@@ -2,3 +2,4 @@
 GET         /hello-world                         controllers.SandboxHelloWorldController.world
 GET         /hello-user                          controllers.SandboxHelloWorldController.user
 GET         /hello-application                   controllers.SandboxHelloWorldController.application
+POST        /subscription                        controllers.SandboxSubscriptionController.subscribe
