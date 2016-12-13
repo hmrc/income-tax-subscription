@@ -33,6 +33,10 @@ trait MicroService {
   lazy val plugins : Seq[Plugins] = Seq(play.PlayScala)
   lazy val playSettings : Seq[Setting[_]] = Seq.empty
 
+  def unitFilter(name: String): Boolean = name startsWith "unit"
+  def endtoendTestFilter(name: String): Boolean = name startsWith "endtoend"
+  def itTestFilter(name: String): Boolean = name startsWith "it"
+
   lazy val scoverageSettings = {
     import scoverage.ScoverageKeys
     Seq(
@@ -67,10 +71,18 @@ trait MicroService {
       addTestReportOption(IntegrationTest, "int-test-reports"),
       testGrouping in IntegrationTest := oneForkedJvmPerTest((definedTests in IntegrationTest).value),
       parallelExecution in IntegrationTest := false)
+    .configs(EndToEndTest)
+    .settings(inConfig(EndToEndTest)(Defaults.testSettings): _*)
+    .settings(
+      testOptions in EndToEndTest := Seq(Tests.Filter(endtoendTestFilter)),
+      unmanagedSourceDirectories   in EndToEndTest <<= (baseDirectory in EndToEndTest)(base => Seq(base / "test"))
+    )
     .settings(resolvers += Resolver.bintrayRepo("hmrc", "releases"))
 }
 
 private object TestPhases {
+
+  lazy val EndToEndTest = config("endtoend") extend IntegrationTest
 
   def oneForkedJvmPerTest(tests: Seq[TestDefinition]): Seq[Tests.Group] =
     tests map {
