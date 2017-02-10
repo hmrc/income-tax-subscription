@@ -14,18 +14,12 @@
  * limitations under the License.
  */
 
-package models
+package models.subscription.business
 
-import uk.gov.hmrc.play.test.UnitSpec
+import play.api.libs.json.Json
 
-class ContactDetailsModelSpec extends UnitSpec {
+case class BusinessSubscriptionRequestModel(businessDetails: BusinessDetailsModel)
 
-  "Creating a model for a subscription request" should {
-    val contactDetails = ContactDetailsModel(emailAddress = "test@test.com")
-
-    "Email should be 'test@test.com'" in {
-      contactDetails.emailAddress shouldBe "test@test.com"
-    }
-  }
-
+object BusinessSubscriptionRequestModel{
+  implicit val format = Json.format[BusinessSubscriptionRequestModel]
 }

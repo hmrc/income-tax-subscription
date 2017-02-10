@@ -14,40 +14,36 @@
  * limitations under the License.
  */
 
-package models
+package unit.models.subscription
 
+import models.subscription.business.{BusinessDetailsModel, BusinessSubscriptionRequestModel}
 import uk.gov.hmrc.play.test.UnitSpec
 
-class BusinessDetailsModelSpec extends UnitSpec {
+class BusinessSubscriptionRequestModelSpec extends UnitSpec {
 
   "Creating a model for a subscription request" should {
-    val contactDetails = ContactDetailsModel(emailAddress = "test@test.com")
-    val businessDetails = BusinessDetailsModel(
+    val businessDetailsModel = BusinessDetailsModel(
       accountingPeriodStartDate = "2017-04-01",
       accountingPeriodEndDate = "2018-03-30",
       tradingName = "Test Business",
-      contactDetails,
       cashOrAccruals = "cash"
     )
+    val model = BusinessSubscriptionRequestModel(businessDetailsModel)
 
     "Accounting Period Start Date should be '2017-04-01'" in {
-      businessDetails.accountingPeriodStartDate shouldBe "2017-04-01"
+      model.businessDetails.accountingPeriodStartDate shouldBe "2017-04-01"
     }
 
     "Accounting Period End Date should be '2018-03-30'" in {
-      businessDetails.accountingPeriodEndDate shouldBe "2018-03-30"
+      model.businessDetails.accountingPeriodEndDate shouldBe "2018-03-30"
     }
 
     "Trading Name should be 'Test Business'" in {
-      businessDetails.tradingName shouldBe "Test Business"
-    }
-
-    "Email should be 'test@test.com'" in {
-      businessDetails.contactDetails.emailAddress shouldBe "test@test.com"
+      model.businessDetails.tradingName shouldBe "Test Business"
     }
 
     "Cash or Accruals should be 'cash'" in {
-      businessDetails.cashOrAccruals shouldBe "cash"
+      model.businessDetails.cashOrAccruals shouldBe "cash"
     }
   }
 

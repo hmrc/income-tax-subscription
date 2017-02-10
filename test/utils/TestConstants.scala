@@ -24,6 +24,9 @@ import JsonUtils._
 object TestConstants {
   lazy val testNino = new Generator().nextNino.nino
   lazy val testSafeId = "XE0001234567890"
+  lazy val testMtditId = "mtditId001"
+  lazy val testSourceId = "sourceId0001"
+  lazy val testErrorReason = "Error Reason"
 
   object NewRegistrationResponse {
     val successResponse: String => JsValue = (safeId: String) =>
@@ -107,6 +110,26 @@ object TestConstants {
       s"""
          |{
          |    "reason":"$reason"
+         |}
+      """.stripMargin
+  }
+
+  object BusinessSubscriptionResponse {
+    def successResponse(safeId: String, mtditId: String, sourceId: String): JsValue =
+      s"""{
+       |  "safeId": "$safeId",
+       |  "mtditId": "$mtditId",
+       |  "incomeSources": [{
+       |    "incomeSourceId": "$sourceId"
+       |  }]
+       |}
+      """.stripMargin
+
+    def failureResponse(code: String, reason: String): JsValue =
+      s"""
+         |{
+         |  "code":"$code",
+         |  "reason":"$reason"
          |}
       """.stripMargin
   }

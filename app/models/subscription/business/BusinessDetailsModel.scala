@@ -14,12 +14,18 @@
  * limitations under the License.
  */
 
-package models
+package models.subscription.business
 
-import play.api.libs.json.Json
+import play.api.libs.json.{Format, Json}
 
-case class BusinessSubscriptionRequestModel(businessDetails: BusinessDetailsModel)
+case class BusinessDetailsModel
+(
+  accountingPeriodStartDate: String,
+  accountingPeriodEndDate: String,
+  tradingName: String,
+  cashOrAccruals: String
+)
 
-object BusinessSubscriptionRequestModel{
-  implicit val format = Json.format[BusinessSubscriptionRequestModel]
+object BusinessDetailsModel {
+  implicit val format: Format[BusinessDetailsModel] = Json.format[BusinessDetailsModel]
 }

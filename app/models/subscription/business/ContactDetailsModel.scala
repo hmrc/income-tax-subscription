@@ -14,19 +14,12 @@
  * limitations under the License.
  */
 
-package models
+package models.subscription.business
 
 import play.api.libs.json.{Format, Json}
 
-case class BusinessDetailsModel
-(
-  accountingPeriodStartDate: String,
-  accountingPeriodEndDate: String,
-  tradingName: String,
-  contactDetails: ContactDetailsModel,
-  cashOrAccruals: String
-)
+case class ContactDetailsModel(emailAddress: String)
 
-object BusinessDetailsModel {
-  implicit val format: Format[BusinessDetailsModel] = Json.format[BusinessDetailsModel]
+object ContactDetailsModel {
+  implicit val format: Format[ContactDetailsModel] = Json.format[ContactDetailsModel]
 }
