@@ -16,14 +16,22 @@
 
 package models.gg
 
+import models.ErrorResponsesModel
 import play.api.libs.json.Json
 
+case class KnownFactsSuccessResponseModel(linesUpdated: Int)
 
-case class EnrolRequest(portalId: String,
-                        serviceName: String,
-                        friendlyName: String,
-                        knownFacts: List[String])
+object KnownFactsSuccessResponseModel {
+  implicit val format = Json.format[KnownFactsSuccessResponseModel]
+}
 
-object EnrolRequest {
-  implicit val format = Json.format[EnrolRequest]
+case class KnownFactsFailureResponseModel(statusCode: Int, message: String, xStatusCode: Option[String] = None, requested: Option[String] = None)
+  extends ErrorResponsesModel {
+  override val code: Option[String] = xStatusCode
+
+  override val reason: String = message
+}
+
+object KnownFactsFailureResponseModel {
+  implicit val format = Json.format[KnownFactsFailureResponseModel]
 }
