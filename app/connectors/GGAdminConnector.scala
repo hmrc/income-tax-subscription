@@ -40,7 +40,7 @@ class GGAdminConnector @Inject()(config: Configuration,
                                 ) extends ServicesConfig with RawResponseReads {
 
   private lazy val ggAdminUrl: String = applicationConfig.ggAdminURL
-  private lazy val serviceName: String = "ITSA"
+  private lazy val serviceName: String = "HMRC-MTD-IT"
 
   val addKnownFactsUrl: String = s"$ggAdminUrl/service/$serviceName/known-facts"
 

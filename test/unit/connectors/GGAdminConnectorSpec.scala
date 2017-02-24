@@ -29,7 +29,7 @@ class GGAdminConnectorSpec extends MockGGAdminConnector {
   "GGAdminConnector.addKnownFacts" should {
 
     "Post to the correct url" in {
-      TestGGAdminConnector.addKnownFactsUrl should endWith("service/ITSA/known-facts")
+      TestGGAdminConnector.addKnownFactsUrl should endWith("service/HMRC-MTD-IT/known-facts")
     }
 
     def result = await(TestGGAdminConnector.addKnownFacts(knowFactsRequest))
