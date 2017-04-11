@@ -28,6 +28,10 @@ case class GetRegistrationFailureResponseModel(reason: String) extends ErrorResp
   override def code: Option[String] = None
 }
 
+case class GetBusinessDetailsSuccessResponseModel(mtdbsa: String)
+
+case class GetBusinessDetailsFailureResponseModel(code: Option[String], reason: String) extends ErrorResponsesModel
+
 object RegistrationSuccessResponseModel {
   implicit val format = Json.format[RegistrationSuccessResponseModel]
 }
@@ -38,4 +42,12 @@ object NewRegistrationFailureResponseModel {
 
 object GetRegistrationFailureResponseModel {
   implicit val format = Json.format[GetRegistrationFailureResponseModel]
+}
+
+object GetBusinessDetailsSuccessResponseModel {
+  implicit val format = Json.format[GetBusinessDetailsSuccessResponseModel]
+}
+
+object GetBusinessDetailsFailureResponseModel {
+  implicit val format = Json.format[GetBusinessDetailsFailureResponseModel]
 }

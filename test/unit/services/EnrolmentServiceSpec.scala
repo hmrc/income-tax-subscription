@@ -16,14 +16,14 @@
 
 package unit.services
 
-import play.api.http.Status.{INTERNAL_SERVER_ERROR, _}
-import play.api.libs.json.Json
+import play.api.http.Status._
 import uk.gov.hmrc.play.http.HeaderCarrier
 import unit.services.mocks.MockEnrolmentService
-import utils.TestConstants._
-import utils.TestConstants.GG._
-import utils.TestConstants.GG.KnownFactsResponse._
 import utils.TestConstants.GG.EnrolResponseExamples._
+import utils.TestConstants.GG.KnownFactsResponse._
+import utils.TestConstants.GG._
+import utils.TestConstants._
+
 import scala.concurrent.ExecutionContext.Implicits.global
 
 class EnrolmentServiceSpec extends MockEnrolmentService {

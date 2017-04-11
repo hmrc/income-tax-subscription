@@ -92,6 +92,51 @@ object TestConstants {
       knownFacts = List(testMtditId, testNino)
     )
 
+  object GetBusinessDetailsResponse {
+    val successResponse: (String, String, String) => JsValue = (nino: String, safeId: String, mtdbsa: String) =>
+      s"""{
+         |   "safeId": "$safeId",
+         |   "nino": "$nino",
+         |   "mtdbsa": "$mtdbsa",
+         |   "propertyIncome": false,
+         |   "businessData": [
+         |      {
+         |         "incomeSourceId": "123456789012345",
+         |         "accountingPeriodStartDate": "2001-01-01",
+         |         "accountingPeriodEndDate": "2001-01-01",
+         |         "tradingName": "RCDTS",
+         |         "businessAddressDetails": {
+         |            "addressLine1": "100 SuttonStreet",
+         |            "addressLine2": "Wokingham",
+         |            "addressLine3": "Surrey",
+         |            "addressLine4": "London",
+         |            "postalCode": "DH14EJ",
+         |            "countryCode": "GB"
+         |         },
+         |         "businessContactDetails": {
+         |            "phoneNumber": "01332752856",
+         |            "mobileNumber": "07782565326",
+         |            "faxNumber": "01332754256",
+         |            "emailAddress": "stephen@manncorpone.co.uk"
+         |         },
+         |         "tradingStartDate": "2001-01-01",
+         |         "cashOrAccruals": "cash",
+         |         "seasonal": true
+         |      }
+         |   ]
+         |}
+      """.stripMargin
+
+    val failureResponse: (String, String) => JsValue = (code: String, reason: String) =>
+      s"""
+         |{
+         |    "code": "$code",
+         |    "reason":"$reason"
+         |}
+      """.stripMargin
+  }
+
+
   val registerRequestPayload = RegistrationRequestModel(isAnAgent = false)
 
   object NewRegistrationResponse {
