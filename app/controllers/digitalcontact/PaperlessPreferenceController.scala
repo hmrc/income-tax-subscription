@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 HM Revenue & Customs
+ * Copyright 2019 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,11 +17,10 @@
 package controllers.digitalcontact
 
 import javax.inject.{Inject, Singleton}
-
 import common.Constants._
 import models.digitalcontact.PaperlessPreferenceKey
 import play.api.libs.json.{JsError, JsSuccess, JsValue, Json}
-import play.api.mvc.{Action, AnyContent}
+import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import services.AuthService
 import services.digitalcontact.PaperlessPreferenceService
 import uk.gov.hmrc.play.bootstrap.controller.BaseController
@@ -30,8 +29,9 @@ import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class PaperlessPreferenceController @Inject()(authService: AuthService,
-                                              paperlessPreferenceService: PaperlessPreferenceService)(implicit ec: ExecutionContext)
-  extends BaseController {
+                                              paperlessPreferenceService: PaperlessPreferenceService,
+                                             cc: ControllerComponents)(implicit ec: ExecutionContext)
+  extends BaseController(cc) {
 
   import authService._
 

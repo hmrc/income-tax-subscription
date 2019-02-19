@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 HM Revenue & Customs
+ * Copyright 2019 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,8 +30,8 @@ import scala.concurrent.Future
 
 
 class LockoutStatusControllerSpec extends UnitSpec with MockLockoutStatusService with MaterializerSupport with MockAuthService {
-
-  object TestController extends LockoutStatusController(mockAuthService, mockLockoutStatusService)
+  lazy val mockCC = stubControllerComponents()
+  object TestController extends LockoutStatusController(mockAuthService, mockLockoutStatusService, mockCC)
 
   "LockoutStatusController.checkLockoutStatus" should {
     def call: Future[Result] = TestController.checkLockoutStatus(testArn)(FakeRequest())

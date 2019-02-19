@@ -8,9 +8,9 @@
 # Failing to follow this rule may result in test routes deployed in production.
 
 
-GET         /income-tax-subscription/client-matching/test-only/reset-agent-lockout        @testonly.controllers.matching.ResetAgentLockoutController.resetAgentLockout
-GET         /income-tax-subscription/test-only/feature-switch                             @testonly.controllers.featureswitch.FeatureSwitchController.get
-POST        /income-tax-subscription/test-only/feature-switch                             @testonly.controllers.featureswitch.FeatureSwitchController.update
+GET         /income-tax-subscription/client-matching/test-only/reset-agent-lockout        testonly.controllers.matching.ResetAgentLockoutController.resetAgentLockout
+GET         /income-tax-subscription/test-only/feature-switch                             testonly.controllers.featureswitch.FeatureSwitchController.get
+POST        /income-tax-subscription/test-only/feature-switch                             testonly.controllers.featureswitch.FeatureSwitchController.update
 
 # Add all the application routes to the prod.routes file
 ->          /                                                                             prod.Routes

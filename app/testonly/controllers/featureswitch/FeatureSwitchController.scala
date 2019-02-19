@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 HM Revenue & Customs
+ * Copyright 2019 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,18 +17,18 @@
 package testonly.controllers.featureswitch
 
 import javax.inject.Inject
-
 import config.featureswitch.FeatureSwitch._
 import config.featureswitch.{FeatureSwitch, FeatureSwitching}
 import play.api.i18n.MessagesApi
 import play.api.libs.json.Json
-import play.api.mvc.{Action, Result}
+import play.api.mvc.{Action, ControllerComponents, Result}
 import uk.gov.hmrc.play.bootstrap.controller.BaseController
 
 import scala.concurrent.Future
 
-class FeatureSwitchController @Inject()(val messagesApi: MessagesApi)
-  extends BaseController with FeatureSwitching {
+class FeatureSwitchController @Inject()(override val messagesApi: MessagesApi,
+                                        cc: ControllerComponents)
+  extends BaseController(cc) with FeatureSwitching {
 
   private def returnCurrentSettings = Ok(Json.toJson(switches.map(fs => FeatureSwitchSetting(fs, isEnabled(fs)))))
 

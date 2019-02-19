@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 HM Revenue & Customs
+ * Copyright 2019 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,21 +20,27 @@ import common.Constants._
 import models.digitalcontact.PaperlessPreferenceKey
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.Result
+import play.api.test.Helpers.stubControllerComponents
 import play.api.test.FakeRequest
 import services.mocks.{MockAuthService, MockPaperlessPreferenceService}
 import uk.gov.hmrc.play.test.UnitSpec
 import utils.MaterializerSupport
 import utils.TestConstants._
 import play.api.test.Helpers._
+import play.api.test.Helpers.stubControllerComponents
+import uk.gov.hmrc.play.bootstrap
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 class PaperlessPreferenceControllerSpec extends UnitSpec with MaterializerSupport with MockPaperlessPreferenceService with MockAuthService {
 
+  lazy val mockCC = stubControllerComponents()
+
   object TestPaperlessPreferenceController extends PaperlessPreferenceController(
     mockAuthService,
-    mockPaperlessPreferenceService
+    mockPaperlessPreferenceService,
+    mockCC
   )
 
   s"storeNino($testPreferencesToken)" should {

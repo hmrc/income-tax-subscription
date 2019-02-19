@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 HM Revenue & Customs
+ * Copyright 2019 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,11 +17,10 @@
 package controllers.matching
 
 import javax.inject.{Inject, Singleton}
-
 import models.lockout.LockoutRequest
 import models.matching.LockoutResponse
 import play.api.libs.json.Json
-import play.api.mvc.{Action, AnyContent}
+import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import services.{AuthService, LockoutStatusService}
 import uk.gov.hmrc.play.bootstrap.controller.BaseController
 
@@ -30,7 +29,8 @@ import scala.concurrent.Future
 
 @Singleton
 class LockoutStatusController @Inject()(authService: AuthService,
-                                        lockoutStatusService: LockoutStatusService) extends BaseController {
+                                        lockoutStatusService: LockoutStatusService,
+                                        cc: ControllerComponents) extends BaseController(cc) {
 
   import authService._
 

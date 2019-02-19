@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 HM Revenue & Customs
+ * Copyright 2019 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,10 +17,9 @@
 package controllers.subscription
 
 import javax.inject.Inject
-
 import audit.{Logging, LoggingConfig}
 import models.frontend.FEFailureResponse
-import play.api.mvc.{Action, AnyContent}
+import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import services.{AuthService, SubscriptionStatusService}
 import uk.gov.hmrc.play.bootstrap.controller.BaseController
 import utils.Implicits._
@@ -30,7 +29,8 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 class SubscriptionStatusController @Inject()(logging: Logging,
                                              authService: AuthService,
-                                             subscriptionStatusService: SubscriptionStatusService) extends BaseController {
+                                             subscriptionStatusService: SubscriptionStatusService,
+                                             cc: ControllerComponents) extends BaseController(cc) {
   import authService._
 
   def checkSubscriptionStatus(nino: String): Action[AnyContent] = Action.async { implicit request =>

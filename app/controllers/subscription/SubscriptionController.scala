@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 HM Revenue & Customs
+ * Copyright 2019 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,12 +17,11 @@
 package controllers.subscription
 
 import javax.inject.Inject
-
 import audit.{Logging, LoggingConfig}
 import controllers.ITSASessionKeys
 import models.frontend.{FEFailureResponse, FERequest}
 import play.api.libs.json.{JsError, JsSuccess}
-import play.api.mvc.{Action, AnyContent, Request, Result}
+import play.api.mvc._
 import services.{AuthService, RosmAndEnrolManagerService}
 import uk.gov.hmrc.play.bootstrap.controller.BaseController
 import utils.JsonUtils._
@@ -33,8 +32,9 @@ import uk.gov.hmrc.http.HeaderCarrier
 
 class SubscriptionController @Inject()(logging: Logging,
                                        subManService: RosmAndEnrolManagerService,
-                                       authService: AuthService
-                                      ) extends BaseController {
+                                       authService: AuthService,
+                                       cc: ControllerComponents
+                                      ) extends BaseController(cc) {
   import authService._
 
   def subscribe(nino: String): Action[AnyContent] = Action.async { implicit request =>

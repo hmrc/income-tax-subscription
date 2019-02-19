@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 HM Revenue & Customs
+ * Copyright 2019 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,36 +29,36 @@ private object AppDependencies {
 
   private val domainVersion = "5.1.0"
   private val hmrcTestVersion = "3.0.0"
-  private val scalaTestVersion = "3.0.1"
-  private val scalaTestPlusVersion = "2.0.0"
+  private val scalaTestVersion = "3.0.5"
+  private val scalaTestPlusVersion = "3.1.2"
   private val pegdownVersion = "1.6.0"
   private val mockitoVersion = "2.7.17"
 
   private val scalaJVersion = "2.3.0"
   private val cucumberVersion = "1.2.5"
 
-  private val reactiveMongoVersion = "6.2.0"
+  private val reactiveMongoVersion = "7.3.0-play-26"
 
   private val wiremockVersion = "2.5.1"
 
-  private val bootstrapVersion = "1.7.0"
-
+  private val bootstrapVersion = "0.32.0"
 
   val compile = Seq(
     ws,
-    "uk.gov.hmrc" %% "bootstrap-play-25" % bootstrapVersion,
+    "uk.gov.hmrc" %% "bootstrap-play-26" % bootstrapVersion,
     "uk.gov.hmrc" %% "domain" % domainVersion,
-    "uk.gov.hmrc" %% "play-reactivemongo" % reactiveMongoVersion
+    "uk.gov.hmrc" %% "simple-reactivemongo" % reactiveMongoVersion
   )
 
   trait TestDependencies {
     lazy val scope: String = "test"
-    lazy val test: Seq[ModuleID] = ???
+    lazy val test: Seq[ModuleID] = Seq()
   }
 
   object Test {
-    def apply() = new TestDependencies {
+    def apply(): Seq[ModuleID] = new TestDependencies {
       override lazy val test = Seq(
+        "uk.gov.hmrc" %% "bootstrap-play-26" % bootstrapVersion % scope,
         "uk.gov.hmrc" %% "hmrctest" % hmrcTestVersion % scope,
         "org.scalatest" %% "scalatest" % scalaTestVersion % scope,
         "org.pegdown" % "pegdown" % pegdownVersion % scope,
@@ -74,7 +74,7 @@ private object AppDependencies {
   }
 
   object IntegrationTest {
-    def apply() = new TestDependencies {
+    def apply(): Seq[ModuleID] = new TestDependencies {
 
       override lazy val scope: String = "it"
 
@@ -94,6 +94,27 @@ private object AppDependencies {
     }.test
   }
 
-  def apply() = compile ++ Test() ++ IntegrationTest()
-}
+  // Fixes a transitive dependency clash between wiremock and scalatestplus-play
+  val overrides: Set[ModuleID] = {
+    val jettyFromWiremockVersion = "9.2.24.v20180105"
+    Set(
+      "org.eclipse.jetty" % "jetty-client" % jettyFromWiremockVersion,
+      "org.eclipse.jetty" % "jetty-continuation" % jettyFromWiremockVersion,
+      "org.eclipse.jetty" % "jetty-http" % jettyFromWiremockVersion,
+      "org.eclipse.jetty" % "jetty-io" % jettyFromWiremockVersion,
+      "org.eclipse.jetty" % "jetty-security" % jettyFromWiremockVersion,
+      "org.eclipse.jetty" % "jetty-server" % jettyFromWiremockVersion,
+      "org.eclipse.jetty" % "jetty-servlet" % jettyFromWiremockVersion,
+      "org.eclipse.jetty" % "jetty-servlets" % jettyFromWiremockVersion,
+      "org.eclipse.jetty" % "jetty-util" % jettyFromWiremockVersion,
+      "org.eclipse.jetty" % "jetty-webapp" % jettyFromWiremockVersion,
+      "org.eclipse.jetty" % "jetty-xml" % jettyFromWiremockVersion,
+      "org.eclipse.jetty.websocket" % "websocket-api" % jettyFromWiremockVersion,
+      "org.eclipse.jetty.websocket" % "websocket-client" % jettyFromWiremockVersion,
+      "org.eclipse.jetty.websocket" % "websocket-common" % jettyFromWiremockVersion
+    )
+  }
 
+  def apply(): Seq[ModuleID] = compile ++ Test() ++ IntegrationTest()
+
+}

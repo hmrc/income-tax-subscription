@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 HM Revenue & Customs
+ * Copyright 2019 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -48,7 +48,7 @@ trait MockSubscriptionStatusService extends MockitoSugar {
     mockCheckMtditsaSubscription(nino)(Future.successful(Right(Some(FESuccessResponse(Some(testMtditId))))))
 
   def mockCheckMtditsaNotFound(nino: String): Unit =
-    mockCheckMtditsaSubscription(nino)(Future.successful(Right(None)))
+    mockCheckMtditsaSubscription(nino)(Future.successful(Right(Some(FESuccessResponse(None)))))
 
   def mockCheckMtditsaFailure(nino: String): Unit =
     mockCheckMtditsaSubscription(nino)(Future.successful(Left(INVALID_NINO_MODEL)))

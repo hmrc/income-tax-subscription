@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 HM Revenue & Customs
+ * Copyright 2019 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,10 +17,10 @@
 package config
 
 import javax.inject.{Inject, Singleton}
-
 import config.featureswitch.FeatureSwitching
 import play.api.{Application, Configuration}
-import uk.gov.hmrc.play.config.ServicesConfig
+import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
+
 
 trait AppConfig {
   val authURL: String
@@ -34,22 +34,20 @@ trait AppConfig {
 }
 
 @Singleton
-class MicroserviceAppConfig @Inject()(val app: Application) extends AppConfig with ServicesConfig with FeatureSwitching {
-  val configuration = app.configuration
-  override val mode = app.mode
+class MicroserviceAppConfig @Inject()(val configuration: Configuration, servicesConfig:ServicesConfig) extends AppConfig with FeatureSwitching {
 
   private def loadConfig(key: String) = configuration.getString(key).getOrElse(throw new Exception(s"Missing configuration key: $key"))
 
-  override lazy val authURL = baseUrl("auth")
-  override lazy val ggAuthenticationURL = baseUrl("gg-authentication")
-  override lazy val ggURL = baseUrl("government-gateway")
-  override lazy val ggAdminURL = baseUrl("gg-admin")
+  override lazy val authURL = servicesConfig.baseUrl("auth")
+  override lazy val ggAuthenticationURL = servicesConfig.baseUrl("gg-authentication")
+  override lazy val ggURL = servicesConfig.baseUrl("government-gateway")
+  override lazy val ggAdminURL = servicesConfig.baseUrl("gg-admin")
 
   private def desBase =
     if (isEnabled(featureswitch.StubDESFeature)) "microservice.services.stub-des"
     else "microservice.services.des"
 
-  override def desURL = loadConfig(s"$desBase.url")
+  override def desURL: String = loadConfig(s"$desBase.url")
 
   override lazy val desEnvironment = loadConfig(s"$desBase.environment")
   override lazy val desToken = loadConfig(s"$desBase.authorization-token")
@@ -59,5 +57,5 @@ class MicroserviceAppConfig @Inject()(val app: Application) extends AppConfig wi
       .getOrElse(throw new Exception(s"Missing configuration key: $key"))
   }
 
-  override protected def runModeConfiguration: Configuration = configuration
+   protected def runModeConfiguration: Configuration = configuration
 }

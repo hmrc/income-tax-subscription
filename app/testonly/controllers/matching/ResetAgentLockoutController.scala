@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 HM Revenue & Customs
+ * Copyright 2019 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,14 +17,15 @@
 package testonly.controllers.matching
 
 import javax.inject.{Inject, Singleton}
-
-import play.api.mvc.{Action, AnyContent}
+import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import repositories.LockoutMongoRepository
 import uk.gov.hmrc.play.bootstrap.controller.BaseController
+
 import scala.concurrent.ExecutionContext.Implicits.global
 
 @Singleton
-class ResetAgentLockoutController @Inject()(mongoRepository: LockoutMongoRepository) extends BaseController {
+class ResetAgentLockoutController @Inject()(mongoRepository: LockoutMongoRepository,
+                                            cc: ControllerComponents) extends BaseController(cc) {
 
   def resetAgentLockout: Action[AnyContent] = Action.async { implicit request =>
     mongoRepository.dropDb map (_ => Ok)

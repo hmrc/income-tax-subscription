@@ -1,9 +1,9 @@
-POST        /subscription/:nino               @controllers.subscription.SubscriptionController.subscribe(nino: String)
+POST        /subscription/:nino               controllers.subscription.SubscriptionController.subscribe(nino: String)
 
-GET         /subscription/:nino               @controllers.subscription.SubscriptionStatusController.checkSubscriptionStatus(nino: String)
+GET         /subscription/:nino               controllers.subscription.SubscriptionStatusController.checkSubscriptionStatus(nino: String)
 
-GET         /client-matching/lock/:arn        @controllers.matching.LockoutStatusController.checkLockoutStatus(arn:String)
-POST        /client-matching/lock/:arn        @controllers.matching.LockoutStatusController.lockoutAgent(arn:String)
+GET         /client-matching/lock/:arn        controllers.matching.LockoutStatusController.checkLockoutStatus(arn:String)
+POST        /client-matching/lock/:arn        controllers.matching.LockoutStatusController.lockoutAgent(arn:String)
 
-GET         /identifier-mapping/:token        @controllers.digitalcontact.PaperlessPreferenceController.getNino(token:String)
-POST        /identifier-mapping/:token        @controllers.digitalcontact.PaperlessPreferenceController.storeNino(token:String)
+GET         /identifier-mapping/:token        controllers.digitalcontact.PaperlessPreferenceController.getNino(token:String)
+POST        /identifier-mapping/:token        controllers.digitalcontact.PaperlessPreferenceController.storeNino(token:String)

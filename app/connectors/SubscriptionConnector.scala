@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 HM Revenue & Customs
+ * Copyright 2019 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -53,7 +53,8 @@ class SubscriptionConnector @Inject()(applicationConfig: AppConfig,
     import BusinessConnectorUtil._
     import SubscriptionConnector._
     implicit val loggingConfig = SubscriptionConnector.businessSubscribeLoggingConfig
-    lazy val requestDetails: Map[String, String] = Map("nino" -> nino, "arn" -> arn.fold("-")(identity), "subscribe" -> (businessSubscriptionPayload: JsValue).toString)
+    lazy val requestDetails: Map[String, String] = Map("nino" -> nino, "arn" -> arn.fold("-")(identity),
+      "subscribe" -> (businessSubscriptionPayload: JsValue).toString)
     val updatedHc = createHeaderCarrierPost(hc)
 
     logging.debug(s"Request:\n$requestDetails\n\nHeader Carrier:\n$updatedHc")

@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 HM Revenue & Customs
+ * Copyright 2019 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,6 +21,7 @@ import models.frontend.FESuccessResponse
 import play.api.http.Status._
 import play.api.mvc.Result
 import play.api.test.FakeRequest
+import play.api.test.Helpers.stubControllerComponents
 import services.mocks.{MockAuthService, MockSubscriptionStatusService}
 import uk.gov.hmrc.play.test.UnitSpec
 import utils.MaterializerSupport
@@ -29,10 +30,10 @@ import utils.TestConstants._
 import scala.concurrent.Future
 
 class SubscriptionStatusControllerSpec extends UnitSpec with MockSubscriptionStatusService with MaterializerSupport with MockAuthService {
-
+  lazy val mockCC = stubControllerComponents()
   val logging = mock[Logging]
 
-  object TestController extends SubscriptionStatusController(logging, mockAuthService, mockSubscriptionStatusService)
+  object TestController extends SubscriptionStatusController(logging, mockAuthService, mockSubscriptionStatusService, mockCC)
 
   def call: Future[Result] = TestController.checkSubscriptionStatus(testNino)(FakeRequest())
 
