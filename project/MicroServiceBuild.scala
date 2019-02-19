@@ -27,21 +27,21 @@ private object AppDependencies {
   import play.core.PlayVersion
   import play.sbt.PlayImport._
 
-  private val domainVersion = "5.1.0"
-  private val hmrcTestVersion = "3.0.0"
+  private val domainVersion = "5.3.0"
+  private val hmrcTestVersion = "3.3.0"
   private val scalaTestVersion = "3.0.5"
   private val scalaTestPlusVersion = "3.1.2"
   private val pegdownVersion = "1.6.0"
   private val mockitoVersion = "2.7.17"
 
-  private val scalaJVersion = "2.3.0"
+  private val scalaJVersion = "2.4.1"
   private val cucumberVersion = "1.2.5"
 
-  private val reactiveMongoVersion = "7.3.0-play-26"
+  private val reactiveMongoVersion = "7.12.0-play-26"
 
-  private val wiremockVersion = "2.5.1"
+  private val wiremockVersion = "2.21.0"
 
-  private val bootstrapVersion = "0.32.0"
+  private val bootstrapVersion = "0.36.0"
 
   val compile = Seq(
     ws,
