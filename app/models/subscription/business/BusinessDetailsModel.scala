@@ -19,7 +19,7 @@ package models.subscription.business
 import play.api.libs.json._
 
 
-sealed trait CashOrAccruals {
+trait CashOrAccruals {
   def cashOrAccruals: String
 }
 
