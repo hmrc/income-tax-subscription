@@ -40,7 +40,7 @@ class AuditServiceSpec extends UnitSpec with MockitoSugar with BeforeAndAfterEac
   private implicit val hc: HeaderCarrier = HeaderCarrier()
   implicit val request = FakeRequest("POST", "testUrl")
 
-  val testAuditModel = new AuditModel{
+  val testAuditModel = new AuditModel {
     override val auditType = "testAuditType"
     override val transactionName = "testTransactionName"
     override val detail = Map[String, String]()
