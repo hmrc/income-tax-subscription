@@ -17,14 +17,15 @@
 package services
 
 import javax.inject.{Inject, Singleton}
-
 import audit.Logging
 import config.AppConfig
 import models.ErrorModel
 import models.frontend._
+import models.monitoring.mtdItsaSubscription.CtReferenceMatchAuditModel
 import models.subscription.business.BusinessSubscriptionSuccessResponseModel
 import models.subscription.property.PropertySubscriptionResponseModel
 import play.api.http.Status._
+import services.monitoring.AuditService
 import utils.Implicits._
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -35,6 +36,7 @@ class RosmAndEnrolManagerService @Inject()
 (
   appConfig: AppConfig,
   logging: Logging,
+  auditService: AuditService,
   registrationService: RegistrationService,
   subscriptionService: SubscriptionService
 ) {
@@ -43,18 +45,18 @@ class RosmAndEnrolManagerService @Inject()
 
   val pathKey = "path"
 
-  val feRequestToAuditMap: FERequest => Map[String, String] = feRequest =>
-    Map(
-      "nino" -> feRequest.nino,
-      "isAgent" -> feRequest.isAgent.toString,
-      "arn" -> feRequest.arn.fold("-")(identity),
-      "sourceOfIncome" -> feRequest.incomeSource.toString,
-      "acccountingPeriodStartDate" -> feRequest.accountingPeriodStart.fold("-")(x => x.toDesDateFormat),
-      "acccountingPeriodEndDate" -> feRequest.accountingPeriodEnd.fold("-")(x => x.toDesDateFormat),
-      "tradingName" -> feRequest.tradingName.fold("-")(identity),
-      "cashOrAccruals" -> feRequest.cashOrAccruals.fold("-")(x => x.toLowerCase),
-      "Authorization" -> urlHeaderAuthorization
-    )
+//  val feRequestToAuditMap: FERequest => Map[String, String] = feRequest =>
+//    Map(
+//      "nino" -> feRequest.nino,
+//      "isAgent" -> feRequest.isAgent.toString,
+//      "arn" -> feRequest.arn.fold("-")(identity),
+//      "sourceOfIncome" -> feRequest.incomeSource.toString,
+//      "acccountingPeriodStartDate" -> feRequest.accountingPeriodStart.fold("-")(x => x.toDesDateFormat),
+//      "acccountingPeriodEndDate" -> feRequest.accountingPeriodEnd.fold("-")(x => x.toDesDateFormat),
+//      "tradingName" -> feRequest.tradingName.fold("-")(identity),
+//      "cashOrAccruals" -> feRequest.cashOrAccruals.fold("-")(x => x.toLowerCase),
+//      "Authorization" -> urlHeaderAuthorization
+//    )
 
   val auditResponseMap: (FERequest, FESuccessResponse) => Map[String, String] = (feRequest, response) =>
     Map(
@@ -64,12 +66,13 @@ class RosmAndEnrolManagerService @Inject()
     )
 
   def rosmAndEnrol(request: FERequest, path: String)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Either[ErrorModel, FESuccessResponse]] = {
-    logging.audit(
-      Logging.AuditSubscribeRequest.transactionName,
-      feRequestToAuditMap(request) + (pathKey -> path),
-      Logging.AuditSubscribeRequest.auditType
-    )(hc)
+//    logging.audit(
+//      Logging.AuditSubscribeRequest.transactionName,
+//      feRequestToAuditMap(request) + (pathKey -> path),
+//      Logging.AuditSubscribeRequest.auditType
+//    )(hc)
 
+    auditService.audit(CtReferenceMatchAuditModel)
     val result: Future[Either[ErrorModel, FESuccessResponse]] = orchestrateROSM(request).flatMap {
       case Right(rosmSuccess) => Future.successful(FESuccessResponse(rosmSuccess.mtditId))
       case Left(rosmFailure) => Future.successful(rosmFailure)
