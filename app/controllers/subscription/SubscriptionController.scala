@@ -67,7 +67,7 @@ class SubscriptionController @Inject()(logging: Logging,
     }
   } yield parsedBody
 
-  private def createSubscription(feRequest: FERequest, path: String)(implicit hc: HeaderCarrier): Future[Result] =
+  private def createSubscription(feRequest: FERequest, path: String)(implicit hc: HeaderCarrier,request: Request[_]): Future[Result] =
     subManService.rosmAndEnrol(feRequest, path).map {
     case Right(r) =>
       logging.debug(s"Subscription successful, responding with\n$r")

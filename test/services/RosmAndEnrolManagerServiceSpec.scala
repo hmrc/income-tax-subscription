@@ -21,6 +21,8 @@ import models.frontend.{FERequest, FESuccessResponse}
 import models.subscription.IncomeSourceModel
 import models.subscription.property.PropertySubscriptionResponseModel
 import play.api.http.Status._
+import play.api.mvc.Request
+import play.api.test.FakeRequest
 import services.mocks.TestSubscriptionManagerService
 import uk.gov.hmrc.http.HeaderCarrier
 import utils.TestConstants._
@@ -32,12 +34,14 @@ class RosmAndEnrolManagerServiceSpec extends TestSubscriptionManagerService {
 
   implicit val hc = HeaderCarrier()
   implicit val ec = ExecutionContext.Implicits.global
+  implicit val request: Request[_] = FakeRequest()
 
   val path = ""
 
   "The RosmAndEnrolManagerService.rosmAndEnrol action" should {
 
-    def call(request: FERequest): Either[ErrorModel, FESuccessResponse] = await(TestSubscriptionManagerService.rosmAndEnrol(request, path))
+    def call(feRequest: FERequest): Either[ErrorModel, FESuccessResponse] =
+      await(TestSubscriptionManagerService.rosmAndEnrol(feRequest, path)(hc, ec, request: Request[_]))
 
     "return the mtditId when register and subscribe are successful (property only)" in {
       val propertySubscriptionSuccess = PropertySubscriptionResponseModel(testSafeId, testMtditId, IncomeSourceModel(testSourceId))
