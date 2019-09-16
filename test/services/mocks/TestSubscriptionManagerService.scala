@@ -24,9 +24,11 @@ import org.mockito.ArgumentMatchers
 import org.mockito.Mockito._
 import org.scalatest.mockito.MockitoSugar
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
+import play.api.mvc.Request
 import services.RosmAndEnrolManagerService
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.test.UnitSpec
+import services.mocks.monitoring.MockAuditService
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -39,21 +41,22 @@ trait MockSubscriptionManagerService extends MockitoSugar {
       ArgumentMatchers.eq(path)
     )(
       ArgumentMatchers.any[HeaderCarrier],
-      ArgumentMatchers.any[ExecutionContext]
+      ArgumentMatchers.any[ExecutionContext],
+      ArgumentMatchers.any[Request[_]]
     ))
       .thenReturn(response)
   }
 
 }
 
-trait TestSubscriptionManagerService extends UnitSpec with GuiceOneAppPerSuite with MockRegistrationService with MockSubscriptionService {
+trait TestSubscriptionManagerService extends UnitSpec with GuiceOneAppPerSuite with MockRegistrationService with MockSubscriptionService with MockAuditService {
 
   lazy val appConfig = app.injector.instanceOf[AppConfig]
   val logging = mock[Logging]
 
   object TestSubscriptionManagerService extends RosmAndEnrolManagerService(
     appConfig,
-    logging,
+    mockAuditService,
     mockRegistrationService,
     mockSubscriptionService
   )

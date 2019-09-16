@@ -17,14 +17,17 @@
 package services
 
 import javax.inject.{Inject, Singleton}
-
-import audit.Logging
 import config.AppConfig
 import models.ErrorModel
 import models.frontend._
+
+import models.monitoring.rosmAndEnrol.rosmAndEnrolModel
+import models.monitoring.rosmAndEnrolSuccess.rosmAndEnrolSuccessModel
 import models.subscription.business.BusinessSubscriptionSuccessResponseModel
 import models.subscription.property.PropertySubscriptionResponseModel
 import play.api.http.Status._
+import play.api.mvc.Request
+import services.monitoring.AuditService
 import utils.Implicits._
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -34,7 +37,7 @@ import uk.gov.hmrc.http.HeaderCarrier
 class RosmAndEnrolManagerService @Inject()
 (
   appConfig: AppConfig,
-  logging: Logging,
+  auditService: AuditService,
   registrationService: RegistrationService,
   subscriptionService: SubscriptionService
 ) {
@@ -43,47 +46,16 @@ class RosmAndEnrolManagerService @Inject()
 
   val pathKey = "path"
 
-  val feRequestToAuditMap: FERequest => Map[String, String] = feRequest =>
-    Map(
-      "nino" -> feRequest.nino,
-      "isAgent" -> feRequest.isAgent.toString,
-      "arn" -> feRequest.arn.fold("-")(identity),
-      "sourceOfIncome" -> feRequest.incomeSource.toString,
-      "acccountingPeriodStartDate" -> feRequest.accountingPeriodStart.fold("-")(x => x.toDesDateFormat),
-      "acccountingPeriodEndDate" -> feRequest.accountingPeriodEnd.fold("-")(x => x.toDesDateFormat),
-      "tradingName" -> feRequest.tradingName.fold("-")(identity),
-      "cashOrAccruals" -> feRequest.cashOrAccruals.fold("-")(x => x.toLowerCase),
-      "Authorization" -> urlHeaderAuthorization
-    )
+  def rosmAndEnrol(feRequest: FERequest, path: String)
+                  (implicit hc: HeaderCarrier, ec: ExecutionContext, request: Request[_]): Future[Either[ErrorModel, FESuccessResponse]] = {
+    auditService.audit(rosmAndEnrolModel(feRequest, urlHeaderAuthorization))
 
-  val auditResponseMap: (FERequest, FESuccessResponse) => Map[String, String] = (feRequest, response) =>
-    Map(
-      "nino" -> feRequest.nino,
-      "arn" -> feRequest.arn.fold("-")(identity),
-      "mtdItsaReferenceNumber" -> response.mtditId.get
-    )
-
-  def rosmAndEnrol(request: FERequest, path: String)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Either[ErrorModel, FESuccessResponse]] = {
-    logging.audit(
-      Logging.AuditSubscribeRequest.transactionName,
-      feRequestToAuditMap(request) + (pathKey -> path),
-      Logging.AuditSubscribeRequest.auditType
-    )(hc)
-
-    val result: Future[Either[ErrorModel, FESuccessResponse]] = orchestrateROSM(request).flatMap {
-      case Right(rosmSuccess) => Future.successful(FESuccessResponse(rosmSuccess.mtditId))
-      case Left(rosmFailure) => Future.successful(rosmFailure)
-    }
-    result.map {
-      case Right(rosmSuccess@FESuccessResponse(_)) =>
-        logging.audit(
-          Logging.AuditReferenceNumber.transactionName,
-          auditResponseMap(request, rosmSuccess) + (pathKey -> path),
-          Logging.AuditReferenceNumber.auditType
-        )(hc)
-
-        rosmSuccess
-      case x => x
+    orchestrateROSM(feRequest) flatMap {
+      case Right(rosmSuccess) =>
+        auditService.audit(rosmAndEnrolSuccessModel(feRequest, rosmSuccess, path))
+        Future.successful(FESuccessResponse(rosmSuccess.mtditId))
+      case Left(rosmFailure) =>
+        Future.successful(rosmFailure)
     }
   }
 
@@ -105,8 +77,9 @@ class RosmAndEnrolManagerService @Inject()
   }
 
 
-  private def businessSubscription(request: FERequest)(implicit hc: HeaderCarrier, ec: ExecutionContext)
-  : Future[Option[Either[ErrorModel, BusinessSubscriptionSuccessResponseModel]]] = {
+  private def businessSubscription(request: FERequest)
+                                  (implicit hc: HeaderCarrier,
+                                   ec: ExecutionContext): Future[Option[Either[ErrorModel, BusinessSubscriptionSuccessResponseModel]]] = {
     request.incomeSource match {
       case Both | Business => subscriptionService.businessSubscribe(request) map {
         case Right(success) => Some(success)
@@ -116,8 +89,9 @@ class RosmAndEnrolManagerService @Inject()
     }
   }
 
-  private def propertySubscription(request: FERequest)(implicit hc: HeaderCarrier, ec: ExecutionContext)
-  : Future[Option[Either[ErrorModel, PropertySubscriptionResponseModel]]] = {
+  private def propertySubscription(request: FERequest)
+                                  (implicit hc: HeaderCarrier,
+                                   ec: ExecutionContext): Future[Option[Either[ErrorModel, PropertySubscriptionResponseModel]]] = {
     request.incomeSource match {
       case Both | Property => subscriptionService.propertySubscribe(request) map {
         case Right(success) => Some(success)
