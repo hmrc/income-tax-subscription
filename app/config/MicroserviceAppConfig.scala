@@ -16,9 +16,9 @@
 
 package config
 
-import javax.inject.{Inject, Singleton}
 import config.featureswitch.FeatureSwitching
-import play.api.{Application, Configuration}
+import javax.inject.{Inject, Singleton}
+import play.api.Configuration
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
 
@@ -27,14 +27,18 @@ trait AppConfig {
   val ggURL: String
   val ggAdminURL: String
   val ggAuthenticationURL: String
+
   def desURL: String
+
   val desEnvironment: String
   val desToken: String
   val paperlessPreferencesExpirySeconds: Int
+  val desAuthorisationToken: String
+  val desEnvironmentHeader: (String, String)
 }
 
 @Singleton
-class MicroserviceAppConfig @Inject()(val configuration: Configuration, servicesConfig:ServicesConfig) extends AppConfig with FeatureSwitching {
+class MicroserviceAppConfig @Inject()(val configuration: Configuration, servicesConfig: ServicesConfig) extends AppConfig with FeatureSwitching {
 
   private def loadConfig(key: String) = configuration.getString(key).getOrElse(throw new Exception(s"Missing configuration key: $key"))
 
@@ -49,6 +53,11 @@ class MicroserviceAppConfig @Inject()(val configuration: Configuration, services
 
   override def desURL: String = loadConfig(s"$desBase.url")
 
+  lazy val desAuthorisationToken: String = s"Bearer ${loadConfig(s"$desBase.authorization-token")}"
+
+  lazy val desEnvironmentHeader: (String, String) =
+    "Environment" -> loadConfig(s"$desBase.environment")
+
   override lazy val desEnvironment = loadConfig(s"$desBase.environment")
   override lazy val desToken = loadConfig(s"$desBase.authorization-token")
   override val paperlessPreferencesExpirySeconds: Int = {
@@ -57,5 +66,5 @@ class MicroserviceAppConfig @Inject()(val configuration: Configuration, services
       .getOrElse(throw new Exception(s"Missing configuration key: $key"))
   }
 
-   protected def runModeConfiguration: Configuration = configuration
+  protected def runModeConfiguration: Configuration = configuration
 }

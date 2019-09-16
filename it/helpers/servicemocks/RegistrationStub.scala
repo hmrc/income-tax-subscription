@@ -22,17 +22,24 @@ import helpers.IntegrationTestConstants._
 import models.registration.RegistrationSuccessResponseModel
 import models.registration.NewRegistrationFailureResponseModel
 import play.api.http.Status._
+import play.api.libs.json.Writes
 
 object RegistrationStub extends WireMockMethods {
   val successfulRegistrationResponse: RegistrationSuccessResponseModel = RegistrationSuccessResponseModel(testMtditId)
   val failedRegistrationResponse: NewRegistrationFailureResponseModel = NewRegistrationFailureResponseModel(Some("BAD_REQUEST"), testErrorReason)
 
+  def stubRegistration[T](nino: String, isAnAgent: Boolean)(responseStatus: Int, responseBody: T)(implicit writes: Writes[T]): StubMapping = {
+    when(method = POST, uri = RegistrationConnector.registrationUrl(testNino), body = RegistrationConnector.registerRequestBody(isAnAgent))
+      .thenReturn(status = responseStatus, body = responseBody)
+  }
 
+  @Deprecated
   def stubNewRegistrationSuccess(): StubMapping =
-    when(method = POST, uri = RegistrationConnector.newRegistrationUri(testNino), body = registerRequestPayload)
+    when(method = POST, uri = connectors.deprecated.RegistrationConnector.newRegistrationUri(testNino), body = registerRequestPayload)
       .thenReturn(status = OK, body = successfulRegistrationResponse)
 
+  @Deprecated
   def stubNewRegistrationFailure(): StubMapping =
-    when(method = POST, uri = RegistrationConnector.newRegistrationUri(testNino), body = registerRequestPayload)
+    when(method = POST, uri = connectors.deprecated.RegistrationConnector.newRegistrationUri(testNino), body = registerRequestPayload)
       .thenReturn(status = BAD_REQUEST, body = failedRegistrationResponse)
 }
