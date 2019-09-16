@@ -18,7 +18,7 @@ package connectors.mocks
 
 import audit.Logging
 import config.AppConfig
-import connectors.{GetRegistrationUtil, NewRegistrationUtil, RegistrationConnector}
+import connectors.deprecated.{GetRegistrationUtil, NewRegistrationUtil, RegistrationConnector}
 import models.registration.{RegistrationRequestModel, RegistrationSuccessResponseModel}
 import org.mockito.ArgumentMatchers
 import org.mockito.Mockito._

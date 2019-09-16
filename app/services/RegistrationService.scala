@@ -17,9 +17,8 @@
 package services
 
 import javax.inject.{Inject, Singleton}
-
 import audit.{Logging, LoggingConfig}
-import connectors.RegistrationConnector
+import connectors.deprecated.RegistrationConnector
 import models.ErrorModel
 import models.registration.{RegistrationRequestModel, RegistrationSuccessResponseModel}
 import play.api.http.Status.CONFLICT

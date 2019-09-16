@@ -16,11 +16,10 @@
 
 package connectors
 
-import javax.inject.Inject
-
 import audit.{Logging, LoggingConfig}
 import config.AppConfig
 import connectors.utils.ConnectorUtils
+import javax.inject.Inject
 import models.ErrorModel
 import models.registration.{GetBusinessDetailsFailureResponseModel, GetBusinessDetailsSuccessResponseModel}
 import play.api.http.Status._
@@ -51,7 +50,7 @@ class BusinessDetailsConnector @Inject()(appConfig: AppConfig,
   def getBusinessDetails(nino: String)(implicit hc: HeaderCarrier): Future[GetBusinessDetailsUtil.Response] = {
     import BusinessDetailsConnector.auditGetBusinessDetails
     import GetBusinessDetailsUtil._
-    implicit val loggingConfig = RegistrationConnector.getRegistrationLoggingConfig
+    implicit val loggingConfig = connectors.deprecated.RegistrationConnector.getRegistrationLoggingConfig
     lazy val requestDetails: Map[String, String] = Map("nino" -> nino)
     val updatedHc = createHeaderCarrierGet(hc)
     logging.debug(s"Request:\n$requestDetails\n\nRequest Headers:\n$updatedHc")
