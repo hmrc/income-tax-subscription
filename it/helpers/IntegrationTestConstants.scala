@@ -16,14 +16,15 @@
 
 package helpers
 
-import java.time.{Instant, OffsetDateTime, ZoneId}
+import java.time.{Instant, LocalDate, OffsetDateTime, ZoneId}
 import java.util.UUID
 
 import models.digitalcontact.PaperlessPreferenceKey
 import models.frontend.{Both, Business, FERequest, Property}
 import models.lockout.LockoutRequest
 import models.registration.RegistrationRequestModel
-import models.subscription.business.{BusinessDetailsModel, BusinessSubscriptionRequestModel}
+import models.subscription.business.{BusinessDetailsModel, BusinessSubscriptionRequestModel, Cash, CashOrAccruals}
+import models.subscription.incomesource.{AccountingPeriod, BusinessIncomeModel, PropertyIncomeModel}
 import models.{DateModel, ErrorModel}
 import play.api.http.Status._
 import play.api.libs.json.JsValue
@@ -41,6 +42,10 @@ object IntegrationTestConstants {
   lazy val testErrorReason = "Error Reason"
   lazy val requestUri = "/"
   lazy val testPreferencesToken: String = s"${UUID.randomUUID()}"
+  lazy val testTradingName: String = UUID.randomUUID().toString
+  lazy val testStartDate: DateModel = LocalDate.now()
+  lazy val testEndDate: DateModel = LocalDate.now().plusDays(2)
+  lazy val testAccountingPeriod: AccountingPeriod = AccountingPeriod(testStartDate, testEndDate)
 
   val INVALID_NINO_MODEL = ErrorModel(BAD_REQUEST, "INVALID_NINO", "Submission has not passed validation. Invalid parameter NINO.")
   val INVALID_PAYLOAD_MODEL = ErrorModel(BAD_REQUEST, "INVALID_PAYLOAD", "Submission has not passed validation. Invalid PAYLOAD.")
@@ -59,6 +64,16 @@ object IntegrationTestConstants {
   val CONFLICT_ERROR = (CONFLICT, failureResponse(CONFLICT_ERROR_MODEL.code.get, CONFLICT_ERROR_MODEL.reason))
 
   def offsetDateTime: OffsetDateTime = OffsetDateTime.ofInstant(Instant.now, ZoneId.systemDefault())
+
+  val testBusinessIncomeModel = BusinessIncomeModel(
+    tradingName = Some(testTradingName),
+    accountingPeriod = testAccountingPeriod,
+    accountingMethod = Cash
+  )
+
+  val testPropertyIncomeModel = PropertyIncomeModel(
+    cashOrAccruals = Cash
+  )
 
   val lockoutRequest = LockoutRequest(
     timeoutSeconds = 10
