@@ -36,7 +36,7 @@ object rosmAndEnrol {
       "acccountingPeriodStartDate" -> fERequest.accountingPeriodStart.fold("-")(x => x.toDesDateFormat),
       "acccountingPeriodEndDate" -> fERequest.accountingPeriodEnd.fold("-")(x => x.toDesDateFormat),
       "tradingName" -> fERequest.tradingName.fold("-")(identity),
-      "cashOrAccruals" -> fERequest.cashOrAccruals.fold("-")(x => x.toLowerCase),
+      "cashOrAccruals" -> fERequest.cashOrAccruals.fold("-")(x => x.stringValue.toLowerCase),
       "Authorization" -> urlHeaderAuthorization
     )
 

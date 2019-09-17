@@ -19,46 +19,37 @@ package models.subscription.business
 import play.api.libs.json._
 
 
-sealed trait CashOrAccruals {
-  def cashOrAccruals: String
+sealed trait AccountingMethod {
+  val stringValue: String
 }
 
-case object Cash extends CashOrAccruals {
-  override val cashOrAccruals = "cash"
+case object Cash extends AccountingMethod {
+  override val stringValue = "cash"
 }
 
-case object Accruals extends CashOrAccruals {
-  override val cashOrAccruals = "accruals"
+case object Accruals extends AccountingMethod {
+  override val stringValue = "accruals"
 }
 
-object CashOrAccruals {
-  val feCash = "Cash"
-  val feAccruals = "Accruals"
+object AccountingMethod {
 
-  private val reader: Reads[CashOrAccruals] = __.read[String].map {
-    case `feCash` | Cash.cashOrAccruals => Cash
-    case `feAccruals` | Accruals.cashOrAccruals => Accruals
+  private val reader: Reads[AccountingMethod] = __.read[String].map {
+    case Cash.stringValue => Cash
+    case Accruals.stringValue => Accruals
   }
 
-  private val writer: Writes[CashOrAccruals] = Writes[CashOrAccruals](cashOrAccruals =>
-    JsString(cashOrAccruals.cashOrAccruals)
+  private val writer: Writes[AccountingMethod] = Writes[AccountingMethod](cashOrAccruals =>
+    JsString(cashOrAccruals.stringValue)
   )
 
-  implicit val format: Format[CashOrAccruals] = Format(reader, writer)
-
-  implicit def convert(str: String): CashOrAccruals = str match {
-    case `feCash` | Cash.cashOrAccruals => Cash
-    case `feAccruals` | Accruals.cashOrAccruals => Accruals
-  }
+  implicit val format: Format[AccountingMethod] = Format(reader, writer)
 }
 
-case class BusinessDetailsModel
-(
-  accountingPeriodStartDate: String,
-  accountingPeriodEndDate: String,
-  tradingName: String,
-  cashOrAccruals: CashOrAccruals
-)
+case class BusinessDetailsModel(accountingPeriodStartDate: String,
+                                accountingPeriodEndDate: String,
+                                tradingName: String,
+                                cashOrAccruals: AccountingMethod
+                               )
 
 object BusinessDetailsModel {
   implicit val format: Format[BusinessDetailsModel] = Json.format[BusinessDetailsModel]

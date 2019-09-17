@@ -17,14 +17,12 @@
 package models.incomesource
 
 import models.DateModel
-import models.subscription.business.CashOrAccruals
-import models.subscription.incomesource.{AccountingPeriod, BusinessIncomeModel, IncomeSource, PropertyIncomeModel}
+import models.subscription.business.Cash
+import models.subscription.incomesource.{AccountingPeriod, BusinessIncomeModel, SignUpRequest, PropertyIncomeModel}
 import play.api.libs.json.Json
 import uk.gov.hmrc.play.test.UnitSpec
 
-import scala.util.parsing.json.JSONObject
-
-class IncomeSourceSpec extends UnitSpec {
+class SignUpRequestSpec extends UnitSpec {
   "Creating a model for a subscription request" should {
 
     val testNino = "nino"
@@ -37,11 +35,13 @@ class IncomeSourceSpec extends UnitSpec {
     val endMonth = "6"
     val endYear = "2019"
 
-    val businessIncome = BusinessIncomeModel(Some(testTradingName),
-      AccountingPeriod(startDate = DateModel(startDay, startMonth, startYear), endDate = DateModel(endDay, endMonth, endYear)),
-      CashOrAccruals.feCash)
+    val businessIncome = BusinessIncomeModel(
+      tradingName = Some(testTradingName),
+      accountingPeriod = AccountingPeriod(startDate = DateModel(startDay, startMonth, startYear), endDate = DateModel(endDay, endMonth, endYear)),
+      accountingMethod = Cash
+    )
 
-    def incomeSource(testArn: Option[String] = None) = IncomeSource(testNino, testArn, Some(businessIncome), Some(PropertyIncomeModel(None)))
+    def incomeSource(testArn: Option[String] = None) = SignUpRequest(testNino, testArn, Some(businessIncome), Some(PropertyIncomeModel(None)))
 
     def testJson(testArn: Option[String] = None) = Json.obj(
       "nino" -> testNino,
@@ -71,14 +71,14 @@ class IncomeSourceSpec extends UnitSpec {
     "convert from json" when {
 
       "an arn is present" in {
-        val result = testJson(Some(testArn)).as[IncomeSource]
+        val result = testJson(Some(testArn)).as[SignUpRequest]
 
         result shouldBe incomeSource(Some(testArn))
         result.isAgent shouldBe true
       }
 
       "an arn is not present" in {
-        val result = testJson().as[IncomeSource]
+        val result = testJson().as[SignUpRequest]
 
         result shouldBe incomeSource()
         result.isAgent shouldBe false

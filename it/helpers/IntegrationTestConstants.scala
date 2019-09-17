@@ -23,7 +23,7 @@ import models.digitalcontact.PaperlessPreferenceKey
 import models.frontend.{Both, Business, FERequest, Property}
 import models.lockout.LockoutRequest
 import models.registration.RegistrationRequestModel
-import models.subscription.business.{BusinessDetailsModel, BusinessSubscriptionRequestModel, Cash, CashOrAccruals}
+import models.subscription.business.{BusinessDetailsModel, BusinessSubscriptionRequestModel, Cash}
 import models.subscription.incomesource.{AccountingPeriod, BusinessIncomeModel, PropertyIncomeModel}
 import models.{DateModel, ErrorModel}
 import play.api.http.Status._
@@ -72,7 +72,7 @@ object IntegrationTestConstants {
   )
 
   val testPropertyIncomeModel = PropertyIncomeModel(
-    cashOrAccruals = Cash
+    accountingMethod = Cash
   )
 
   val lockoutRequest = LockoutRequest(
@@ -92,7 +92,7 @@ object IntegrationTestConstants {
     accountingPeriodStart = DateModel("01", "05", "2017"),
     accountingPeriodEnd = DateModel("30", "04", "2018"),
     tradingName = "Test Business",
-    cashOrAccruals = "cash"
+    cashOrAccruals = Cash
   )
 
   val feBothRequest = FERequest(
@@ -102,7 +102,7 @@ object IntegrationTestConstants {
     accountingPeriodStart = DateModel("01", "05", "2017"),
     accountingPeriodEnd = DateModel("30", "04", "2018"),
     tradingName = "Test Business",
-    cashOrAccruals = "cash"
+    cashOrAccruals = Cash
   )
 
   val businessSubscriptionRequestPayload = BusinessSubscriptionRequestModel(
@@ -110,7 +110,7 @@ object IntegrationTestConstants {
       accountingPeriodStartDate = "2017-05-01",
       accountingPeriodEndDate = "2018-04-30",
       tradingName = "Test Business",
-      cashOrAccruals = "cash"
+      cashOrAccruals = Cash
     ))
   )
 

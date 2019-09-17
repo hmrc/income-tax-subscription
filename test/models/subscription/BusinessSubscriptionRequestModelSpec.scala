@@ -16,7 +16,7 @@
 
 package models.subscription
 
-import models.subscription.business.{BusinessDetailsModel, BusinessSubscriptionRequestModel, Cash, CashOrAccruals}
+import models.subscription.business.{BusinessDetailsModel, BusinessSubscriptionRequestModel, Cash, AccountingMethod}
 import uk.gov.hmrc.play.test.UnitSpec
 import utils.JsonUtils._
 import utils.Resources
@@ -28,7 +28,7 @@ class BusinessSubscriptionRequestModelSpec extends UnitSpec {
       accountingPeriodStartDate = "2017-04-01",
       accountingPeriodEndDate = "2018-03-30",
       tradingName = "Test Business",
-      cashOrAccruals = CashOrAccruals.feCash
+      cashOrAccruals = Cash
     )
     val model = BusinessSubscriptionRequestModel(List(businessDetailsModel))
 

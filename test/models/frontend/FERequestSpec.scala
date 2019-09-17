@@ -16,9 +16,7 @@
 
 package models.frontend
 
-import models.frontend
-import models.frontend.{FERequest, _}
-import play.api.libs.json.{JsError, JsValue, Json}
+import play.api.libs.json.{JsValue, Json}
 import uk.gov.hmrc.play.test.UnitSpec
 import utils.JsonUtils._
 import utils.TestConstants
