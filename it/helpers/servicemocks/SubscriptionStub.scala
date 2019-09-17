@@ -17,8 +17,8 @@
 package helpers.servicemocks
 
 import com.github.tomakehurst.wiremock.stubbing.StubMapping
-import connectors.SubscriptionConnector
-import connectors.SubscriptionConnector._
+import connectors.deprecated.SubscriptionConnector._
+import connectors.deprecated.SubscriptionConnector
 import models.subscription.IncomeSourceModel
 import models.subscription.business._
 import helpers.IntegrationTestConstants._

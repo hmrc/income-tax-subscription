@@ -17,7 +17,7 @@
 package connectors.mocks
 
 import config.AppConfig
-import connectors.{BusinessConnectorUtil, PropertyConnectorUtil, SubscriptionConnector}
+import connectors.deprecated.{BusinessConnectorUtil, PropertyConnectorUtil, SubscriptionConnector}
 import models.subscription.business.BusinessSubscriptionRequestModel
 import org.mockito.ArgumentMatchers
 import org.mockito.Mockito._

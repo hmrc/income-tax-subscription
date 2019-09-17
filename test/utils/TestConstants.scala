@@ -348,7 +348,7 @@ object TestConstants {
     arn = None,
     businessIncome = None,
     propertyIncome = Some(PropertyIncomeModel(
-      accountingMethod = Cash
+      accountingMethod = Some(Cash)
     ))
   )
 
@@ -361,7 +361,7 @@ object TestConstants {
       accountingMethod = Cash
     )),
     propertyIncome = Some(PropertyIncomeModel(
-      accountingMethod = Cash
+      accountingMethod = Some(Cash)
     ))
   )
 
