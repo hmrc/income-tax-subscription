@@ -16,9 +16,9 @@
 
 package connectors.mocks
 
-import audit.Logging
+import audit._
 import config.AppConfig
-import connectors.{BusinessConnectorUtil, PropertyConnectorUtil, SubscriptionConnector}
+import connectors.deprecated.{BusinessConnectorUtil, PropertyConnectorUtil, SubscriptionConnector}
 import models.subscription.business.BusinessSubscriptionRequestModel
 import org.mockito.ArgumentMatchers
 import org.mockito.Mockito._
@@ -26,7 +26,7 @@ import org.scalatest.mockito.MockitoSugar
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.http.Status._
 import play.api.libs.json.JsValue
-import uk.gov.hmrc.http.{HeaderCarrier, HttpPost}
+import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
 import utils.JsonUtils._
 import utils.TestConstants.{BusinessSubscriptionResponse, PropertySubscriptionResponse, _}

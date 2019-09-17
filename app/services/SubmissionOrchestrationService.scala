@@ -19,6 +19,7 @@ package services
 import connectors.{BusinessConnector, PropertyConnector, RegistrationConnector}
 import javax.inject.{Inject, Singleton}
 import models.subscription.incomesource.SignUpRequest
+import play.api.libs.json.Json
 import services.SubmissionOrchestrationService.{NoSubmissionNeeded, _}
 import uk.gov.hmrc.http.{HeaderCarrier, InternalServerException}
 
@@ -58,5 +59,9 @@ object SubmissionOrchestrationService {
   case object NoSubmissionNeeded
 
   case class SuccessfulSubmission(mtditId: String)
+
+  object SuccessfulSubmission {
+    implicit val format = Json.format[SuccessfulSubmission]
+  }
 
 }

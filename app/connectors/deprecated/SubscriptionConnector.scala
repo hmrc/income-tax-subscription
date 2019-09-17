@@ -14,15 +14,15 @@
  * limitations under the License.
  */
 
-package connectors
-
-import javax.inject.Inject
+package connectors.deprecated
 
 import audit.Logging._
 import audit.{Logging, LoggingConfig}
 import config.AppConfig
-import connectors.SubscriptionConnector._
+import connectors.RawResponseReads
+import connectors.deprecated.SubscriptionConnector._
 import connectors.utils.ConnectorUtils
+import javax.inject.Inject
 import models.ErrorModel
 import models.subscription.business._
 import models.subscription.property.{PropertySubscriptionFailureModel, PropertySubscriptionResponseModel}

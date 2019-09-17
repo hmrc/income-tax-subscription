@@ -17,9 +17,8 @@
 package services
 
 import javax.inject.{Inject, Singleton}
-
 import audit.{Logging, LoggingConfig}
-import connectors.SubscriptionConnector
+import connectors.deprecated.SubscriptionConnector
 import models.ErrorModel
 import models.frontend.FERequest
 import models.subscription.business.{BusinessDetailsModel, BusinessSubscriptionRequestModel, BusinessSubscriptionSuccessResponseModel}
