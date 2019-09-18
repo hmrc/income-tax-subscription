@@ -16,7 +16,7 @@
 
 package utils
 
-import java.time.{Instant, OffsetDateTime, ZoneId}
+import java.time.{Instant, LocalDate, OffsetDateTime, ZoneId}
 import java.util.UUID
 
 import models.digitalcontact.PaperlessPreferenceKey
@@ -26,7 +26,8 @@ import models.matching.LockoutResponse
 import models.frontend._
 import models.registration.RegistrationRequestModel
 import models.subscription.IncomeSourceModel
-import models.subscription.business.{BusinessDetailsModel, BusinessSubscriptionRequestModel, BusinessSubscriptionSuccessResponseModel}
+import models.subscription.business.{BusinessDetailsModel, BusinessSubscriptionRequestModel, BusinessSubscriptionSuccessResponseModel, Cash}
+import models.subscription.incomesource.{AccountingPeriod, BusinessIncomeModel, SignUpRequest, PropertyIncomeModel}
 import models.subscription.property.PropertySubscriptionResponseModel
 import models.{DateModel, ErrorModel}
 import play.api.http.Status._
@@ -85,7 +86,7 @@ object TestConstants {
     accountingPeriodStart = DateModel("01", "05", "2017"),
     accountingPeriodEnd = DateModel("30", "04", "2018"),
     tradingName = "Test Business",
-    cashOrAccruals = "cash"
+    cashOrAccruals = Cash
   )
 
   val feBothRequest = FERequest(
@@ -95,7 +96,7 @@ object TestConstants {
     accountingPeriodStart = DateModel("01", "05", "2017"),
     accountingPeriodEnd = DateModel("30", "04", "2018"),
     tradingName = "Test Business",
-    cashOrAccruals = "cash"
+    cashOrAccruals = Cash
   )
 
   val businessSubscriptionRequestPayload = BusinessSubscriptionRequestModel(
@@ -103,7 +104,7 @@ object TestConstants {
       accountingPeriodStartDate = "2017-05-01",
       accountingPeriodEndDate = "2018-04-30",
       tradingName = "Test Business",
-      cashOrAccruals = "cash"
+      cashOrAccruals = Cash
     ))
   )
 
@@ -326,4 +327,42 @@ object TestConstants {
   val feSuccessResponse = FESuccessResponse(Some(testMtditId))
 
   val testPaperlessPreferenceKey = PaperlessPreferenceKey(testPreferencesToken, testNino)
+
+  val testStartDate = LocalDate.now()
+
+  val testEndDate = LocalDate.now().plusDays(1)
+
+  val testBusinessIncomeSourceModel = SignUpRequest(
+    nino = testNino,
+    arn = None,
+    businessIncome = Some(BusinessIncomeModel(
+      tradingName = None,
+      accountingPeriod = AccountingPeriod(testStartDate, testEndDate),
+      accountingMethod = Cash
+    )),
+    propertyIncome = None
+  )
+
+  val testPropertyIncomeSourceModel = SignUpRequest(
+    nino = testNino,
+    arn = None,
+    businessIncome = None,
+    propertyIncome = Some(PropertyIncomeModel(
+      accountingMethod = Cash
+    ))
+  )
+
+  val testBothIncomeSourceModel = SignUpRequest(
+    nino = testNino,
+    arn = None,
+    businessIncome = Some(BusinessIncomeModel(
+      tradingName = None,
+      accountingPeriod = AccountingPeriod(testStartDate, testEndDate),
+      accountingMethod = Cash
+    )),
+    propertyIncome = Some(PropertyIncomeModel(
+      accountingMethod = Cash
+    ))
+  )
+
 }

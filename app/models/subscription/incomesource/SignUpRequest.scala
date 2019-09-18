@@ -17,28 +17,29 @@
 package models.subscription.incomesource
 
 import models.DateModel
-import models.subscription.business.CashOrAccruals
+import models.subscription.business.AccountingMethod
 import play.api.libs.json.{Json, OFormat}
 
-case class IncomeSource(nino: String,
-                        arn: Option[String],
-                        businessIncome: Option[BusinessIncomeModel],
-                        propertyIncome: Option[PropertyIncomeModel]) {
+case class SignUpRequest(nino: String,
+                         arn: Option[String],
+                         businessIncome: Option[BusinessIncomeModel],
+                         propertyIncome: Option[PropertyIncomeModel]
+                        ) {
 
   val isAgent: Boolean = arn.isDefined
 }
 
 case class BusinessIncomeModel(tradingName: Option[String],
                                accountingPeriod: AccountingPeriod,
-                               accountingMethod: CashOrAccruals)
+                               accountingMethod: AccountingMethod)
 
-case class PropertyIncomeModel(cashOrAccruals: Option[CashOrAccruals]) //TODO change to non option when cash and accruals has been added to property
+case class PropertyIncomeModel(accountingMethod: Option[AccountingMethod]) //TODO change to non option when cash and accruals has been added to property
 
 
 case class AccountingPeriod(startDate: DateModel, endDate: DateModel)
 
-object IncomeSource {
-  implicit val format: OFormat[IncomeSource] = Json.format[IncomeSource]
+object SignUpRequest {
+  implicit val format: OFormat[SignUpRequest] = Json.format[SignUpRequest]
 }
 
 object BusinessIncomeModel {

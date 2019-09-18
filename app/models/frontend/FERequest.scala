@@ -17,21 +17,19 @@
 package models.frontend
 
 import models.DateModel
-import play.api.data.validation.ValidationError
+import models.subscription.business.AccountingMethod
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
 
-case class FERequest
-(
-  nino: String,
-  incomeSource: IncomeSourceType,
-  isAgent: Boolean = false,
-  arn: Option[String] = None,
-  accountingPeriodStart: Option[DateModel] = None,
-  accountingPeriodEnd: Option[DateModel] = None,
-  tradingName: Option[String] = None,
-  cashOrAccruals: Option[String] = None
-)
+case class FERequest(nino: String,
+                     incomeSource: IncomeSourceType,
+                     isAgent: Boolean = false,
+                     arn: Option[String] = None,
+                     accountingPeriodStart: Option[DateModel] = None,
+                     accountingPeriodEnd: Option[DateModel] = None,
+                     tradingName: Option[String] = None,
+                     cashOrAccruals: Option[AccountingMethod] = None
+                    )
 
 object FERequest {
 
@@ -44,7 +42,7 @@ object FERequest {
       (JsPath \ "accountingPeriodStart").readNullable[DateModel] and
       (JsPath \ "accountingPeriodEnd").readNullable[DateModel] and
       (JsPath \ "tradingName").readNullable[String] and
-      (JsPath \ "cashOrAccruals").readNullable[String]
+      (JsPath \ "cashOrAccruals").readNullable[AccountingMethod]
     ) (FERequest.apply _)
 
   val writes: OWrites[FERequest] = Json.writes[FERequest]

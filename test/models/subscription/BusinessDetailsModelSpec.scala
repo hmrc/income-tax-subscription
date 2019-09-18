@@ -16,7 +16,7 @@
 
 package models.subscription
 
-import models.subscription.business.{BusinessDetailsModel, Cash, CashOrAccruals}
+import models.subscription.business.{BusinessDetailsModel, Cash, AccountingMethod}
 import uk.gov.hmrc.play.test.UnitSpec
 
 class BusinessDetailsModelSpec extends UnitSpec {
@@ -26,7 +26,7 @@ class BusinessDetailsModelSpec extends UnitSpec {
       accountingPeriodStartDate = "2017-04-01",
       accountingPeriodEndDate = "2018-03-30",
       tradingName = "Test Business",
-      cashOrAccruals = CashOrAccruals.feCash
+      cashOrAccruals = Cash
     )
 
     "Accounting Period Start Date should be '2017-04-01'" in {
