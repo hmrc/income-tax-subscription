@@ -92,7 +92,7 @@ object IntegrationTestConstants {
     accountingPeriodStart = DateModel("01", "05", "2017"),
     accountingPeriodEnd = DateModel("30", "04", "2018"),
     tradingName = "Test Business",
-    cashOrAccruals = Cash
+    cashOrAccruals = Some("Cash")
   )
 
   val feBothRequest = FERequest(
@@ -102,7 +102,7 @@ object IntegrationTestConstants {
     accountingPeriodStart = DateModel("01", "05", "2017"),
     accountingPeriodEnd = DateModel("30", "04", "2018"),
     tradingName = "Test Business",
-    cashOrAccruals = Cash
+    cashOrAccruals = Some("Cash")
   )
 
   val businessSubscriptionRequestPayload = BusinessSubscriptionRequestModel(

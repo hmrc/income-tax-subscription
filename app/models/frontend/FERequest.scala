@@ -17,7 +17,6 @@
 package models.frontend
 
 import models.DateModel
-import models.subscription.business.AccountingMethod
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
 
@@ -28,7 +27,7 @@ case class FERequest(nino: String,
                      accountingPeriodStart: Option[DateModel] = None,
                      accountingPeriodEnd: Option[DateModel] = None,
                      tradingName: Option[String] = None,
-                     cashOrAccruals: Option[AccountingMethod] = None
+                     cashOrAccruals: Option[String] = None
                     )
 
 object FERequest {
@@ -42,7 +41,7 @@ object FERequest {
       (JsPath \ "accountingPeriodStart").readNullable[DateModel] and
       (JsPath \ "accountingPeriodEnd").readNullable[DateModel] and
       (JsPath \ "tradingName").readNullable[String] and
-      (JsPath \ "cashOrAccruals").readNullable[AccountingMethod]
+      (JsPath \ "cashOrAccruals").readNullable[String]
     ) (FERequest.apply _)
 
   val writes: OWrites[FERequest] = Json.writes[FERequest]

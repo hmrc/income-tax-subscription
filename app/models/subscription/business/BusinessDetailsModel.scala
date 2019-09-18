@@ -32,10 +32,12 @@ case object Accruals extends AccountingMethod {
 }
 
 object AccountingMethod {
+  val feCash = "Cash"
+  val feAccruals = "Accruals"
 
   private val reader: Reads[AccountingMethod] = __.read[String].map {
-    case Cash.stringValue => Cash
-    case Accruals.stringValue => Accruals
+    case `feCash` | Cash.stringValue => Cash
+    case `feAccruals` | Accruals.stringValue => Accruals
   }
 
   private val writer: Writes[AccountingMethod] = Writes[AccountingMethod](cashOrAccruals =>
@@ -43,6 +45,11 @@ object AccountingMethod {
   )
 
   implicit val format: Format[AccountingMethod] = Format(reader, writer)
+
+  implicit def convert(str: String): AccountingMethod = str match {
+    case `feCash` | Cash.stringValue => Cash
+    case `feAccruals` | Accruals.stringValue => Accruals
+  }
 }
 
 case class BusinessDetailsModel(accountingPeriodStartDate: String,
