@@ -19,21 +19,20 @@ package connectors
 import config.MicroserviceAppConfig
 import javax.inject.{Inject, Singleton}
 import models.subscription.incomesource.BusinessIncomeModel
+import parsers.MtditIdParser.MtditIdHttpReads
 import play.api.libs.json.Writes
-import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.http.HttpReads.readRaw
 import uk.gov.hmrc.http.logging.Authorization
+import uk.gov.hmrc.http.{HeaderCarrier, HttpReads}
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
 
-import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class BusinessConnector @Inject()(val http: HttpClient,
-                                  val appConfig: MicroserviceAppConfig) {
+                                  val appConfig: MicroserviceAppConfig)(implicit ec: ExecutionContext) {
 
   def businessSubscribe(nino: String, businessIncomeModel: BusinessIncomeModel)
-                       (implicit hc: HeaderCarrier): Future[BusinessIncomeSubscriptionSuccess.type] = {
+                       (implicit hc: HeaderCarrier): Future[String] = {
 
     val headerCarrier = hc
       .withExtraHeaders("Environment" -> appConfig.desEnvironment)
@@ -44,11 +43,9 @@ class BusinessConnector @Inject()(val http: HttpClient,
       body = businessIncomeModel
     )(
       implicitly[Writes[BusinessIncomeModel]],
-      readRaw,
+      implicitly[HttpReads[String]],
       headerCarrier,
       implicitly[ExecutionContext]
-    ) map (_ => BusinessIncomeSubscriptionSuccess)
+    )
   }
 }
-
-case object BusinessIncomeSubscriptionSuccess

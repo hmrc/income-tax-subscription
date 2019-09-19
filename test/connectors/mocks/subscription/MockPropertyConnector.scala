@@ -16,7 +16,8 @@
 
 package connectors.mocks.subscription
 
-import connectors.{PropertyConnector, PropertyIncomeSubscriptionSuccess}
+import connectors.PropertyConnector
+import models.subscription.incomesource.PropertyIncomeModel
 import org.mockito.ArgumentMatchers
 import org.mockito.Mockito.when
 import org.scalatest.mockito.MockitoSugar
@@ -28,10 +29,10 @@ trait MockPropertyConnector extends MockitoSugar {
 
   val mockPropertyConnector: PropertyConnector = mock[PropertyConnector]
 
-  def mockPropertySubscribe(nino: String)
-                           (response: Future[PropertyIncomeSubscriptionSuccess.type])
+  def mockPropertySubscribe(nino: String, propertyIncomeModel: PropertyIncomeModel)
+                           (response: Future[String])
                            (implicit hc: HeaderCarrier): Unit = {
-    when(mockPropertyConnector.propertySubscribe(ArgumentMatchers.eq(nino))(ArgumentMatchers.any[HeaderCarrier]))
+    when(mockPropertyConnector.propertySubscribe(ArgumentMatchers.eq(nino), ArgumentMatchers.eq(propertyIncomeModel))(ArgumentMatchers.any[HeaderCarrier]))
       .thenReturn(response)
   }
 

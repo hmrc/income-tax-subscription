@@ -41,7 +41,11 @@ class SignUpRequestSpec extends UnitSpec {
       accountingMethod = Cash
     )
 
-    def incomeSource(testArn: Option[String] = None) = SignUpRequest(testNino, testArn, Some(businessIncome), Some(PropertyIncomeModel(None)))
+    val propertyIncome = PropertyIncomeModel(
+      accountingMethod = Some(Cash)
+    )
+
+    def incomeSource(testArn: Option[String] = None) = SignUpRequest(testNino, testArn, Some(businessIncome), Some(propertyIncome))
 
     def testJson(testArn: Option[String] = None) = Json.obj(
       "nino" -> testNino,
@@ -61,7 +65,9 @@ class SignUpRequestSpec extends UnitSpec {
         ),
         "accountingMethod" -> "cash"
       ),
-      "propertyIncome" -> Json.obj()
+      "propertyIncome" -> Json.obj(
+        "accountingMethod" -> "cash"
+      )
     ) ++ testArn.fold(Json.obj())(arn => Json.obj("arn" -> arn))
 
     "convert to the correct Json" in {

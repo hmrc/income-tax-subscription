@@ -17,22 +17,22 @@
 package connectors
 
 import config.MicroserviceAppConfig
+import parsers.MtditIdParser.MtditIdHttpReads
 import javax.inject.{Inject, Singleton}
-import play.api.libs.json.{JsObject, Json, Writes}
-import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.http.HttpReads.readRaw
+import models.subscription.incomesource.PropertyIncomeModel
+import play.api.libs.json.Writes
 import uk.gov.hmrc.http.logging.Authorization
+import uk.gov.hmrc.http.{HeaderCarrier, HttpReads}
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
 
-import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class PropertyConnector @Inject()(val http: HttpClient,
-                                  val appConfig: MicroserviceAppConfig) {
+                                  val appConfig: MicroserviceAppConfig)(implicit ec: ExecutionContext) {
 
-  def propertySubscribe(nino: String)
-                       (implicit hc: HeaderCarrier): Future[PropertyIncomeSubscriptionSuccess.type] = {
+  def propertySubscribe(nino: String, propertyIncomeModel: PropertyIncomeModel)
+                       (implicit hc: HeaderCarrier): Future[String] = {
 
     val headerCarrier = hc
       .withExtraHeaders("Environment" -> appConfig.desEnvironment)
@@ -40,15 +40,12 @@ class PropertyConnector @Inject()(val http: HttpClient,
 
     http.POST(
       url = appConfig.propertySubscribeUrl(nino),
-      body = Json.obj()
+      body = propertyIncomeModel
     )(
-      implicitly[Writes[JsObject]],
-      readRaw,
+      implicitly[Writes[PropertyIncomeModel]],
+      implicitly[HttpReads[String]],
       headerCarrier,
       implicitly[ExecutionContext]
-    ) map (_ => PropertyIncomeSubscriptionSuccess)
+    )
   }
 }
-
-case object PropertyIncomeSubscriptionSuccess
-
