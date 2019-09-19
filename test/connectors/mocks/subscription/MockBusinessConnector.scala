@@ -16,7 +16,7 @@
 
 package connectors.mocks.subscription
 
-import connectors.{BusinessConnector, BusinessIncomeSubscriptionSuccess}
+import connectors.BusinessConnector
 import models.subscription.incomesource.BusinessIncomeModel
 import org.mockito.ArgumentMatchers
 import org.mockito.Mockito.when
@@ -30,7 +30,7 @@ trait MockBusinessConnector extends MockitoSugar {
   val mockBusinessConnector: BusinessConnector = mock[BusinessConnector]
 
   def mockBusinessSubscribe(nino: String, businessIncomeModel: BusinessIncomeModel)
-                           (response: Future[BusinessIncomeSubscriptionSuccess.type])
+                           (response: Future[String])
                            (implicit hc: HeaderCarrier): Unit = {
     when(mockBusinessConnector.businessSubscribe(ArgumentMatchers.eq(nino), ArgumentMatchers.eq(businessIncomeModel))(ArgumentMatchers.any[HeaderCarrier]))
       .thenReturn(response)

@@ -19,8 +19,8 @@ package services
 import connectors.{BusinessConnector, PropertyConnector, RegistrationConnector}
 import javax.inject.{Inject, Singleton}
 import models.subscription.incomesource.SignUpRequest
-import services.SubmissionOrchestrationService._
-import uk.gov.hmrc.http.HeaderCarrier
+import services.SubmissionOrchestrationService.{NoSubmissionNeeded, _}
+import uk.gov.hmrc.http.{HeaderCarrier, InternalServerException}
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -30,25 +30,33 @@ class SubmissionOrchestrationService @Inject()(registrationConnector: Registrati
                                                propertyConnector: PropertyConnector
                                               )(implicit ec: ExecutionContext) {
 
-  def submit(signUpRequest: SignUpRequest)(implicit hc: HeaderCarrier): Future[SuccessfulSubmission.type] =
+
+  def submit(signUpRequest: SignUpRequest)(implicit hc: HeaderCarrier): Future[SuccessfulSubmission] =
     for {
       _ <- registrationConnector.register(signUpRequest.nino, signUpRequest.isAgent)
-      _ <- signUpRequest.businessIncome match {
+      businessResponse <- signUpRequest.businessIncome match {
         case Some(business) => businessConnector.businessSubscribe(signUpRequest.nino, business)
         case None => Future.successful(NoSubmissionNeeded)
       }
-      _ <- signUpRequest.propertyIncome match {
-        case Some(_) => propertyConnector.propertySubscribe(signUpRequest.nino)
+      propertyResponse <- signUpRequest.propertyIncome match {
+        case Some(property) => propertyConnector.propertySubscribe(signUpRequest.nino, property)
         case None => Future.successful(NoSubmissionNeeded)
       }
-    } yield SuccessfulSubmission
-
+    } yield
+      (businessResponse, propertyResponse) match {
+        case (businessSuccess: String, _) =>
+          SuccessfulSubmission(businessSuccess)
+        case (_, propertySuccess: String) =>
+          SuccessfulSubmission(propertySuccess)
+        case _ =>
+          throw new InternalServerException("Unexpected error - income type missing")
+      }
 }
 
 object SubmissionOrchestrationService {
 
   case object NoSubmissionNeeded
 
-  case object SuccessfulSubmission
+  case class SuccessfulSubmission(mtditId: String)
 
 }

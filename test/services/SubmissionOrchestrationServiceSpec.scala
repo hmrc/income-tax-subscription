@@ -16,13 +16,13 @@
 
 package services
 
-import connectors.{BusinessIncomeSubscriptionSuccess, PropertyIncomeSubscriptionSuccess, RegistrationSuccess}
+import connectors.RegistrationSuccess
 import connectors.mocks.subscription.{MockBusinessConnector, MockPropertyConnector, MockRegistrationConnector}
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import services.SubmissionOrchestrationService.SuccessfulSubmission
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.test.UnitSpec
-import utils.TestConstants.{testBothIncomeSourceModel, testBusinessIncomeSourceModel, testNino, testPropertyIncomeSourceModel}
+import utils.TestConstants._
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -37,72 +37,74 @@ class SubmissionOrchestrationServiceSpec extends UnitSpec
 
   object Service extends SubmissionOrchestrationService(mockRegistrationConnector, mockBusinessConnector, mockPropertyConnector)
 
+  val successfulSubmission = SuccessfulSubmission(mtditId = testMtditId)
+
   "submit" should {
     "register and subscribe a business for an individual" when {
       "only business income is provided" in {
         mockRegister(testNino, isAnAgent = false)(Future.successful(RegistrationSuccess))
-        mockBusinessSubscribe(testNino, testBusinessIncomeSourceModel.businessIncome.get)(Future.successful(BusinessIncomeSubscriptionSuccess))
+        mockBusinessSubscribe(testNino, testBusinessIncomeSourceModel.businessIncome.get)(Future.successful(testMtditId))
 
         val result = Service.submit(testBusinessIncomeSourceModel)
 
-        await(result) shouldBe SuccessfulSubmission
+        await(result) shouldBe successfulSubmission
       }
     }
 
     "register and subscribe a property for an individual" when {
       "only property income is provided" in {
         mockRegister(testNino, isAnAgent = false)(Future.successful(RegistrationSuccess))
-        mockPropertySubscribe(testNino)(Future.successful(PropertyIncomeSubscriptionSuccess))
+        mockPropertySubscribe(testNino, testPropertyIncomeSourceModel.propertyIncome.get)(Future.successful(testMtditId))
 
         val result = Service.submit(testPropertyIncomeSourceModel)
 
-        await(result) shouldBe SuccessfulSubmission
+        await(result) shouldBe successfulSubmission
       }
     }
 
     "register and subscribe a business and a property for an individual" when {
       "both income sources are provided" in {
         mockRegister(testNino, isAnAgent = false)(Future.successful(RegistrationSuccess))
-        mockBusinessSubscribe(testNino, testBusinessIncomeSourceModel.businessIncome.get)(Future.successful(BusinessIncomeSubscriptionSuccess))
-        mockPropertySubscribe(testNino)(Future.successful(PropertyIncomeSubscriptionSuccess))
+        mockBusinessSubscribe(testNino, testBusinessIncomeSourceModel.businessIncome.get)(Future.successful(testMtditId))
+        mockPropertySubscribe(testNino, testPropertyIncomeSourceModel.propertyIncome.get)(Future.successful(testMtditId))
 
         val result = Service.submit(testBothIncomeSourceModel)
 
-        await(result) shouldBe SuccessfulSubmission
+        await(result) shouldBe successfulSubmission
       }
     }
 
     "register and subscribe a business for an agent" when {
       "only business income is provided" in {
         mockRegister(testNino, isAnAgent = true)(Future.successful(RegistrationSuccess))
-        mockBusinessSubscribe(testNino, testBusinessIncomeSourceModel.businessIncome.get)(Future.successful(BusinessIncomeSubscriptionSuccess))
+        mockBusinessSubscribe(testNino, testBusinessIncomeSourceModel.businessIncome.get)(Future.successful(testMtditId))
 
         val result = Service.submit(testBusinessIncomeSourceModel)
 
-        await(result) shouldBe SuccessfulSubmission
+        await(result) shouldBe successfulSubmission
       }
     }
 
     "register and subscribe a property for an agent" when {
       "only property income is provided" in {
         mockRegister(testNino, isAnAgent = true)(Future.successful(RegistrationSuccess))
-        mockPropertySubscribe(testNino)(Future.successful(PropertyIncomeSubscriptionSuccess))
+        mockPropertySubscribe(testNino, testPropertyIncomeSourceModel.propertyIncome.get)(Future.successful(testMtditId))
 
         val result = Service.submit(testPropertyIncomeSourceModel)
 
-        await(result) shouldBe SuccessfulSubmission
+        await(result) shouldBe successfulSubmission
       }
     }
 
     "register and subscribe a business and a property for an agent" when {
       "both income sources are provided" in {
         mockRegister(testNino, isAnAgent = true)(Future.successful(RegistrationSuccess))
-        mockBusinessSubscribe(testNino, testBusinessIncomeSourceModel.businessIncome.get)(Future.successful(BusinessIncomeSubscriptionSuccess))
-        mockPropertySubscribe(testNino)(Future.successful(PropertyIncomeSubscriptionSuccess))
+        mockBusinessSubscribe(testNino, testBusinessIncomeSourceModel.businessIncome.get)(Future.successful(testMtditId))
+        mockPropertySubscribe(testNino, testPropertyIncomeSourceModel.propertyIncome.get)(Future.successful(testMtditId))
 
         val result = Service.submit(testBothIncomeSourceModel)
 
-        await(result) shouldBe SuccessfulSubmission
+        await(result) shouldBe successfulSubmission
       }
     }
   }
