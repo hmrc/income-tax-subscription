@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package connectors.utils
+package connectors.utilities
 
 import models.{ErrorModel, ErrorResponsesModel}
 import play.api.libs.json.{JsValue, Reads}

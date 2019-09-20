@@ -17,22 +17,23 @@
 package services
 
 import javax.inject.{Inject, Singleton}
-import audit.{Logging, LoggingConfig}
 import connectors.deprecated.RegistrationConnector
 import models.ErrorModel
 import models.registration.{RegistrationRequestModel, RegistrationSuccessResponseModel}
 import play.api.http.Status.CONFLICT
+import play.api.mvc.Request
 import utils.Implicits._
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import uk.gov.hmrc.http.HeaderCarrier
+import utils.{Logging, LoggingConfig}
 
 @Singleton
 class RegistrationService @Inject()(registrationConnector: RegistrationConnector,
                                     logging: Logging) {
 
-  def register(isAgent: Boolean, nino: String)(implicit hc: HeaderCarrier): Future[Either[ErrorModel, RegistrationSuccessResponseModel]] = {
+  def register(isAgent: Boolean, nino: String)(implicit hc: HeaderCarrier, request: Request[_]): Future[Either[ErrorModel, RegistrationSuccessResponseModel]] = {
     implicit val registerLoggingConfig: Option[LoggingConfig] = RegistrationService.registerLoggingConfig
     logging.debug(s"Request: NINO=$nino, isAgent=$isAgent")
     registrationConnector.register(nino, RegistrationRequestModel(isAgent)).flatMap {
@@ -41,7 +42,7 @@ class RegistrationService @Inject()(registrationConnector: RegistrationConnector
     }
   }
 
-  @inline private[services] def lookupRegister(nino: String)(implicit hc: HeaderCarrier) = {
+  @inline private[services] def lookupRegister(nino: String)(implicit hc: HeaderCarrier, request: Request[_]) = {
     implicit val lookupRegisterConfig: Option[LoggingConfig] = RegistrationService.lookupRegisterLoggingConfig
     logging.debug(s"Request: NINO=$nino")
     registrationConnector.getRegistration(nino)

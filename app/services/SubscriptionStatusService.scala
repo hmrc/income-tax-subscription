@@ -17,16 +17,16 @@
 package services
 
 import javax.inject.{Inject, Singleton}
-
-import audit.{Logging, LoggingConfig}
 import connectors.BusinessDetailsConnector
 import models.ErrorModel
 import models.frontend.FESuccessResponse
 import play.api.http.Status._
+import play.api.mvc.Request
 import utils.Implicits._
 
 import scala.concurrent.{ExecutionContext, Future}
 import uk.gov.hmrc.http.HeaderCarrier
+import utils.{Logging, LoggingConfig}
 
 @Singleton
 class SubscriptionStatusService @Inject()(businessDetailsConnector: BusinessDetailsConnector,
@@ -36,7 +36,8 @@ class SubscriptionStatusService @Inject()(businessDetailsConnector: BusinessDeta
   * if will return OK with the reference if it is found, or OK with {} if it is not found
   * it will return all other errors as they were
   **/
-  def checkMtditsaSubscription(nino: String)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Either[ErrorModel, Option[FESuccessResponse]]] = {
+  def checkMtditsaSubscription(nino: String)
+                              (implicit hc: HeaderCarrier, ec: ExecutionContext, request: Request[_]): Future[Either[ErrorModel, Option[FESuccessResponse]]] = {
     logging.debug(s"Request: NINO=$nino")
     implicit val checkAlreadyEnrolledLoggingConfig = SubscriptionStatusService.checkMtditsaEnrolmentLoggingConfig
     businessDetailsConnector.getBusinessDetails(nino).flatMap {

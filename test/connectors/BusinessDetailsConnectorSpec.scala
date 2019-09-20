@@ -23,11 +23,14 @@ import play.api.libs.json.JsValue
 import connectors.mocks.TestBusinessDetailsConnector
 import _root_.utils.JsonUtils._
 import _root_.utils.TestConstants._
+import play.api.mvc.Request
+import play.api.test.FakeRequest
 import uk.gov.hmrc.http.HeaderCarrier
 
 class BusinessDetailsConnectorSpec extends TestBusinessDetailsConnector {
 
   implicit val hc = HeaderCarrier()
+  implicit val request: Request[_] = FakeRequest()
 
   lazy val env = appConfig.desEnvironment
   lazy val authToken = appConfig.desToken

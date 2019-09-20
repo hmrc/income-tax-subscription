@@ -17,26 +17,30 @@
 package connectors
 
 import javax.inject.Inject
-
-import audit.Logging._
-import audit.{Logging, LoggingConfig}
+import utils.Logging._
 import config.AppConfig
 import connectors.SubscriptionConnector._
-import connectors.utils.ConnectorUtils
+import connectors.utilities.ConnectorUtils
 import models.ErrorModel
+import models.monitoring.businessSubscribe.businessSubscribeModel
+import models.monitoring.propertySubscribe.propertySubscribeModel
 import models.subscription.business._
 import models.subscription.property.{PropertySubscriptionFailureModel, PropertySubscriptionResponseModel}
 import play.api.http.Status._
 import play.api.libs.json.{JsValue, Writes}
+import play.api.mvc.Request
+import services.monitoring.AuditService
 import uk.gov.hmrc.http.logging.Authorization
 import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, HttpResponse}
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
+import utils.{Logging, LoggingConfig}
 
 import scala.concurrent.{ExecutionContext, Future}
 
 class SubscriptionConnector @Inject()(applicationConfig: AppConfig,
                                       httpClient: HttpClient,
-                                      logging: Logging
+                                      logging: Logging,
+                                      auditService: AuditService
                                      ) extends RawResponseReads {
 
   val businessSubscribeUrl: String => String = nino => applicationConfig.desURL + businessSubscribeUri(nino)
@@ -49,9 +53,8 @@ class SubscriptionConnector @Inject()(applicationConfig: AppConfig,
       .withExtraHeaders("Environment" -> applicationConfig.desEnvironment, "Content-Type" -> "application/json")
 
   def businessSubscribe(nino: String, businessSubscriptionPayload: BusinessSubscriptionRequestModel, arn: Option[String])
-                       (implicit hc: HeaderCarrier, ec: ExecutionContext): Future[BusinessConnectorUtil.Response] = {
+                       (implicit hc: HeaderCarrier, ec: ExecutionContext, request: Request[_]): Future[BusinessConnectorUtil.Response] = {
     import BusinessConnectorUtil._
-    import SubscriptionConnector._
     implicit val loggingConfig = SubscriptionConnector.businessSubscribeLoggingConfig
     lazy val requestDetails: Map[String, String] = Map("nino" -> nino, "arn" -> arn.fold("-")(identity),
       "subscribe" -> (businessSubscriptionPayload: JsValue).toString)
@@ -66,11 +69,7 @@ class SubscriptionConnector @Inject()(applicationConfig: AppConfig,
           logging.info(s"Business subscription responded with an OK")
           parseSuccess(response.body)
         case status =>
-          logging.audit(
-            transactionName = auditBusinessSubscribeName,
-            detail = requestDetails + ("response" -> response.body),
-            auditType = auditBusinessSubscribeName + "-" + eventTypeUnexpectedError
-          )(updatedHc)
+          auditService.audit(businessSubscribeModel(nino,arn,businessSubscriptionPayload,eventTypeUnexpectedError,response.body))(updatedHc,ec,request)
 
           val parseResponse@Left(ErrorModel(_, optCode, message)) = parseFailure(status, response.body)
           val code: String = optCode.getOrElse("N/A")
@@ -81,9 +80,10 @@ class SubscriptionConnector @Inject()(applicationConfig: AppConfig,
     }
   }
 
-  def propertySubscribe(nino: String, arn: Option[String])(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[PropertyConnectorUtil.Response] = {
+  def propertySubscribe(nino: String, arn: Option[String])
+                       (implicit hc: HeaderCarrier, ec: ExecutionContext, request: Request[_]) : Future[PropertyConnectorUtil.Response] = {
     import PropertyConnectorUtil._
-    import SubscriptionConnector._
+
     implicit val loggingConfig = SubscriptionConnector.propertySubscribeLoggingConfig
     lazy val requestDetails: Map[String, String] = Map("nino" -> nino, "arn" -> arn.fold("-")(identity))
     val updatedHc = createHeaderCarrierPost(hc)
@@ -97,11 +97,7 @@ class SubscriptionConnector @Inject()(applicationConfig: AppConfig,
           parseSuccess(response.body)
         case status =>
 
-          logging.audit(
-            transactionName = auditPropertySubscribeName,
-            detail = requestDetails + ("response" -> response.body),
-            auditType = auditPropertySubscribeName + "-" + eventTypeUnexpectedError
-          )(updatedHc)
+          auditService.audit(propertySubscribeModel(nino,arn,eventTypeUnexpectedError,response.body))(updatedHc,ec,request)
 
           val parseResponse@Left(ErrorModel(_, optCode, message)) = parseFailure(status, response.body)
           val code: String = optCode.getOrElse("N/A")
@@ -117,10 +113,8 @@ object SubscriptionConnector {
 
   import _root_.utils.Implicits.optionUtl
 
-  val auditBusinessSubscribeName = "business-subscribe-api-10"
   val businessSubscribeLoggingConfig: Option[LoggingConfig] = LoggingConfig(heading = "SubscriptionConnector.businessSubscribe")
 
-  val auditPropertySubscribeName = "property-subscribe-api-35"
   val propertySubscribeLoggingConfig: Option[LoggingConfig] = LoggingConfig(heading = "SubscriptionConnector.propertySubscribe")
 
   def businessSubscribeUri(nino: String): String = s"/income-tax-self-assessment/nino/$nino/business"

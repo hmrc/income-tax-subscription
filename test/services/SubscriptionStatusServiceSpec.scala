@@ -18,6 +18,8 @@ package services
 
 import models.frontend.FESuccessResponse
 import play.api.http.Status._
+import play.api.mvc.Request
+import play.api.test.FakeRequest
 import services.mocks.TestSubscriptionStatusService
 import utils.TestConstants._
 
@@ -29,6 +31,7 @@ import uk.gov.hmrc.play.test.UnitSpec
 class SubscriptionStatusServiceSpec extends UnitSpec with TestSubscriptionStatusService {
 
   implicit val hc = HeaderCarrier()
+  implicit val request: Request[_] = FakeRequest()
 
   "SubscriptionStatusService.checkMtditsaSubscroption" should {
 

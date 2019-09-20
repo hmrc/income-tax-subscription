@@ -16,7 +16,6 @@
 
 package services.mocks
 
-import audit.Logging
 import config.AppConfig
 import models.ErrorModel
 import models.frontend.{FERequest, FESuccessResponse}
@@ -29,6 +28,7 @@ import services.RosmAndEnrolManagerService
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.test.UnitSpec
 import services.mocks.monitoring.MockAuditService
+import utils.Logging
 
 import scala.concurrent.{ExecutionContext, Future}
 

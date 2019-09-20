@@ -16,18 +16,22 @@
 
 package connectors.deprecated
 
-import audit.{Logging, LoggingConfig}
 import config.AppConfig
 import connectors.RawResponseReads
-import connectors.utils.ConnectorUtils
+import connectors.utilities.ConnectorUtils
 import javax.inject.Inject
 import models.ErrorModel
+import models.monitoring.getRegistration.{getRegistrationModel, getRegistrationShortModel}
+import models.monitoring.registerAudit.registerAuditModel
 import models.registration._
 import play.api.http.Status._
 import play.api.libs.json.{JsValue, Writes}
+import play.api.mvc.Request
+import services.monitoring.AuditService
 import uk.gov.hmrc.http._
 import uk.gov.hmrc.http.logging.Authorization
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
+import utils.{Logging, LoggingConfig}
 
 import scala.annotation.switch
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -35,8 +39,9 @@ import scala.concurrent.{ExecutionContext, Future}
 
 class RegistrationConnector @Inject()(appConfig: AppConfig,
                                       logging: Logging,
-                                      httpClient: HttpClient
-                                     ) (implicit ec: ExecutionContext) extends RawResponseReads {
+                                      httpClient: HttpClient,
+                                      auditService: AuditService
+                                     )(implicit ec: ExecutionContext) extends RawResponseReads {
 
   import Logging._
 
@@ -57,9 +62,8 @@ class RegistrationConnector @Inject()(appConfig: AppConfig,
     headerCarrier.withExtraHeaders("Environment" -> appConfig.desEnvironment)
       .copy(authorization = Some(Authorization(urlHeaderAuthorization)))
 
-  def register(nino: String, registration: RegistrationRequestModel)(implicit hc: HeaderCarrier): Future[NewRegistrationUtil.Response] = {
+  def register(nino: String, registration: RegistrationRequestModel)(implicit hc: HeaderCarrier, request: Request[_]): Future[NewRegistrationUtil.Response] = {
     import NewRegistrationUtil._
-    import RegistrationConnector.auditRegisterName
 
     implicit val loggingConfig = RegistrationConnector.registerLoggingConfig
     lazy val requestDetails: Map[String, String] = Map("nino" -> nino, "requestJson" -> (registration: JsValue).toString)
@@ -83,11 +87,7 @@ class RegistrationConnector @Inject()(appConfig: AppConfig,
               case SERVICE_UNAVAILABLE => eventTypeServerUnavailable
               case _ => eventTypeUnexpectedError
             }
-            logging.audit(
-              transactionName = auditRegisterName,
-              detail = requestDetails + ("response" -> response.body),
-              auditType = auditRegisterName + "-" + suffix
-            )(updatedHc)
+            auditService.audit(registerAuditModel(nino, suffix, registration, response.body))(updatedHc, ec, request)
 
             val parseResponse@Left(ErrorModel(_, optCode, message)) = parseFailure(status, response.body)
             val code: String = optCode.getOrElse("N/A")
@@ -98,16 +98,14 @@ class RegistrationConnector @Inject()(appConfig: AppConfig,
       }
   }
 
-  def getRegistration(nino: String)(implicit hc: HeaderCarrier): Future[GetRegistrationUtil.Response] = {
+  def getRegistration(nino: String)(implicit hc: HeaderCarrier, request: Request[_]): Future[GetRegistrationUtil.Response] = {
     import GetRegistrationUtil._
-    import RegistrationConnector.auditGetRegistrationName
 
     implicit val loggingConfig = RegistrationConnector.getRegistrationLoggingConfig
     lazy val requestDetails: Map[String, String] = Map("nino" -> nino)
     val updatedHc = createHeaderCarrierGet(hc)
 
-    lazy val auditRequest = logging.auditFor(auditGetRegistrationName, requestDetails)(updatedHc)
-    auditRequest(eventTypeRequest)
+    auditService.audit(getRegistrationShortModel(nino, eventTypeRequest))(updatedHc, ec, request)
 
     logging.debug(s"Request:\n$requestDetails\n\nRequest Headers:\n$updatedHc")
     httpClient.GET[HttpResponse](getRegistrationUrl(nino))(implicitly[HttpReads[HttpResponse]], updatedHc, ec)
@@ -125,11 +123,7 @@ class RegistrationConnector @Inject()(appConfig: AppConfig,
               case SERVICE_UNAVAILABLE => eventTypeServerUnavailable
               case _ => eventTypeUnexpectedError
             }
-            logging.audit(
-              transactionName = auditGetRegistrationName,
-              detail = requestDetails + ("response" -> response.body),
-              auditType = auditGetRegistrationName + "-" + suffix
-            )(updatedHc)
+            auditService.audit(getRegistrationModel(nino, suffix, response.body))(updatedHc, ec, request)
 
             val parseResponse@Left(ErrorModel(_, optCode, message)) = parseFailure(status, response.body)
             val code: String = optCode.getOrElse("N/A")
@@ -143,8 +137,6 @@ class RegistrationConnector @Inject()(appConfig: AppConfig,
 }
 
 object RegistrationConnector {
-
-  val auditRegisterName = "register-api-4"
 
   val auditGetRegistrationName = "getRegistration-api-1(b)"
 

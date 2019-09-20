@@ -16,7 +16,6 @@
 
 package services.mocks
 
-import audit.Logging
 import connectors.deprecated.NewRegistrationUtil
 import connectors.mocks.MockRegistrationConnector
 import models.registration.RegistrationSuccessResponseModel
@@ -24,6 +23,7 @@ import org.mockito.ArgumentMatchers
 import org.mockito.Mockito.when
 import org.scalatest.mockito.MockitoSugar
 import services.RegistrationService
+import utils.Logging
 import utils.TestConstants.{INVALID_NINO_MODEL, testSafeId}
 
 import scala.concurrent.Future
@@ -41,7 +41,7 @@ trait MockRegistrationService extends MockitoSugar {
   val mockRegistrationService = mock[RegistrationService]
 
   private def setupMockRegister(nino: String)(response: Future[NewRegistrationUtil.Response]): Unit =
-    when(mockRegistrationService.register(ArgumentMatchers.any(), ArgumentMatchers.eq(nino))(ArgumentMatchers.any()))
+    when(mockRegistrationService.register(ArgumentMatchers.any(), ArgumentMatchers.eq(nino))(ArgumentMatchers.any(),ArgumentMatchers.any()))
       .thenReturn(response)
 
   def mockRegisterSuccess(nino: String): Unit =

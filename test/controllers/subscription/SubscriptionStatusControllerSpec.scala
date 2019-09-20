@@ -16,7 +16,6 @@
 
 package controllers.subscription
 
-import audit.Logging
 import models.frontend.FESuccessResponse
 import play.api.http.Status._
 import play.api.mvc.Result
@@ -24,7 +23,7 @@ import play.api.test.FakeRequest
 import play.api.test.Helpers.stubControllerComponents
 import services.mocks.{MockAuthService, MockSubscriptionStatusService}
 import uk.gov.hmrc.play.test.UnitSpec
-import utils.MaterializerSupport
+import utils.{Logging, MaterializerSupport}
 import utils.TestConstants._
 
 import scala.concurrent.Future

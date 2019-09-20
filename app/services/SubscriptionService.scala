@@ -17,39 +17,40 @@
 package services
 
 import javax.inject.{Inject, Singleton}
-
-import audit.{Logging, LoggingConfig}
 import connectors.SubscriptionConnector
 import models.ErrorModel
 import models.frontend.FERequest
 import models.subscription.business.{BusinessDetailsModel, BusinessSubscriptionRequestModel, BusinessSubscriptionSuccessResponseModel}
 import models.subscription.property.PropertySubscriptionResponseModel
+import play.api.mvc.Request
 import utils.Implicits._
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import uk.gov.hmrc.http.HeaderCarrier
+import utils.{Logging, LoggingConfig}
 
 @Singleton
 class SubscriptionService @Inject()(subscriptionConnector: SubscriptionConnector,
                                     logging: Logging) {
 
-  def propertySubscribe(request: FERequest)(implicit hc: HeaderCarrier): Future[Either[ErrorModel, PropertySubscriptionResponseModel]] = {
+  def propertySubscribe(feRequest: FERequest)(implicit hc: HeaderCarrier,request: Request[_]): Future[Either[ErrorModel, PropertySubscriptionResponseModel]] = {
     implicit val subscribeLoggingConfig: Option[LoggingConfig] = SubscriptionService.propertySubscribeLoggingConfig
-    logging.debug(s"Request: $request")
-    subscriptionConnector.propertySubscribe(request.nino, request.arn)
+    logging.debug(s"Request: $feRequest")
+    subscriptionConnector.propertySubscribe(feRequest.nino, feRequest.arn)
   }
 
-  def businessSubscribe(request: FERequest)(implicit hc: HeaderCarrier): Future[Either[ErrorModel, BusinessSubscriptionSuccessResponseModel]] = {
+  def businessSubscribe(feRequest: FERequest)(implicit hc: HeaderCarrier, request: Request[_]):
+          Future[Either[ErrorModel, BusinessSubscriptionSuccessResponseModel]] = {
     implicit val businessSubscribeLoggingConfig: Option[LoggingConfig] = SubscriptionService.businessSubscribeLoggingConfig
-    logging.debug(s"Request: $request")
+    logging.debug(s"Request: $feRequest")
     val businessDetails = BusinessDetailsModel(
-      accountingPeriodStartDate = request.accountingPeriodStart.get.toDesDateFormat,
-      accountingPeriodEndDate = request.accountingPeriodEnd.get.toDesDateFormat,
-      cashOrAccruals = request.cashOrAccruals.get,
-      tradingName = request.tradingName.get
+      accountingPeriodStartDate = feRequest.accountingPeriodStart.get.toDesDateFormat,
+      accountingPeriodEndDate = feRequest.accountingPeriodEnd.get.toDesDateFormat,
+      cashOrAccruals = feRequest.cashOrAccruals.get,
+      tradingName = feRequest.tradingName.get
     )
-    subscriptionConnector.businessSubscribe(request.nino, BusinessSubscriptionRequestModel(List(businessDetails)), request.arn)
+    subscriptionConnector.businessSubscribe(feRequest.nino, BusinessSubscriptionRequestModel(List(businessDetails)), feRequest.arn)
   }
 
 }

@@ -16,7 +16,6 @@
 
 package connectors.mocks
 
-import audit.Logging
 import config.AppConfig
 import connectors.{BusinessConnectorUtil, PropertyConnectorUtil, SubscriptionConnector}
 import models.subscription.business.BusinessSubscriptionRequestModel
@@ -26,9 +25,12 @@ import org.scalatest.mockito.MockitoSugar
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.http.Status._
 import play.api.libs.json.JsValue
-import uk.gov.hmrc.http.{HeaderCarrier, HttpPost}
+import play.api.mvc.Request
+import services.monitoring.AuditService
+import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
 import utils.JsonUtils._
+import utils.Logging
 import utils.TestConstants.{BusinessSubscriptionResponse, PropertySubscriptionResponse, _}
 
 import scala.concurrent.ExecutionContext
@@ -43,7 +45,8 @@ trait MockSubscriptionConnector extends MockitoSugar {
       ArgumentMatchers.any()
     )(
       ArgumentMatchers.any[HeaderCarrier],
-      ArgumentMatchers.any[ExecutionContext]
+      ArgumentMatchers.any[ExecutionContext],
+      ArgumentMatchers.any[Request[_]]
     ))
       .thenReturn(response)
   }
@@ -54,7 +57,8 @@ trait MockSubscriptionConnector extends MockitoSugar {
       ArgumentMatchers.any()
     )(
       ArgumentMatchers.any[HeaderCarrier],
-      ArgumentMatchers.any[ExecutionContext]
+      ArgumentMatchers.any[ExecutionContext],
+      ArgumentMatchers.any[Request[_]]
     ))
       .thenReturn(response)
   }
@@ -65,6 +69,7 @@ trait TestSubscriptionConnector extends MockHttp with GuiceOneAppPerSuite {
   lazy val appConfig: AppConfig = app.injector.instanceOf[AppConfig]
   lazy val httpClient: HttpClient = mockHttpClient
   lazy val logging: Logging = app.injector.instanceOf[Logging]
+  lazy val auditService: AuditService = app.injector.instanceOf[AuditService]
 
   val mockPropertySubscribe = (setupMockPropertySubscribe(testNino) _).tupled
 
@@ -73,7 +78,7 @@ trait TestSubscriptionConnector extends MockHttp with GuiceOneAppPerSuite {
   val propertySubscribeSuccess = (OK, PropertySubscriptionResponse.successResponse(testSafeId, testMtditId, testSourceId))
   val businessSubscribeSuccess = (OK, BusinessSubscriptionResponse.successResponse(testSafeId, testMtditId, testSourceId))
 
-  object TestSubscriptionConnector extends SubscriptionConnector(appConfig, httpClient, logging)
+  object TestSubscriptionConnector extends SubscriptionConnector(appConfig, httpClient, logging, auditService)
 
   def setupMockBusinessSubscribe(nino: String, payload: BusinessSubscriptionRequestModel)(status: Int, response: JsValue): Unit =
     setupMockHttpPost(url = TestSubscriptionConnector.businessSubscribeUrl(nino), payload)(status, response)

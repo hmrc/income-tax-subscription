@@ -17,13 +17,13 @@
 package controllers.subscription
 
 import javax.inject.Inject
-import audit.{Logging, LoggingConfig}
 import models.frontend.FEFailureResponse
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import services.{AuthService, SubscriptionStatusService}
 import uk.gov.hmrc.play.bootstrap.controller.BaseController
 import utils.Implicits._
 import utils.JsonUtils.toJsValue
+import utils.{Logging, LoggingConfig}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
