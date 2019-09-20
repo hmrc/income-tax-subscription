@@ -16,7 +16,6 @@
 
 package connectors.mocks
 
-import audit.Logging
 import config.AppConfig
 import connectors.deprecated.{GetRegistrationUtil, NewRegistrationUtil, RegistrationConnector}
 import models.registration.{RegistrationRequestModel, RegistrationSuccessResponseModel}
@@ -26,9 +25,11 @@ import org.scalatest.mockito.MockitoSugar
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.http.Status._
 import play.api.libs.json.JsValue
+import services.monitoring.AuditService
 import uk.gov.hmrc.http.{HttpGet, HttpPost}
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
 import utils.Implicits._
+import utils.Logging
 import utils.TestConstants.{GetRegistrationResponse, NewRegistrationResponse, _}
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -38,6 +39,7 @@ trait TestRegistrationConnector extends MockHttp with GuiceOneAppPerSuite {
 
   lazy val appConfig: AppConfig = app.injector.instanceOf[AppConfig]
   lazy val logging: Logging = app.injector.instanceOf[Logging]
+  lazy val auditService: AuditService = app.injector.instanceOf[AuditService]
   lazy val httpPost: HttpPost = mockHttpClient
   lazy val httpClient: HttpClient = mockHttpClient
 
@@ -45,7 +47,7 @@ trait TestRegistrationConnector extends MockHttp with GuiceOneAppPerSuite {
 
   val mockGetRegistration = (setupMockGetRegistration(testNino) _).tupled
 
-  object TestRegistrationConnector extends RegistrationConnector(appConfig, logging, httpClient)
+  object TestRegistrationConnector extends RegistrationConnector(appConfig, logging, httpClient,auditService)
 
   val regSuccess = (OK, NewRegistrationResponse.successResponse(testSafeId))
   val getRegSuccess = (OK, GetRegistrationResponse.successResponse(testSafeId))
@@ -63,7 +65,7 @@ trait MockRegistrationConnector extends MockitoSugar {
   val mockRegistrationConnector = mock[RegistrationConnector]
 
   private def setupMockRegister(nino: String, payload: RegistrationRequestModel)(response: Future[NewRegistrationUtil.Response]): Unit =
-    when(mockRegistrationConnector.register(ArgumentMatchers.eq(nino), ArgumentMatchers.eq(payload))(ArgumentMatchers.any()))
+    when(mockRegistrationConnector.register(ArgumentMatchers.eq(nino), ArgumentMatchers.eq(payload))(ArgumentMatchers.any(),ArgumentMatchers.any()))
       .thenReturn(response)
 
   def mockRegisterSuccess(nino: String, payload: RegistrationRequestModel): Unit =
@@ -76,7 +78,7 @@ trait MockRegistrationConnector extends MockitoSugar {
     setupMockRegister(nino, payload)(Future.successful(Left(INVALID_NINO_MODEL)))
 
   private def setupMockGetRegistration(nino: String)(response: Future[GetRegistrationUtil.Response]): Unit =
-    when(mockRegistrationConnector.getRegistration(ArgumentMatchers.eq(nino))(ArgumentMatchers.any()))
+    when(mockRegistrationConnector.getRegistration(ArgumentMatchers.eq(nino))(ArgumentMatchers.any(),ArgumentMatchers.any()))
       .thenReturn(response)
 
   def mockGetRegistrationSuccess(nino: String): Unit =

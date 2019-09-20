@@ -91,7 +91,7 @@ class RosmAndEnrolManagerServiceSpec extends TestSubscriptionManagerService {
 
   "The RosmAndEnrolManagerService.orchestrateROSM action" should {
 
-    def call(request: FERequest): Either[ErrorModel, FESuccessResponse] = await(TestSubscriptionManagerService.orchestrateROSM(request))
+    def call(feRequest: FERequest): Either[ErrorModel, FESuccessResponse] = await(TestSubscriptionManagerService.orchestrateROSM(feRequest))
 
     "return the mtditID when registration and subscription for property is successful" in {
       mockRegisterSuccess(testNino)

@@ -16,7 +16,6 @@
 
 package services.mocks
 
-import audit.Logging
 import connectors.mocks.MockSubscriptionConnector
 import models.ErrorModel
 import models.frontend.FERequest
@@ -26,29 +25,33 @@ import org.mockito.ArgumentMatchers
 import org.mockito.Mockito._
 import org.scalatest.mockito.MockitoSugar
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
+import play.api.mvc.Request
 import services.SubscriptionService
 import uk.gov.hmrc.play.test.UnitSpec
 
 import scala.concurrent.Future
 import uk.gov.hmrc.http.HeaderCarrier
+import utils.Logging
 
 trait MockSubscriptionService extends MockitoSugar {
   val mockSubscriptionService = mock[SubscriptionService]
 
-  def mockBusinessSubscribe(request: FERequest)(response: Future[Either[ErrorModel, BusinessSubscriptionSuccessResponseModel]]): Unit = {
+  def mockBusinessSubscribe(feRequest: FERequest)(response: Future[Either[ErrorModel, BusinessSubscriptionSuccessResponseModel]]): Unit = {
     when(mockSubscriptionService.businessSubscribe(
-      ArgumentMatchers.eq(request)
+      ArgumentMatchers.eq(feRequest)
     )(
-      ArgumentMatchers.any[HeaderCarrier]
+      ArgumentMatchers.any[HeaderCarrier],
+      ArgumentMatchers.any[Request[_]]
     ))
       .thenReturn(response)
   }
 
-  def mockPropertySubscribe(request: FERequest)(response: Future[Either[ErrorModel, PropertySubscriptionResponseModel]]): Unit = {
+  def mockPropertySubscribe(feRequest: FERequest)(response: Future[Either[ErrorModel, PropertySubscriptionResponseModel]]): Unit = {
     when(mockSubscriptionService.propertySubscribe(
-      ArgumentMatchers.eq(request)
+      ArgumentMatchers.eq(feRequest)
     )(
-      ArgumentMatchers.any[HeaderCarrier]
+      ArgumentMatchers.any[HeaderCarrier],
+      ArgumentMatchers.any[Request[_]]
     ))
       .thenReturn(response)
   }

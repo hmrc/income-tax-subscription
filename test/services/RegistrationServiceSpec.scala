@@ -17,6 +17,8 @@
 package services
 
 import play.api.http.Status._
+import play.api.mvc.Request
+import play.api.test.FakeRequest
 import services.mocks.TestRegistrationService
 import utils.TestConstants._
 import uk.gov.hmrc.http.HeaderCarrier
@@ -25,6 +27,7 @@ import uk.gov.hmrc.play.test.UnitSpec
 class RegistrationServiceSpec extends UnitSpec with TestRegistrationService {
 
   implicit val hc = HeaderCarrier()
+  implicit val request: Request[_] = FakeRequest()
 
   def call = await(TestRegistrationService.register(isAgent = false, testNino))
 

@@ -17,7 +17,6 @@
 package controllers.subscription
 
 import javax.inject.Inject
-import audit.{Logging, LoggingConfig}
 import controllers.ITSASessionKeys
 import models.frontend.{FEFailureResponse, FERequest}
 import play.api.libs.json.{JsError, JsSuccess}
@@ -29,6 +28,7 @@ import utils.JsonUtils._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import uk.gov.hmrc.http.HeaderCarrier
+import utils.{Logging, LoggingConfig}
 
 class SubscriptionController @Inject()(logging: Logging,
                                        subManService: RosmAndEnrolManagerService,

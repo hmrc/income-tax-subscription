@@ -19,6 +19,8 @@ package services
 import models.ErrorModel
 import models.subscription.IncomeSourceModel
 import models.subscription.property.PropertySubscriptionResponseModel
+import play.api.mvc.Request
+import play.api.test.FakeRequest
 import services.mocks.TestSubscriptionService
 import utils.TestConstants._
 
@@ -28,6 +30,7 @@ import uk.gov.hmrc.http.HeaderCarrier
 class SubscriptionServiceSpec extends TestSubscriptionService {
 
   implicit val hc = HeaderCarrier()
+  implicit val request: Request[_] = FakeRequest()
 
   "SubscriptionService" should {
 

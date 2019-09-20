@@ -16,7 +16,6 @@
 
 package connectors.mocks
 
-import audit.Logging
 import config.AppConfig
 import connectors.{BusinessDetailsConnector, GetBusinessDetailsUtil}
 import models.ErrorModel
@@ -28,9 +27,11 @@ import org.scalatest.mockito.MockitoSugar
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.http.Status._
 import play.api.libs.json.JsValue
+import services.monitoring.AuditService
 import uk.gov.hmrc.http.{HttpGet, HttpPost}
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
 import utils.Implicits._
+import utils.Logging
 import utils.TestConstants._
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -41,11 +42,12 @@ trait TestBusinessDetailsConnector extends MockHttp with GuiceOneAppPerSuite {
   lazy val appConfig: AppConfig = app.injector.instanceOf[AppConfig]
   lazy val logging: Logging = app.injector.instanceOf[Logging]
   lazy val httpClient: HttpClient = mockHttpClient
+  lazy val auditService: AuditService = app.injector.instanceOf[AuditService]
 
 
   val mockBusinessDetails = (setupMockBusinessDetails(testNino) _).tupled
 
-  object TestBusinessDetailsConnector extends BusinessDetailsConnector(appConfig, logging, httpClient)
+  object TestBusinessDetailsConnector extends BusinessDetailsConnector(appConfig, logging, httpClient, auditService)
 
   val getBusinessDetailsSuccess = (OK, GetBusinessDetailsResponse.successResponse(testNino, testSafeId, testMtditId))
   val getBusinessDetailsNotFound = (NOT_FOUND, GetBusinessDetailsResponse.failureResponse("NOT_FOUND_NINO", "The remote endpoint has indicated that no data can be found"))
@@ -62,7 +64,7 @@ trait MockBusinessDetailsConnector extends MockitoSugar {
   val mockBusinessDetailsConnector = mock[BusinessDetailsConnector]
 
   private def setupMockBusinessDetails(nino: String)(response: Future[GetBusinessDetailsUtil.Response]): Unit =
-    when(mockBusinessDetailsConnector.getBusinessDetails(ArgumentMatchers.eq(nino))(ArgumentMatchers.any())).thenReturn(response)
+    when(mockBusinessDetailsConnector.getBusinessDetails(ArgumentMatchers.eq(nino))(ArgumentMatchers.any(),ArgumentMatchers.any())).thenReturn(response)
 
   def mockGetBusinessDetailsSuccess(nino: String): Unit =
     setupMockBusinessDetails(nino)(Future.successful(Right(GetBusinessDetailsSuccessResponseModel(testMtditId))))

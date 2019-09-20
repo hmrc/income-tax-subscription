@@ -16,16 +16,19 @@
 
 package connectors
 
-import audit.{Logging, LoggingConfig}
 import config.AppConfig
-import connectors.utils.ConnectorUtils
+import connectors.utilities.ConnectorUtils
 import javax.inject.Inject
 import models.ErrorModel
+import models.monitoring.getBusinessDetails.getBusinessDetailsModel
 import models.registration.{GetBusinessDetailsFailureResponseModel, GetBusinessDetailsSuccessResponseModel}
 import play.api.http.Status._
+import play.api.mvc.Request
+import services.monitoring.AuditService
 import uk.gov.hmrc.http.logging.Authorization
 import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, HttpResponse}
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
+import utils.{Logging, LoggingConfig}
 
 import scala.annotation.switch
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -33,7 +36,8 @@ import scala.concurrent.{ExecutionContext, Future}
 
 class BusinessDetailsConnector @Inject()(appConfig: AppConfig,
                                          logging: Logging,
-                                         httpClient: HttpClient
+                                         httpClient: HttpClient,
+                                         auditService: AuditService
                                         )(implicit ec: ExecutionContext) extends RawResponseReads {
 
   import Logging._
@@ -47,9 +51,9 @@ class BusinessDetailsConnector @Inject()(appConfig: AppConfig,
     headerCarrier.withExtraHeaders("Environment" -> appConfig.desEnvironment)
       .copy(authorization = Some(Authorization(urlHeaderAuthorization)))
 
-  def getBusinessDetails(nino: String)(implicit hc: HeaderCarrier): Future[GetBusinessDetailsUtil.Response] = {
-    import BusinessDetailsConnector.auditGetBusinessDetails
+  def getBusinessDetails(nino: String)(implicit hc: HeaderCarrier, request: Request[_]): Future[GetBusinessDetailsUtil.Response] = {
     import GetBusinessDetailsUtil._
+
     implicit val loggingConfig = connectors.deprecated.RegistrationConnector.getRegistrationLoggingConfig
     lazy val requestDetails: Map[String, String] = Map("nino" -> nino)
     val updatedHc = createHeaderCarrierGet(hc)
@@ -78,11 +82,7 @@ class BusinessDetailsConnector @Inject()(appConfig: AppConfig,
                 // expected case, do not audit
                 logging.info(s"Get Business Details responded with nino not found")
               case _ =>
-                logging.audit(
-                  transactionName = auditGetBusinessDetails,
-                  detail = requestDetails + ("response" -> response.body),
-                  auditType = auditGetBusinessDetails + "-" + suffix
-                )(updatedHc)
+                auditService.audit(getBusinessDetailsModel(nino,suffix,response.body))(updatedHc,ec,request)
                 logging.warn(s"Get Business Details responded with an error, status=$status code=$code message=$message")
             }
             parseResponse
@@ -92,8 +92,6 @@ class BusinessDetailsConnector @Inject()(appConfig: AppConfig,
 }
 
 object BusinessDetailsConnector {
-
-  val auditGetBusinessDetails = "getBusinessDetails api-5"
 
   import _root_.utils.Implicits.optionUtl
 

@@ -23,11 +23,15 @@ import models.ErrorModel
 import models.registration._
 import play.api.http.Status._
 import play.api.libs.json.JsValue
+import play.api.mvc.Request
+import play.api.test.FakeRequest
 import uk.gov.hmrc.http.HeaderCarrier
 
 class RegistrationConnectorSpec extends TestRegistrationConnector {
 
   implicit val hc = HeaderCarrier()
+  implicit val request: Request[_] = FakeRequest()
+
 
   val env = appConfig.desEnvironment
   val authToken = appConfig.desToken

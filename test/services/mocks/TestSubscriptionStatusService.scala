@@ -16,7 +16,6 @@
 
 package services.mocks
 
-import audit.Logging
 import connectors.mocks.MockBusinessDetailsConnector
 import models.ErrorModel
 import models.frontend.FESuccessResponse
@@ -24,6 +23,7 @@ import org.mockito.Mockito._
 import org.mockito._
 import org.scalatest.mockito.MockitoSugar
 import services.SubscriptionStatusService
+import utils.Logging
 import utils.TestConstants._
 
 import scala.concurrent.Future
@@ -41,7 +41,7 @@ trait MockSubscriptionStatusService extends MockitoSugar {
   val mockSubscriptionStatusService = mock[SubscriptionStatusService]
 
   private def mockCheckMtditsaSubscription(nino: String)(response: Future[Either[ErrorModel, Option[FESuccessResponse]]]): Unit =
-    when(mockSubscriptionStatusService.checkMtditsaSubscription(ArgumentMatchers.eq(nino))(ArgumentMatchers.any(), ArgumentMatchers.any()))
+    when(mockSubscriptionStatusService.checkMtditsaSubscription(ArgumentMatchers.eq(nino))(ArgumentMatchers.any(), ArgumentMatchers.any(), ArgumentMatchers.any()))
       .thenReturn(response)
 
   def mockCheckMtditsaFound(nino: String): Unit =

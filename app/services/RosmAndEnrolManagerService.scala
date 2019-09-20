@@ -59,12 +59,13 @@ class RosmAndEnrolManagerService @Inject()
     }
   }
 
-  def orchestrateROSM(request: FERequest)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Either[ErrorModel, FESuccessResponse]] = {
-    registrationService.register(request.isAgent, request.nino) flatMap {
+  def orchestrateROSM(feRequest: FERequest)
+                     (implicit hc: HeaderCarrier, ec: ExecutionContext,request: Request[_]): Future[Either[ErrorModel, FESuccessResponse]] = {
+    registrationService.register(feRequest.isAgent, feRequest.nino) flatMap {
       case Right(success) =>
         for {
-          businessResult <- businessSubscription(request)
-          propertyResult <- propertySubscription(request)
+          businessResult <- businessSubscription(feRequest)
+          propertyResult <- propertySubscription(feRequest)
         } yield (businessResult, propertyResult) match {
           case (Some(Left(err)), _) => err
           case (_, Some(Left(err))) => err
@@ -77,11 +78,11 @@ class RosmAndEnrolManagerService @Inject()
   }
 
 
-  private def businessSubscription(request: FERequest)
+  private def businessSubscription(feRequest: FERequest)
                                   (implicit hc: HeaderCarrier,
-                                   ec: ExecutionContext): Future[Option[Either[ErrorModel, BusinessSubscriptionSuccessResponseModel]]] = {
-    request.incomeSource match {
-      case Both | Business => subscriptionService.businessSubscribe(request) map {
+                                   ec: ExecutionContext,request: Request[_]): Future[Option[Either[ErrorModel, BusinessSubscriptionSuccessResponseModel]]] = {
+    feRequest.incomeSource match {
+      case Both | Business => subscriptionService.businessSubscribe(feRequest) map {
         case Right(success) => Some(success)
         case Left(failure) => Some(failure)
       }
@@ -89,11 +90,12 @@ class RosmAndEnrolManagerService @Inject()
     }
   }
 
-  private def propertySubscription(request: FERequest)
+  private def propertySubscription(feRequest: FERequest)
                                   (implicit hc: HeaderCarrier,
-                                   ec: ExecutionContext): Future[Option[Either[ErrorModel, PropertySubscriptionResponseModel]]] = {
-    request.incomeSource match {
-      case Both | Property => subscriptionService.propertySubscribe(request) map {
+                                   ec: ExecutionContext,
+                                   request: Request[_]): Future[Option[Either[ErrorModel, PropertySubscriptionResponseModel]]] = {
+    feRequest.incomeSource match {
+      case Both | Property => subscriptionService.propertySubscribe(feRequest) map {
         case Right(success) => Some(success)
         case Left(failure) => Some(failure)
       }

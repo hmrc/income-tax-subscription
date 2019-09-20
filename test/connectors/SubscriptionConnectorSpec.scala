@@ -25,6 +25,8 @@ import play.api.libs.json.JsValue
 import connectors.mocks.TestSubscriptionConnector
 import _root_.utils.JsonUtils._
 import _root_.utils.TestConstants._
+import play.api.mvc.Request
+import play.api.test.FakeRequest
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import uk.gov.hmrc.http.HeaderCarrier
@@ -32,6 +34,7 @@ import uk.gov.hmrc.http.HeaderCarrier
 class SubscriptionConnectorSpec extends TestSubscriptionConnector {
 
   implicit val hc = HeaderCarrier()
+  implicit val request: Request[_] = FakeRequest()
 
   "The connector should have the correct POST request headers for DES" in {
     val rHc = TestSubscriptionConnector.createHeaderCarrierPost(hc)
