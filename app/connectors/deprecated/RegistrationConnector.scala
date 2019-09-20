@@ -41,7 +41,7 @@ class RegistrationConnector @Inject()(appConfig: AppConfig,
                                       logging: Logging,
                                       httpClient: HttpClient,
                                       auditService: AuditService
-                                     ) (implicit ec: ExecutionContext) extends RawResponseReads {
+                                     )(implicit ec: ExecutionContext) extends RawResponseReads {
 
   import Logging._
 
@@ -62,7 +62,7 @@ class RegistrationConnector @Inject()(appConfig: AppConfig,
     headerCarrier.withExtraHeaders("Environment" -> appConfig.desEnvironment)
       .copy(authorization = Some(Authorization(urlHeaderAuthorization)))
 
-  def register(nino: String, registration: RegistrationRequestModel)(implicit hc: HeaderCarrier,request: Request[_]): Future[NewRegistrationUtil.Response] = {
+  def register(nino: String, registration: RegistrationRequestModel)(implicit hc: HeaderCarrier, request: Request[_]): Future[NewRegistrationUtil.Response] = {
     import NewRegistrationUtil._
 
     implicit val loggingConfig = RegistrationConnector.registerLoggingConfig
@@ -87,7 +87,7 @@ class RegistrationConnector @Inject()(appConfig: AppConfig,
               case SERVICE_UNAVAILABLE => eventTypeServerUnavailable
               case _ => eventTypeUnexpectedError
             }
-            auditService.audit(registerAuditModel(nino,suffix,registration,response.body))(updatedHc,ec,request)
+            auditService.audit(registerAuditModel(nino, suffix, registration, response.body))(updatedHc, ec, request)
 
             val parseResponse@Left(ErrorModel(_, optCode, message)) = parseFailure(status, response.body)
             val code: String = optCode.getOrElse("N/A")
@@ -98,15 +98,14 @@ class RegistrationConnector @Inject()(appConfig: AppConfig,
       }
   }
 
-  def getRegistration(nino: String)(implicit hc: HeaderCarrier,request: Request[_]): Future[GetRegistrationUtil.Response] = {
+  def getRegistration(nino: String)(implicit hc: HeaderCarrier, request: Request[_]): Future[GetRegistrationUtil.Response] = {
     import GetRegistrationUtil._
-    import RegistrationConnector.auditGetRegistrationName
 
     implicit val loggingConfig = RegistrationConnector.getRegistrationLoggingConfig
     lazy val requestDetails: Map[String, String] = Map("nino" -> nino)
     val updatedHc = createHeaderCarrierGet(hc)
 
-    auditService.audit(getRegistrationShortModel(nino,eventTypeRequest))(updatedHc,ec,request)
+    auditService.audit(getRegistrationShortModel(nino, eventTypeRequest))(updatedHc, ec, request)
 
     logging.debug(s"Request:\n$requestDetails\n\nRequest Headers:\n$updatedHc")
     httpClient.GET[HttpResponse](getRegistrationUrl(nino))(implicitly[HttpReads[HttpResponse]], updatedHc, ec)
@@ -124,7 +123,7 @@ class RegistrationConnector @Inject()(appConfig: AppConfig,
               case SERVICE_UNAVAILABLE => eventTypeServerUnavailable
               case _ => eventTypeUnexpectedError
             }
-            auditService.audit(getRegistrationModel(nino,suffix,response.body))(updatedHc,ec,request)
+            auditService.audit(getRegistrationModel(nino, suffix, response.body))(updatedHc, ec, request)
 
             val parseResponse@Left(ErrorModel(_, optCode, message)) = parseFailure(status, response.body)
             val code: String = optCode.getOrElse("N/A")

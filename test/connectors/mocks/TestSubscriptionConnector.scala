@@ -27,7 +27,7 @@ import play.api.http.Status._
 import play.api.libs.json.JsValue
 import play.api.mvc.Request
 import services.monitoring.AuditService
-import uk.gov.hmrc.http.{HeaderCarrier, HttpPost}
+import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
 import utils.JsonUtils._
 import utils.Logging

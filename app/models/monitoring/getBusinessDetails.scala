@@ -16,8 +16,6 @@
 
 package models.monitoring
 
-import models.subscription.business.BusinessSubscriptionRequestModel
-import play.api.libs.json.Json
 import services.monitoring.AuditModel
 
 
@@ -25,9 +23,9 @@ object getBusinessDetails {
   val controlListTransactionName = "getBusinessDetails api-5"
 
   case class getBusinessDetailsModel(nino: String,
-                                     suffix : String,
+                                     suffix: String,
                                      responseBody: String
-                              ) extends AuditModel {
+                                    ) extends AuditModel {
     override val transactionName: String = controlListTransactionName
     override val detail: Map[String, String] = Map(
       "nino" -> nino,

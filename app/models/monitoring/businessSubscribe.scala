@@ -16,7 +16,6 @@
 
 package models.monitoring
 
-import models.frontend.FERequest
 import models.subscription.business.BusinessSubscriptionRequestModel
 import play.api.libs.json.Json
 import services.monitoring.AuditModel
@@ -27,10 +26,10 @@ object businessSubscribe {
 
   case class businessSubscribeModel(nino: String,
                                     arn: Option[String],
-                               businessSubscriptionPayload: BusinessSubscriptionRequestModel,
-                               eventTypeUnexpectedError : String,
+                                    businessSubscriptionPayload: BusinessSubscriptionRequestModel,
+                                    eventTypeUnexpectedError: String,
                                     responseBody: String
-                              ) extends AuditModel {
+                                   ) extends AuditModel {
     override val transactionName: String = controlListTransactionName
     override val detail: Map[String, String] = Map(
       "nino" -> nino,

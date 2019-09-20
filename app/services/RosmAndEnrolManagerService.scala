@@ -80,7 +80,8 @@ class RosmAndEnrolManagerService @Inject()
 
   private def businessSubscription(feRequest: FERequest)
                                   (implicit hc: HeaderCarrier,
-                                   ec: ExecutionContext,request: Request[_]): Future[Option[Either[ErrorModel, BusinessSubscriptionSuccessResponseModel]]] = {
+                                   ec: ExecutionContext,
+                                   request: Request[_]): Future[Option[Either[ErrorModel, BusinessSubscriptionSuccessResponseModel]]] = {
     feRequest.incomeSource match {
       case Both | Business => subscriptionService.businessSubscribe(feRequest) map {
         case Right(success) => Some(success)

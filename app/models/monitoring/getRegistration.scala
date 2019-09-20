@@ -16,8 +16,6 @@
 
 package models.monitoring
 
-import models.registration.RegistrationRequestModel
-import play.api.libs.json.Json
 import services.monitoring.AuditModel
 
 
@@ -25,9 +23,9 @@ object getRegistration {
   val controlListTransactionName = "getRegistration-api-1(b)"
 
   case class getRegistrationModel(nino: String,
-                                suffix : String,
-                                responseBody: String
-                              ) extends AuditModel {
+                                  suffix: String,
+                                  responseBody: String
+                                 ) extends AuditModel {
     override val transactionName: String = controlListTransactionName
     override val detail: Map[String, String] = Map(
       "nino" -> nino,
@@ -38,7 +36,7 @@ object getRegistration {
 
   case class getRegistrationShortModel(nino: String,
                                        auditT: String
-                                 ) extends AuditModel {
+                                      ) extends AuditModel {
     override val transactionName: String = controlListTransactionName
     override val detail: Map[String, String] = Map(
       "nino" -> nino
