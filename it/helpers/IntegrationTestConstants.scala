@@ -24,10 +24,10 @@ import models.frontend.{Both, Business, FERequest, Property}
 import models.lockout.LockoutRequest
 import models.registration.RegistrationRequestModel
 import models.subscription.business.{BusinessDetailsModel, BusinessSubscriptionRequestModel, Cash}
-import models.subscription.incomesource.{AccountingPeriod, BusinessIncomeModel, PropertyIncomeModel}
+import models.subscription.incomesource.{AccountingPeriod, BusinessIncomeModel, PropertyIncomeModel, SignUpRequest}
 import models.{DateModel, ErrorModel}
 import play.api.http.Status._
-import play.api.libs.json.JsValue
+import play.api.libs.json.{JsObject, JsValue, Json}
 import uk.gov.hmrc.domain.Generator
 import utils.JsonUtils._
 
@@ -72,11 +72,40 @@ object IntegrationTestConstants {
   )
 
   val testPropertyIncomeModel = PropertyIncomeModel(
-    accountingMethod = Cash
+    accountingMethod = Some(Cash)
   )
 
   val lockoutRequest = LockoutRequest(
     timeoutSeconds = 10
+  )
+
+  val incomeSourceBusiness = SignUpRequest(
+    nino = testNino,
+    arn = None,
+    businessIncome = BusinessIncomeModel(
+      tradingName = testTradingName,
+      accountingPeriod = testAccountingPeriod,
+      accountingMethod = Cash
+    ),
+    propertyIncome = None
+  )
+
+  val incomeSourceProperty = SignUpRequest(
+    nino = testNino,
+    arn = None,
+    businessIncome = None,
+    propertyIncome = PropertyIncomeModel(Some(Cash))
+  )
+
+  val incomeSourceBoth = SignUpRequest(
+    nino = testNino,
+    arn = None,
+    businessIncome = BusinessIncomeModel(
+      tradingName = testTradingName,
+      accountingPeriod = testAccountingPeriod,
+      accountingMethod = Cash
+    ),
+    propertyIncome = PropertyIncomeModel(Some(Cash))
   )
 
   val fePropertyRequest = FERequest(

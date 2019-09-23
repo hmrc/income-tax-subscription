@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 
-package connectors
+package connectors.deprecated
 
-import javax.inject.Inject
-import utils.Logging._
 import config.AppConfig
-import connectors.SubscriptionConnector._
+import connectors.RawResponseReads
+import connectors.deprecated.SubscriptionConnector._
 import connectors.utilities.ConnectorUtils
+import javax.inject.Inject
 import models.ErrorModel
 import models.monitoring.businessSubscribe.businessSubscribeModel
 import models.monitoring.propertySubscribe.propertySubscribeModel
@@ -33,6 +33,7 @@ import services.monitoring.AuditService
 import uk.gov.hmrc.http.logging.Authorization
 import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, HttpResponse}
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
+import utils.Logging._
 import utils.{Logging, LoggingConfig}
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -69,7 +70,7 @@ class SubscriptionConnector @Inject()(applicationConfig: AppConfig,
           logging.info(s"Business subscription responded with an OK")
           parseSuccess(response.body)
         case status =>
-          auditService.audit(businessSubscribeModel(nino,arn,businessSubscriptionPayload,eventTypeUnexpectedError,response.body))(updatedHc,ec,request)
+          auditService.audit(businessSubscribeModel(nino, arn, businessSubscriptionPayload, eventTypeUnexpectedError, response.body))(updatedHc, ec, request)
 
           val parseResponse@Left(ErrorModel(_, optCode, message)) = parseFailure(status, response.body)
           val code: String = optCode.getOrElse("N/A")
@@ -81,7 +82,7 @@ class SubscriptionConnector @Inject()(applicationConfig: AppConfig,
   }
 
   def propertySubscribe(nino: String, arn: Option[String])
-                       (implicit hc: HeaderCarrier, ec: ExecutionContext, request: Request[_]) : Future[PropertyConnectorUtil.Response] = {
+                       (implicit hc: HeaderCarrier, ec: ExecutionContext, request: Request[_]): Future[PropertyConnectorUtil.Response] = {
     import PropertyConnectorUtil._
 
     implicit val loggingConfig = SubscriptionConnector.propertySubscribeLoggingConfig
@@ -97,7 +98,7 @@ class SubscriptionConnector @Inject()(applicationConfig: AppConfig,
           parseSuccess(response.body)
         case status =>
 
-          auditService.audit(propertySubscribeModel(nino,arn,eventTypeUnexpectedError,response.body))(updatedHc,ec,request)
+          auditService.audit(propertySubscribeModel(nino, arn, eventTypeUnexpectedError, response.body))(updatedHc, ec, request)
 
           val parseResponse@Left(ErrorModel(_, optCode, message)) = parseFailure(status, response.body)
           val code: String = optCode.getOrElse("N/A")

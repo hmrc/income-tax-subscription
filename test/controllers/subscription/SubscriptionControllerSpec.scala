@@ -16,53 +16,44 @@
 
 package controllers.subscription
 
-import controllers.ITSASessionKeys
-import models.frontend.FESuccessResponse
 import play.api.http.Status._
-import play.api.mvc.{AnyContentAsJson, Request, Result}
+import play.api.libs.json.{JsValue, Json}
 import play.api.test.FakeRequest
 import play.api.test.Helpers.stubControllerComponents
-import services.mocks.{MockAuthService, MockSubscriptionManagerService}
+import services.SubmissionOrchestrationService.SuccessfulSubmission
+import services.mocks.{MockAuthService, MockSubmissionOrchestrationService}
 import uk.gov.hmrc.play.test.UnitSpec
-import utils.JsonUtils._
-import utils.{Logging, MaterializerSupport}
+import utils.MaterializerSupport
 import utils.TestConstants._
 
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
-class SubscriptionControllerSpec extends UnitSpec with MockSubscriptionManagerService with MaterializerSupport with MockAuthService {
+class SubscriptionControllerSpec(implicit val ec: ExecutionContext
+                                ) extends UnitSpec with MockSubmissionOrchestrationService with MockAuthService with MaterializerSupport {
   lazy val mockCC = stubControllerComponents()
-  val logging = mock[Logging]
 
-  object TestController extends SubscriptionController(logging, mockSubscriptionManagerService, mockAuthService, mockCC)
+  object TestController extends SubscriptionController(mockSubmissionOrchestrationService, mockAuthService, mockCC)
 
-  def call(request: Request[AnyContentAsJson]): Future[Result] = TestController.subscribe(testNino)(request)
+  "IncomeSourceController" when {
+    "subscribe" should {
+      "return a 200 response with an id if the json is valid" in {
+        val fakeRequest = FakeRequest().withBody(Json.toJson(testBothIncomeSourceModel))
 
-  "SubscriptionController" should {
+        mockAuthSuccess()
+        mockSubmit(testBothIncomeSourceModel)(Future.successful(SuccessfulSubmission(testMtditId)))
 
-    "return the id when successful" in {
-      val fakeRequest: FakeRequest[AnyContentAsJson] =
-        FakeRequest()
-          .withJsonBody(fePropertyRequest)
-          .withHeaders(ITSASessionKeys.RequestURI -> "")
-      mockAuthSuccess()
-      mockRosmAndEnrol(fePropertyRequest, "")(Future.successful(Right(feSuccessResponse)))
-      val result = call(fakeRequest)
-      jsonBodyOf(result).as[FESuccessResponse].mtditId.get shouldBe testMtditId
+        val result = await(TestController.subscribe(testNino)(fakeRequest))
+        status(result) shouldBe OK
+        jsonBodyOf(result).as[SuccessfulSubmission].mtditId shouldBe testMtditId
+      }
+      "return a 400 response if the json can't be parsed" in {
+        val fakeRequest: FakeRequest[JsValue] = FakeRequest().withBody(Json.obj())
 
-    }
+        mockAuthSuccess()
 
-    "return failure when the json body cannot be parsed" in {
-      val fakeRequest: FakeRequest[AnyContentAsJson] =
-        FakeRequest()
-          .withJsonBody("{}")
-          .withHeaders(ITSASessionKeys.RequestURI -> "")
-
-      mockAuthSuccess()
-
-      val result = call(fakeRequest)
-      status(result) shouldBe BAD_REQUEST
+        val result = await(TestController.subscribe(testNino)(fakeRequest))
+        status(result) shouldBe BAD_REQUEST
+      }
     }
   }
-
 }
