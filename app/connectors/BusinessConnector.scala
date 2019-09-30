@@ -18,9 +18,10 @@ package connectors
 
 import config.MicroserviceAppConfig
 import javax.inject.{Inject, Singleton}
+
 import models.subscription.incomesource.BusinessIncomeModel
 import parsers.MtditIdParser.MtditIdHttpReads
-import play.api.libs.json.Writes
+import play.api.libs.json.{JsObject, Writes}
 import uk.gov.hmrc.http.logging.Authorization
 import uk.gov.hmrc.http.{HeaderCarrier, HttpReads}
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
@@ -40,9 +41,9 @@ class BusinessConnector @Inject()(val http: HttpClient,
 
     http.POST(
       url = appConfig.businessSubscribeUrl(nino),
-      body = businessIncomeModel
+      body = BusinessIncomeModel.writeToDes(businessIncomeModel)
     )(
-      implicitly[Writes[BusinessIncomeModel]],
+      implicitly[Writes[JsObject]],
       implicitly[HttpReads[String]],
       headerCarrier,
       implicitly[ExecutionContext]

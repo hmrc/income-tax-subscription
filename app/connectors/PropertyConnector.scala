@@ -19,8 +19,9 @@ package connectors
 import config.MicroserviceAppConfig
 import parsers.MtditIdParser.MtditIdHttpReads
 import javax.inject.{Inject, Singleton}
+
 import models.subscription.incomesource.PropertyIncomeModel
-import play.api.libs.json.Writes
+import play.api.libs.json.{JsObject, Writes}
 import uk.gov.hmrc.http.logging.Authorization
 import uk.gov.hmrc.http.{HeaderCarrier, HttpReads}
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
@@ -40,9 +41,9 @@ class PropertyConnector @Inject()(val http: HttpClient,
 
     http.POST(
       url = appConfig.propertySubscribeUrl(nino),
-      body = propertyIncomeModel
+      body = PropertyIncomeModel.writeToDes(propertyIncomeModel)
     )(
-      implicitly[Writes[PropertyIncomeModel]],
+      implicitly[Writes[JsObject]],
       implicitly[HttpReads[String]],
       headerCarrier,
       implicitly[ExecutionContext]
