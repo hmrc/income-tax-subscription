@@ -17,12 +17,14 @@
 package models.incomesource
 
 import models.DateModel
-import models.subscription.business.Cash
-import models.subscription.incomesource.{AccountingPeriod, BusinessIncomeModel, SignUpRequest, PropertyIncomeModel}
+import models.subscription.business.{AccountingMethod, Cash}
+import models.subscription.incomesource.{AccountingPeriod, BusinessIncomeModel, PropertyIncomeModel, SignUpRequest}
 import play.api.libs.json.Json
 import uk.gov.hmrc.play.test.UnitSpec
 
 class SignUpRequestSpec extends UnitSpec {
+
+
   "Creating a model for a subscription request" should {
 
     val testNino = "nino"
@@ -35,61 +37,32 @@ class SignUpRequestSpec extends UnitSpec {
     val endMonth = "6"
     val endYear = "2019"
 
-    val businessIncome = BusinessIncomeModel(
-      tradingName = Some(testTradingName),
-      accountingPeriod = AccountingPeriod(startDate = DateModel(startDay, startMonth, startYear), endDate = DateModel(endDay, endMonth, endYear)),
-      accountingMethod = Cash
+    val businessIncome = BusinessIncomeModel(Some(testTradingName),
+      AccountingPeriod(startDate = DateModel(startDay, startMonth, startYear), endDate = DateModel(endDay, endMonth, endYear)),
+      AccountingMethod.feCash)
+
+    val propertyIncome = PropertyIncomeModel(None)
+
+    def businessIncomeJson(testArn: Option[String] = None) = Json.obj(
+      "businessDetails" ->  Seq(Json.obj(
+        "accountingPeriodStartDate" -> "2018-06-06",
+        "accountingPeriodEndDate" -> "2019-06-05",
+        "tradingName" -> "trader joe",
+        "cashOrAccruals" -> "cash"
+      ))
     )
 
-    val propertyIncome = PropertyIncomeModel(
-      accountingMethod = Some(Cash)
-    )
+    def propertyIncomeJson() = Json.obj()
 
-    def incomeSource(testArn: Option[String] = None) = SignUpRequest(testNino, testArn, Some(businessIncome), Some(propertyIncome))
+    "send the correct json to DES for business income source" in {
 
-    def testJson(testArn: Option[String] = None) = Json.obj(
-      "nino" -> testNino,
-      "businessIncome" -> Json.obj(
-        "tradingName" -> testTradingName,
-        "accountingPeriod" -> Json.obj(
-          "startDate" -> Json.obj(
-            "day" -> startDay,
-            "month" -> startMonth,
-            "year" -> startYear
-          ),
-          "endDate" -> Json.obj(
-            "day" -> endDay,
-            "month" -> endMonth,
-            "year" -> endYear
-          )
-        ),
-        "accountingMethod" -> "cash"
-      ),
-      "propertyIncome" -> Json.obj(
-        "accountingMethod" -> "cash"
-      )
-    ) ++ testArn.fold(Json.obj())(arn => Json.obj("arn" -> arn))
+      val result = BusinessIncomeModel.writeToDes(businessIncome) shouldBe businessIncomeJson()
 
-    "convert to the correct Json" in {
-      Json.toJson(incomeSource(Some(testArn))) shouldBe testJson(Some(testArn))
     }
 
-    "convert from json" when {
-
-      "an arn is present" in {
-        val result = testJson(Some(testArn)).as[SignUpRequest]
-
-        result shouldBe incomeSource(Some(testArn))
-        result.isAgent shouldBe true
-      }
-
-      "an arn is not present" in {
-        val result = testJson().as[SignUpRequest]
-
-        result shouldBe incomeSource()
-        result.isAgent shouldBe false
-      }
+    "send the correct json to DES for property income source" in {
+      val result = PropertyIncomeModel.writeToDes(propertyIncome) shouldBe propertyIncomeJson()
     }
-
   }
+
 }

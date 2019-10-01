@@ -67,7 +67,7 @@ class MicroserviceAppConfig @Inject()(val configuration: Configuration, services
   }
 
   def businessSubscribeUrl: String => String = nino => s"$desURL/income-tax-self-assessment/nino/$nino/business"
-  def propertySubscribeUrl: String => String = nino => s"$desURL/income-tax-self-assessment/nino/$nino/property"
+  def propertySubscribeUrl: String => String = nino => s"$desURL/income-tax-self-assessment/nino/$nino/properties"
 
   protected def runModeConfiguration: Configuration = configuration
 }
