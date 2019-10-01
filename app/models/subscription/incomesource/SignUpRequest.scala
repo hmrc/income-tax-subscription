@@ -17,7 +17,7 @@
 package models.subscription.incomesource
 
 import models.DateModel
-import models.subscription.business.AccountingMethod
+import models.subscription.business.{AccountingMethod, Accruals, Cash}
 import play.api.libs.json._
 
 case class SignUpRequest(nino: String,
@@ -50,7 +50,7 @@ object SignUpRequest {
 object BusinessIncomeModel {
   implicit val format: OFormat[BusinessIncomeModel] = Json.format[BusinessIncomeModel]
 
-  def writeToDes(buisnessIncomeModel: BusinessIncomeModel) = {
+  def writeToDes(buisnessIncomeModel: BusinessIncomeModel): JsObject = {
     Json.obj(
       "businessDetails" -> Seq(Json.obj(
         "accountingPeriodStartDate" -> buisnessIncomeModel.accountingPeriod.startDate.toDesDateFormat,
@@ -65,8 +65,16 @@ object BusinessIncomeModel {
 object PropertyIncomeModel {
   implicit val format: OFormat[PropertyIncomeModel] = Json.format[PropertyIncomeModel]
 
-  def writeToDes(propertyIncomeModel: PropertyIncomeModel) = {
-    propertyIncomeModel.accountingMethod.fold(Json.obj())(accountingMethod => Json.obj("cashOrAccruals" -> accountingMethod))
+  def writeToDes(propertyIncomeModel: PropertyIncomeModel): JsObject = {
+
+    val toDesCashAccruals: AccountingMethod => String = {
+      case Cash => "C"
+      case Accruals => "A"
+    }
+
+    propertyIncomeModel.accountingMethod.map(toDesCashAccruals).fold(Json.obj())(accountingMethod => Json.obj(
+      "cashOrAccrualsFlag" -> accountingMethod)
+    )
   }
 
 
