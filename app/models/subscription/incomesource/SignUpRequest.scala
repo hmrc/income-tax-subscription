@@ -17,7 +17,7 @@
 package models.subscription.incomesource
 
 import models.DateModel
-import models.subscription.business.AccountingMethod
+import models.subscription.business.{AccountingMethod, Accruals, Cash}
 import play.api.libs.json._
 
 case class SignUpRequest(nino: String,
@@ -50,13 +50,13 @@ object SignUpRequest {
 object BusinessIncomeModel {
   implicit val format: OFormat[BusinessIncomeModel] = Json.format[BusinessIncomeModel]
 
-  def writeToDes(buisnessIncomeModel: BusinessIncomeModel) = {
+  def writeToDes(businessIncomeModel: BusinessIncomeModel): JsObject = {
     Json.obj(
       "businessDetails" -> Seq(Json.obj(
-        "accountingPeriodStartDate" -> buisnessIncomeModel.accountingPeriod.startDate.toDesDateFormat,
-        "accountingPeriodEndDate" -> buisnessIncomeModel.accountingPeriod.endDate.toDesDateFormat,
-        "tradingName" -> buisnessIncomeModel.tradingName,
-        "cashOrAccruals" -> buisnessIncomeModel.accountingMethod
+        "accountingPeriodStartDate" -> businessIncomeModel.accountingPeriod.startDate.toDesDateFormat,
+        "accountingPeriodEndDate" -> businessIncomeModel.accountingPeriod.endDate.toDesDateFormat,
+        "tradingName" -> businessIncomeModel.tradingName,
+        "cashOrAccruals" -> businessIncomeModel.accountingMethod
       ))
     )
   }
@@ -65,9 +65,13 @@ object BusinessIncomeModel {
 object PropertyIncomeModel {
   implicit val format: OFormat[PropertyIncomeModel] = Json.format[PropertyIncomeModel]
 
-  def writeToDes(propertyIncomeModel: PropertyIncomeModel) = {
-    propertyIncomeModel.accountingMethod.fold(Json.obj())(accountingMethod => Json.obj("cashOrAccruals" -> accountingMethod))
+  val cashAccrualsFlag = "cashAccrualsFlag"
+
+  def writeToDes(propertyIncomeModel: PropertyIncomeModel): JsObject = {
+    propertyIncomeModel.accountingMethod match {
+      case Some(Cash) => Json.obj(cashAccrualsFlag -> "C")
+      case Some(Accruals) => Json.obj(cashAccrualsFlag -> "A")
+      case None => Json.obj()
+    }
   }
-
-
 }

@@ -23,7 +23,7 @@ import models.digitalcontact.PaperlessPreferenceKey
 import models.frontend.{Both, Business, FERequest, Property}
 import models.lockout.LockoutRequest
 import models.registration.RegistrationRequestModel
-import models.subscription.business.{BusinessDetailsModel, BusinessSubscriptionRequestModel, Cash}
+import models.subscription.business.{Accruals, BusinessDetailsModel, BusinessSubscriptionRequestModel, Cash}
 import models.subscription.incomesource.{AccountingPeriod, BusinessIncomeModel, PropertyIncomeModel, SignUpRequest}
 import models.{DateModel, ErrorModel}
 import play.api.http.Status._
@@ -71,6 +71,11 @@ object IntegrationTestConstants {
     accountingMethod = Cash
   )
 
+  val testPropertyIncomeCash = Json.obj("cashAccrualsFlag" -> "C")
+  val testPropertyIncomeAccruals = Json.obj("cashAccrualsFlag" -> "A")
+  val testPropertyIncomeNone = Json.obj()
+
+
   val testPropertyIncomeModel = PropertyIncomeModel(
     accountingMethod = Some(Cash)
   )
@@ -90,11 +95,25 @@ object IntegrationTestConstants {
     propertyIncome = None
   )
 
-  val incomeSourceProperty = SignUpRequest(
+  val incomeSourcePropertyCash = SignUpRequest(
     nino = testNino,
     arn = None,
     businessIncome = None,
     propertyIncome = PropertyIncomeModel(Some(Cash))
+  )
+
+  val incomeSourcePropertyNone = SignUpRequest(
+    nino = testNino,
+    arn = None,
+    businessIncome = None,
+    propertyIncome = PropertyIncomeModel(None)
+  )
+
+  val incomeSourcePropertyAccruals = SignUpRequest(
+    nino = testNino,
+    arn = None,
+    businessIncome = None,
+    propertyIncome = PropertyIncomeModel(Some(Accruals))
   )
 
   val incomeSourceBoth = SignUpRequest(
