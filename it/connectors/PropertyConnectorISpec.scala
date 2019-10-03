@@ -15,7 +15,7 @@ class PropertyConnectorISpec extends ComponentSpecBase {
   "property connector" when {
     "property subscription returns a successful response" should {
       "return propertySubscriptionPayload" in {
-        stubPropertyIncomeSubscription(testNino, testPropertyIncomeModel)(OK, Json.obj(
+        stubPropertyIncomeSubscription(testNino, testPropertyIncomeCash)(OK, Json.obj(
           "mtditId" -> testMtditId))
 
         val res = PropertyConnector.propertySubscribe(testNino, testPropertyIncomeModel)
@@ -26,7 +26,7 @@ class PropertyConnectorISpec extends ComponentSpecBase {
 
     "property subscription errors " should {
       "throw an exception where the nino number doesn't exist" in {
-        stubPropertyIncomeSubscription(testNino, testPropertyIncomeModel)(INTERNAL_SERVER_ERROR, Json.obj())
+        stubPropertyIncomeSubscription(testNino, testPropertyIncomeCash)(INTERNAL_SERVER_ERROR, Json.obj())
 
         intercept[InternalServerException] {
           val res = PropertyConnector.propertySubscribe(testNino, testPropertyIncomeModel)

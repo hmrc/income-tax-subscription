@@ -41,7 +41,8 @@ class SignUpRequestSpec extends UnitSpec {
       AccountingPeriod(startDate = DateModel(startDay, startMonth, startYear), endDate = DateModel(endDay, endMonth, endYear)),
       AccountingMethod.feCash)
 
-    val propertyIncome = PropertyIncomeModel(None)
+    val propertyIncome = PropertyIncomeModel(Some(Cash))
+    val propertyNoIncome = PropertyIncomeModel(None)
 
     def businessIncomeJson(testArn: Option[String] = None) = Json.obj(
       "businessDetails" ->  Seq(Json.obj(
@@ -52,7 +53,8 @@ class SignUpRequestSpec extends UnitSpec {
       ))
     )
 
-    def propertyIncomeJson() = Json.obj()
+    def propertyIncomeJson() = Json.obj("cashAccrualsFlag" -> "C")
+    def propertyNoIncomeJson() = Json.obj()
 
     "send the correct json to DES for business income source" in {
 
@@ -62,6 +64,10 @@ class SignUpRequestSpec extends UnitSpec {
 
     "send the correct json to DES for property income source" in {
       val result = PropertyIncomeModel.writeToDes(propertyIncome) shouldBe propertyIncomeJson()
+    }
+
+    "send the correct json to DES for property income source with no cash or accurals" in {
+      val result = PropertyIncomeModel.writeToDes(propertyNoIncome) shouldBe propertyNoIncomeJson()
     }
   }
 
