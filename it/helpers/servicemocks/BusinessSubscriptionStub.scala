@@ -9,9 +9,18 @@ object BusinessSubscriptionStub extends WireMockMethods {
 
   private def businessSubscriptionUri(nino: String): String = s"/income-tax-self-assessment/nino/$nino/business"
 
-  def stubBusinessIncomeSubscription(nino: String, businessIncomeModel: BusinessIncomeModel)(status: Int, body: JsObject): StubMapping = {
-    when(method = POST, uri = businessSubscriptionUri(nino), body = BusinessIncomeModel.writeToDes(businessIncomeModel))
-      .thenReturn(status, body)
+  def stubBusinessIncomeSubscription(nino: String, expectedBody: JsObject, authorizationHeader: String, environmentHeader: String)
+                                    (status: Int, body: JsObject): StubMapping = {
+    when(
+      method = POST,
+      uri = businessSubscriptionUri(nino),
+      body = expectedBody,
+      headers = Map[String, String](
+        "Authorization" -> authorizationHeader,
+        "Environment" -> environmentHeader
+      )
+    ).thenReturn(status, body)
+
   }
 
 }

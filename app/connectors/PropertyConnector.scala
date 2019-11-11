@@ -17,10 +17,9 @@
 package connectors
 
 import config.MicroserviceAppConfig
-import parsers.MtditIdParser.MtditIdHttpReads
 import javax.inject.{Inject, Singleton}
-
 import models.subscription.incomesource.PropertyIncomeModel
+import parsers.MtditIdParser.MtditIdHttpReads
 import play.api.libs.json.{JsObject, Writes}
 import uk.gov.hmrc.http.logging.Authorization
 import uk.gov.hmrc.http.{HeaderCarrier, HttpReads}
@@ -36,8 +35,8 @@ class PropertyConnector @Inject()(val http: HttpClient,
                        (implicit hc: HeaderCarrier): Future[String] = {
 
     val headerCarrier = hc
-      .withExtraHeaders("Environment" -> appConfig.desEnvironment)
-      .copy(authorization = Some(Authorization(appConfig.desToken)))
+      .copy(authorization = Some(Authorization(appConfig.desAuthorisationToken)))
+      .withExtraHeaders(appConfig.desEnvironmentHeader)
 
     http.POST(
       url = appConfig.propertySubscribeUrl(nino),

@@ -1,6 +1,7 @@
 
 package connectors
 
+import config.MicroserviceAppConfig
 import helpers.ComponentSpecBase
 import helpers.IntegrationTestConstants._
 import helpers.servicemocks.PropertySubscriptionStub.stubPropertyIncomeSubscription
@@ -10,15 +11,17 @@ import uk.gov.hmrc.http.InternalServerException
 
 class PropertyConnectorISpec extends ComponentSpecBase {
 
-  private lazy val PropertyConnector: PropertyConnector = app.injector.instanceOf[PropertyConnector]
+  private lazy val propertyConnector: PropertyConnector = app.injector.instanceOf[PropertyConnector]
+  private lazy val appConfig: MicroserviceAppConfig = app.injector.instanceOf[MicroserviceAppConfig]
 
   "property connector" when {
     "property subscription returns a successful response" should {
       "return propertySubscriptionPayload" in {
-        stubPropertyIncomeSubscription(testNino, testPropertyIncomeCash)(OK, Json.obj(
-          "mtditId" -> testMtditId))
+        stubPropertyIncomeSubscription(testNino, testPropertyIncomeCash, appConfig.desAuthorisationToken, appConfig.desEnvironment)(
+          OK, Json.obj("mtditId" -> testMtditId)
+        )
 
-        val res = PropertyConnector.propertySubscribe(testNino, testPropertyIncomeModel)
+        val res = propertyConnector.propertySubscribe(testNino, testPropertyIncomeModel)
 
         await(res) shouldBe testMtditId
       }
@@ -26,10 +29,12 @@ class PropertyConnectorISpec extends ComponentSpecBase {
 
     "property subscription errors " should {
       "throw an exception where the nino number doesn't exist" in {
-        stubPropertyIncomeSubscription(testNino, testPropertyIncomeCash)(INTERNAL_SERVER_ERROR, Json.obj())
+        stubPropertyIncomeSubscription(testNino, testPropertyIncomeCash, appConfig.desAuthorisationToken, appConfig.desEnvironment)(
+          INTERNAL_SERVER_ERROR, Json.obj()
+        )
 
         intercept[InternalServerException] {
-          val res = PropertyConnector.propertySubscribe(testNino, testPropertyIncomeModel)
+          val res = propertyConnector.propertySubscribe(testNino, testPropertyIncomeModel)
           await(res)
         }
       }
