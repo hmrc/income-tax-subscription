@@ -66,8 +66,9 @@ class MicroserviceAppConfig @Inject()(val configuration: Configuration, services
       .getOrElse(throw new Exception(s"Missing configuration key: $key"))
   }
 
-  def businessSubscribeUrl: String => String = nino => s"$desURL/income-tax-self-assessment/nino/$nino/business"
-  def propertySubscribeUrl: String => String = nino => s"$desURL/income-tax-self-assessment/nino/$nino/properties"
+  def businessSubscribeUrl(nino: String): String = s"$desURL/income-tax-self-assessment/nino/$nino/business"
+
+  def propertySubscribeUrl(nino: String): String = s"$desURL/income-tax-self-assessment/nino/$nino/properties"
 
   protected def runModeConfiguration: Configuration = configuration
 }

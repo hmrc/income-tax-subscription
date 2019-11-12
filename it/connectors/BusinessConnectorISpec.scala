@@ -1,6 +1,7 @@
 
 package connectors
 
+import config.MicroserviceAppConfig
 import helpers.ComponentSpecBase
 import helpers.IntegrationTestConstants._
 import helpers.servicemocks.BusinessSubscriptionStub.stubBusinessIncomeSubscription
@@ -10,15 +11,17 @@ import uk.gov.hmrc.http.InternalServerException
 
 class BusinessConnectorISpec extends ComponentSpecBase {
 
-  private lazy val BusinessConnector: BusinessConnector = app.injector.instanceOf[BusinessConnector]
+  private lazy val businessConnector: BusinessConnector = app.injector.instanceOf[BusinessConnector]
+  private lazy val appConfig: MicroserviceAppConfig = app.injector.instanceOf[MicroserviceAppConfig]
 
   "business connector" when {
     "business subscription returns a successful response" should {
       "return businessSubscriptionPayload" in {
-        stubBusinessIncomeSubscription(testNino, testBusinessIncomeModel)(OK, Json.obj(
-          "mtditId" -> testMtditId))
+        stubBusinessIncomeSubscription(testNino, testBusinessIncomeJson, appConfig.desAuthorisationToken, appConfig.desEnvironment)(
+          OK, Json.obj("mtditId" -> testMtditId)
+        )
 
-        val res = BusinessConnector.businessSubscribe(testNino, testBusinessIncomeModel)
+        val res = businessConnector.businessSubscribe(testNino, testBusinessIncomeModel)
 
         await(res) shouldBe testMtditId
       }
@@ -26,10 +29,12 @@ class BusinessConnectorISpec extends ComponentSpecBase {
 
     "business subscription errors " should {
       "throw an Exception where the nino number doesn't exist" in {
-        stubBusinessIncomeSubscription(testNino, testBusinessIncomeModel)(INTERNAL_SERVER_ERROR, Json.obj())
+        stubBusinessIncomeSubscription(testNino, testBusinessIncomeJson, appConfig.desAuthorisationToken, appConfig.desEnvironment)(
+          INTERNAL_SERVER_ERROR, Json.obj()
+        )
 
         intercept[InternalServerException] {
-          val res = BusinessConnector.businessSubscribe(testNino, testBusinessIncomeModel)
+          val res = businessConnector.businessSubscribe(testNino, testBusinessIncomeModel)
           await(res)
         }
       }

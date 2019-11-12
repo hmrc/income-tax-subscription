@@ -16,6 +16,7 @@
 
 package controllers.subscription
 
+import config.MicroserviceAppConfig
 import helpers.ComponentSpecBase
 import helpers.IntegrationTestConstants._
 import helpers.servicemocks.BusinessSubscriptionStub.stubBusinessIncomeSubscription
@@ -27,11 +28,16 @@ import services.SubmissionOrchestrationService.SuccessfulSubmission
 
 
 class SubscriptionControllerISpec extends ComponentSpecBase {
+
+  val appConfig: MicroserviceAppConfig = app.injector.instanceOf[MicroserviceAppConfig]
+
   "subscribe" should {
     "call the subscription service successfully when auth succeeds for a business registration" in {
       AuthStub.stubAuthSuccess()
       RegistrationStub.stubRegistration(testNino, isAnAgent = false)(OK, "")
-      stubBusinessIncomeSubscription(testNino, testBusinessIncomeModel)(OK, Json.obj("mtditId" -> testMtditId))
+      stubBusinessIncomeSubscription(testNino, testBusinessIncomeJson, appConfig.desAuthorisationToken, appConfig.desEnvironment)(
+        OK, Json.obj("mtditId" -> testMtditId)
+      )
 
       val res = IncomeTaxSubscription.createSubscriptionRefactor(incomeSourceBusiness)
 
@@ -44,7 +50,9 @@ class SubscriptionControllerISpec extends ComponentSpecBase {
     "call the subscription service successfully when auth succeeds for a property registration sending None" in {
       AuthStub.stubAuthSuccess()
       RegistrationStub.stubRegistration(testNino, isAnAgent = false)(OK, "")
-      stubPropertyIncomeSubscription(testNino, testPropertyIncomeNone)(OK, Json.obj("mtditId" -> testMtditId))
+      stubPropertyIncomeSubscription(testNino, testPropertyIncomeNone, appConfig.desAuthorisationToken, appConfig.desEnvironment)(
+        OK, Json.obj("mtditId" -> testMtditId)
+      )
 
       val res = IncomeTaxSubscription.createSubscriptionRefactor(incomeSourcePropertyNone)
 
@@ -57,7 +65,9 @@ class SubscriptionControllerISpec extends ComponentSpecBase {
     "call the subscription service successfully when auth succeeds for a property registration sending Cash" in {
       AuthStub.stubAuthSuccess()
       RegistrationStub.stubRegistration(testNino, isAnAgent = false)(OK, "")
-      stubPropertyIncomeSubscription(testNino, testPropertyIncomeCash)(OK, Json.obj("mtditId" -> testMtditId))
+      stubPropertyIncomeSubscription(testNino, testPropertyIncomeCash, appConfig.desAuthorisationToken, appConfig.desEnvironment)(
+        OK, Json.obj("mtditId" -> testMtditId)
+      )
 
       val res = IncomeTaxSubscription.createSubscriptionRefactor(incomeSourcePropertyCash)
 
@@ -70,7 +80,9 @@ class SubscriptionControllerISpec extends ComponentSpecBase {
     "call the subscription service successfully when auth succeeds for a property registration sending Accruals" in {
       AuthStub.stubAuthSuccess()
       RegistrationStub.stubRegistration(testNino, isAnAgent = false)(OK, "")
-      stubPropertyIncomeSubscription(testNino, testPropertyIncomeAccruals)(OK, Json.obj("mtditId" -> testMtditId))
+      stubPropertyIncomeSubscription(testNino, testPropertyIncomeAccruals, appConfig.desAuthorisationToken, appConfig.desEnvironment)(
+        OK, Json.obj("mtditId" -> testMtditId)
+      )
 
       val res = IncomeTaxSubscription.createSubscriptionRefactor(incomeSourcePropertyAccruals)
 
@@ -83,8 +95,12 @@ class SubscriptionControllerISpec extends ComponentSpecBase {
     "call the subscription service successfully when auth succeeds for a business and property registration" in {
       AuthStub.stubAuthSuccess()
       RegistrationStub.stubRegistration(testNino, isAnAgent = false)(OK, "")
-      stubBusinessIncomeSubscription(testNino, testBusinessIncomeModel)(OK, Json.obj("mtditId" -> testMtditId))
-      stubPropertyIncomeSubscription(testNino, testPropertyIncomeCash)(OK, Json.obj("mtditId" -> testMtditId))
+      stubBusinessIncomeSubscription(testNino, testBusinessIncomeJson, appConfig.desAuthorisationToken, appConfig.desEnvironment)(
+        OK, Json.obj("mtditId" -> testMtditId)
+      )
+      stubPropertyIncomeSubscription(testNino, testPropertyIncomeCash, appConfig.desAuthorisationToken, appConfig.desEnvironment)(
+        OK, Json.obj("mtditId" -> testMtditId)
+      )
 
       val res = IncomeTaxSubscription.createSubscriptionRefactor(incomeSourceBoth)
 
@@ -118,7 +134,9 @@ class SubscriptionControllerISpec extends ComponentSpecBase {
     "fail when Business Subscription returns a BAD_REQUEST response" in {
       AuthStub.stubAuthSuccess()
       RegistrationStub.stubRegistration(testNino, isAnAgent = false)(OK, RegistrationStub.successfulRegistrationResponse)
-      stubBusinessIncomeSubscription(testNino, testBusinessIncomeModel)(BAD_REQUEST, Json.obj())
+      stubBusinessIncomeSubscription(testNino, testBusinessIncomeJson, appConfig.desAuthorisationToken, appConfig.desEnvironment)(
+        BAD_REQUEST, Json.obj()
+      )
 
       val res = IncomeTaxSubscription.createSubscriptionRefactor(incomeSourceBusiness)
 
@@ -130,7 +148,9 @@ class SubscriptionControllerISpec extends ComponentSpecBase {
     "fail when Property Subscription returns a BAD_REQUEST response" in {
       AuthStub.stubAuthSuccess()
       RegistrationStub.stubRegistration(testNino, isAnAgent = false)(OK, RegistrationStub.successfulRegistrationResponse)
-      stubPropertyIncomeSubscription(testNino, testPropertyIncomeCash)(BAD_REQUEST, Json.obj())
+      stubPropertyIncomeSubscription(testNino, testPropertyIncomeCash, appConfig.desAuthorisationToken, appConfig.desEnvironment)(
+        BAD_REQUEST, Json.obj()
+      )
 
       val res = IncomeTaxSubscription.createSubscriptionRefactor(incomeSourcePropertyCash)
 
@@ -142,8 +162,12 @@ class SubscriptionControllerISpec extends ComponentSpecBase {
     "fail when BOTH Subscriptions returns BAD_REQUEST responses during a dual Subscription" in {
       AuthStub.stubAuthSuccess()
       RegistrationStub.stubRegistration(testNino, isAnAgent = false)(OK, RegistrationStub.successfulRegistrationResponse)
-      stubBusinessIncomeSubscription(testNino, testBusinessIncomeModel)(BAD_REQUEST, Json.obj())
-      stubPropertyIncomeSubscription(testNino, testPropertyIncomeCash)(BAD_REQUEST, Json.obj())
+      stubBusinessIncomeSubscription(testNino, testBusinessIncomeJson, appConfig.desAuthorisationToken, appConfig.desEnvironment)(
+        BAD_REQUEST, Json.obj()
+      )
+      stubPropertyIncomeSubscription(testNino, testPropertyIncomeCash, appConfig.desAuthorisationToken, appConfig.desEnvironment)(
+        BAD_REQUEST, Json.obj()
+      )
 
       val res = IncomeTaxSubscription.createSubscriptionRefactor(incomeSourceBoth)
 
@@ -155,8 +179,12 @@ class SubscriptionControllerISpec extends ComponentSpecBase {
     "fail when Business Subscription returns BAD_REQUEST but Property Subscription has no errors during a BOTH Subscription" in {
       AuthStub.stubAuthSuccess()
       RegistrationStub.stubRegistration(testNino, isAnAgent = false)(OK, RegistrationStub.successfulRegistrationResponse)
-      stubBusinessIncomeSubscription(testNino, testBusinessIncomeModel)(BAD_REQUEST, Json.obj())
-      stubPropertyIncomeSubscription(testNino, testPropertyIncomeCash)(OK, Json.obj("mtditId" -> testMtditId))
+      stubBusinessIncomeSubscription(testNino, testBusinessIncomeJson, appConfig.desAuthorisationToken, appConfig.desEnvironment)(
+        BAD_REQUEST, Json.obj()
+      )
+      stubPropertyIncomeSubscription(testNino, testPropertyIncomeCash, appConfig.desAuthorisationToken, appConfig.desEnvironment)(
+        OK, Json.obj("mtditId" -> testMtditId)
+      )
 
       val res = IncomeTaxSubscription.createSubscriptionRefactor(incomeSourceBoth)
 
@@ -168,8 +196,12 @@ class SubscriptionControllerISpec extends ComponentSpecBase {
     "fail when Property Subscription returns BAD_REQUEST but Business Subscription has no errors during a BOTH Subscription" in {
       AuthStub.stubAuthSuccess()
       RegistrationStub.stubRegistration(testNino, isAnAgent = false)(OK, RegistrationStub.successfulRegistrationResponse)
-      stubBusinessIncomeSubscription(testNino, testBusinessIncomeModel)(OK, Json.obj("mtditId" -> testMtditId))
-      stubPropertyIncomeSubscription(testNino, testPropertyIncomeCash)(BAD_REQUEST, Json.obj())
+      stubBusinessIncomeSubscription(testNino, testBusinessIncomeJson, appConfig.desAuthorisationToken, appConfig.desEnvironment)(
+        OK, Json.obj("mtditId" -> testMtditId)
+      )
+      stubPropertyIncomeSubscription(testNino, testPropertyIncomeCash, appConfig.desAuthorisationToken, appConfig.desEnvironment)(
+        BAD_REQUEST, Json.obj()
+      )
 
       val res = IncomeTaxSubscription.createSubscriptionRefactor(incomeSourceBoth)
 

@@ -71,6 +71,8 @@ object IntegrationTestConstants {
     accountingMethod = Cash
   )
 
+  val testBusinessIncomeJson: JsObject = BusinessIncomeModel.writeToDes(testBusinessIncomeModel)
+
   val testPropertyIncomeCash = Json.obj("cashAccrualsFlag" -> "C")
   val testPropertyIncomeAccruals = Json.obj("cashAccrualsFlag" -> "A")
   val testPropertyIncomeNone = Json.obj()
