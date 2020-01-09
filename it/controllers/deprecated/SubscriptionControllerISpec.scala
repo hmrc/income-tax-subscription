@@ -38,10 +38,8 @@ class SubscriptionControllerISpec extends ComponentSpecBase {
         httpStatus(OK),
         jsonBodyAs[FESuccessResponse](FESuccessResponse(Some(testMtditId)))
       )
-
-      Then("The subscription should have been audited")
-      AuditStub.verifyAudit()
     }
+
     "call the subscription service successfully when auth succeeds for a property registration" in {
       Given("I setup the wiremock stubs")
       AuthStub.stubAuthSuccess()
@@ -57,9 +55,6 @@ class SubscriptionControllerISpec extends ComponentSpecBase {
         httpStatus(OK),
         jsonBodyAs[FESuccessResponse](FESuccessResponse(Some(testMtditId)))
       )
-
-      Then("The subscription should have been audited")
-      AuditStub.verifyAudit()
     }
 
     "call the subscription service successfully when auth succeeds for a business and property registration" in {
@@ -84,9 +79,6 @@ class SubscriptionControllerISpec extends ComponentSpecBase {
 
       Then("Property subscription should have been called")
       SubscriptionStub.verifyPropertySubscribe()
-
-      Then("The subscription should have been audited")
-      AuditStub.verifyAudit()
     }
 
     "fail when Auth returns an UNAUTHORIZED response" in {
@@ -116,9 +108,6 @@ class SubscriptionControllerISpec extends ComponentSpecBase {
         jsonBodyAs[FEFailureResponse](FEFailureResponse(testErrorReason))
       )
 
-      Then("The subscription should have been audited")
-      AuditStub.verifyAudit()
-
     }
 
     "fail when Business Subscription returns a BAD_REQUEST response" in {
@@ -136,9 +125,6 @@ class SubscriptionControllerISpec extends ComponentSpecBase {
         jsonBodyAs[FEFailureResponse](FEFailureResponse(testErrorReason))
       )
 
-      Then("The subscription should have been audited")
-      AuditStub.verifyAudit()
-
     }
 
     "fail when Property Subscription returns a NOT_FOUND response" in {
@@ -155,9 +141,6 @@ class SubscriptionControllerISpec extends ComponentSpecBase {
         httpStatus(NOT_FOUND),
         jsonBodyAs[FEFailureResponse](FEFailureResponse(testErrorReason))
       )
-
-      Then("The subscription should have been audited")
-      AuditStub.verifyAudit()
 
     }
 
@@ -182,9 +165,6 @@ class SubscriptionControllerISpec extends ComponentSpecBase {
 
       Then("Property subscription should have been called")
       SubscriptionStub.verifyPropertySubscribe()
-
-      Then("The subscription should have been audited")
-      AuditStub.verifyAudit()
     }
 
     "fail when Business Subscription returns BAD_REQUEST but Property Subscription has no errors during a BOTH Subscription" in {
@@ -208,9 +188,6 @@ class SubscriptionControllerISpec extends ComponentSpecBase {
 
       Then("Property subscription should have been called")
       SubscriptionStub.verifyPropertySubscribe()
-
-      Then("The subscription should have been audited")
-      AuditStub.verifyAudit()
     }
 
     "fail when Property Subscription returns BAD_REQUEST but Business Subscription has no errors during a BOTH Subscription" in {
@@ -234,9 +211,6 @@ class SubscriptionControllerISpec extends ComponentSpecBase {
 
       Then("Property subscription should have been called")
       SubscriptionStub.verifyPropertySubscribe()
-
-      Then("The subscription should have been audited")
-      AuditStub.verifyAudit()
     }
 
   }

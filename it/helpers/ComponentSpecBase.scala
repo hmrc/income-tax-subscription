@@ -17,7 +17,7 @@
 package helpers
 
 import controllers.ITSASessionKeys
-import helpers.servicemocks.{AuditStub, WireMockMethods}
+import helpers.servicemocks.WireMockMethods
 import models.frontend.FERequest
 import models.lockout.LockoutRequest
 import models.subscription.incomesource.SignUpRequest
@@ -55,9 +55,7 @@ trait ComponentSpecBase extends UnitSpec
     "microservice.services.government-gateway.port" -> mockPort,
     "microservice.services.gg-authentication.host" -> mockHost,
     "microservice.services.gg-authentication.port" -> mockPort,
-    "microservice.services.throttle-threshold" -> "2",
-    "auditing.consumer.baseUri.host" -> mockHost,
-    "auditing.consumer.baseUri.port" -> mockPort
+    "microservice.services.throttle-threshold" -> "2"
   )
 
   override def beforeAll(): Unit = {
@@ -68,7 +66,6 @@ trait ComponentSpecBase extends UnitSpec
   override def beforeEach(): Unit = {
     super.beforeEach()
     resetWiremock()
-    AuditStub.stubAuditing()
   }
 
   override def afterAll(): Unit = {
@@ -99,7 +96,7 @@ trait ComponentSpecBase extends UnitSpec
     def post[T](uri: String, body: T)(implicit writes: Writes[T]): WSResponse = {
       await(
         buildClient(uri)
-          .withHeaders(
+          .withHttpHeaders(
             "Content-Type" -> "application/json",
             ITSASessionKeys.RequestURI -> IntegrationTestConstants.requestUri
           )
