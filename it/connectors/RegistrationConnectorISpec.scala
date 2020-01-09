@@ -38,7 +38,6 @@ class RegistrationConnectorISpec extends ComponentSpecBase {
     s"the downstream service returns $BAD_REQUEST" should {
       "throw a BadRequestException" in {
         val isAnAgent = true
-
         RegistrationStub.stubRegistration(testNino, isAnAgent)(BAD_REQUEST, RegistrationStub.failedRegistrationResponse)
 
         intercept[BadRequestException](await(registrationConnector.register(testNino, isAnAgent)))
