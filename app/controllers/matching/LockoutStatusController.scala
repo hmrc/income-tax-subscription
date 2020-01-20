@@ -22,7 +22,7 @@ import models.matching.LockoutResponse
 import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import services.{AuthService, LockoutStatusService}
-import uk.gov.hmrc.play.bootstrap.controller.BaseController
+import uk.gov.hmrc.play.bootstrap.controller.BackendController
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -30,12 +30,12 @@ import scala.concurrent.Future
 @Singleton
 class LockoutStatusController @Inject()(authService: AuthService,
                                         lockoutStatusService: LockoutStatusService,
-                                        cc: ControllerComponents) extends BaseController(cc) {
+                                        cc: ControllerComponents) extends BackendController(cc) {
 
-  import authService._
+
 
   def checkLockoutStatus(arn: String): Action[AnyContent] = Action.async { implicit request =>
-    authorised() {
+    authService.authorised() {
       lockoutStatusService.checkLockoutStatus(arn).map {
         case Right(Some(lock)) => Ok(Json.toJson(lock)(LockoutResponse.feWritter))
         case Right(None) => NotFound
@@ -45,12 +45,12 @@ class LockoutStatusController @Inject()(authService: AuthService,
   }
 
   def lockoutAgent(arn: String): Action[AnyContent] = Action.async { implicit request =>
-    authorised() {
+    authService.authorised() {
       request.body.asJson.map(Json.fromJson[LockoutRequest](_).asOpt) match {
         case Some(Some(req)) =>
           lockoutStatusService.lockoutAgent(arn, req).map {
             case Right(Some(lock)) => Created(Json.toJson(lock)(LockoutResponse.feWritter))
-            case Left(_) => InternalServerError
+            case _ => InternalServerError
           }
         case _ =>
           Future.successful(BadRequest)

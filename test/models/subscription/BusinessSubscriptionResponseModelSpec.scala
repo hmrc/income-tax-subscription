@@ -16,13 +16,12 @@
 
 package models.subscription
 
-import models.subscription.IncomeSourceModel
 import models.subscription.business._
 import play.api.libs.json.Json
 import uk.gov.hmrc.play.test.UnitSpec
-import utils.{Implicits, Resources}
-import utils.TestConstants._
 import utils.TestConstants.BusinessSubscriptionResponse.successResponse
+import utils.TestConstants._
+import utils.{Implicits, Resources}
 
 class BusinessSubscriptionResponseModelSpec extends UnitSpec with Implicits {
 

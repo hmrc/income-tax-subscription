@@ -22,13 +22,13 @@ import config.featureswitch.{FeatureSwitch, FeatureSwitching}
 import play.api.i18n.MessagesApi
 import play.api.libs.json.Json
 import play.api.mvc.{Action, ControllerComponents, Result}
-import uk.gov.hmrc.play.bootstrap.controller.BaseController
+import uk.gov.hmrc.play.bootstrap.controller.BackendController
 
 import scala.concurrent.Future
 
 class FeatureSwitchController @Inject()(override val messagesApi: MessagesApi,
                                         cc: ControllerComponents)
-  extends BaseController(cc) with FeatureSwitching {
+  extends BackendController(cc) with FeatureSwitching {
 
   private def returnCurrentSettings = Ok(Json.toJson(switches.map(fs => FeatureSwitchSetting(fs, isEnabled(fs)))))
 

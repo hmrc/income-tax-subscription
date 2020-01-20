@@ -299,27 +299,6 @@ object TestConstants {
     val ggFriendlyName = "Making Tax Digital Income Tax Self-Assessment enrolment"
   }
 
-  object Auth {
-    def authResponseJson(uri: String, userDetailsLink: String, gatewayId: String, idsLink: String): JsValue = Json.parse(
-      s"""
-         |{
-         |  "uri":"$uri",
-         |  "userDetailsLink":"$userDetailsLink",
-         |  "credentials" : {
-         |    "gatewayId":"$gatewayId"
-         |  },
-         |  "ids":"$idsLink"
-         |}
-     """.stripMargin
-    )
-
-    def idsResponseJson(internalId: String, externalId: String): JsValue = Json.parse(
-      s"""{
-           "internalId":"$internalId",
-           "externalId":"$externalId"
-        }""")
-  }
-
   val propertySubscriptionSuccess = PropertySubscriptionResponseModel(testSafeId, testMtditId, IncomeSourceModel(testSourceId))
 
   val businessSubscriptionSuccess = BusinessSubscriptionSuccessResponseModel(testSafeId, testMtditId, List(IncomeSourceModel(testSourceId)))

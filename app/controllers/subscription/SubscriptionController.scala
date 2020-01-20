@@ -30,10 +30,8 @@ class SubscriptionController @Inject()(submissionOrchestrationService: Submissio
                                        cc: ControllerComponents
                                       )(implicit ec: ExecutionContext) extends BackendController(cc) {
 
-  import authService._
-
   def subscribe(nino: String): Action[JsValue] = Action.async(parse.json) { implicit request =>
-    authorised() {
+    authService.authorised() {
       withJsonBody[SignUpRequest] {
         signUpRequest =>
           submissionOrchestrationService.submit(signUpRequest).map {

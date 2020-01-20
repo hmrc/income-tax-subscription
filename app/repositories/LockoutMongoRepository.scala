@@ -46,7 +46,7 @@ class LockoutMongoRepository @Inject()(implicit mongo: ReactiveMongoComponent)
     val expiryTimestamp = OffsetDateTime.ofInstant(Instant.now.plusSeconds(ttl.getSeconds), ZoneId.systemDefault())
 
     val model = LockoutResponse(arn, expiryTimestamp)
-    collection.insert(model).map {
+    collection.insert(ordered = false).one(model).map {
       case result if result.ok => Some(model)
       case result => None
     }

@@ -16,7 +16,6 @@
 
 package models.registration
 
-import models.registration.RegistrationRequestModel
 import uk.gov.hmrc.play.test.UnitSpec
 import utils.JsonUtils._
 import utils.Resources

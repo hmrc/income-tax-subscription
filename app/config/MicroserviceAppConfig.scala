@@ -38,9 +38,9 @@ trait AppConfig {
 }
 
 @Singleton
-class MicroserviceAppConfig @Inject()(val configuration: Configuration, servicesConfig: ServicesConfig) extends AppConfig with FeatureSwitching {
+class MicroserviceAppConfig @Inject()(servicesConfig: ServicesConfig) extends AppConfig with FeatureSwitching {
 
-  private def loadConfig(key: String) = configuration.getString(key).getOrElse(throw new Exception(s"Missing configuration key: $key"))
+  private def loadConfig(key: String) = servicesConfig.getString(key)
 
   override lazy val authURL = servicesConfig.baseUrl("auth")
   override lazy val ggAuthenticationURL = servicesConfig.baseUrl("gg-authentication")
@@ -62,13 +62,10 @@ class MicroserviceAppConfig @Inject()(val configuration: Configuration, services
   override lazy val desToken = loadConfig(s"$desBase.authorization-token")
   override val paperlessPreferencesExpirySeconds: Int = {
     val key = s"paperless-preference.expiry-seconds"
-    configuration.getInt(s"paperless-preference.expiry-seconds")
-      .getOrElse(throw new Exception(s"Missing configuration key: $key"))
+    servicesConfig.getInt(s"paperless-preference.expiry-seconds")
   }
 
   def businessSubscribeUrl(nino: String): String = s"$desURL/income-tax-self-assessment/nino/$nino/business"
 
   def propertySubscribeUrl(nino: String): String = s"$desURL/income-tax-self-assessment/nino/$nino/properties"
-
-  protected def runModeConfiguration: Configuration = configuration
 }

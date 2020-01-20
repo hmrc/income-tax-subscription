@@ -20,7 +20,7 @@ import javax.inject.Inject
 import models.frontend.FEFailureResponse
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import services.{AuthService, SubscriptionStatusService}
-import uk.gov.hmrc.play.bootstrap.controller.BaseController
+import uk.gov.hmrc.play.bootstrap.controller.BackendController
 import utils.Implicits._
 import utils.JsonUtils.toJsValue
 import utils.{Logging, LoggingConfig}
@@ -30,11 +30,10 @@ import scala.concurrent.ExecutionContext.Implicits.global
 class SubscriptionStatusController @Inject()(logging: Logging,
                                              authService: AuthService,
                                              subscriptionStatusService: SubscriptionStatusService,
-                                             cc: ControllerComponents) extends BaseController(cc) {
-  import authService._
+                                             cc: ControllerComponents) extends BackendController(cc) {
 
   def checkSubscriptionStatus(nino: String): Action[AnyContent] = Action.async { implicit request =>
-    authorised() {
+    authService.authorised() {
       implicit val loggingConfig = SubscriptionStatusController.checkSubscriptionStatusLoggingConfig
       subscriptionStatusService.checkMtditsaSubscription(nino).map {
         case Right(success) =>
