@@ -23,20 +23,16 @@ import play.api.libs.json.{JsError, JsSuccess, JsValue, Json}
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import services.AuthService
 import services.digitalcontact.PaperlessPreferenceService
-import uk.gov.hmrc.play.bootstrap.controller.BaseController
+import uk.gov.hmrc.play.bootstrap.controller.BackendController
 
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class PaperlessPreferenceController @Inject()(authService: AuthService,
-                                              paperlessPreferenceService: PaperlessPreferenceService,
-                                             cc: ControllerComponents)(implicit ec: ExecutionContext)
-  extends BaseController(cc) {
-
-  import authService._
+class PaperlessPreferenceController @Inject()(authService: AuthService, paperlessPreferenceService: PaperlessPreferenceService,
+                                             cc: ControllerComponents)(implicit ec: ExecutionContext) extends BackendController(cc) {
 
   def storeNino(token: String): Action[JsValue] = Action.async(parse.json) { implicit req =>
-    authorised() {
+    authService.authorised() {
       (req.body \ ninoJsonKey).validate[String] match {
         case JsSuccess(nino, _) =>
           val model = PaperlessPreferenceKey(token, nino)
@@ -52,7 +48,7 @@ class PaperlessPreferenceController @Inject()(authService: AuthService,
   }
 
   def getNino(token: String): Action[AnyContent] = Action.async { implicit req =>
-    authorised() {
+    authService.authorised() {
       paperlessPreferenceService.getNino(token).map {
         case Some(model) => Ok(Json.toJson(model)(PaperlessPreferenceKey.writes))
         case None => NotFound

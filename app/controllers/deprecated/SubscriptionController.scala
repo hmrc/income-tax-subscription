@@ -16,7 +16,6 @@
 
 package controllers.deprecated
 
-import utils.{Logging, LoggingConfig}
 import controllers.ITSASessionKeys
 import javax.inject.Inject
 import models.frontend.{FEFailureResponse, FERequest}
@@ -24,8 +23,9 @@ import play.api.libs.json.{JsError, JsSuccess}
 import play.api.mvc._
 import services.{AuthService, RosmAndEnrolManagerService}
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.play.bootstrap.controller.BaseController
+import uk.gov.hmrc.play.bootstrap.controller.BackendController
 import utils.JsonUtils._
+import utils.{Logging, LoggingConfig}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -34,8 +34,7 @@ class SubscriptionController @Inject()(logging: Logging,
                                        subManService: RosmAndEnrolManagerService,
                                        authService: AuthService,
                                        cc: ControllerComponents
-                                      ) extends BaseController(cc) {
-  import authService._
+                                      ) extends BackendController(cc) {
 
   def subscribe(nino: String): Action[AnyContent] = Action.async { implicit request =>
     val path = request.headers.get(ITSASessionKeys.RequestURI) match {
@@ -49,7 +48,7 @@ class SubscriptionController @Inject()(logging: Logging,
     implicit val loggingConfig = SubscriptionController.subscribeLoggingConfig
     logging.debug(s"Request received for $nino")
 
-    authorised() {
+    authService.authorised() {
       parseRequest(request) match {
         case Some(feRequest) => createSubscription(feRequest, path)
         case None => BadRequest(toJsValue(FEFailureResponse("Request is invalid")))

@@ -33,7 +33,9 @@ import utils.{Logging, LoggingConfig}
 class RegistrationService @Inject()(registrationConnector: RegistrationConnector,
                                     logging: Logging) {
 
-  def register(isAgent: Boolean, nino: String)(implicit hc: HeaderCarrier, request: Request[_]): Future[Either[ErrorModel, RegistrationSuccessResponseModel]] = {
+  def register(isAgent: Boolean, nino: String)(implicit hc: HeaderCarrier, request: Request[_]):
+                                                Future[Either[ErrorModel, RegistrationSuccessResponseModel]] = {
+
     implicit val registerLoggingConfig: Option[LoggingConfig] = RegistrationService.registerLoggingConfig
     logging.debug(s"Request: NINO=$nino, isAgent=$isAgent")
     registrationConnector.register(nino, RegistrationRequestModel(isAgent)).flatMap {

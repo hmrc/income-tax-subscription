@@ -30,8 +30,7 @@ import scala.concurrent.ExecutionContext
 class AuditService @Inject()(configuration: Configuration,
                              auditConnector: AuditConnector) {
 
-  private lazy val appName: String = configuration.getString("appName")
-    .getOrElse(throw new Exception(s"Missing configuration key: appName"))
+  private lazy val appName: String = configuration.get[String]("appName")
 
   def audit(dataSource: AuditModel)(implicit hc: HeaderCarrier, ec: ExecutionContext, request: Request[_]): Unit =
     auditConnector.sendEvent(toDataEvent(appName, dataSource, request.path))

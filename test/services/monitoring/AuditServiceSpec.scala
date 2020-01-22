@@ -50,7 +50,7 @@ class AuditServiceSpec extends UnitSpec with MockitoSugar with BeforeAndAfterEac
     super.beforeEach()
     reset(mockAuditConnector, mockConfiguration)
 
-    when(mockConfiguration.getString("appName")) thenReturn Some(testAppName)
+    when(mockConfiguration.get[String]("appName")) thenReturn testAppName
   }
 
   "audit" when {
