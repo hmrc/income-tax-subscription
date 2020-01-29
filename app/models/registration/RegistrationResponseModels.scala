@@ -19,30 +19,9 @@ package models.registration
 import models.ErrorResponsesModel
 import play.api.libs.json._
 
-
-case class RegistrationSuccessResponseModel(safeId: String)
-
-case class NewRegistrationFailureResponseModel(code: Option[String], reason: String) extends ErrorResponsesModel
-
-case class GetRegistrationFailureResponseModel(reason: String) extends ErrorResponsesModel {
-  override def code: Option[String] = None
-}
-
 case class GetBusinessDetailsSuccessResponseModel(mtdbsa: String)
 
 case class GetBusinessDetailsFailureResponseModel(code: Option[String], reason: String) extends ErrorResponsesModel
-
-object RegistrationSuccessResponseModel {
-  implicit val format = Json.format[RegistrationSuccessResponseModel]
-}
-
-object NewRegistrationFailureResponseModel {
-  implicit val format = Json.format[NewRegistrationFailureResponseModel]
-}
-
-object GetRegistrationFailureResponseModel {
-  implicit val format = Json.format[GetRegistrationFailureResponseModel]
-}
 
 object GetBusinessDetailsSuccessResponseModel {
   implicit val format = Json.format[GetBusinessDetailsSuccessResponseModel]

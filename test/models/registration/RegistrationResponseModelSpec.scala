@@ -16,44 +16,50 @@
 
 package models.registration
 
-import models.registration._
-import play.api.libs.json.{JsValue, Json}
+import play.api.libs.json.{JsObject, JsSuccess, Json}
 import uk.gov.hmrc.play.test.UnitSpec
-import utils.Implicits
 
-class RegistrationResponseModelSpec extends UnitSpec with Implicits {
+class RegistrationResponseModelSpec extends UnitSpec {
 
-  "NewRegistrationResponseModel" should {
-    import utils.TestConstants.NewRegistrationResponse.{failureResponse, successResponse}
+  "GetBusinessDetailsSuccessResponseModel" should {
 
-    "Reads the safe id correctly from a successful registration response" in {
-      val safeId = "XE0001234567890"
-      val response: JsValue = successResponse(safeId)
-      Json.fromJson[RegistrationSuccessResponseModel](response).get shouldBe RegistrationSuccessResponseModel(safeId)
+    val json: JsObject = Json.obj("mtdbsa" -> "testId")
+    val model: GetBusinessDetailsSuccessResponseModel = GetBusinessDetailsSuccessResponseModel("testId")
+
+    "read from json" in {
+      Json.fromJson[GetBusinessDetailsSuccessResponseModel](json) shouldBe JsSuccess(model)
     }
-
-    "Reads the error messages correctly from a failure registration response" in {
-      val reason = "Service unavailable"
-      val code = "SERVICE_UNAVAILABLE"
-      val response: JsValue = failureResponse(code, reason)
-      Json.fromJson[NewRegistrationFailureResponseModel](response).get shouldBe NewRegistrationFailureResponseModel(code, reason)
+    "write to json" in {
+      Json.toJson(model) shouldBe json
     }
   }
 
-  "GetRegistrationResponseModel" should {
-    import utils.TestConstants.GetRegistrationResponse.{failureResponse, successResponse}
+  "GetBusinessDetailsFailureResponseModel" should {
 
-    "Reads the safe id correctly from a successful registration response" in {
-      val safeId = "XE0001234567890"
-      val response: JsValue = successResponse(safeId)
-      Json.fromJson[RegistrationSuccessResponseModel](response).get shouldBe RegistrationSuccessResponseModel(safeId)
+    val fullJson: JsObject = Json.obj("code" -> "testCode", "reason" -> "testReason")
+    val fullModel: GetBusinessDetailsFailureResponseModel = GetBusinessDetailsFailureResponseModel(Some("testCode"), "testReason")
+
+    val minimalJson: JsObject = Json.obj("reason" -> "testReason")
+    val minimalModel: GetBusinessDetailsFailureResponseModel = GetBusinessDetailsFailureResponseModel(None, "testReason")
+
+    "read from json" when {
+      "all data is present" in {
+        Json.fromJson[GetBusinessDetailsFailureResponseModel](fullJson) shouldBe JsSuccess(fullModel)
+      }
+      "optional data is not present" in {
+        Json.fromJson[GetBusinessDetailsFailureResponseModel](minimalJson) shouldBe JsSuccess(minimalModel)
+      }
     }
 
-    "Reads the error messages correctly from a failure registration response" in {
-      val reason = "Service unavailable"
-      val response: JsValue = failureResponse(reason)
-      Json.fromJson[GetRegistrationFailureResponseModel](response).get shouldBe GetRegistrationFailureResponseModel(reason)
+    "write to json" when {
+      "all data is present" in {
+        Json.toJson(fullModel) shouldBe fullJson
+      }
+      "optional data is not present" in {
+        Json.toJson(minimalJson) shouldBe minimalJson
+      }
     }
+
   }
 
 }

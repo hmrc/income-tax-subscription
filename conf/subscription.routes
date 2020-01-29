@@ -1,4 +1,3 @@
-POST        /subscription/:nino               controllers.deprecated.SubscriptionController.subscribe(nino: String)
 GET         /subscription/:nino               controllers.subscription.SubscriptionStatusController.checkSubscriptionStatus(nino: String)
 
 POST        /subscription-v2/:nino            controllers.subscription.SubscriptionController.subscribe(nino: String)

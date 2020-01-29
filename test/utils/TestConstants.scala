@@ -19,19 +19,17 @@ package utils
 import java.time.{Instant, LocalDate, OffsetDateTime, ZoneId}
 import java.util.UUID
 
+import models.ErrorModel
 import models.digitalcontact.PaperlessPreferenceKey
-import models.frontend.{Both, Business, FERequest, Property}
+import models.frontend._
 import models.lockout.LockoutRequest
 import models.matching.LockoutResponse
-import models.frontend._
-import models.registration.RegistrationRequestModel
 import models.subscription.IncomeSourceModel
 import models.subscription.business.{BusinessDetailsModel, BusinessSubscriptionRequestModel, BusinessSubscriptionSuccessResponseModel, Cash}
-import models.subscription.incomesource.{AccountingPeriod, BusinessIncomeModel, SignUpRequest, PropertyIncomeModel}
+import models.subscription.incomesource.{AccountingPeriod, BusinessIncomeModel, PropertyIncomeModel, SignUpRequest}
 import models.subscription.property.PropertySubscriptionResponseModel
-import models.{DateModel, ErrorModel}
 import play.api.http.Status._
-import play.api.libs.json.{JsValue, Json}
+import play.api.libs.json.JsValue
 import uk.gov.hmrc.domain.Generator
 import utils.JsonUtils._
 
@@ -72,32 +70,6 @@ object TestConstants {
   lazy val testLockoutNone = Right(None)
 
   lazy val testException = new Exception("an error")
-
-  val fePropertyRequest = FERequest(
-    nino = testNino,
-    incomeSource = Property,
-    isAgent = false
-  )
-
-  val feBusinessRequest = FERequest(
-    nino = testNino,
-    incomeSource = Business,
-    isAgent = false,
-    accountingPeriodStart = DateModel("01", "05", "2017"),
-    accountingPeriodEnd = DateModel("30", "04", "2018"),
-    tradingName = "Test Business",
-    cashOrAccruals = Some("Cash")
-  )
-
-  val feBothRequest = FERequest(
-    nino = testNino,
-    incomeSource = Both,
-    isAgent = false,
-    accountingPeriodStart = DateModel("01", "05", "2017"),
-    accountingPeriodEnd = DateModel("30", "04", "2018"),
-    tradingName = "Test Business",
-    cashOrAccruals = Some("Cash")
-  )
 
   val businessSubscriptionRequestPayload = BusinessSubscriptionRequestModel(
     List(BusinessDetailsModel(
@@ -151,9 +123,6 @@ object TestConstants {
          |}
       """.stripMargin
   }
-
-
-  val registerRequestPayload = RegistrationRequestModel(isAnAgent = false)
 
   object PaperlessPreferenceResponse {
     val successResponse: String => JsValue = (nino: String) =>
@@ -327,7 +296,7 @@ object TestConstants {
     arn = None,
     businessIncome = None,
     propertyIncome = Some(PropertyIncomeModel(
-      accountingMethod = Some(Cash)
+      accountingMethod = Cash
     ))
   )
 
@@ -340,7 +309,7 @@ object TestConstants {
       accountingMethod = Cash
     )),
     propertyIncome = Some(PropertyIncomeModel(
-      accountingMethod = Some(Cash)
+      accountingMethod = Cash
     ))
   )
 
