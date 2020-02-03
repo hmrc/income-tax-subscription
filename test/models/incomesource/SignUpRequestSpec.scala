@@ -18,7 +18,7 @@ package models.incomesource
 
 import models.DateModel
 import models.subscription.business.{AccountingMethod, Cash}
-import models.subscription.incomesource.{AccountingPeriod, BusinessIncomeModel, PropertyIncomeModel, SignUpRequest}
+import models.subscription.incomesource.{AccountingPeriod, BusinessIncomeModel, PropertyIncomeModel}
 import play.api.libs.json.Json
 import uk.gov.hmrc.play.test.UnitSpec
 
@@ -41,11 +41,10 @@ class SignUpRequestSpec extends UnitSpec {
       AccountingPeriod(startDate = DateModel(startDay, startMonth, startYear), endDate = DateModel(endDay, endMonth, endYear)),
       AccountingMethod.feCash)
 
-    val propertyIncome = PropertyIncomeModel(Some(Cash))
-    val propertyNoIncome = PropertyIncomeModel(None)
+    val propertyIncome = PropertyIncomeModel(Cash)
 
     def businessIncomeJson(testArn: Option[String] = None) = Json.obj(
-      "businessDetails" ->  Seq(Json.obj(
+      "businessDetails" -> Seq(Json.obj(
         "accountingPeriodStartDate" -> "2018-06-06",
         "accountingPeriodEndDate" -> "2019-06-05",
         "tradingName" -> "trader joe",
@@ -54,21 +53,17 @@ class SignUpRequestSpec extends UnitSpec {
     )
 
     def propertyIncomeJson() = Json.obj("cashAccrualsFlag" -> "C")
+
     def propertyNoIncomeJson() = Json.obj()
 
     "send the correct json to DES for business income source" in {
-
-      val result = BusinessIncomeModel.writeToDes(businessIncome) shouldBe businessIncomeJson()
-
+      BusinessIncomeModel.writeToDes(businessIncome) shouldBe businessIncomeJson()
     }
 
     "send the correct json to DES for property income source" in {
-      val result = PropertyIncomeModel.writeToDes(propertyIncome) shouldBe propertyIncomeJson()
+      PropertyIncomeModel.writeToDes(propertyIncome) shouldBe propertyIncomeJson()
     }
 
-    "send the correct json to DES for property income source with no cash or accurals" in {
-      val result = PropertyIncomeModel.writeToDes(propertyNoIncome) shouldBe propertyNoIncomeJson()
-    }
   }
 
 }
