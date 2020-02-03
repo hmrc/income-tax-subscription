@@ -53,7 +53,7 @@ class BusinessDetailsConnector @Inject()(appConfig: AppConfig,
 
   def getBusinessDetails(nino: String)(implicit hc: HeaderCarrier, request: Request[_]): Future[GetBusinessDetailsUtil.Response] = {
     import GetBusinessDetailsUtil._
-    implicit val loggingConfig = connectors.deprecated.RegistrationConnector.getRegistrationLoggingConfig
+    implicit val loggingConfig = BusinessDetailsConnector.getRegistrationLoggingConfig
     lazy val requestDetails: Map[String, String] = Map("nino" -> nino)
     val updatedHc = createHeaderCarrierGet(hc)
     logging.debug(s"Request:\n$requestDetails\n\nRequest Headers:\n$updatedHc")

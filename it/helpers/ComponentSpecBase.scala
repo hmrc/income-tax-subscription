@@ -18,7 +18,6 @@ package helpers
 
 import controllers.ITSASessionKeys
 import helpers.servicemocks.WireMockMethods
-import models.frontend.FERequest
 import models.lockout.LockoutRequest
 import models.subscription.incomesource.SignUpRequest
 import org.scalatest._
@@ -80,10 +79,7 @@ trait ComponentSpecBase extends UnitSpec
 
     def get(uri: String): WSResponse = await(buildClient(uri).get())
 
-    @Deprecated
-    def createSubscription(body: FERequest): WSResponse = post(s"/subscription/${body.nino}", body)
-
-    def createSubscriptionRefactor(body: SignUpRequest): WSResponse = post(s"/subscription-v2/${body.nino}", body)
+    def createSubscription(body: SignUpRequest): WSResponse = post(s"/subscription-v2/${body.nino}", body)
 
     def checkLockoutStatus(arn: String): WSResponse = get(s"/client-matching/lock/$arn")
 

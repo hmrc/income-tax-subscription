@@ -23,8 +23,7 @@ import play.api.libs.json._
 case class SignUpRequest(nino: String,
                          arn: Option[String],
                          businessIncome: Option[BusinessIncomeModel],
-                         propertyIncome: Option[PropertyIncomeModel]
-                        ) {
+                         propertyIncome: Option[PropertyIncomeModel]) {
 
   val isAgent: Boolean = arn.isDefined
 }
@@ -33,7 +32,7 @@ case class BusinessIncomeModel(tradingName: Option[String],
                                accountingPeriod: AccountingPeriod,
                                accountingMethod: AccountingMethod)
 
-case class PropertyIncomeModel(accountingMethod: Option[AccountingMethod]) //TODO change to non option when cash and accruals has been added to property
+case class PropertyIncomeModel(accountingMethod: Option[AccountingMethod]) //TODO remove when frontend feature switch is disabled
 
 
 case class AccountingPeriod(startDate: DateModel, endDate: DateModel)

@@ -20,9 +20,7 @@ import java.time.{Instant, LocalDate, OffsetDateTime, ZoneId}
 import java.util.UUID
 
 import models.digitalcontact.PaperlessPreferenceKey
-import models.frontend.{Both, Business, FERequest, Property}
 import models.lockout.LockoutRequest
-import models.registration.RegistrationRequestModel
 import models.subscription.business.{Accruals, BusinessDetailsModel, BusinessSubscriptionRequestModel, Cash}
 import models.subscription.incomesource.{AccountingPeriod, BusinessIncomeModel, PropertyIncomeModel, SignUpRequest}
 import models.{DateModel, ErrorModel}
@@ -79,7 +77,7 @@ object IntegrationTestConstants {
 
 
   val testPropertyIncomeModel = PropertyIncomeModel(
-    accountingMethod = Some(Cash)
+    accountingMethod = Cash
   )
 
   val lockoutRequest = LockoutRequest(
@@ -101,21 +99,14 @@ object IntegrationTestConstants {
     nino = testNino,
     arn = None,
     businessIncome = None,
-    propertyIncome = PropertyIncomeModel(Some(Cash))
-  )
-
-  val incomeSourcePropertyNone = SignUpRequest(
-    nino = testNino,
-    arn = None,
-    businessIncome = None,
-    propertyIncome = PropertyIncomeModel(None)
+    propertyIncome = PropertyIncomeModel(Cash)
   )
 
   val incomeSourcePropertyAccruals = SignUpRequest(
     nino = testNino,
     arn = None,
     businessIncome = None,
-    propertyIncome = PropertyIncomeModel(Some(Accruals))
+    propertyIncome = PropertyIncomeModel(Accruals)
   )
 
   val incomeSourceBoth = SignUpRequest(
@@ -126,33 +117,7 @@ object IntegrationTestConstants {
       accountingPeriod = testAccountingPeriod,
       accountingMethod = Cash
     ),
-    propertyIncome = PropertyIncomeModel(Some(Cash))
-  )
-
-  val fePropertyRequest = FERequest(
-    nino = testNino,
-    incomeSource = Property,
-    isAgent = false
-  )
-
-  val feBusinessRequest = FERequest(
-    nino = testNino,
-    incomeSource = Business,
-    isAgent = false,
-    accountingPeriodStart = DateModel("01", "05", "2017"),
-    accountingPeriodEnd = DateModel("30", "04", "2018"),
-    tradingName = "Test Business",
-    cashOrAccruals = Some("Cash")
-  )
-
-  val feBothRequest = FERequest(
-    nino = testNino,
-    incomeSource = Both,
-    isAgent = false,
-    accountingPeriodStart = DateModel("01", "05", "2017"),
-    accountingPeriodEnd = DateModel("30", "04", "2018"),
-    tradingName = "Test Business",
-    cashOrAccruals = Some("Cash")
+    propertyIncome = PropertyIncomeModel(Cash)
   )
 
   val businessSubscriptionRequestPayload = BusinessSubscriptionRequestModel(
@@ -207,10 +172,6 @@ object IntegrationTestConstants {
          |}
       """.stripMargin
   }
-
-
-  val registerRequestPayload = RegistrationRequestModel(isAnAgent = false)
-
 
   def failureResponse(code: String, reason: String): JsValue =
     s"""
