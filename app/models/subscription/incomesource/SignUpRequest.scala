@@ -32,7 +32,7 @@ case class BusinessIncomeModel(tradingName: Option[String],
                                accountingPeriod: AccountingPeriod,
                                accountingMethod: AccountingMethod)
 
-case class PropertyIncomeModel(accountingMethod: Option[AccountingMethod]) //TODO remove when frontend feature switch is disabled
+case class PropertyIncomeModel(accountingMethod: AccountingMethod)
 
 
 case class AccountingPeriod(startDate: DateModel, endDate: DateModel)
@@ -68,9 +68,9 @@ object PropertyIncomeModel {
 
   def writeToDes(propertyIncomeModel: PropertyIncomeModel): JsObject = {
     propertyIncomeModel.accountingMethod match {
-      case Some(Cash) => Json.obj(cashAccrualsFlag -> "C")
-      case Some(Accruals) => Json.obj(cashAccrualsFlag -> "A")
-      case None => Json.obj()
+      case Cash => Json.obj(cashAccrualsFlag -> "C")
+      case Accruals => Json.obj(cashAccrualsFlag -> "A")
     }
   }
+
 }
