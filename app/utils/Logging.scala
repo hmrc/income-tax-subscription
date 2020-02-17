@@ -36,9 +36,9 @@ class Logging @Inject()(configuration: Configuration,
                         auditConnector: AuditConnector) {
 
 
-  lazy val appName: String = configuration.getString("appName").fold("APP NAME NOT SET")(x => x)
+  lazy val appName: String = configuration.get[String]("appName")
 
-  lazy val debugToWarn: Boolean = configuration.getString("feature-switching.debugToWarn").fold(false)(x => x.toBoolean)
+  lazy val debugToWarn: Boolean = configuration.getOptional[String]("feature-switching.debugToWarn").fold(false)(x => x.toBoolean)
 
   lazy val audit: Audit = new Audit(appName, auditConnector)
   

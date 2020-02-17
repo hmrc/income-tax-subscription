@@ -16,14 +16,11 @@
 
 package repositories.digitalcontact
 
-import javax.inject.{Inject, Singleton}
-
 import config.AppConfig
+import javax.inject.{Inject, Singleton}
 import models.digitalcontact.PaperlessPreferenceKey
-import models.lockout.CheckLockout
 import play.api.libs.json.OFormat
 import play.modules.reactivemongo.ReactiveMongoComponent
-import reactivemongo.api.indexes.IndexType.Ascending
 import reactivemongo.api.indexes.{Index, IndexType}
 import reactivemongo.bson._
 import repositories.converters.PaperlessPreferenceKeyWrites._
@@ -52,7 +49,7 @@ class PaperlessPreferenceMongoRepository @Inject()(config: AppConfig)(implicit m
   }
 
   private lazy val ttlIndex = Index(
-    Seq((timestampKey, IndexType(Ascending.value))),
+    Seq((timestampKey, IndexType.Ascending)),
     name = Some("tokenExpires"),
     unique = false,
     background = false,
