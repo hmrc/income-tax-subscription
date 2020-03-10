@@ -38,14 +38,13 @@ import scala.concurrent.Future
 trait TestBusinessDetailsConnector extends MockHttp with GuiceOneAppPerSuite {
 
   lazy val appConfig: AppConfig = app.injector.instanceOf[AppConfig]
-  lazy val logging: Logging = app.injector.instanceOf[Logging]
   lazy val httpClient: HttpClient = mockHttpClient
   lazy val auditService: AuditService = app.injector.instanceOf[AuditService]
 
 
   val mockBusinessDetails = (setupMockBusinessDetails(testNino) _).tupled
 
-  object TestBusinessDetailsConnector extends BusinessDetailsConnector(appConfig, logging, httpClient, auditService)
+  object TestBusinessDetailsConnector extends BusinessDetailsConnector(appConfig, httpClient, auditService)
 
   val getBusinessDetailsSuccess = (OK, GetBusinessDetailsResponse.successResponse(testNino, testSafeId, testMtditId))
   val getBusinessDetailsNotFound = (NOT_FOUND, GetBusinessDetailsResponse.failureResponse("NOT_FOUND_NINO", "The remote endpoint has indicated that no data can be found"))

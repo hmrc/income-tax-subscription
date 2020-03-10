@@ -16,21 +16,20 @@
 
 package services
 
-import javax.inject.{Inject, Singleton}
 import connectors.BusinessDetailsConnector
+import javax.inject.{Inject, Singleton}
 import models.ErrorModel
 import models.frontend.FESuccessResponse
+import play.api.Logger
 import play.api.http.Status._
 import play.api.mvc.Request
+import uk.gov.hmrc.http.HeaderCarrier
 import utils.Implicits._
 
 import scala.concurrent.{ExecutionContext, Future}
-import uk.gov.hmrc.http.HeaderCarrier
-import utils.{Logging, LoggingConfig}
 
 @Singleton
-class SubscriptionStatusService @Inject()(businessDetailsConnector: BusinessDetailsConnector,
-                                          logging: Logging) {
+class SubscriptionStatusService @Inject()(businessDetailsConnector: BusinessDetailsConnector) {
   /*
   * This method will check to see if a user with the supplied nino has an MTD IT SA subscription
   * if will return OK with the reference if it is found, or OK with {} if it is not found
@@ -38,23 +37,17 @@ class SubscriptionStatusService @Inject()(businessDetailsConnector: BusinessDeta
   **/
   def checkMtditsaSubscription(nino: String)
                               (implicit hc: HeaderCarrier, ec: ExecutionContext, request: Request[_]): Future[Either[ErrorModel, Option[FESuccessResponse]]] = {
-    logging.debug(s"Request: NINO=$nino")
-    implicit val checkAlreadyEnrolledLoggingConfig = SubscriptionStatusService.checkMtditsaEnrolmentLoggingConfig
+    Logger.debug(s"Request: NINO=$nino")
     businessDetailsConnector.getBusinessDetails(nino).flatMap {
       // if the subscription is not found, convert it to OK with {}
       case Left(error: ErrorModel) if error.status == NOT_FOUND =>
-        logging.debug(s"No mtditsa enrolment for nino=$nino")
+        Logger.debug(s"SubscriptionStatusService.checkMtditsaEnrolment - No mtditsa enrolment for nino=$nino")
         Right(None)
       case Right(x) =>
-        logging.debug(s"Client is already enrolled with mtditsa, ref=${x.mtdbsa}")
+        Logger.debug(s"SubscriptionStatusService.checkMtditsaEnrolment - Client is already enrolled with mtditsa, ref=${x.mtdbsa}")
         Right(Some(FESuccessResponse(x.mtdbsa)))
       case Left(x) => Left(x)
     }
   }
-
-}
-
-object SubscriptionStatusService {
-  val checkMtditsaEnrolmentLoggingConfig: Option[LoggingConfig] = LoggingConfig(heading = "SubscriptionStatusService.checkMtditsaEnrolment")
 }
 

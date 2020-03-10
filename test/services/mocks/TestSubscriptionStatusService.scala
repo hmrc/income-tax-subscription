@@ -30,9 +30,7 @@ import scala.concurrent.Future
 
 trait TestSubscriptionStatusService extends MockBusinessDetailsConnector {
 
-  val logging = mock[Logging]
-
-  object TestSubscriptionStatusService extends SubscriptionStatusService(mockBusinessDetailsConnector, logging)
+  object TestSubscriptionStatusService extends SubscriptionStatusService(mockBusinessDetailsConnector)
 
 }
 
