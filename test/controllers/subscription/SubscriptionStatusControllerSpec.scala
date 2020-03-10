@@ -30,9 +30,8 @@ import scala.concurrent.Future
 
 class SubscriptionStatusControllerSpec extends UnitSpec with MockSubscriptionStatusService with MaterializerSupport with MockAuthService {
   lazy val mockCC = stubControllerComponents()
-  val logging = mock[Logging]
 
-  object TestController extends SubscriptionStatusController(logging, mockAuthService, mockSubscriptionStatusService, mockCC)
+  object TestController extends SubscriptionStatusController(mockAuthService, mockSubscriptionStatusService, mockCC)
 
   def call: Future[Result] = TestController.checkSubscriptionStatus(testNino)(FakeRequest())
 

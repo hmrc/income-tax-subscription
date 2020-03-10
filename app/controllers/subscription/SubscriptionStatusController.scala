@@ -18,36 +18,28 @@ package controllers.subscription
 
 import javax.inject.Inject
 import models.frontend.FEFailureResponse
+import play.api.Logger
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import services.{AuthService, SubscriptionStatusService}
 import uk.gov.hmrc.play.bootstrap.controller.BackendController
-import utils.Implicits._
 import utils.JsonUtils.toJsValue
-import utils.{Logging, LoggingConfig}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
-class SubscriptionStatusController @Inject()(logging: Logging,
-                                             authService: AuthService,
+class SubscriptionStatusController @Inject()(authService: AuthService,
                                              subscriptionStatusService: SubscriptionStatusService,
                                              cc: ControllerComponents) extends BackendController(cc) {
 
   def checkSubscriptionStatus(nino: String): Action[AnyContent] = Action.async { implicit request =>
     authService.authorised() {
-      implicit val loggingConfig = SubscriptionStatusController.checkSubscriptionStatusLoggingConfig
       subscriptionStatusService.checkMtditsaSubscription(nino).map {
         case Right(success) =>
-          logging.debug(s"successful, responding with\n$success")
+          Logger.debug(s"SubscriptionStatusController.checkSubscriptionStatus - successful, responding with\n$success")
           Ok(toJsValue(success))
         case Left(failure) =>
-          logging.warn(s"failed, responding with\nstatus=${failure.status}\nreason=${failure.reason}")
+          Logger.warn(s"SubscriptionStatusController.checkSubscriptionStatus - failed, responding with\nstatus=${failure.status}\nreason=${failure.reason}")
           Status(failure.status)(toJsValue(FEFailureResponse(failure.reason)))
       }
     }
   }
-
-}
-
-object SubscriptionStatusController {
-  val checkSubscriptionStatusLoggingConfig: Option[LoggingConfig] = LoggingConfig(heading = "SubscriptionStatusController.checkSubscriptionStatus")
 }

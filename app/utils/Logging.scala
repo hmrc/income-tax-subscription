@@ -16,45 +16,6 @@
 
 package utils
 
-import javax.inject.{Inject, Singleton}
-import play.api.{Configuration, Logger}
-import uk.gov.hmrc.play.audit.http.connector.AuditConnector
-import uk.gov.hmrc.play.audit.model.Audit
-
-case class LoggingConfig(heading: String)
-
-object LoggingConfig {
-
-  implicit class LoggingConfigUtil(config: Option[LoggingConfig]) {
-    def addHeading(message: String): String = config.fold(message)(x => x.heading + ": " + message)
-  }
-
-}
-
-@Singleton
-class Logging @Inject()(configuration: Configuration,
-                        auditConnector: AuditConnector) {
-
-
-  lazy val appName: String = configuration.get[String]("appName")
-
-  lazy val debugToWarn: Boolean = configuration.getOptional[String]("feature-switching.debugToWarn").fold(false)(x => x.toBoolean)
-
-  lazy val audit: Audit = new Audit(appName, auditConnector)
-  
-
-  @inline def trace(msg: String)(implicit config: Option[LoggingConfig] = None): Unit = Logger.trace(config.addHeading(msg))
-
-  @inline def debug(msg: String)(implicit config: Option[LoggingConfig] = None): Unit = Logger.debug(config.addHeading(msg))
-
-  @inline def info(msg: String)(implicit config: Option[LoggingConfig] = None): Unit = Logger.info(config.addHeading(msg))
-
-  @inline def warn(msg: String)(implicit config: Option[LoggingConfig] = None): Unit = Logger.warn(config.addHeading(msg))
-
-  @inline def err(msg: String)(implicit config: Option[LoggingConfig] = None): Unit = Logger.error(config.addHeading(msg))
-
-}
-
 object Logging {
 
   val splunkString = "SPLUNK AUDIT:\n"
