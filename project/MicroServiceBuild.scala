@@ -18,7 +18,6 @@ import sbt._
 
 private object MicroServiceBuild {
   val appName = "income-tax-subscription"
-
   lazy val appDependencies: Seq[ModuleID] = AppDependencies()
 }
 
@@ -37,11 +36,11 @@ private object AppDependencies {
   private val scalaJVersion = "2.4.1"
   private val cucumberVersion = "1.2.5"
 
-  private val reactiveMongoVersion = "7.20.0-play-26"
+  private val reactiveMongoVersion = "7.23.0-play-26"
 
   private val wiremockVersion = "2.21.0"
 
-  private val bootstrapVersion = "0.36.0"
+  private val bootstrapVersion = "1.5.0"
 
   val compile = Seq(
     ws,
