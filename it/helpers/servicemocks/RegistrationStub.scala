@@ -22,8 +22,10 @@ import helpers.IntegrationTestConstants._
 
 object RegistrationStub extends WireMockMethods {
 
+  def registrationUrl(nino: String) = s"/registration/individual/nino/$nino"
+
   def stubRegistration[T](nino: String, isAnAgent: Boolean)(responseStatus: Int): StubMapping = {
-    when(method = POST, uri = RegistrationConnector.registrationUrl(testNino), body = RegistrationConnector.registerRequestBody(isAnAgent))
+    when(method = POST, uri = registrationUrl(nino), body = RegistrationConnector.registerRequestBody(isAnAgent))
       .thenReturn(status = responseStatus)
   }
 

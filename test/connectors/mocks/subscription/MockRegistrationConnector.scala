@@ -16,23 +16,30 @@
 
 package connectors.mocks.subscription
 
-import connectors.RegistrationSuccess
+import connectors.{RegistrationConnector, RegistrationSuccess}
+import models.ErrorModel
 import org.mockito.ArgumentMatchers
 import org.mockito.Mockito.when
 import org.scalatest.mockito.MockitoSugar
+import play.api.mvc.Request
 import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.Future
 
 trait MockRegistrationConnector extends MockitoSugar {
 
-  val mockRegistrationConnector: connectors.RegistrationConnector = mock[connectors.RegistrationConnector]
+  val mockRegistrationConnector: RegistrationConnector = mock[RegistrationConnector]
 
   def mockRegister(nino: String, isAnAgent: Boolean)
-                  (response: Future[RegistrationSuccess.type])
+                  (response: Future[Either[ErrorModel, RegistrationSuccess.type]])
                   (implicit hc: HeaderCarrier): Unit = {
-    when(mockRegistrationConnector.register(ArgumentMatchers.eq(nino), ArgumentMatchers.eq(isAnAgent))(ArgumentMatchers.any[HeaderCarrier]))
+
+    when(mockRegistrationConnector.register(
+      ArgumentMatchers.eq(nino),
+      ArgumentMatchers.eq(isAnAgent)
+    )(ArgumentMatchers.any[HeaderCarrier], ArgumentMatchers.any[Request[_]]))
       .thenReturn(response)
+
   }
 
 }

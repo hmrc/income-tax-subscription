@@ -21,6 +21,7 @@ import models.subscription.incomesource.PropertyIncomeModel
 import org.mockito.ArgumentMatchers
 import org.mockito.Mockito.when
 import org.scalatest.mockito.MockitoSugar
+import play.api.mvc.Request
 import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.Future
@@ -29,11 +30,16 @@ trait MockPropertyConnector extends MockitoSugar {
 
   val mockPropertyConnector: PropertyConnector = mock[PropertyConnector]
 
-  def mockPropertySubscribe(nino: String, propertyIncomeModel: PropertyIncomeModel)
+  def mockPropertySubscribe(nino: String, propertyIncomeModel: PropertyIncomeModel, arn: Option[String])
                            (response: Future[String])
                            (implicit hc: HeaderCarrier): Unit = {
-    when(mockPropertyConnector.propertySubscribe(ArgumentMatchers.eq(nino), ArgumentMatchers.eq(propertyIncomeModel))(ArgumentMatchers.any[HeaderCarrier]))
-      .thenReturn(response)
+
+    when(mockPropertyConnector.propertySubscribe(
+      ArgumentMatchers.eq(nino),
+      ArgumentMatchers.eq(propertyIncomeModel),
+      ArgumentMatchers.eq(arn)
+    )(ArgumentMatchers.any[HeaderCarrier], ArgumentMatchers.any[Request[_]])).thenReturn(response)
+
   }
 
 }

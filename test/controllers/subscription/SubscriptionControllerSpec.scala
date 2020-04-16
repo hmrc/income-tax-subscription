@@ -16,6 +16,7 @@
 
 package controllers.subscription
 
+import models.ErrorModel
 import play.api.http.Status._
 import play.api.libs.json.{JsValue, Json}
 import play.api.test.FakeRequest
@@ -40,11 +41,21 @@ class SubscriptionControllerSpec(implicit val ec: ExecutionContext
         val fakeRequest = FakeRequest().withBody(Json.toJson(testBothIncomeSourceModel))
 
         mockAuthSuccess()
-        mockSubmit(testBothIncomeSourceModel)(Future.successful(SuccessfulSubmission(testMtditId)))
+        mockSubmit(testBothIncomeSourceModel)(Future.successful(Right(SuccessfulSubmission(testMtditId))))
 
         val result = await(TestController.subscribe(testNino)(fakeRequest))
         status(result) shouldBe OK
         jsonBodyOf(result).as[SuccessfulSubmission].mtditId shouldBe testMtditId
+      }
+      "return the status in the error model if one is returned from the service" in {
+        val fakeRequest = FakeRequest().withBody(Json.toJson(testBothIncomeSourceModel))
+        val errorModel = ErrorModel(INTERNAL_SERVER_ERROR, "test-error")
+
+        mockAuthSuccess()
+        mockSubmit(testBothIncomeSourceModel)(Future.successful(Left(errorModel)))
+
+        val result = await(TestController.subscribe(testNino)(fakeRequest))
+        status(result) shouldBe INTERNAL_SERVER_ERROR
       }
       "return a 400 response if the json can't be parsed" in {
         val fakeRequest: FakeRequest[JsValue] = FakeRequest().withBody(Json.obj())

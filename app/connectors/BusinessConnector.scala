@@ -18,34 +18,47 @@ package connectors
 
 import config.MicroserviceAppConfig
 import javax.inject.{Inject, Singleton}
+import models.monitoring.BusinessSubscribeFailureAudit
 import models.subscription.incomesource.BusinessIncomeModel
-import parsers.MtditIdParser.MtditIdHttpReads
-import play.api.libs.json.{JsObject, Writes}
+import play.api.Logger
+import play.api.http.Status._
+import play.api.libs.json.{JsObject, JsSuccess}
+import play.api.mvc.Request
+import services.monitoring.AuditService
 import uk.gov.hmrc.http.logging.Authorization
-import uk.gov.hmrc.http.{HeaderCarrier, HttpReads}
+import uk.gov.hmrc.http.{HeaderCarrier, InternalServerException}
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
 
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class BusinessConnector @Inject()(val http: HttpClient,
-                                  val appConfig: MicroserviceAppConfig)(implicit ec: ExecutionContext) {
+class BusinessConnector @Inject()(http: HttpClient,
+                                  appConfig: MicroserviceAppConfig,
+                                  auditService: AuditService)(implicit ec: ExecutionContext) extends RawResponseReads {
 
-  def businessSubscribe(nino: String, businessIncomeModel: BusinessIncomeModel)
-                       (implicit hc: HeaderCarrier): Future[String] = {
+  def businessSubscribe(nino: String, businessIncomeModel: BusinessIncomeModel, arn: Option[String])
+                       (implicit hc: HeaderCarrier, request: Request[_]): Future[String] = {
 
     val headerCarrier: HeaderCarrier = hc
       .copy(authorization = Some(Authorization(appConfig.desAuthorisationToken)))
       .withExtraHeaders(appConfig.desEnvironmentHeader)
 
-    http.POST(
-      url = appConfig.businessSubscribeUrl(nino),
-      body = BusinessIncomeModel.writeToDes(businessIncomeModel)
-    )(
-      implicitly[Writes[JsObject]],
-      implicitly[HttpReads[String]],
-      headerCarrier,
-      implicitly[ExecutionContext]
-    )
+    val requestBody: JsObject = BusinessIncomeModel.writeToDes(businessIncomeModel)
+
+    http.POST(appConfig.businessSubscribeUrl(nino), requestBody)(implicitly, httpReads, headerCarrier, implicitly) map { response =>
+      response.status match {
+        case OK =>
+          (response.json \ "mtditId").validate[String] match {
+            case JsSuccess(mtditId, _) =>
+              Logger.info(s"[BusinessConnector][businessSubscribe] - Successful business subscribed for $nino")
+              mtditId
+            case _ => throw new InternalServerException("[BusinessConnector][businessSubscribe] MTDITID missing from DES response")
+          }
+        case status =>
+          auditService.audit(BusinessSubscribeFailureAudit(nino, arn, requestBody, response.body))(headerCarrier, implicitly, implicitly)
+          throw new InternalServerException(s"[BusinessConnector][businessSubscribe] - Failed business subscription for $nino, status: $status")
+      }
+    }
   }
+
 }

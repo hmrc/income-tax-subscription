@@ -17,6 +17,7 @@
 package controllers.subscription
 
 import config.MicroserviceAppConfig
+import connectors.RegistrationConnector
 import helpers.ComponentSpecBase
 import helpers.IntegrationTestConstants._
 import helpers.servicemocks.BusinessSubscriptionStub.stubBusinessIncomeSubscription
@@ -30,6 +31,7 @@ import services.SubmissionOrchestrationService.SuccessfulSubmission
 class SubscriptionControllerISpec extends ComponentSpecBase {
 
   val appConfig: MicroserviceAppConfig = app.injector.instanceOf[MicroserviceAppConfig]
+  val registrationConnector: RegistrationConnector = app.injector.instanceOf[RegistrationConnector]
 
   "subscribe" should {
     "call the subscription service successfully when auth succeeds for a business registration" in {
@@ -45,6 +47,7 @@ class SubscriptionControllerISpec extends ComponentSpecBase {
         httpStatus(OK),
         jsonBodyAs[SuccessfulSubmission](SuccessfulSubmission(testMtditId))
       )
+
     }
 
     "call the subscription service successfully when auth succeeds for a property registration sending Cash" in {

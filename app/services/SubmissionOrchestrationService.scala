@@ -16,11 +16,17 @@
 
 package services
 
+import config.AppConfig
 import connectors.{BusinessConnector, PropertyConnector, RegistrationConnector}
+import controllers.ITSASessionKeys
 import javax.inject.{Inject, Singleton}
+import models.ErrorModel
+import models.monitoring.{RegistrationRequestAudit, RegistrationSuccessAudit}
 import models.subscription.incomesource.SignUpRequest
-import play.api.libs.json.Json
-import services.SubmissionOrchestrationService.{NoSubmissionNeeded, _}
+import play.api.libs.json.{Json, OFormat}
+import play.api.mvc.Request
+import services.SubmissionOrchestrationService._
+import services.monitoring.AuditService
 import uk.gov.hmrc.http.{HeaderCarrier, InternalServerException}
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -28,30 +34,54 @@ import scala.concurrent.{ExecutionContext, Future}
 @Singleton
 class SubmissionOrchestrationService @Inject()(registrationConnector: RegistrationConnector,
                                                businessConnector: BusinessConnector,
-                                               propertyConnector: PropertyConnector
-                                              )(implicit ec: ExecutionContext) {
+                                               propertyConnector: PropertyConnector,
+                                               auditService: AuditService,
+                                               appConfig: AppConfig)(implicit ec: ExecutionContext) {
 
+  def submit(signUpRequest: SignUpRequest)
+            (implicit hc: HeaderCarrier, request: Request[_]): Future[Either[ErrorModel, SuccessfulSubmission]] = {
 
-  def submit(signUpRequest: SignUpRequest)(implicit hc: HeaderCarrier): Future[SuccessfulSubmission] =
+    auditService.audit(RegistrationRequestAudit(signUpRequest, appConfig.desAuthorisationToken))
+
+    registrationConnector.register(signUpRequest.nino, signUpRequest.isAgent) flatMap {
+      case Left(left) => Future.successful(Left(left))
+      case _ => signUpIncomeSources(signUpRequest).map(id => Right(SuccessfulSubmission(id)))
+    } map {
+      case Right(success) =>
+        val path: String = request.headers.get(ITSASessionKeys.RequestURI).getOrElse("-")
+        auditService.audit(RegistrationSuccessAudit(signUpRequest, success.mtditId, path))
+        Right(success)
+      case left => left
+    }
+
+  }
+
+  private def signUpIncomeSources(signUpRequest: SignUpRequest)(implicit hc: HeaderCarrier, request: Request[_]): Future[String] = {
     for {
-      _ <- registrationConnector.register(signUpRequest.nino, signUpRequest.isAgent)
-      businessResponse <- signUpRequest.businessIncome match {
-        case Some(business) => businessConnector.businessSubscribe(signUpRequest.nino, business)
-        case None => Future.successful(NoSubmissionNeeded)
+      businessResponse <- signUpBusiness(signUpRequest)
+      propertyResponse <- signUpProperty(signUpRequest)
+    } yield {
+      businessResponse orElse propertyResponse match {
+        case Some(id) => id
+        case None => throw new InternalServerException("[SubmissionOrchestrationService][submit] - No mtditid response")
       }
-      propertyResponse <- signUpRequest.propertyIncome match {
-        case Some(property) => propertyConnector.propertySubscribe(signUpRequest.nino, property)
-        case None => Future.successful(NoSubmissionNeeded)
-      }
-    } yield
-      (businessResponse, propertyResponse) match {
-        case (businessSuccess: String, _) =>
-          SuccessfulSubmission(businessSuccess)
-        case (_, propertySuccess: String) =>
-          SuccessfulSubmission(propertySuccess)
-        case _ =>
-          throw new InternalServerException("Unexpected error - income type missing")
-      }
+    }
+  }
+
+  private def signUpBusiness(signUpRequest: SignUpRequest)(implicit hc: HeaderCarrier, request: Request[_]): Future[Option[String]] = {
+    signUpRequest.businessIncome match {
+      case Some(business) => businessConnector.businessSubscribe(signUpRequest.nino, business, signUpRequest.arn).map(Some.apply)
+      case None => Future.successful(None)
+    }
+  }
+
+  private def signUpProperty(signUpRequest: SignUpRequest)(implicit hc: HeaderCarrier, request: Request[_]): Future[Option[String]] = {
+    signUpRequest.propertyIncome match {
+      case Some(property) => propertyConnector.propertySubscribe(signUpRequest.nino, property, signUpRequest.arn).map(Some.apply)
+      case None => Future.successful(None)
+    }
+  }
+
 }
 
 object SubmissionOrchestrationService {
@@ -61,7 +91,7 @@ object SubmissionOrchestrationService {
   case class SuccessfulSubmission(mtditId: String)
 
   object SuccessfulSubmission {
-    implicit val format = Json.format[SuccessfulSubmission]
+    implicit val format: OFormat[SuccessfulSubmission] = Json.format[SuccessfulSubmission]
   }
 
 }
