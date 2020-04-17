@@ -7,12 +7,15 @@ import helpers.IntegrationTestConstants._
 import helpers.servicemocks.BusinessSubscriptionStub.stubBusinessIncomeSubscription
 import play.api.http.Status._
 import play.api.libs.json.Json
+import play.api.mvc.Request
+import play.api.test.FakeRequest
 import uk.gov.hmrc.http.InternalServerException
 
 class BusinessConnectorISpec extends ComponentSpecBase {
 
   private lazy val businessConnector: BusinessConnector = app.injector.instanceOf[BusinessConnector]
   private lazy val appConfig: MicroserviceAppConfig = app.injector.instanceOf[MicroserviceAppConfig]
+  implicit val request: Request[_] = FakeRequest()
 
   "business connector" when {
     "business subscription returns a successful response" should {
@@ -21,7 +24,7 @@ class BusinessConnectorISpec extends ComponentSpecBase {
           OK, Json.obj("mtditId" -> testMtditId)
         )
 
-        val res = businessConnector.businessSubscribe(testNino, testBusinessIncomeModel)
+        val res = businessConnector.businessSubscribe(testNino, testBusinessIncomeModel, Some(testArn))
 
         await(res) shouldBe testMtditId
       }
@@ -34,7 +37,7 @@ class BusinessConnectorISpec extends ComponentSpecBase {
         )
 
         intercept[InternalServerException] {
-          val res = businessConnector.businessSubscribe(testNino, testBusinessIncomeModel)
+          val res = businessConnector.businessSubscribe(testNino, testBusinessIncomeModel, Some(testArn))
           await(res)
         }
       }

@@ -7,12 +7,15 @@ import helpers.IntegrationTestConstants._
 import helpers.servicemocks.PropertySubscriptionStub.stubPropertyIncomeSubscription
 import play.api.http.Status.{INTERNAL_SERVER_ERROR, OK}
 import play.api.libs.json.Json
+import play.api.mvc.Request
+import play.api.test.FakeRequest
 import uk.gov.hmrc.http.InternalServerException
 
 class PropertyConnectorISpec extends ComponentSpecBase {
 
   private lazy val propertyConnector: PropertyConnector = app.injector.instanceOf[PropertyConnector]
   private lazy val appConfig: MicroserviceAppConfig = app.injector.instanceOf[MicroserviceAppConfig]
+  implicit val request: Request[_] = FakeRequest()
 
   "property connector" when {
     "property subscription returns a successful response" should {
@@ -21,7 +24,7 @@ class PropertyConnectorISpec extends ComponentSpecBase {
           OK, Json.obj("mtditId" -> testMtditId)
         )
 
-        val res = propertyConnector.propertySubscribe(testNino, testPropertyIncomeModel)
+        val res = propertyConnector.propertySubscribe(testNino, testPropertyIncomeModel, Some(testArn))
 
         await(res) shouldBe testMtditId
       }
@@ -34,7 +37,7 @@ class PropertyConnectorISpec extends ComponentSpecBase {
         )
 
         intercept[InternalServerException] {
-          val res = propertyConnector.propertySubscribe(testNino, testPropertyIncomeModel)
+          val res = propertyConnector.propertySubscribe(testNino, testPropertyIncomeModel, Some(testArn))
           await(res)
         }
       }

@@ -17,13 +17,18 @@
 package connectors
 
 import helpers.ComponentSpecBase
-import play.api.http.Status._
 import helpers.IntegrationTestConstants._
 import helpers.servicemocks.RegistrationStub
-import uk.gov.hmrc.http.BadRequestException
+import models.ErrorModel
+import play.api.http.Status._
+import play.api.mvc.Request
+import play.api.test.FakeRequest
 
 class RegistrationConnectorISpec extends ComponentSpecBase {
+
   val registrationConnector: RegistrationConnector = app.injector.instanceOf[RegistrationConnector]
+
+  implicit val request: Request[_] = FakeRequest()
 
   "register" when {
     s"the downstream service returns $OK" should {
@@ -32,15 +37,16 @@ class RegistrationConnectorISpec extends ComponentSpecBase {
 
         RegistrationStub.stubRegistration(testNino, isAnAgent)(OK)
 
-        await(registrationConnector.register(testNino, isAnAgent)) shouldBe RegistrationSuccess
+        await(registrationConnector.register(testNino, isAnAgent)) shouldBe Right(RegistrationSuccess)
       }
     }
-    s"the downstream service returns $BAD_REQUEST" should {
-      "throw a BadRequestException" in {
+    s"the downstream service returns anything other than $OK" should {
+      "return an error model with the status" in {
         val isAnAgent = true
-        RegistrationStub.stubRegistration(testNino, isAnAgent)(BAD_REQUEST)
 
-        intercept[BadRequestException](await(registrationConnector.register(testNino, isAnAgent)))
+        RegistrationStub.stubRegistration(testNino, isAnAgent)(INTERNAL_SERVER_ERROR)
+
+        await(registrationConnector.register(testNino, isAnAgent)) shouldBe Left(ErrorModel(INTERNAL_SERVER_ERROR, s"Failed to register $testNino"))
       }
     }
   }

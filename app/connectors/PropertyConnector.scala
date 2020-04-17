@@ -18,34 +18,46 @@ package connectors
 
 import config.MicroserviceAppConfig
 import javax.inject.{Inject, Singleton}
+import models.monitoring.PropertySubscribeFailureAudit
 import models.subscription.incomesource.PropertyIncomeModel
-import parsers.MtditIdParser.MtditIdHttpReads
-import play.api.libs.json.{JsObject, Writes}
+import play.api.Logger
+import play.api.http.Status._
+import play.api.libs.json.{JsObject, JsSuccess}
+import play.api.mvc.Request
+import services.monitoring.AuditService
 import uk.gov.hmrc.http.logging.Authorization
-import uk.gov.hmrc.http.{HeaderCarrier, HttpReads}
+import uk.gov.hmrc.http.{HeaderCarrier, InternalServerException}
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
 
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class PropertyConnector @Inject()(val http: HttpClient,
-                                  val appConfig: MicroserviceAppConfig)(implicit ec: ExecutionContext) {
+class PropertyConnector @Inject()(http: HttpClient,
+                                  appConfig: MicroserviceAppConfig,
+                                  auditService: AuditService)(implicit ec: ExecutionContext) extends RawResponseReads {
 
-  def propertySubscribe(nino: String, propertyIncomeModel: PropertyIncomeModel)
-                       (implicit hc: HeaderCarrier): Future[String] = {
+  def propertySubscribe(nino: String, propertyIncomeModel: PropertyIncomeModel, arn: Option[String])
+                       (implicit hc: HeaderCarrier, request: Request[_]): Future[String] = {
 
     val headerCarrier = hc
       .copy(authorization = Some(Authorization(appConfig.desAuthorisationToken)))
       .withExtraHeaders(appConfig.desEnvironmentHeader)
 
-    http.POST(
-      url = appConfig.propertySubscribeUrl(nino),
-      body = PropertyIncomeModel.writeToDes(propertyIncomeModel)
-    )(
-      implicitly[Writes[JsObject]],
-      implicitly[HttpReads[String]],
-      headerCarrier,
-      implicitly[ExecutionContext]
-    )
+    val requestBody: JsObject = PropertyIncomeModel.writeToDes(propertyIncomeModel)
+
+    http.POST(appConfig.propertySubscribeUrl(nino), requestBody)(implicitly, httpReads, headerCarrier, implicitly) map { response =>
+      response.status match {
+        case OK =>
+          (response.json \ "mtditId").validate[String] match {
+            case JsSuccess(mtditId, _) =>
+              Logger.info(s"[PropertyConnector][propertySubscribe] - Successful property subscribed for $nino")
+              mtditId
+            case _ => throw new InternalServerException("[PropertyConnector][propertySubscribe] MTDITID missing from DES response")
+          }
+        case status =>
+          auditService.audit(PropertySubscribeFailureAudit(nino, arn, requestBody, response.body))(headerCarrier, implicitly, implicitly)
+          throw new InternalServerException(s"[PropertyConnector][propertySubscribe] - Failed property subscription for $nino, status: $status")
+      }
+    }
   }
 }

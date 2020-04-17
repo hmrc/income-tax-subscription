@@ -22,21 +22,21 @@ import play.api.libs.json._
 import play.api.mvc._
 import services.{AuthService, SubmissionOrchestrationService}
 import uk.gov.hmrc.play.bootstrap.controller.BackendController
+
 import scala.concurrent.ExecutionContext
 
 @Singleton
 class SubscriptionController @Inject()(submissionOrchestrationService: SubmissionOrchestrationService,
                                        authService: AuthService,
-                                       cc: ControllerComponents
-                                      )(implicit ec: ExecutionContext) extends BackendController(cc) {
+                                       cc: ControllerComponents)(implicit ec: ExecutionContext) extends BackendController(cc) {
 
   def subscribe(nino: String): Action[JsValue] = Action.async(parse.json) { implicit request =>
     authService.authorised() {
       withJsonBody[SignUpRequest] {
         signUpRequest =>
           submissionOrchestrationService.submit(signUpRequest).map {
-            response =>
-              Ok(Json.toJson(response))
+            case Right(success) => Ok(Json.toJson(success))
+            case Left(error) => Status(error.status)(error.reason)
           }
       }
     }

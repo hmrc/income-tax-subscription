@@ -26,6 +26,7 @@ case class SignUpRequest(nino: String,
                          propertyIncome: Option[PropertyIncomeModel]) {
 
   val isAgent: Boolean = arn.isDefined
+
 }
 
 case class BusinessIncomeModel(tradingName: Option[String],

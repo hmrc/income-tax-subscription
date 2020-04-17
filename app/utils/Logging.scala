@@ -20,7 +20,6 @@ object Logging {
 
   val splunkString = "SPLUNK AUDIT:\n"
 
-
   val eventTypeRequest: String = "Request"
   val eventTypeSuccess: String = "Success"
   val eventTypeFailure: String = "Failure"
@@ -30,5 +29,6 @@ object Logging {
   val eventTypeInternalServerError: String = "InternalServerError"
   val eventTypeServerUnavailable: String = "ServerUnavailable"
   val eventTypeUnexpectedError: String = "UnexpectedError"
+
 }
 

@@ -21,6 +21,7 @@ import models.subscription.incomesource.BusinessIncomeModel
 import org.mockito.ArgumentMatchers
 import org.mockito.Mockito.when
 import org.scalatest.mockito.MockitoSugar
+import play.api.mvc.Request
 import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.Future
@@ -29,11 +30,16 @@ trait MockBusinessConnector extends MockitoSugar {
 
   val mockBusinessConnector: BusinessConnector = mock[BusinessConnector]
 
-  def mockBusinessSubscribe(nino: String, businessIncomeModel: BusinessIncomeModel)
+  def mockBusinessSubscribe(nino: String, businessIncomeModel: BusinessIncomeModel, arn: Option[String])
                            (response: Future[String])
                            (implicit hc: HeaderCarrier): Unit = {
-    when(mockBusinessConnector.businessSubscribe(ArgumentMatchers.eq(nino), ArgumentMatchers.eq(businessIncomeModel))(ArgumentMatchers.any[HeaderCarrier]))
-      .thenReturn(response)
+
+    when(mockBusinessConnector.businessSubscribe(
+      ArgumentMatchers.eq(nino),
+      ArgumentMatchers.eq(businessIncomeModel),
+      ArgumentMatchers.eq(arn)
+    )(ArgumentMatchers.any[HeaderCarrier], ArgumentMatchers.any[Request[_]])).thenReturn(response)
+
   }
 
 }

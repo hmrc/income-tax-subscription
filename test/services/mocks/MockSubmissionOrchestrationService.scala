@@ -17,26 +17,23 @@
 package services.mocks
 
 import models.ErrorModel
-import models.frontend.FESuccessResponse
 import models.subscription.incomesource.SignUpRequest
 import org.mockito.ArgumentMatchers
 import org.mockito.Mockito._
 import org.scalatest.mockito.MockitoSugar
+import play.api.mvc.Request
 import services.SubmissionOrchestrationService
 import services.SubmissionOrchestrationService.SuccessfulSubmission
 import uk.gov.hmrc.http.HeaderCarrier
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.Future
 
 trait MockSubmissionOrchestrationService extends MockitoSugar {
   val mockSubmissionOrchestrationService: SubmissionOrchestrationService = mock[SubmissionOrchestrationService]
 
-  def mockSubmit(request: SignUpRequest)(response: Future[SuccessfulSubmission]): Unit = {
-    when(mockSubmissionOrchestrationService.submit(
-      ArgumentMatchers.eq(request)
-    )(
-      ArgumentMatchers.any[HeaderCarrier]
-    ))
-      .thenReturn(response)
+  def mockSubmit(request: SignUpRequest)(response: Future[Either[ErrorModel, SuccessfulSubmission]]): Unit = {
+    when(mockSubmissionOrchestrationService.submit(ArgumentMatchers.eq(request))(
+      ArgumentMatchers.any[HeaderCarrier], ArgumentMatchers.any[Request[_]]
+    )).thenReturn(response)
   }
 }
