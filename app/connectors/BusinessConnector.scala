@@ -27,6 +27,7 @@ import uk.gov.hmrc.play.bootstrap.http.HttpClient
 
 import scala.concurrent.{ExecutionContext, Future}
 
+
 @Singleton
 class BusinessConnector @Inject()(val http: HttpClient,
                                   val appConfig: MicroserviceAppConfig)(implicit ec: ExecutionContext) {
