@@ -16,6 +16,7 @@
 
 package repositories
 
+import models.DataModel
 import org.scalatest.BeforeAndAfterEach
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.{Application, Environment, Mode}
@@ -35,32 +36,29 @@ class DataMongoRepositorySpec extends UnitSpec with GuiceOneAppPerSuite with Bef
     .configure(servicesConfig)
     .build()
 
-  val testData = Json.obj("_id" -> "testId", "testDataKey" -> "testDataValue")
+  val testData = Json.obj("testDataKey" -> "testDataValue")
+
+  val testDataModel1 = new DataModel("session-id", "data-id-1", testData)
+  val testDataModel2 = new DataModel("session-id", "data-id-2", testData)
+  val testDataModel3 = new DataModel("session-id", "data-id-3", testData)
+
   override def beforeEach(): Unit = {
     await(TestDataMongoRepository.drop)
   }
 
   "storeData" should {
-    "return the model when it is successfully inserted" in {
-      val (insertRes, stored) = await(for {
-        insertRes <- TestDataMongoRepository.insert(testData)
-        stored <- TestDataMongoRepository.find("_id" -> "testId")
-      } yield (insertRes, stored))
+    "return the model when it is successfully inserted by dataId and sessionId" in {
+      val (retrieveOnDataId, retrieveOnSessionId) = await(for {
+        insertRes1 <- TestDataMongoRepository.insert(testDataModel1)
+        insertRes2 <- TestDataMongoRepository.insert(testDataModel2)
+        insertRes3 <- TestDataMongoRepository.insert(testDataModel3)
+        retrieveOnSessionId <- TestDataMongoRepository.findAllBySessionId("session-id")
+        retrieveOnDataId <- TestDataMongoRepository.findByDataId("data-id-2")
+      } yield (retrieveOnDataId, retrieveOnSessionId))
 
-      stored.size shouldBe 1
-      testData shouldBe stored.head
-
-    }
-
-
-    "fail when a duplicate is created" in {
-      val res = for {
-        _ <- TestDataMongoRepository.insert(testData)
-        _ <- TestDataMongoRepository.insert(testData)
-      } yield ()
-
-      intercept[Exception](await(res))
+      retrieveOnSessionId.size shouldBe 3
+      retrieveOnSessionId shouldBe List(testDataModel1, testDataModel2, testDataModel3)
+      retrieveOnDataId.get shouldBe testDataModel2
     }
   }
-
 }
