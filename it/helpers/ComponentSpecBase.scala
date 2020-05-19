@@ -24,7 +24,7 @@ import org.scalatest._
 import org.scalatest.concurrent.{Eventually, IntegrationPatience, ScalaFutures}
 import org.scalatestplus.play.guice.GuiceOneServerPerSuite
 import play.api.inject.guice.GuiceApplicationBuilder
-import play.api.libs.json.{Json, Writes}
+import play.api.libs.json.{JsValue, Json, Writes}
 import play.api.libs.ws.WSResponse
 import play.api.{Application, Environment, Mode}
 import uk.gov.hmrc.http.HeaderCarrier
@@ -72,7 +72,7 @@ trait ComponentSpecBase extends UnitSpec
     super.afterAll()
   }
 
-  implicit val hc = HeaderCarrier()
+  implicit val hc: HeaderCarrier = HeaderCarrier()
 
   object IncomeTaxSubscription {
     def getSubscriptionStatus(nino: String): WSResponse = get(s"/subscription/$nino")
@@ -88,6 +88,27 @@ trait ComponentSpecBase extends UnitSpec
     def storeNino(token: String, nino: String): WSResponse = post(s"/identifier-mapping/$token", Json.obj("nino" -> nino))
 
     def getNino(token: String): WSResponse = get(s"/identifier-mapping/$token")
+
+    def getRetrieveSelfEmployments(dataId: String): WSResponse = await(
+      buildClient(s"/self-employments/id/$dataId")
+        .withHttpHeaders("X-Session-ID" -> "testSessionId")
+        .get()
+    )
+
+    def postInsertSelfEmployments(dataId: String, body: JsValue): WSResponse = await(
+      buildClient(s"/self-employments/id/$dataId")
+        .withHttpHeaders(
+          "X-Session-ID" -> "testSessionId",
+          "Content-Type" -> "application/json"
+        )
+        .post(body.toString())
+    )
+
+    def getAllSelfEmployments: WSResponse = await(
+      buildClient(s"/self-employments/all")
+        .withHttpHeaders("X-Session-ID" -> "testSessionId")
+        .get()
+    )
 
     def post[T](uri: String, body: T)(implicit writes: Writes[T]): WSResponse = {
       await(

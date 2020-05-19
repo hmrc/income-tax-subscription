@@ -1,0 +1,108 @@
+/*
+ * Copyright 2020 HM Revenue & Customs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package services
+
+import org.mockito.Mockito._
+import org.scalatest.mockito.MockitoSugar
+import play.api.libs.json.{JsObject, Json}
+import repositories.SelfEmploymentsRepository
+import uk.gov.hmrc.http.logging.SessionId
+import uk.gov.hmrc.http.{HeaderCarrier, InternalServerException}
+import uk.gov.hmrc.play.test.UnitSpec
+
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
+
+class SelfEmploymentsServiceSpec extends UnitSpec with MockitoSugar {
+
+  trait Setup {
+    val mockSelfEmploymentsRepository: SelfEmploymentsRepository = mock[SelfEmploymentsRepository]
+    val service = new SelfEmploymentsService(mockSelfEmploymentsRepository)
+  }
+
+  val testJson: JsObject = Json.obj(
+    "testDataIdKey" -> "testDataIdValue"
+  )
+  val testSessionId: String = "sessionId"
+  val testDataId: String = "dataId"
+
+  "getAllSelfEmployments" should {
+    "call the repo with the sessionId" when {
+      "available in the headerCarrier" in new Setup {
+        implicit val hc: HeaderCarrier = HeaderCarrier(sessionId = Some(SessionId(testSessionId)))
+
+        when(mockSelfEmploymentsRepository.getSessionIdData(testSessionId))
+          .thenReturn(Future.successful(Some(testJson)))
+
+        await(service.getAllSelfEmployments) shouldBe Some(testJson)
+      }
+    }
+
+    "throw internal server exception" when {
+      "the sessionId is not in the headerCarrier" in new Setup {
+        implicit val hc: HeaderCarrier = HeaderCarrier()
+
+        val result: InternalServerException = intercept[InternalServerException](await(service.getAllSelfEmployments))
+        result.message shouldBe "[SelfEmploymentsService][retrieveSelfEmployments] - No session id in header carrier"
+      }
+    }
+  }
+
+  "retrieveSelfEmployments" should {
+    "call the repo with the sessionId and dataId" when {
+      "sessionId is available in the headerCarrier" in new Setup {
+        implicit val hc: HeaderCarrier = HeaderCarrier(sessionId = Some(SessionId(testSessionId)))
+
+        when(mockSelfEmploymentsRepository.getDataFromSession(testSessionId, testDataId))
+          .thenReturn(Future.successful(Some(testJson)))
+
+        await(service.retrieveSelfEmployments(testDataId)) shouldBe Some(testJson)
+      }
+    }
+
+    "throw internal server exception" when {
+      "the sessionId is not in the headerCarrier" in new Setup {
+        implicit val hc: HeaderCarrier = HeaderCarrier()
+
+        val result: InternalServerException = intercept[InternalServerException](await(service.retrieveSelfEmployments(testDataId)))
+        result.message shouldBe "[SelfEmploymentsService][retrieveSelfEmployments] - No session id in header carrier"
+      }
+    }
+  }
+
+  "insertSelfEmployments" should {
+    "call the repo with the sessionId, dataId and data" when {
+      "sessionId is available in the headerCarrier" in new Setup {
+        implicit val hc: HeaderCarrier = HeaderCarrier(sessionId = Some(SessionId(testSessionId)))
+
+        when(mockSelfEmploymentsRepository.insertDataWithSession(testSessionId, testDataId, testJson))
+          .thenReturn(Future.successful(Some(testJson)))
+
+        await(service.insertSelfEmployments(testDataId, testJson)) shouldBe Some(testJson)
+      }
+    }
+
+    "throw internal server exception" when {
+      "the sessionId is not in the headerCarrier" in new Setup {
+        implicit val hc: HeaderCarrier = HeaderCarrier()
+
+        val result: InternalServerException = intercept[InternalServerException](await(service.insertSelfEmployments(testDataId, testJson)))
+        result.message shouldBe "[SelfEmploymentsService][retrieveSelfEmployments] - No session id in header carrier"
+      }
+    }
+  }
+}
