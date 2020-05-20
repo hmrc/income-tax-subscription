@@ -17,7 +17,7 @@
 package helpers
 
 import org.scalatest.matchers._
-import play.api.libs.json.Reads
+import play.api.libs.json.{JsValue, Reads}
 import play.api.libs.ws.WSResponse
 
 trait CustomMatchers {
@@ -34,12 +34,22 @@ trait CustomMatchers {
 
   def jsonBodyAs[T](expectedValue: T)(implicit reads: Reads[T]): HavePropertyMatcher[WSResponse, T] =
     new HavePropertyMatcher[WSResponse, T] {
-    def apply(response: WSResponse) =
+      def apply(response: WSResponse) =
+        HavePropertyMatchResult(
+          response.json.as[T] == expectedValue,
+          "jsonBodyAs",
+          expectedValue,
+          response.json.as[T]
+        )
+    }
+
+  def jsonBodyOf(expectedValue: JsValue): HavePropertyMatcher[WSResponse, JsValue] = HavePropertyMatcher[WSResponse, JsValue] {
+    response =>
       HavePropertyMatchResult(
-        response.json.as[T] == expectedValue,
-        "jsonBodyAs",
+        response.json == expectedValue,
+        "jsonBodyOf",
         expectedValue,
-        response.json.as[T]
+        response.json
       )
   }
 

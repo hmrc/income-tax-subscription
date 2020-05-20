@@ -7,3 +7,7 @@ POST        /client-matching/lock/:arn        controllers.matching.LockoutStatus
 
 GET         /identifier-mapping/:token        controllers.digitalcontact.PaperlessPreferenceController.getNino(token:String)
 POST        /identifier-mapping/:token        controllers.digitalcontact.PaperlessPreferenceController.storeNino(token:String)
+
+GET         /self-employments/all             controllers.SelfEmploymentsController.getAllSelfEmployments
+GET         /self-employments/id/:id          controllers.SelfEmploymentsController.retrieveSelfEmployments(id:String)
+POST        /self-employments/id/:id          controllers.SelfEmploymentsController.insertSelfEmployments(id:String)
