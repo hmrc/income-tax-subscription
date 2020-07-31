@@ -104,6 +104,12 @@ trait ComponentSpecBase extends UnitSpec
         .post(body.toString())
     )
 
+    def deleteDeleteAllSessionData: WSResponse = await(
+      buildClient(s"/subscription-data/all")
+       .withHttpHeaders("X-Session-ID" -> "testSessionId")
+       .delete()
+    )
+
     def getAllSelfEmployments: WSResponse = await(
       buildClient(s"/self-employments/all")
         .withHttpHeaders("X-Session-ID" -> "testSessionId")

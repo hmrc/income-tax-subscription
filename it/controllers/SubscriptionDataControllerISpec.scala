@@ -20,13 +20,13 @@ import helpers.ComponentSpecBase
 import helpers.servicemocks.AuthStub
 import play.api.http.Status._
 import play.api.libs.json.{JsObject, Json}
-import repositories.SelfEmploymentsRepository
+import repositories.SubscriptionDataRepository
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
-class SelfEmploymentsControllerISpec extends ComponentSpecBase {
+class SubscriptionDataControllerISpec extends ComponentSpecBase {
 
-  val repository: SelfEmploymentsRepository = app.injector.instanceOf[SelfEmploymentsRepository]
+  val repository: SubscriptionDataRepository = app.injector.instanceOf[SubscriptionDataRepository]
   val testJson: JsObject = Json.obj("testDataIdKey" -> "testDataIdValue")
   val testDocument: JsObject = Json.obj(
     "sessionId" -> "testSessionId",
@@ -53,7 +53,7 @@ class SelfEmploymentsControllerISpec extends ComponentSpecBase {
     super.beforeEach()
   }
 
-  s"GET ${controllers.routes.SelfEmploymentsController.getAllSelfEmployments().url}" should {
+  s"GET ${controllers.routes.SubscriptionDataController.getAllSelfEmployments().url}" should {
     "return OK with all the data related to the user in mongo" when {
       "the sessionId exists in mongo for the user" in {
         AuthStub.stubAuthSuccess()
@@ -96,7 +96,7 @@ class SelfEmploymentsControllerISpec extends ComponentSpecBase {
     }
   }
 
-  s"GET ${controllers.routes.SelfEmploymentsController.retrieveSelfEmployments("testDataId").url}" should {
+  s"GET ${controllers.routes.SubscriptionDataController.retrieveSelfEmployments("testDataId").url}" should {
     "return OK with the data related to the key in mongo" when {
       "the data exists in mongo for the user" in {
         AuthStub.stubAuthSuccess()
@@ -132,7 +132,7 @@ class SelfEmploymentsControllerISpec extends ComponentSpecBase {
     }
   }
 
-  s"POST ${controllers.routes.SelfEmploymentsController.insertSelfEmployments("testDataId").url}" should {
+  s"POST ${controllers.routes.SubscriptionDataController.insertSelfEmployments("testDataId").url}" should {
     "return OK to upsert the data in mongo" when {
       "the session document already existed for the user" in {
         AuthStub.stubAuthSuccess()
@@ -168,4 +168,25 @@ class SelfEmploymentsControllerISpec extends ComponentSpecBase {
       }
     }
   }
+
+    s"DELETE ${controllers.routes.SubscriptionDataController.deleteAllSessionData().url}" should {
+    "return OK remove all the data related to the user in mongo" when {
+      "the sessionId exists in mongo for the user" in {
+        AuthStub.stubAuthSuccess()
+        await(repository.insert(testDocumentAll))
+        IncomeTaxSubscription.deleteDeleteAllSessionData should have(httpStatus(OK))
+      }
+    }
+
+    "return unauthorised" when {
+      "the user is not authorised" in {
+        AuthStub.stubAuthFailure()
+
+        IncomeTaxSubscription.deleteDeleteAllSessionData should have(
+          httpStatus(UNAUTHORIZED)
+        )
+      }
+    }
+  }
+
 }

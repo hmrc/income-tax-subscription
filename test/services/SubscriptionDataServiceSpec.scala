@@ -19,7 +19,8 @@ package services
 import org.mockito.Mockito._
 import org.scalatest.mockito.MockitoSugar
 import play.api.libs.json.{JsObject, Json}
-import repositories.SelfEmploymentsRepository
+import reactivemongo.api.commands.UpdateWriteResult
+import repositories.SubscriptionDataRepository
 import uk.gov.hmrc.http.logging.SessionId
 import uk.gov.hmrc.http.{HeaderCarrier, InternalServerException}
 import uk.gov.hmrc.play.test.UnitSpec
@@ -27,11 +28,11 @@ import uk.gov.hmrc.play.test.UnitSpec
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class SelfEmploymentsServiceSpec extends UnitSpec with MockitoSugar {
+class SubscriptionDataServiceSpec extends UnitSpec with MockitoSugar {
 
   trait Setup {
-    val mockSelfEmploymentsRepository: SelfEmploymentsRepository = mock[SelfEmploymentsRepository]
-    val service = new SelfEmploymentsService(mockSelfEmploymentsRepository)
+    val mockSelfEmploymentsRepository: SubscriptionDataRepository = mock[SubscriptionDataRepository]
+    val service = new SubscriptionDataService(mockSelfEmploymentsRepository)
   }
 
   val testJson: JsObject = Json.obj(
@@ -39,6 +40,26 @@ class SelfEmploymentsServiceSpec extends UnitSpec with MockitoSugar {
   )
   val testSessionId: String = "sessionId"
   val testDataId: String = "dataId"
+
+  "sessionIdFromHC" should {
+    "return the sessionId" when {
+      "there is one sessionId value" in new Setup {
+        implicit val hc: HeaderCarrier = HeaderCarrier(sessionId = Some(SessionId(testSessionId)))
+        val result = service.sessionIdFromHC(hc)
+        result shouldBe testSessionId
+      }
+    }
+
+    "throw internal server exception" when {
+      "the sessionId is not in the headerCarrier" in new Setup {
+        implicit val hc: HeaderCarrier = HeaderCarrier()
+
+        val result: InternalServerException = intercept[InternalServerException](await(service.sessionIdFromHC(hc)))
+        result.message shouldBe "[SubscriptionDataService][retrieveSelfEmployments] - No session id in header carrier"
+      }
+    }
+
+  }
 
   "getAllSelfEmployments" should {
     "call the repo with the sessionId" when {
@@ -49,15 +70,6 @@ class SelfEmploymentsServiceSpec extends UnitSpec with MockitoSugar {
           .thenReturn(Future.successful(Some(testJson)))
 
         await(service.getAllSelfEmployments) shouldBe Some(testJson)
-      }
-    }
-
-    "throw internal server exception" when {
-      "the sessionId is not in the headerCarrier" in new Setup {
-        implicit val hc: HeaderCarrier = HeaderCarrier()
-
-        val result: InternalServerException = intercept[InternalServerException](await(service.getAllSelfEmployments))
-        result.message shouldBe "[SelfEmploymentsService][retrieveSelfEmployments] - No session id in header carrier"
       }
     }
   }
@@ -73,15 +85,6 @@ class SelfEmploymentsServiceSpec extends UnitSpec with MockitoSugar {
         await(service.retrieveSelfEmployments(testDataId)) shouldBe Some(testJson)
       }
     }
-
-    "throw internal server exception" when {
-      "the sessionId is not in the headerCarrier" in new Setup {
-        implicit val hc: HeaderCarrier = HeaderCarrier()
-
-        val result: InternalServerException = intercept[InternalServerException](await(service.retrieveSelfEmployments(testDataId)))
-        result.message shouldBe "[SelfEmploymentsService][retrieveSelfEmployments] - No session id in header carrier"
-      }
-    }
   }
 
   "insertSelfEmployments" should {
@@ -95,14 +98,19 @@ class SelfEmploymentsServiceSpec extends UnitSpec with MockitoSugar {
         await(service.insertSelfEmployments(testDataId, testJson)) shouldBe Some(testJson)
       }
     }
+  }
 
-    "throw internal server exception" when {
-      "the sessionId is not in the headerCarrier" in new Setup {
-        implicit val hc: HeaderCarrier = HeaderCarrier()
+  "deleteSessionData" should {
+    "call the repo with the sessionId" when {
+      "sessionId is available in the headerCarrier" in new Setup {
+        implicit val hc: HeaderCarrier = HeaderCarrier(sessionId = Some(SessionId(testSessionId)))
 
-        val result: InternalServerException = intercept[InternalServerException](await(service.insertSelfEmployments(testDataId, testJson)))
-        result.message shouldBe "[SelfEmploymentsService][retrieveSelfEmployments] - No session id in header carrier"
+        when(mockSelfEmploymentsRepository.deleteDataFromSessionId(testSessionId))
+          .thenReturn(Future.successful(UpdateWriteResult(true, 1, 1, Seq(), Seq(), None, Some(200), None)))
+
+        await(service.deleteSessionData).ok shouldBe true
       }
     }
   }
+
 }

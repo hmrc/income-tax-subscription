@@ -16,43 +16,45 @@
 
 package services.mocks
 
-import org.mockito.{ArgumentMatcher, ArgumentMatchers}
+import org.mockito.ArgumentMatchers
 import org.mockito.Mockito._
-import org.mockito.stubbing.OngoingStubbing
 import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{BeforeAndAfterEach, Suite}
 import play.api.libs.json.JsObject
-import services.{AuthService, SelfEmploymentsService}
-import uk.gov.hmrc.auth.core.authorise.EmptyPredicate
-import uk.gov.hmrc.auth.core.retrieve.Retrieval
-import uk.gov.hmrc.http.HeaderCarrier
+import reactivemongo.api.commands.WriteResult
+import services.SubscriptionDataService
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.Future
 
-trait MockSelfEmploymentsService extends BeforeAndAfterEach with MockitoSugar {
+trait MockSubscriptionDataService extends BeforeAndAfterEach with MockitoSugar {
   self: Suite =>
 
-  val mockSelfEmploymentsService = mock[SelfEmploymentsService]
+  val mockSubscriptionDataService = mock[SubscriptionDataService]
 
   val mockDataId: String = "DataId"
 
   override def beforeEach(): Unit = {
     super.beforeEach()
-    reset(mockSelfEmploymentsService)
+    reset(mockSubscriptionDataService)
   }
 
   def mockGetAllSelfEmployments(result: Option[JsObject]): Unit = {
-    when(mockSelfEmploymentsService.getAllSelfEmployments(ArgumentMatchers.any()))
+    when(mockSubscriptionDataService.getAllSelfEmployments(ArgumentMatchers.any()))
       .thenReturn(Future.successful(result))
   }
 
   def mockRetrieveSelfEmployments(result: Option[JsObject]): Unit = {
-    when(mockSelfEmploymentsService.retrieveSelfEmployments(ArgumentMatchers.eq(mockDataId))(ArgumentMatchers.any()))
+    when(mockSubscriptionDataService.retrieveSelfEmployments(ArgumentMatchers.eq(mockDataId))(ArgumentMatchers.any()))
       .thenReturn(Future.successful(result))
   }
 
   def mockInsertSelfEmployments(data: JsObject)(result: Option[JsObject]): Unit = {
-    when(mockSelfEmploymentsService.insertSelfEmployments(ArgumentMatchers.eq(mockDataId), ArgumentMatchers.eq(data))(ArgumentMatchers.any()))
+    when(mockSubscriptionDataService.insertSelfEmployments(ArgumentMatchers.eq(mockDataId), ArgumentMatchers.eq(data))(ArgumentMatchers.any()))
+      .thenReturn(Future.successful(result))
+  }
+
+  def mockDeleteSessionData(result: WriteResult): Unit = {
+    when(mockSubscriptionDataService.deleteSessionData(ArgumentMatchers.any()))
       .thenReturn(Future.successful(result))
   }
 
