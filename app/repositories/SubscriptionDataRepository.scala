@@ -21,6 +21,7 @@ import javax.inject.{Inject, Singleton}
 import play.api.libs.json.{Format, JsObject, JsValue, Json}
 import play.modules.reactivemongo.ReactiveMongoComponent
 import reactivemongo.api.Cursor.FailOnError
+import reactivemongo.api.commands.WriteResult
 import reactivemongo.api.indexes.{Index, IndexType}
 import reactivemongo.bson.{BSONDocument, BSONObjectID}
 import reactivemongo.play.json.ImplicitBSONHandlers._
@@ -29,8 +30,8 @@ import uk.gov.hmrc.mongo.ReactiveRepository
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class SelfEmploymentsRepository @Inject()(mongo: ReactiveMongoComponent,
-                                          appConfig: MicroserviceAppConfig)(implicit ec: ExecutionContext)
+class SubscriptionDataRepository @Inject()(mongo: ReactiveMongoComponent,
+                                           appConfig: MicroserviceAppConfig)(implicit ec: ExecutionContext)
   extends ReactiveRepository[JsObject, BSONObjectID](
     "selfEmploymentsData",
     mongo.mongoConnector.db,
@@ -61,6 +62,11 @@ class SelfEmploymentsRepository @Inject()(mongo: ReactiveMongoComponent,
     val set: JsValue = selector ++ Json.obj(dataId -> data)
     val update: JsObject = Json.obj("$set" -> set)
     findAndUpdate(selector, update, fetchNewObject = true, upsert = true).map(_.result[JsValue])
+  }
+
+  def deleteDataFromSessionId(sessionId: String): Future[WriteResult] = {
+    val selector = Json.obj("sessionId" -> sessionId)
+    remove("sessionId" -> Json.parse(s"""{"sessionId":"$sessionId"}"""))
   }
 
   val creationTimestampKey = "creationTimestamp"

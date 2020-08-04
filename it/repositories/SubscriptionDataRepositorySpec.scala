@@ -24,9 +24,9 @@ import uk.gov.hmrc.play.test.UnitSpec
 import scala.concurrent.ExecutionContext.Implicits._
 import scala.concurrent.Future
 
-class SelfEmploymentsRepositorySpec extends UnitSpec with GuiceOneAppPerSuite with BeforeAndAfterEach {
+class SubscriptionDataRepositorySpec extends UnitSpec with GuiceOneAppPerSuite with BeforeAndAfterEach {
 
-  val testSelfEmploymentsRepository: SelfEmploymentsRepository = app.injector.instanceOf[SelfEmploymentsRepository]
+  val testSelfEmploymentsRepository: SubscriptionDataRepository = app.injector.instanceOf[SubscriptionDataRepository]
 
   override def beforeEach(): Unit = {
     await(testSelfEmploymentsRepository.drop)

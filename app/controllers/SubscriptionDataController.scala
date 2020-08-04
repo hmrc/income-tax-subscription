@@ -19,21 +19,21 @@ package controllers
 import javax.inject.{Inject, Singleton}
 import play.api.libs.json.JsValue
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
-import services.{AuthService, SelfEmploymentsService}
+import services.{AuthService, SubscriptionDataService}
 import uk.gov.hmrc.play.bootstrap.controller.BackendController
 
 import scala.concurrent.ExecutionContext
 
 @Singleton
-class SelfEmploymentsController @Inject()(authService: AuthService,
-                                          selfEmploymentsService: SelfEmploymentsService,
-                                          cc: ControllerComponents)
+class SubscriptionDataController @Inject()(authService: AuthService,
+                                           subscriptionDataService: SubscriptionDataService,
+                                           cc: ControllerComponents)
                                          (implicit ec: ExecutionContext) extends BackendController(cc) {
 
 
   def getAllSelfEmployments: Action[AnyContent] = Action.async { implicit request =>
     authService.authorised() {
-      selfEmploymentsService.getAllSelfEmployments.map {
+      subscriptionDataService.getAllSelfEmployments.map {
         case Some(data) => Ok(data)
         case None => NoContent
       }
@@ -42,7 +42,7 @@ class SelfEmploymentsController @Inject()(authService: AuthService,
 
   def retrieveSelfEmployments(id: String): Action[AnyContent] = Action.async { implicit request =>
     authService.authorised() {
-      selfEmploymentsService.retrieveSelfEmployments(id).map {
+      subscriptionDataService.retrieveSelfEmployments(id).map {
         case Some(data) => Ok(data)
         case None => NoContent
       }
@@ -51,8 +51,21 @@ class SelfEmploymentsController @Inject()(authService: AuthService,
 
   def insertSelfEmployments(id: String): Action[JsValue] = Action.async(parse.json) { implicit request =>
     authService.authorised() {
-      selfEmploymentsService.insertSelfEmployments(dataId = id, request.body).map(_ => Ok)
+      subscriptionDataService.insertSelfEmployments(dataId = id, request.body).map(_ => Ok)
+    }
+  }
+
+  def deleteAllSessionData: Action[AnyContent] = Action.async { implicit request =>
+    authService.authorised() {
+      subscriptionDataService.deleteSessionData.map { result =>
+        if (result.ok) {
+          Ok
+        } else {
+          throw new RuntimeException(
+            "[SubscriptionDataController][deleteAllSessionData] - delete session data failed with code " + result.code.getOrElse("")
+          )
+        }
+      }
     }
   }
 }
-

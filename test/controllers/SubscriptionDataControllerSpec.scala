@@ -16,20 +16,20 @@
 
 package controllers
 
-import play.api.libs.json.{JsObject, JsValue, Json}
-import play.api.mvc.{Request, Result}
+import play.api.libs.json.{JsObject, Json}
+import play.api.mvc.Result
 import play.api.test.FakeRequest
 import play.api.test.Helpers.{stubControllerComponents, _}
-import services.mocks.{MockAuthService, MockSelfEmploymentsService}
+import reactivemongo.api.commands.UpdateWriteResult
+import services.mocks.{MockAuthService, MockSubscriptionDataService}
 import uk.gov.hmrc.play.test.UnitSpec
-import utils.MaterializerSupport
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class SelfEmploymentsControllerSpec extends UnitSpec with MockSelfEmploymentsService with MockAuthService {
+class SubscriptionDataControllerSpec extends UnitSpec with MockSubscriptionDataService with MockAuthService {
 
-  object TestController extends SelfEmploymentsController(mockAuthService, mockSelfEmploymentsService, stubControllerComponents())
+  object TestController extends SubscriptionDataController(mockAuthService, mockSubscriptionDataService, stubControllerComponents())
 
   val testJson: JsObject = Json.obj(
     "testDataIdKey" -> "testDataIdValue"
@@ -98,6 +98,29 @@ class SelfEmploymentsControllerSpec extends UnitSpec with MockSelfEmploymentsSer
         val result: Future[Result] = TestController.insertSelfEmployments(mockDataId)(fakeRequest)
 
         status(result) shouldBe OK
+      }
+    }
+  }
+
+  "deleteAllSessionData" should {
+    "return OK" when {
+      "the data related to the given sessionId have been deleted successfully and an OK status returned from the service" in {
+        mockAuthSuccess()
+        mockDeleteSessionData(UpdateWriteResult(true, 1, 1, Seq(), Seq(), None, None, None))
+
+        val result = await(TestController.deleteAllSessionData(request))
+
+        status(result) shouldBe OK
+      }
+    }
+
+    "throw an exception" when {
+      "delete session data fails" in {
+        mockAuthSuccess()
+        mockDeleteSessionData(UpdateWriteResult(false, 1, 1, Seq(), Seq(), None, Some(500), None))
+
+        val ex = intercept[RuntimeException](await(TestController.deleteAllSessionData(request)))
+        ex.getMessage shouldBe "[SubscriptionDataController][deleteAllSessionData] - delete session data failed with code 500"
       }
     }
   }

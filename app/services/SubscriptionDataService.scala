@@ -18,38 +18,43 @@ package services
 
 import javax.inject.{Inject, Singleton}
 import play.api.libs.json.JsValue
-import repositories.SelfEmploymentsRepository
+import reactivemongo.api.commands.WriteResult
+import repositories.SubscriptionDataRepository
 import uk.gov.hmrc.http.{HeaderCarrier, InternalServerException}
 
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class SelfEmploymentsService @Inject()(selfEmploymentsRepository: SelfEmploymentsRepository)
-                                      (implicit ec: ExecutionContext) {
+class SubscriptionDataService @Inject()(subscriptionDataRepository: SubscriptionDataRepository)
+                                       (implicit ec: ExecutionContext) {
 
 
-  private def sessionIdFromHC(implicit hc: HeaderCarrier): String = {
+  private[services] def sessionIdFromHC(implicit hc: HeaderCarrier): String = {
     hc.sessionId.fold(
-      throw new InternalServerException("[SelfEmploymentsService][retrieveSelfEmployments] - No session id in header carrier")
+      throw new InternalServerException("[SubscriptionDataService][retrieveSelfEmployments] - No session id in header carrier")
     )(_.value)
   }
 
   def retrieveSelfEmployments(dataId: String)(implicit hc: HeaderCarrier): Future[Option[JsValue]] = {
-    selfEmploymentsRepository.getDataFromSession(
+    subscriptionDataRepository.getDataFromSession(
       sessionId = sessionIdFromHC,
       dataId = dataId
     )
   }
 
   def getAllSelfEmployments(implicit hc: HeaderCarrier): Future[Option[JsValue]] = {
-    selfEmploymentsRepository.getSessionIdData(sessionId = sessionIdFromHC)
+    subscriptionDataRepository.getSessionIdData(sessionId = sessionIdFromHC)
   }
 
   def insertSelfEmployments(dataId: String, data: JsValue)(implicit hc: HeaderCarrier): Future[Option[JsValue]] = {
-    selfEmploymentsRepository.insertDataWithSession(
+    subscriptionDataRepository.insertDataWithSession(
       sessionId = sessionIdFromHC,
       dataId = dataId,
       data = data)
+  }
+
+  def deleteSessionData(implicit hc: HeaderCarrier): Future[WriteResult] = {
+    subscriptionDataRepository.deleteDataFromSessionId(sessionId = sessionIdFromHC)
   }
 
 }
