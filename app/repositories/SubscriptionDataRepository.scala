@@ -66,7 +66,7 @@ class SubscriptionDataRepository @Inject()(mongo: ReactiveMongoComponent,
 
   def deleteDataFromSessionId(sessionId: String): Future[WriteResult] = {
     val selector = Json.obj("sessionId" -> sessionId)
-    remove("sessionId" -> Json.parse(s"""{"sessionId":"$sessionId"}"""))
+    remove("sessionId" -> Json.toJson(sessionId))
   }
 
   val creationTimestampKey = "creationTimestamp"
