@@ -183,4 +183,27 @@ object IntegrationTestConstants {
 
   val testPaperlessPreferenceKey = PaperlessPreferenceKey(testPreferencesToken, testNino)
 
+  def testSignUpSubmission(nino: String): JsValue = Json.parse(
+    s"""
+       |{
+       | "idType" : "NINO",
+       | "idValue" : "$nino"
+       |}
+      """.stripMargin)
+
+  val testSignUpSuccessBody: JsValue = Json.parse(
+    """
+      |{
+      | "mtdbsa": "XQIT00000000001"
+      |}
+    """.stripMargin
+  )
+
+  val testSignUpInvalidBody: JsValue = Json.parse(
+    """
+      |{
+      | "mtdbs": "XQIT00000000001"
+      |}
+    """.stripMargin
+  )
 }

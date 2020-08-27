@@ -17,18 +17,17 @@
 package helpers.servicemocks
 
 import com.github.tomakehurst.wiremock.stubbing.StubMapping
-import models.subscription.incomesource.BusinessIncomeModel
-import play.api.libs.json.JsObject
+import play.api.libs.json.JsValue
 
-object BusinessSubscriptionStub extends WireMockMethods {
+object SignUpStub extends WireMockMethods {
 
-  private def businessSubscriptionUri(nino: String): String = s"/income-tax-self-assessment/nino/$nino/business"
+  private def signUpUri(nino: String): String = s"/income-tax/sign-up/ITSA"
 
-  def stubBusinessIncomeSubscription(nino: String, expectedBody: JsObject, authorizationHeader: String, environmentHeader: String)
-                                    (status: Int, body: JsObject): StubMapping = {
+  def stubSignUp(nino: String, expectedBody: JsValue, authorizationHeader: String, environmentHeader: String)
+                (status: Int, body: JsValue): StubMapping = {
     when(
       method = POST,
-      uri = businessSubscriptionUri(nino),
+      uri = signUpUri(nino),
       body = expectedBody,
       headers = Map[String, String](
         "Authorization" -> authorizationHeader,
@@ -37,5 +36,4 @@ object BusinessSubscriptionStub extends WireMockMethods {
     ).thenReturn(status, body)
 
   }
-
 }
