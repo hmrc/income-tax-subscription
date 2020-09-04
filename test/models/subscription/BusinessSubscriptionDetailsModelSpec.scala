@@ -34,7 +34,7 @@ class BusinessSubscriptionDetailsModelSpec extends UnitSpec {
         businessTradeName = Some(BusinessTradeNameModel("Plumbing")),
         businessAddress = Some(BusinessAddressModel("12345", Address(Seq("line1", "line2", "line3", "line4"), "TF3 4NT")))
       )),
-      accountingMethod = Cash,
+      accountingMethod = Some(Cash),
       incomeSource = FeIncomeSourceModel(true, true, true),
       propertyCommencementDate = Some(PropertyCommencementDateModel(DateModel("6", "7", "2018"))),
       propertyAccountingMethod = Some(AccountingMethodPropertyModel(Accruals)),
@@ -67,7 +67,7 @@ class BusinessSubscriptionDetailsModelSpec extends UnitSpec {
         businessTradeName = Some(BusinessTradeNameModel("Plumbing")),
         businessAddress = Some(BusinessAddressModel("12345", Address(Seq("line1", "line2", "line3"), "TF3 4NT")))
       )),
-      accountingMethod = Cash,
+      accountingMethod = Some(Cash),
       incomeSource = FeIncomeSourceModel(true, true, false),
       propertyCommencementDate = Some(PropertyCommencementDateModel(DateModel("6", "7", "2018"))),
       propertyAccountingMethod = Some(AccountingMethodPropertyModel(Accruals))
@@ -97,7 +97,7 @@ class BusinessSubscriptionDetailsModelSpec extends UnitSpec {
         businessTradeName = Some(BusinessTradeNameModel("Plumbing")),
         businessAddress = Some(BusinessAddressModel("12345", Address(Seq("line1", "line2", "line3"), "TF3 4NT")))
       )),
-      accountingMethod = Cash,
+      accountingMethod = Some(Cash),
       incomeSource = FeIncomeSourceModel(true, true, false),
       propertyCommencementDate = Some(PropertyCommencementDateModel(DateModel("6", "7", "2018"))),
       propertyAccountingMethod = Some(AccountingMethodPropertyModel(Accruals))

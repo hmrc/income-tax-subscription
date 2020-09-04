@@ -112,7 +112,7 @@ object OverseasAccountingMethodPropertyModel {
 
 case class BusinessSubscriptionDetailsModel(accountingPeriod: AccountingPeriodModel,
                                             selfEmploymentsData: Seq[SelfEmploymentData],
-                                            accountingMethod: AccountingMethod,
+                                            accountingMethod: Option[AccountingMethod],
                                             incomeSource: FeIncomeSourceModel,
                                             propertyCommencementDate: Option[PropertyCommencementDateModel] = None,
                                             propertyAccountingMethod: Option[AccountingMethodPropertyModel] = None,
@@ -147,7 +147,7 @@ object BusinessSubscriptionDetailsModel {
           "typeOfBusiness" -> JsString("self-employment"),
           "tradingStartDate" -> JsString(data.businessStartDate.getOrElse(
             throw new Exception("Missing businessStartDate Parameter")).startDate.toDesDateFormat),
-          "cashOrAccrualsFlag" -> JsString(details.accountingMethod.stringValue.toUpperCase)
+          "cashOrAccrualsFlag" -> details.accountingMethod.map(method =>JsString(method.stringValue.toUpperCase)).getOrElse(JsNull)
         )),
       "ukPropertyDetails" -> Json.toJson(
         if(details.incomeSource.ukProperty)

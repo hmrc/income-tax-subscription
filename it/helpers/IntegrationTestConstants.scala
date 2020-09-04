@@ -21,6 +21,7 @@ import java.util.UUID
 
 import models.digitalcontact.PaperlessPreferenceKey
 import models.lockout.LockoutRequest
+import models.subscription._
 import models.subscription.business.{Accruals, Cash}
 import models.subscription.incomesource.{AccountingPeriod, BusinessIncomeModel, PropertyIncomeModel, SignUpRequest}
 import models.{DateModel, ErrorModel}
@@ -37,6 +38,7 @@ object IntegrationTestConstants {
   lazy val testSafeId = "XE0001234567890"
   lazy val testMtditId = "mtditId001"
   lazy val testSourceId = "sourceId0001"
+  lazy val testMtdbsaRef = "XQIT00000000001"
   lazy val testErrorReason = "Error Reason"
   lazy val requestUri = "/"
   lazy val testPreferencesToken: String = s"${UUID.randomUUID()}"
@@ -194,6 +196,31 @@ object IntegrationTestConstants {
     """
       |{
       | "mtdbs": "XQIT00000000001"
+      |}
+    """.stripMargin
+  )
+
+  val testCreateIncomeSubmissionModel: BusinessSubscriptionDetailsModel = BusinessSubscriptionDetailsModel(
+    accountingPeriod = AccountingPeriodModel(LocalDate.now(), LocalDate.now()),
+    selfEmploymentsData = Seq(),
+    accountingMethod = None,
+    incomeSource = FeIncomeSourceModel(selfEmployment = false, ukProperty = true, foreignProperty = false),
+    propertyCommencementDate = Some(PropertyCommencementDateModel(LocalDate.now())),
+    propertyAccountingMethod = Some(AccountingMethodPropertyModel(Cash))
+  )
+
+  val testCreateIncomeSuccessBody: JsValue = Json.parse(
+    """
+      | {
+      |	"incomeSourceId": "AAIS12345678901"
+      |	}
+    """.stripMargin
+  )
+
+  val testCreateIncomeFailureBody: JsValue = Json.parse(
+    """
+      |{
+      | "mtdbsa": "XQIT00000000001"
       |}
     """.stripMargin
   )
