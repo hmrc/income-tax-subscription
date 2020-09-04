@@ -18,7 +18,8 @@ package models.subscription
 
 import models.DateModel
 import org.scalatest.MustMatchers.convertToAnyMustWrapper
-import play.api.libs.json.{JsNull, Json}
+import models.subscription.business.{Accruals, Cash}
+import play.api.libs.json.Json
 import uk.gov.hmrc.play.test.UnitSpec
 
 class BusinessSubscriptionDetailsModelSpec extends UnitSpec {
@@ -46,7 +47,7 @@ class BusinessSubscriptionDetailsModelSpec extends UnitSpec {
         "addressDetails" -> Json.obj("addressLine1" -> "line1", "addressLine2" ->"line2", "addressLine3" -> "line3", "addressLine4" -> "line4",
           "postalCode" -> "TF3 4NT", "countryCode" -> "GB"),
         "tradingName" -> "Plumbing", "tradingStartDate" -> "2017-01-01", "accountingPeriodEndDate" -> "2019-04-05")),
-      "ukPropertyDetails" -> Json.obj("tradingStartDate" -> "2018-07-06","cashOrAccrualsFlag" -> "ACCRUAL",
+      "ukPropertyDetails" -> Json.obj("tradingStartDate" -> "2018-07-06","cashOrAccrualsFlag" -> "ACCRUALS",
         "startDate" -> "2018-04-06"),
       "foreignPropertyDetails" -> Json.obj("tradingStartDate" -> "2018-08-06", "cashOrAccrualsFlag" -> "CASH", "startDate" -> "2018-04-06"))
 
@@ -77,7 +78,7 @@ class BusinessSubscriptionDetailsModelSpec extends UnitSpec {
         "addressDetails" -> Json.obj("addressLine1" -> "line1", "addressLine2" ->"line2", "addressLine3" -> "line3",
           "postalCode" -> "TF3 4NT", "countryCode" -> "GB"),
         "tradingName" -> "Plumbing", "tradingStartDate" -> "2017-01-01", "accountingPeriodEndDate" -> "2019-04-05")),
-      "ukPropertyDetails" -> Json.obj("tradingStartDate" -> "2018-07-06","cashOrAccrualsFlag" -> "ACCRUAL",
+      "ukPropertyDetails" -> Json.obj("tradingStartDate" -> "2018-07-06","cashOrAccrualsFlag" -> "ACCRUALS",
         "startDate" -> "2018-04-06"))
 
 
@@ -101,15 +102,6 @@ class BusinessSubscriptionDetailsModelSpec extends UnitSpec {
       propertyCommencementDate = Some(PropertyCommencementDateModel(DateModel("6", "7", "2018"))),
       propertyAccountingMethod = Some(AccountingMethodPropertyModel(Accruals))
     )
-
-    val json = Json.obj("businessDetails" -> Json.arr(
-      Json.obj("accountingPeriodStartDate" -> "2018-04-06", "cashOrAccrualsFlag" -> "CASH", "typeOfBusiness" -> "self-employment",
-        "addressDetails" -> Json.obj("addressLine1" -> "line1", "addressLine2" ->"line2", "addressLine3" -> "line3",
-          "postalCode" -> "TF3 4NT", "countryCode" -> "GB"),
-        "tradingName" -> "Plumbing", "tradingStartDate" -> "2017-01-01", "accountingPeriodEndDate" -> "2019-04-05")),
-      "ukPropertyDetails" -> Json.obj("tradingStartDate" -> "2018-07-06","cashOrAccrualsFlag" -> "ACCRUALS",
-        "startDate" -> "2018-04-06"))
-
 
     "should throw exception" in {
       intercept[Exception](Json.toJson(businessDetailsModel)).getMessage mustBe "Missing businessStartDate Parameter"

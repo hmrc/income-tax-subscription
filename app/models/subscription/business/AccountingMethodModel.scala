@@ -51,14 +51,3 @@ object AccountingMethod {
     case `feAccruals` | Accruals.stringValue => Accruals
   }
 }
-
-case class BusinessDetailsModel(accountingPeriodStartDate: String,
-                                accountingPeriodEndDate: String,
-                                tradingName: String,
-                                cashOrAccruals: AccountingMethod
-                               )
-
-object BusinessDetailsModel {
-  implicit val format: Format[BusinessDetailsModel] = Json.format[BusinessDetailsModel]
-}
-
