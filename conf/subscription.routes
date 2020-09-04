@@ -12,3 +12,5 @@ GET         /self-employments/all             controllers.SubscriptionDataContro
 GET         /self-employments/id/:id          controllers.SubscriptionDataController.retrieveSelfEmployments(id:String)
 POST        /self-employments/id/:id          controllers.SubscriptionDataController.insertSelfEmployments(id:String)
 DELETE      /subscription-data/all            controllers.SubscriptionDataController.deleteAllSessionData
+
+POST        /mis/sign-up/:nino                controllers.SignUpController.signUp(nino: String)

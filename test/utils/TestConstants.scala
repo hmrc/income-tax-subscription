@@ -29,7 +29,7 @@ import models.subscription.business.{BusinessDetailsModel, BusinessSubscriptionR
 import models.subscription.incomesource.{AccountingPeriod, BusinessIncomeModel, PropertyIncomeModel, SignUpRequest}
 import models.subscription.property.PropertySubscriptionResponseModel
 import play.api.http.Status._
-import play.api.libs.json.JsValue
+import play.api.libs.json.{JsValue, Json}
 import uk.gov.hmrc.domain.Generator
 import utils.JsonUtils._
 
@@ -311,6 +311,30 @@ object TestConstants {
     propertyIncome = Some(PropertyIncomeModel(
       accountingMethod = Cash
     ))
+  )
+
+  def testSignUpSubmission(nino: String): JsValue = Json.parse(
+    s"""
+       |{
+       | "idType" : "NINO",
+       | "idValue" : "$nino"
+       |}
+      """.stripMargin)
+
+  val testSignUpSuccessBody: JsValue = Json.parse(
+    """
+      |{
+      | "mtdbsa": "XQIT00000000001"
+      |}
+    """.stripMargin
+  )
+
+  val testSignUpInvalidBody: JsValue = Json.parse(
+    """
+      |{
+      | "mtdbs": "XQIT00000000001"
+      |}
+    """.stripMargin
   )
 
 }

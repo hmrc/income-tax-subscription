@@ -81,6 +81,8 @@ trait ComponentSpecBase extends UnitSpec
 
     def createSubscription(body: SignUpRequest): WSResponse = post(s"/subscription-v2/${body.nino}", body)
 
+    def signUp(nino: String): WSResponse = post(s"/mis/sign-up/${nino}", Json.parse("{}"))
+
     def checkLockoutStatus(arn: String): WSResponse = get(s"/client-matching/lock/$arn")
 
     def lockoutAgent(arn: String, body: LockoutRequest): WSResponse = post(s"/client-matching/lock/$arn", body)
