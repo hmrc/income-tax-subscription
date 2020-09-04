@@ -25,7 +25,7 @@ import models.frontend._
 import models.lockout.LockoutRequest
 import models.matching.LockoutResponse
 import models.subscription.IncomeSourceModel
-import models.subscription.business.{BusinessDetailsModel, BusinessSubscriptionRequestModel, BusinessSubscriptionSuccessResponseModel, Cash}
+import models.subscription.business.Cash
 import models.subscription.incomesource.{AccountingPeriod, BusinessIncomeModel, PropertyIncomeModel, SignUpRequest}
 import models.subscription.property.PropertySubscriptionResponseModel
 import play.api.http.Status._
@@ -71,14 +71,6 @@ object TestConstants {
 
   lazy val testException = new Exception("an error")
 
-  val businessSubscriptionRequestPayload = BusinessSubscriptionRequestModel(
-    List(BusinessDetailsModel(
-      accountingPeriodStartDate = "2017-05-01",
-      accountingPeriodEndDate = "2018-04-30",
-      tradingName = "Test Business",
-      cashOrAccruals = Cash
-    ))
-  )
 
   object GetBusinessDetailsResponse {
     val successResponse: (String, String, String) => JsValue = (nino: String, safeId: String, mtdbsa: String) =>
@@ -269,8 +261,6 @@ object TestConstants {
   }
 
   val propertySubscriptionSuccess = PropertySubscriptionResponseModel(testSafeId, testMtditId, IncomeSourceModel(testSourceId))
-
-  val businessSubscriptionSuccess = BusinessSubscriptionSuccessResponseModel(testSafeId, testMtditId, List(IncomeSourceModel(testSourceId)))
 
   val feSuccessResponse = FESuccessResponse(Some(testMtditId))
 

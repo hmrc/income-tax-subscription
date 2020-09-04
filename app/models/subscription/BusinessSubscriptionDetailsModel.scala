@@ -17,40 +17,8 @@
 package models.subscription
 
 import models.DateModel
+import models.subscription.business.AccountingMethod
 import play.api.libs.json._
-
-sealed trait AccountingMethod {
-  val stringValue: String
-}
-
-case object Cash extends AccountingMethod {
-  override val stringValue = "CASH"
-}
-
-case object Accruals extends AccountingMethod {
-  override val stringValue = "ACCRUAL"
-}
-
-object AccountingMethod {
-  val feCash = "Cash"
-  val feAccruals = "Accruals"
-
-  private val reader: Reads[AccountingMethod] = __.read[String].map {
-    case `feCash` | Cash.stringValue => Cash
-    case `feAccruals` | Accruals.stringValue => Accruals
-  }
-
-  private val writer: Writes[AccountingMethod] = Writes[AccountingMethod](cashOrAccruals =>
-    JsString(cashOrAccruals.stringValue)
-  )
-
-  implicit val format: Format[AccountingMethod] = Format(reader, writer)
-
-  implicit def convert(str: String): AccountingMethod = str match {
-    case `feCash` | Cash.stringValue => Cash
-    case `feAccruals` | Accruals.stringValue => Accruals
-  }
-}
 
 case class AccountingPeriodModel(startDate: DateModel, endDate: DateModel) {
   lazy val taxEndYear: Int = AccountingPeriodUtil.getTaxEndYear(this)
@@ -179,13 +147,13 @@ object BusinessSubscriptionDetailsModel {
           "typeOfBusiness" -> JsString("self-employment"),
           "tradingStartDate" -> JsString(data.businessStartDate.getOrElse(
             throw new Exception("Missing businessStartDate Parameter")).startDate.toDesDateFormat),
-          "cashOrAccrualsFlag" -> JsString(details.accountingMethod.stringValue)
+          "cashOrAccrualsFlag" -> JsString(details.accountingMethod.stringValue.toUpperCase)
         )),
       "ukPropertyDetails" -> Json.toJson(
         if(details.incomeSource.ukProperty)
           Json.obj(
             "tradingStartDate" -> details.propertyCommencementDate.map(_.startDate.toDesDateFormat),
-            "cashOrAccrualsFlag" -> details.propertyAccountingMethod.map(_.propertyAccountingMethod.stringValue),
+            "cashOrAccrualsFlag" -> details.propertyAccountingMethod.map(_.propertyAccountingMethod.stringValue.toUpperCase),
             "startDate" -> details.accountingPeriod.startDate.toDesDateFormat
           )
         else JsNull
@@ -194,7 +162,7 @@ object BusinessSubscriptionDetailsModel {
         if(details.incomeSource.foreignProperty)
           Json.obj(
           "tradingStartDate" -> details.overseasPropertyCommencementDate.map(_.startDate.toDesDateFormat),
-          "cashOrAccrualsFlag" -> details.overseasAccountingMethodProperty.map(_.overseasPropertyAccountingMethod.stringValue),
+          "cashOrAccrualsFlag" -> details.overseasAccountingMethodProperty.map(_.overseasPropertyAccountingMethod.stringValue.toUpperCase),
           "startDate" -> details.accountingPeriod.startDate.toDesDateFormat
           )
         else JsNull

@@ -21,7 +21,7 @@ import java.util.UUID
 
 import models.digitalcontact.PaperlessPreferenceKey
 import models.lockout.LockoutRequest
-import models.subscription.business.{Accruals, BusinessDetailsModel, BusinessSubscriptionRequestModel, Cash}
+import models.subscription.business.{Accruals, Cash}
 import models.subscription.incomesource.{AccountingPeriod, BusinessIncomeModel, PropertyIncomeModel, SignUpRequest}
 import models.{DateModel, ErrorModel}
 import play.api.http.Status._
@@ -119,16 +119,7 @@ object IntegrationTestConstants {
     ),
     propertyIncome = PropertyIncomeModel(Cash)
   )
-
-  val businessSubscriptionRequestPayload = BusinessSubscriptionRequestModel(
-    List(BusinessDetailsModel(
-      accountingPeriodStartDate = "2017-05-01",
-      accountingPeriodEndDate = "2018-04-30",
-      tradingName = "Test Business",
-      cashOrAccruals = Cash
-    ))
-  )
-
+  
   object GetBusinessDetailsResponse {
     val successResponse: (String, String, String) => JsValue = (nino: String, safeId: String, mtdbsa: String) =>
       s"""{
