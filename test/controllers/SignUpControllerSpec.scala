@@ -18,7 +18,7 @@ package controllers
 
 
 import controllers.Assets.OK
-import models.{SignUpFailure, SignUpResponse}
+import models.{SignUpFailure, SignUpResponse, SignUpResponseFailure}
 import play.api.http.Status.INTERNAL_SERVER_ERROR
 import play.api.libs.json.Json
 import play.api.test.FakeRequest
@@ -51,19 +51,7 @@ class SignUpControllerSpec extends UnitSpec with MockAuthService with MockSignUp
 
         val result = await(TestController.signUp(testNino)(fakeRequest))
         status(result) shouldBe OK
-      }
-
-      "confirm body of result" in {
-        val fakeRequest = FakeRequest().withJsonBody(Json.toJson(testSignUpSubmission(testNino)))
-        implicit val hc: HeaderCarrier = HeaderCarrier()
-
-        mockAuthSuccess()
-        signUp(testNino)(Future.successful(Right(SignUpResponse("XAIT000000"))))
-
-
-        val result = await(TestController.signUp(testNino)(fakeRequest))
         jsonBodyOf(result).as[SignUpResponse].mtdbsa shouldBe {"XAIT000000"}
-
       }
 
     }
@@ -78,14 +66,14 @@ class SignUpControllerSpec extends UnitSpec with MockAuthService with MockSignUp
         mockAuthSuccess()
         signUp(testNino)(Future.successful(Left(SignUpFailure(200,  "Failed to read Json for MTD Sign Up Response"))))
 
-
         val result = await(TestController.signUp(testNino)(fakeRequest))
         status(result) shouldBe INTERNAL_SERVER_ERROR
+        bodyOf(result) shouldBe "Failed Sign up"
+
+
       }
     }
   }
-
-
 
   "return InternalServerError" when {
     "signup is submitted" should {
@@ -99,6 +87,7 @@ class SignUpControllerSpec extends UnitSpec with MockAuthService with MockSignUp
         val result = await(TestController.signUp(testNino)(fakeRequest))
 
         status(result) shouldBe INTERNAL_SERVER_ERROR
+        bodyOf(result) shouldBe "Failed Sign up"
       }
     }
   }

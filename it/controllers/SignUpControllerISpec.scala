@@ -5,6 +5,7 @@ import config.MicroserviceAppConfig
 import helpers.ComponentSpecBase
 import helpers.IntegrationTestConstants._
 import helpers.servicemocks.{AuthStub, SignUpStub}
+import models.SignUpResponse
 import play.api.http.Status._
 
 class SignUpControllerISpec extends ComponentSpecBase {
@@ -23,7 +24,8 @@ class SignUpControllerISpec extends ComponentSpecBase {
       val res = IncomeTaxSubscription.signUp(testNino)
 
       res should have(
-        httpStatus(OK)
+        httpStatus(OK),
+        jsonBodyAs[SignUpResponse](SignUpResponse("XQIT00000000001"))
       )
     }
 
