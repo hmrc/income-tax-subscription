@@ -23,15 +23,17 @@ import play.api.http.Status.INTERNAL_SERVER_ERROR
 import play.api.libs.json.Json
 import play.api.test.FakeRequest
 import play.api.test.Helpers.stubControllerComponents
+import services.SubmissionOrchestrationService.SuccessfulSubmission
 import services.mocks.{MockAuthService, MockSignUpConnector}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.test.UnitSpec
+import utils.MaterializerSupport
 import utils.TestConstants.{testNino, testSignUpSubmission}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class SignUpControllerSpec extends UnitSpec with MockAuthService with MockSignUpConnector {
+class SignUpControllerSpec extends UnitSpec with MockAuthService with MockSignUpConnector with MaterializerSupport {
   lazy val mockCC = stubControllerComponents()
 
 
@@ -50,6 +52,20 @@ class SignUpControllerSpec extends UnitSpec with MockAuthService with MockSignUp
         val result = await(TestController.signUp(testNino)(fakeRequest))
         status(result) shouldBe OK
       }
+
+      "confirm body of result" in {
+        val fakeRequest = FakeRequest().withJsonBody(Json.toJson(testSignUpSubmission(testNino)))
+        implicit val hc: HeaderCarrier = HeaderCarrier()
+
+        mockAuthSuccess()
+        signUp(testNino)(Future.successful(Right(SignUpResponse("XAIT000000"))))
+
+
+        val result = await(TestController.signUp(testNino)(fakeRequest))
+        jsonBodyOf(result).as[SignUpResponse].mtdbsa shouldBe {"XAIT000000"}
+
+      }
+
     }
   }
 
