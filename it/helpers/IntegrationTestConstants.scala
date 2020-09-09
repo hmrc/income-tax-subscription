@@ -209,6 +209,44 @@ object IntegrationTestConstants {
     propertyAccountingMethod = Some(AccountingMethodPropertyModel(Cash))
   )
 
+  val testCreateIncomeSubmissionJson: JsValue =  {
+    val date=LocalDate.now()
+    Json.parse(
+      s"""
+         | {
+         | "accountingPeriod": {
+         |   "startDate": {
+         |    "day": "${date.getDayOfMonth}",
+         |    "month": "${date.getMonthValue}",
+         |    "year": "${date.getYear}"
+         |   },
+         |   "endDate": {
+         |    "day": "${date.getDayOfMonth}",
+         |    "month": "${date.getMonthValue}",
+         |    "year": "${date.getYear}"
+         |   }
+         |   },
+         |   "selfEmploymentsData": [],
+         |   "incomeSource": {
+         |     "selfEmployment": false,
+         |     "ukProperty": true,
+         |     "foreignProperty":false
+         |   },
+         |   "propertyCommencementDate": {
+         |     "startDate": {
+         |    "day": "${date.getDayOfMonth}",
+         |    "month": "${date.getMonthValue}",
+         |    "year": "${date.getYear}"
+         |   }
+         |   },
+         |   "propertyAccountingMethod": {
+         |     "propertyAccountingMethod": "cash"
+         |   }
+         | }
+         |""".stripMargin
+    )
+  }
+
   val testCreateIncomeSuccessBody: JsValue = Json.parse(
     """
       | {

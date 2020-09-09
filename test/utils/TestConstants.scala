@@ -24,7 +24,7 @@ import models.digitalcontact.PaperlessPreferenceKey
 import models.frontend._
 import models.lockout.LockoutRequest
 import models.matching.LockoutResponse
-import models.subscription.IncomeSourceModel
+import models.subscription.{AccountingMethodPropertyModel, AccountingPeriodModel, BusinessSubscriptionDetailsModel, FeIncomeSourceModel, IncomeSourceModel, PropertyCommencementDateModel}
 import models.subscription.business.Cash
 import models.subscription.incomesource.{AccountingPeriod, BusinessIncomeModel, PropertyIncomeModel, SignUpRequest}
 import models.subscription.property.PropertySubscriptionResponseModel
@@ -323,6 +323,69 @@ object TestConstants {
     """
       |{
       | "mtdbs": "XQIT00000000001"
+      |}
+    """.stripMargin
+  )
+
+  val testCreateIncomeSubmissionModel: BusinessSubscriptionDetailsModel = BusinessSubscriptionDetailsModel(
+    accountingPeriod = AccountingPeriodModel(LocalDate.now(), LocalDate.now()),
+    selfEmploymentsData = Seq(),
+    accountingMethod = None,
+    incomeSource = FeIncomeSourceModel(selfEmployment = false, ukProperty = true, foreignProperty = false),
+    propertyCommencementDate = Some(PropertyCommencementDateModel(LocalDate.now())),
+    propertyAccountingMethod = Some(AccountingMethodPropertyModel(Cash))
+  )
+
+  val testCreateIncomeSubmissionJson: JsValue =  {
+    val date=LocalDate.now()
+    Json.parse(
+      s"""
+         | {
+         | "accountingPeriod": {
+         |   "startDate": {
+         |    "day": "${date.getDayOfMonth}",
+         |    "month": "${date.getMonthValue}",
+         |    "year": "${date.getYear}"
+         |   },
+         |   "endDate": {
+         |    "day": "${date.getDayOfMonth}",
+         |    "month": "${date.getMonthValue}",
+         |    "year": "${date.getYear}"
+         |   }
+         |   },
+         |   "selfEmploymentsData": [],
+         |   "incomeSource": {
+         |     "selfEmployment": false,
+         |     "ukProperty": true,
+         |     "foreignProperty":false
+         |   },
+         |   "propertyCommencementDate": {
+         |     "startDate": {
+         |    "day": "${date.getDayOfMonth}",
+         |    "month": "${date.getMonthValue}",
+         |    "year": "${date.getYear}"
+         |   }
+         |   },
+         |   "propertyAccountingMethod": {
+         |     "propertyAccountingMethod": "cash"
+         |   }
+         | }
+         |""".stripMargin
+    )
+  }
+
+  val testCreateIncomeSuccessBody: JsValue = Json.parse(
+    """
+      | {
+      |	"incomeSourceId": "AAIS12345678901"
+      |	}
+    """.stripMargin
+  )
+
+  val testCreateIncomeFailureBody: JsValue = Json.parse(
+    """
+      |{
+      | "mtdbsa": "XQIT00000000001"
       |}
     """.stripMargin
   )

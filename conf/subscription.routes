@@ -15,3 +15,6 @@ DELETE      /subscription-data/all            controllers.SubscriptionDataContro
 
 POST        /mis/sign-up/:nino                controllers.SignUpController.signUp(nino: String)
 
+POST        /mis/create/:mtdbsaRef            controllers.BusinessIncomeSourcesController.createIncomeSource(mtdbsaRef: String)
+
+
