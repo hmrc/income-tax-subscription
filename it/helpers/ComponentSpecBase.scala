@@ -17,8 +17,10 @@
 package helpers
 
 import controllers.ITSASessionKeys
+import helpers.IntegrationTestConstants.testCreateIncomeSubmissionJson
 import helpers.servicemocks.WireMockMethods
 import models.lockout.LockoutRequest
+import models.subscription.BusinessSubscriptionDetailsModel
 import models.subscription.incomesource.SignUpRequest
 import org.scalatest._
 import org.scalatest.concurrent.{Eventually, IntegrationPatience, ScalaFutures}
@@ -82,6 +84,8 @@ trait ComponentSpecBase extends UnitSpec
     def createSubscription(body: SignUpRequest): WSResponse = post(s"/subscription-v2/${body.nino}", body)
 
     def signUp(nino: String): WSResponse = post(s"/mis/sign-up/${nino}", Json.parse("{}"))
+
+    def businessIncomeSource(mtdbsaRef: String, body: JsValue): WSResponse = post(s"/mis/create/${mtdbsaRef}", body)
 
     def checkLockoutStatus(arn: String): WSResponse = get(s"/client-matching/lock/$arn")
 
