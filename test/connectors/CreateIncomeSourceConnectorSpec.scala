@@ -61,7 +61,7 @@ class CreateIncomeSourceConnectorSpec extends MockHttp with GuiceOneAppPerSuite 
 
   val testCreateIncomeSubmissionModel: BusinessSubscriptionDetailsModel = BusinessSubscriptionDetailsModel(
     accountingPeriod = AccountingPeriodModel(LocalDate.now(), LocalDate.now()),
-    selfEmploymentsData = Seq(),
+    selfEmploymentsData = None,
     accountingMethod = None,
     incomeSource = FeIncomeSourceModel(selfEmployment = false, ukProperty = true, foreignProperty = false),
     propertyCommencementDate = Some(PropertyCommencementDateModel(LocalDate.now())),
