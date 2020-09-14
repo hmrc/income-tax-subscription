@@ -27,13 +27,13 @@ class BusinessSubscriptionDetailsModelSpec extends UnitSpec {
   "Creating a model for a subscription request with all values" should {
     val businessDetailsModel = BusinessSubscriptionDetailsModel(
       accountingPeriod = AccountingPeriodModel(DateModel("6", "4", "2018"), DateModel("5", "4", "2019")),
-      selfEmploymentsData = Seq(SelfEmploymentData(
+      selfEmploymentsData = Some(Seq(SelfEmploymentData(
         id = "id1",
         businessStartDate = Some(BusinessStartDate(DateModel("1", "1", "2017"))),
         businessName = Some(BusinessNameModel("ABC Limited")),
         businessTradeName = Some(BusinessTradeNameModel("Plumbing")),
         businessAddress = Some(BusinessAddressModel("12345", Address(Seq("line1", "line2", "line3", "line4"), "TF3 4NT")))
-      )),
+      ))),
       accountingMethod = Some(Cash),
       incomeSource = FeIncomeSourceModel(true, true, true),
       propertyCommencementDate = Some(PropertyCommencementDateModel(DateModel("6", "7", "2018"))),
@@ -60,13 +60,13 @@ class BusinessSubscriptionDetailsModelSpec extends UnitSpec {
   "Creating a model for a subscription request with all values except foreign property and address line4" should {
     val businessDetailsModel = BusinessSubscriptionDetailsModel(
       accountingPeriod = AccountingPeriodModel(DateModel("6", "4", "2018"), DateModel("5", "4", "2019")),
-      selfEmploymentsData = Seq(SelfEmploymentData(
+      selfEmploymentsData = Some(Seq(SelfEmploymentData(
         id = "id1",
         businessStartDate = Some(BusinessStartDate(DateModel("1", "1", "2017"))),
         businessName = Some(BusinessNameModel("ABC Limited")),
         businessTradeName = Some(BusinessTradeNameModel("Plumbing")),
         businessAddress = Some(BusinessAddressModel("12345", Address(Seq("line1", "line2", "line3"), "TF3 4NT")))
-      )),
+      ))),
       accountingMethod = Some(Cash),
       incomeSource = FeIncomeSourceModel(true, true, false),
       propertyCommencementDate = Some(PropertyCommencementDateModel(DateModel("6", "7", "2018"))),
@@ -90,13 +90,13 @@ class BusinessSubscriptionDetailsModelSpec extends UnitSpec {
   "Creating a model for a subscription request with mandatory fields missing" should {
     val businessDetailsModel = BusinessSubscriptionDetailsModel(
       accountingPeriod = AccountingPeriodModel(DateModel("6", "4", "2018"), DateModel("5", "4", "2019")),
-      selfEmploymentsData = Seq(SelfEmploymentData(
+      selfEmploymentsData = Some(Seq(SelfEmploymentData(
         id = "id1",
         businessStartDate = None,
         businessName = Some(BusinessNameModel("ABC Limited")),
         businessTradeName = Some(BusinessTradeNameModel("Plumbing")),
         businessAddress = Some(BusinessAddressModel("12345", Address(Seq("line1", "line2", "line3"), "TF3 4NT")))
-      )),
+      ))),
       accountingMethod = Some(Cash),
       incomeSource = FeIncomeSourceModel(true, true, false),
       propertyCommencementDate = Some(PropertyCommencementDateModel(DateModel("6", "7", "2018"))),

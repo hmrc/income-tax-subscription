@@ -111,7 +111,7 @@ object OverseasAccountingMethodPropertyModel {
 }
 
 case class BusinessSubscriptionDetailsModel(accountingPeriod: AccountingPeriodModel,
-                                            selfEmploymentsData: Seq[SelfEmploymentData],
+                                            selfEmploymentsData: Option[Seq[SelfEmploymentData]],
                                             accountingMethod: Option[AccountingMethod],
                                             incomeSource: FeIncomeSourceModel,
                                             propertyCommencementDate: Option[PropertyCommencementDateModel] = None,
@@ -131,8 +131,13 @@ object BusinessSubscriptionDetailsModel {
   }
 
   implicit val businessSubscriptionWrites: Writes[BusinessSubscriptionDetailsModel] = new Writes[BusinessSubscriptionDetailsModel] {
+
+    def businessJson() = {
+
+    }
+
     def writes(details: BusinessSubscriptionDetailsModel): JsObject = JsObject(Json.obj(
-      "businessDetails" -> details.selfEmploymentsData.map(
+      "businessDetails" -> details.selfEmploymentsData.map(_.map(
         data => Map("accountingPeriodStartDate" -> JsString(details.accountingPeriod.startDate.toDesDateFormat),
           "accountingPeriodEndDate" -> JsString(details.accountingPeriod.endDate.toDesDateFormat),
           "tradingName" -> JsString(data.businessTradeName.map(_.businessTradeName).getOrElse(throw new Exception("Missing tradingName parameter"))),
@@ -148,7 +153,7 @@ object BusinessSubscriptionDetailsModel {
           "tradingStartDate" -> JsString(data.businessStartDate.getOrElse(
             throw new Exception("Missing businessStartDate Parameter")).startDate.toDesDateFormat),
           "cashOrAccrualsFlag" -> details.accountingMethod.map(method =>JsString(method.stringValue.toUpperCase)).getOrElse(JsNull)
-        )),
+        ))),
       "ukPropertyDetails" -> Json.toJson(
         if(details.incomeSource.ukProperty)
           Json.obj(
