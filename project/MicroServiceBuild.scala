@@ -94,9 +94,9 @@ private object AppDependencies {
   }
 
   // Fixes a transitive dependency clash between wiremock and scalatestplus-play
-  val overrides: Set[ModuleID] = {
+  val overrides: Seq[ModuleID] = {
     val jettyFromWiremockVersion = "9.2.24.v20180105"
-    Set(
+    Seq(
       "org.eclipse.jetty" % "jetty-client" % jettyFromWiremockVersion,
       "org.eclipse.jetty" % "jetty-continuation" % jettyFromWiremockVersion,
       "org.eclipse.jetty" % "jetty-http" % jettyFromWiremockVersion,

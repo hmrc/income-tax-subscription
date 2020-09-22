@@ -15,14 +15,11 @@
  */
 
 import MicroServiceBuild._
-import TestPhases.oneForkedJvmPerTest
 import uk.gov.hmrc.DefaultBuildSettings.{addTestReportOption, defaultSettings, scalaSettings}
 import uk.gov.hmrc.sbtdistributables.SbtDistributablesPlugin.publishingSettings
 import uk.gov.hmrc.versioning.SbtGitVersioning.autoImport.majorVersion
 
 lazy val plugins: Seq[Plugins] = Seq(PlayScala)
-
-scalaVersion := "2.11.11"
 
 lazy val scoverageSettings = {
   import scoverage.ScoverageKeys
@@ -44,7 +41,8 @@ lazy val microservice = Project(appName, file("."))
   .settings(defaultSettings(): _*)
   .settings(
     Keys.fork in Test := true,
-    javaOptions in Test += "-Dlogger.resource=logback-test.xml"
+    javaOptions in Test += "-Dlogger.resource=logback-test.xml",
+    scalaVersion := "2.12.12"
   )
   .settings(
     resolvers += Resolver.bintrayRepo("hmrc", "releases"),
@@ -57,9 +55,9 @@ lazy val microservice = Project(appName, file("."))
   .configs(IntegrationTest)
   .settings(inConfig(IntegrationTest)(Defaults.itSettings): _*)
   .settings(
-    Keys.fork in IntegrationTest := false,
+    Keys.fork in IntegrationTest := true,
+    javaOptions in IntegrationTest += "-Dlogger.resource=logback-test.xml",
     unmanagedSourceDirectories in IntegrationTest := (baseDirectory in IntegrationTest) (base => Seq(base / "it")).value,
     addTestReportOption(IntegrationTest, "int-test-reports"),
-    testGrouping in IntegrationTest := oneForkedJvmPerTest((definedTests in IntegrationTest).value),
     parallelExecution in IntegrationTest := false)
   .settings( majorVersion := 1 )

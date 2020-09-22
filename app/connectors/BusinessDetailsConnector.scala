@@ -32,7 +32,6 @@ import uk.gov.hmrc.play.bootstrap.http.HttpClient
 import utils.Logging._
 
 import scala.annotation.switch
-import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{ExecutionContext, Future}
 
 class BusinessDetailsConnector @Inject()(appConfig: AppConfig,
