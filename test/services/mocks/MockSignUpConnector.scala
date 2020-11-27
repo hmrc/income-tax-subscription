@@ -42,8 +42,7 @@ trait MockSignUpConnector extends MockitoSugar with BeforeAndAfterEach with Mock
   }
   val mockSignUpConnector: SignUpConnector = mock[SignUpConnector]
   val appConfig: AppConfig = app.injector.instanceOf[AppConfig]
-  val auditService: AuditService = app.injector.instanceOf[AuditService]
-  val connector = new SignUpConnector(mockHttpClient, appConfig, auditService)
+  val connector = new SignUpConnector(mockHttpClient, appConfig)
 
 
   def signUp(nino: String)(response: Future[PostSignUpResponse])(implicit hc: HeaderCarrier): Unit = {

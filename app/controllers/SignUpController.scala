@@ -16,30 +16,42 @@
 
 package controllers
 
+import config.AppConfig
 import connectors.SignUpConnector
 import javax.inject.{Inject, Singleton}
+import models.monitoring.RegistrationSuccessAudit
 import play.api.Logger.logger
 import play.api.libs.json.Json
 import play.api.mvc._
 import services.AuthService
+import services.monitoring.AuditService
+import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals
 import uk.gov.hmrc.play.bootstrap.controller.BackendController
+import uk.gov.hmrc.auth.core.{Enrolment, EnrolmentIdentifier, Enrolments}
 
 import scala.concurrent.ExecutionContext
 
 @Singleton
-class SignUpController @Inject()(authService: AuthService,
-                                 signUpConnector: SignUpConnector,
-                                 cc: ControllerComponents)(implicit ec: ExecutionContext) extends BackendController(cc) {
+class SignUpController @Inject()(authService: AuthService, auditService: AuditService, signUpConnector: SignUpConnector,
+                                 cc: ControllerComponents, appConfig: AppConfig)(implicit ec: ExecutionContext) extends BackendController(cc) {
 
   def signUp(nino: String): Action[AnyContent] = Action.async { implicit request =>
-    authService.authorised() {
+    authService.authorised().retrieve(Retrievals.allEnrolments) { enrolments =>
       signUpConnector.signUp(nino).map {
-        case Right(response) => Ok(Json.toJson(response))
+        case Right(response) => {
+          val path: Option[String] = request.headers.get(ITSASessionKeys.RequestURI)
+          auditService.audit(RegistrationSuccessAudit(getArnFromEnrolments(enrolments), nino, response.mtdbsa, appConfig.desAuthorisationToken,path))
+          Ok(Json.toJson(response))
+        }
         case Left(error) => logger.error(s"Error processing Sign up request with status ${error.status} and message ${error.reason}")
           InternalServerError("Failed Sign up")
       }
 
     }
+  }
+
+  private def getArnFromEnrolments(enrolments: Enrolments): Option[String] = enrolments.enrolments.collectFirst {
+    case Enrolment("HMRC-AS-AGENT", EnrolmentIdentifier(_, value) :: _, _, _) => value
   }
 
 }

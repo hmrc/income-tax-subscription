@@ -18,13 +18,14 @@ package controllers
 
 
 import controllers.Assets.OK
-import models.{SignUpFailure, SignUpResponse, SignUpResponseFailure}
+import models.{SignUpFailure, SignUpResponse}
 import play.api.http.Status.INTERNAL_SERVER_ERROR
 import play.api.libs.json.Json
 import play.api.test.FakeRequest
 import play.api.test.Helpers.stubControllerComponents
-import services.SubmissionOrchestrationService.SuccessfulSubmission
 import services.mocks.{MockAuthService, MockSignUpConnector}
+import services.monitoring.AuditService
+import uk.gov.hmrc.auth.core.{Enrolment, EnrolmentIdentifier, Enrolments}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.test.UnitSpec
 import utils.MaterializerSupport
@@ -36,8 +37,9 @@ import scala.concurrent.Future
 class SignUpControllerSpec extends UnitSpec with MockAuthService with MockSignUpConnector with MaterializerSupport {
   lazy val mockCC = stubControllerComponents()
 
+  val mockAuditService: AuditService = app.injector.instanceOf[AuditService]
 
-  object TestController extends SignUpController(mockAuthService, mockSignUpConnector, mockCC)
+  object TestController extends SignUpController(mockAuthService, mockAuditService, mockSignUpConnector, mockCC, appConfig)
 
   "Sign Up Controller" when {
     "signup is submitted" should {
@@ -45,7 +47,7 @@ class SignUpControllerSpec extends UnitSpec with MockAuthService with MockSignUp
         val fakeRequest = FakeRequest().withJsonBody(Json.toJson(testSignUpSubmission(testNino)))
         implicit val hc: HeaderCarrier = HeaderCarrier()
 
-        mockAuthSuccess()
+        mockRetrievalSuccess(Enrolments(Set(Enrolment("HMRC-AS-AGENT", Seq(EnrolmentIdentifier("AgentReferenceNumber", "123456789")), "Activated"))))
         signUp(testNino)(Future.successful(Right(SignUpResponse("XAIT000000"))))
 
 
@@ -63,7 +65,8 @@ class SignUpControllerSpec extends UnitSpec with MockAuthService with MockSignUp
         val fakeRequest = FakeRequest().withJsonBody(Json.toJson(testSignUpSubmission(testNino)))
         implicit val hc: HeaderCarrier = HeaderCarrier()
 
-        mockAuthSuccess()
+        mockRetrievalSuccess(Enrolments(Set(Enrolment("HMRC-AS-AGENT", Seq(EnrolmentIdentifier("AgentReferenceNumber", "123456789")), "Activated"))))
+
         signUp(testNino)(Future.successful(Left(SignUpFailure(200,  "Failed to read Json for MTD Sign Up Response"))))
 
         val result = await(TestController.signUp(testNino)(fakeRequest))
@@ -81,7 +84,7 @@ class SignUpControllerSpec extends UnitSpec with MockAuthService with MockSignUp
         val fakeRequest = FakeRequest().withJsonBody(Json.toJson(testSignUpSubmission(testNino)))
         implicit val hc = HeaderCarrier()
 
-        mockAuthSuccess()
+        mockRetrievalSuccess(Enrolments(Set(Enrolment("HMRC-AS-AGENT", Seq(EnrolmentIdentifier("AgentReferenceNumber", "123456789")), "Activated"))))
         signUp(testNino)(Future.successful(Left(SignUpFailure(INTERNAL_SERVER_ERROR, "Failure"))))
 
         val result = await(TestController.signUp(testNino)(fakeRequest))

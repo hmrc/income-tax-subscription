@@ -23,7 +23,7 @@ case class RegistrationRequestAudit(signUpRequest: SignUpRequest, urlHeaderAutho
 
   val nino: String = signUpRequest.nino
   val isAgent: String = signUpRequest.isAgent.toString
-  val arn: String = signUpRequest.arn.getOrElse("-")
+  val agentReferenceNumber: String = signUpRequest.arn.getOrElse("-")
   val sourceOfIncome: String = (signUpRequest.businessIncome, signUpRequest.propertyIncome) match {
     case (Some(_), Some(_)) => "Both"
     case (Some(_), None) => "Business"
@@ -41,7 +41,7 @@ case class RegistrationRequestAudit(signUpRequest: SignUpRequest, urlHeaderAutho
   override val detail: Map[String, String] = Map(
     "nino" -> nino,
     "isAgent" -> isAgent,
-    "arn" -> arn,
+    "agentReferenceNumber" -> agentReferenceNumber,
     "sourceOfIncome" -> sourceOfIncome,
     "acccountingPeriodStartDate" -> accountingPeriodStartDate,
     "acccountingPeriodEndDate" -> accountingPeriodEndDate,

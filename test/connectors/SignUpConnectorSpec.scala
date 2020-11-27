@@ -38,8 +38,7 @@ class SignUpConnectorSpec extends UnitSpec with MockHttp with GuiceOneAppPerSuit
 
   class Test(nino: String, response: PostSignUpResponse) {
     val appConfig: AppConfig = app.injector.instanceOf[AppConfig]
-    val auditService: AuditService = app.injector.instanceOf[AuditService]
-    val connector = new SignUpConnector(mockHttpClient, appConfig, auditService)
+    val connector = new SignUpConnector(mockHttpClient, appConfig)
 
 
     when(mockHttpClient.POST[JsValue, PostSignUpResponse](

@@ -81,7 +81,8 @@ class SubmissionOrchestrationServiceSpec extends UnitSpec
         await(result) shouldBe Right(successfulSubmission)
 
         verifyAudit(RegistrationRequestAudit(testBusinessIncomeSourceModel, appConfig.desAuthorisationToken))
-        verifyAudit(RegistrationSuccessAudit(testBusinessIncomeSourceModel, successfulSubmission.mtditId, path))
+        verifyAudit(RegistrationSuccessAudit(testBusinessIncomeSourceModel.arn, testBusinessIncomeSourceModel.nino, successfulSubmission.mtditId,
+          appConfig.desAuthorisationToken,Some(path)))
       }
     }
 
@@ -95,7 +96,8 @@ class SubmissionOrchestrationServiceSpec extends UnitSpec
         await(result) shouldBe Right(successfulSubmission)
 
         verifyAudit(RegistrationRequestAudit(testPropertyIncomeSourceModel, appConfig.desAuthorisationToken))
-        verifyAudit(RegistrationSuccessAudit(testPropertyIncomeSourceModel, successfulSubmission.mtditId, path))
+        verifyAudit(RegistrationSuccessAudit(testPropertyIncomeSourceModel.arn, testPropertyIncomeSourceModel.nino,successfulSubmission.mtditId,
+          appConfig.desAuthorisationToken,Some(path)))
       }
     }
 
@@ -110,7 +112,8 @@ class SubmissionOrchestrationServiceSpec extends UnitSpec
         await(result) shouldBe Right(successfulSubmission)
 
         verifyAudit(RegistrationRequestAudit(testBothIncomeSourceModel, appConfig.desAuthorisationToken))
-        verifyAudit(RegistrationSuccessAudit(testBothIncomeSourceModel, successfulSubmission.mtditId, path))
+        verifyAudit(RegistrationSuccessAudit(testBothIncomeSourceModel.arn, testBothIncomeSourceModel.nino, successfulSubmission.mtditId,
+          appConfig.desAuthorisationToken,Some(path)))
       }
     }
 
@@ -124,7 +127,8 @@ class SubmissionOrchestrationServiceSpec extends UnitSpec
         await(result) shouldBe Right(successfulSubmission)
 
         verifyAudit(RegistrationRequestAudit(testBusinessIncomeSourceModel, appConfig.desAuthorisationToken))
-        verifyAudit(RegistrationSuccessAudit(testBusinessIncomeSourceModel, successfulSubmission.mtditId, path))
+        verifyAudit(RegistrationSuccessAudit(testBusinessIncomeSourceModel.arn, testBothIncomeSourceModel.nino, successfulSubmission.mtditId,
+          appConfig.desAuthorisationToken,Some(path)))
       }
     }
 
@@ -138,7 +142,8 @@ class SubmissionOrchestrationServiceSpec extends UnitSpec
         await(result) shouldBe Right(successfulSubmission)
 
         verifyAudit(RegistrationRequestAudit(testPropertyIncomeSourceModel, appConfig.desAuthorisationToken))
-        verifyAudit(RegistrationSuccessAudit(testPropertyIncomeSourceModel, successfulSubmission.mtditId, path))
+        verifyAudit(RegistrationSuccessAudit(testPropertyIncomeSourceModel.arn, testPropertyIncomeSourceModel.nino, successfulSubmission.mtditId,
+          appConfig.desAuthorisationToken,Some(path)))
       }
     }
 
@@ -153,7 +158,8 @@ class SubmissionOrchestrationServiceSpec extends UnitSpec
         await(result) shouldBe Right(successfulSubmission)
 
         verifyAudit(RegistrationRequestAudit(testBothIncomeSourceModel, appConfig.desAuthorisationToken))
-        verifyAudit(RegistrationSuccessAudit(testBothIncomeSourceModel, successfulSubmission.mtditId, path))
+        verifyAudit(RegistrationSuccessAudit(testBothIncomeSourceModel.arn, testBothIncomeSourceModel.nino, successfulSubmission.mtditId,
+          appConfig.desAuthorisationToken,Some(path)))
       }
     }
   }
