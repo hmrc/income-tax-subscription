@@ -18,6 +18,7 @@ package helpers
 
 import controllers.ITSASessionKeys
 import helpers.IntegrationTestConstants.testCreateIncomeSubmissionJson
+import helpers.servicemocks.AuditStub.stubAuditing
 import helpers.servicemocks.WireMockMethods
 import models.lockout.LockoutRequest
 import models.subscription.BusinessSubscriptionDetailsModel
@@ -42,11 +43,14 @@ trait ComponentSpecBase extends UnitSpec
     .in(Environment.simple(mode = Mode.Dev))
     .configure(config)
     .build
+
   val mockHost = WiremockHelper.wiremockHost
   val mockPort = WiremockHelper.wiremockPort.toString
   val mockUrl = s"http://$mockHost:$mockPort"
 
   def config: Map[String, String] = Map(
+    "auditing.consumer.baseUri.host" -> mockHost,
+    "auditing.consumer.baseUri.port" -> mockPort,
     "microservice.services.auth.host" -> mockHost,
     "microservice.services.auth.port" -> mockPort,
     "microservice.services.des.url" -> mockUrl,
@@ -67,6 +71,7 @@ trait ComponentSpecBase extends UnitSpec
   override def beforeEach(): Unit = {
     super.beforeEach()
     resetWiremock()
+    stubAuditing()
   }
 
   override def afterAll(): Unit = {

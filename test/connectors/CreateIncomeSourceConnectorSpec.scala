@@ -20,6 +20,7 @@ import java.time.LocalDate
 
 import config.AppConfig
 import connectors.mocks.MockHttp
+import models.monitoring.SignUpCompleteAudit
 import models.subscription.business.{Cash, CreateIncomeSourceErrorModel, CreateIncomeSourceSuccessModel}
 import models.subscription._
 import org.mockito.ArgumentMatchers
@@ -30,6 +31,7 @@ import play.api.http.Status._
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.Request
 import play.api.test.FakeRequest
+import services.mocks.monitoring.MockAuditService
 import services.monitoring.AuditService
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
@@ -37,7 +39,7 @@ import uk.gov.hmrc.play.bootstrap.http.HttpClient
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class CreateIncomeSourceConnectorSpec extends MockHttp with GuiceOneAppPerSuite {
+class CreateIncomeSourceConnectorSpec extends MockHttp with GuiceOneAppPerSuite with MockAuditService {
 
   implicit val hc: HeaderCarrier = HeaderCarrier()
   implicit val request: Request[_] = FakeRequest()
@@ -45,7 +47,6 @@ class CreateIncomeSourceConnectorSpec extends MockHttp with GuiceOneAppPerSuite 
   class Test(mtdbsaRef: String, expectedBody: JsValue, response: PostIncomeSourceResponse) {
     val appConfig: AppConfig = app.injector.instanceOf[AppConfig]
     val httpClient: HttpClient = mockHttpClient
-    val auditService: AuditService = app.injector.instanceOf[AuditService]
 
     when(httpClient.POST[JsValue, PostIncomeSourceResponse](
       ArgumentMatchers.eq(s"${appConfig.desURL}/income-tax/income-sources/mtdbsa/$mtdbsaRef/ITSA/business"),
@@ -56,10 +57,11 @@ class CreateIncomeSourceConnectorSpec extends MockHttp with GuiceOneAppPerSuite 
       ArgumentMatchers.any(),
       ArgumentMatchers.any())).thenReturn(Future.successful(response))
 
-    val connector = new CreateIncomeSourcesConnector(httpClient,appConfig, auditService)
+    val connector = new CreateIncomeSourcesConnector(httpClient, appConfig, mockAuditService)
   }
 
   val testCreateIncomeSubmissionModel: BusinessSubscriptionDetailsModel = BusinessSubscriptionDetailsModel(
+    nino = "AA111111A",
     accountingPeriod = AccountingPeriodModel(LocalDate.now(), LocalDate.now()),
     selfEmploymentsData = None,
     accountingMethod = None,
@@ -73,7 +75,8 @@ class CreateIncomeSourceConnectorSpec extends MockHttp with GuiceOneAppPerSuite 
     "receiving a 200 status" should {
 
       "return a success response" in new Test("XAIT0000006", Json.toJson(testCreateIncomeSubmissionModel), Right(CreateIncomeSourceSuccessModel())) {
-        await(connector.createBusinessIncome("XAIT0000006", testCreateIncomeSubmissionModel)) shouldBe Right(CreateIncomeSourceSuccessModel())
+        await(connector.createBusinessIncome(Some("1223456"), "XAIT0000006", testCreateIncomeSubmissionModel)) shouldBe Right(CreateIncomeSourceSuccessModel())
+        verifyExtendedAudit(SignUpCompleteAudit(Some("1223456"),testCreateIncomeSubmissionModel, appConfig.desAuthorisationToken))
       }
     }
 
@@ -81,8 +84,9 @@ class CreateIncomeSourceConnectorSpec extends MockHttp with GuiceOneAppPerSuite 
 
       "return the error response" in new Test("XAIT0000006",
         Json.toJson(testCreateIncomeSubmissionModel), Left(CreateIncomeSourceErrorModel(INTERNAL_SERVER_ERROR, "error body"))) {
-        await(connector.createBusinessIncome("XAIT0000006", testCreateIncomeSubmissionModel))shouldBe Left(
+        await(connector.createBusinessIncome(Some("1223456"),"XAIT0000006", testCreateIncomeSubmissionModel)) shouldBe Left(
           CreateIncomeSourceErrorModel(INTERNAL_SERVER_ERROR, "error body"))
+        verifyExtendedAudit(SignUpCompleteAudit(Some("1223456"),testCreateIncomeSubmissionModel, appConfig.desAuthorisationToken))
       }
     }
   }

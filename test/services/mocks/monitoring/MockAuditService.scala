@@ -37,7 +37,7 @@ import org.mockito.Mockito._
 import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{BeforeAndAfterEach, Suite}
 import play.api.mvc.Request
-import services.monitoring.{AuditModel, AuditService}
+import services.monitoring.{AuditModel, AuditService, ExtendedAuditModel}
 import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.ExecutionContext
@@ -53,6 +53,15 @@ trait MockAuditService extends MockitoSugar with BeforeAndAfterEach {
 
   def verifyAudit(model: AuditModel): Unit =
     verify(mockAuditService).audit(
+      ArgumentMatchers.eq(model)
+    )(
+      ArgumentMatchers.any[HeaderCarrier],
+      ArgumentMatchers.any[ExecutionContext],
+      ArgumentMatchers.any[Request[_]]
+    )
+
+  def verifyExtendedAudit(model: ExtendedAuditModel): Unit =
+    verify(mockAuditService).extendedAudit(
       ArgumentMatchers.eq(model)
     )(
       ArgumentMatchers.any[HeaderCarrier],

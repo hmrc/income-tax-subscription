@@ -58,9 +58,7 @@ object AuthStub extends WireMockMethods {
     Json.obj(
       "allEnrolments" -> enrolments
     )
-
-
-
+  
   private def exceptionHeaders(value: String) = Map(HeaderNames.WWW_AUTHENTICATE -> s"""MDTP detail="$value"""")
 
   def stubAuthFailure(): StubMapping = {

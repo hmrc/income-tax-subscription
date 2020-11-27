@@ -328,6 +328,7 @@ object TestConstants {
   )
 
   val testCreateIncomeSubmissionModel: BusinessSubscriptionDetailsModel = BusinessSubscriptionDetailsModel(
+    nino = "AA111111A",
     accountingPeriod = AccountingPeriodModel(LocalDate.now(), LocalDate.now()),
     selfEmploymentsData = Seq(),
     accountingMethod = None,
@@ -341,6 +342,10 @@ object TestConstants {
     Json.parse(
       s"""
          | {
+         | "nino": "AA111111A",
+         |
+         | "agentReferenceNumber": "1223456",
+         |
          | "accountingPeriod": {
          |   "startDate": {
          |    "day": "${date.getDayOfMonth}",
