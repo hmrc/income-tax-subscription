@@ -55,7 +55,6 @@ object IntegrationTestConstants {
     val agentServiceEnrolmentName = "HMRC-AS-AGENT"
   }
 
-
   val INVALID_NINO_MODEL = ErrorModel(BAD_REQUEST, "INVALID_NINO", "Submission has not passed validation. Invalid parameter NINO.")
   val INVALID_PAYLOAD_MODEL = ErrorModel(BAD_REQUEST, "INVALID_PAYLOAD", "Submission has not passed validation. Invalid PAYLOAD.")
   val MALFORMED_PAYLOAD_MODEL = ErrorModel(BAD_REQUEST, "MALFORMED_PAYLOAD", "Invalid JSON message received.")
@@ -210,6 +209,7 @@ object IntegrationTestConstants {
   )
 
   val testCreateIncomeSubmissionModel: BusinessSubscriptionDetailsModel = BusinessSubscriptionDetailsModel(
+    nino = "AA111111A",
     accountingPeriod = AccountingPeriodModel(LocalDate.now(), LocalDate.now()),
     selfEmploymentsData = Seq(),
     accountingMethod = None,
@@ -223,6 +223,10 @@ object IntegrationTestConstants {
     Json.parse(
       s"""
          | {
+         | "nino": "AA111111A",
+         |
+         | "agentReferenceNumber": "1223456",
+         |
          | "accountingPeriod": {
          |   "startDate": {
          |    "day": "${date.getDayOfMonth}",

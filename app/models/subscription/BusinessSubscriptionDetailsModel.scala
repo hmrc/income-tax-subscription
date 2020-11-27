@@ -110,7 +110,8 @@ object OverseasAccountingMethodPropertyModel {
   implicit val format: OFormat[OverseasAccountingMethodPropertyModel] = Json.format[OverseasAccountingMethodPropertyModel]
 }
 
-case class BusinessSubscriptionDetailsModel(accountingPeriod: AccountingPeriodModel,
+case class BusinessSubscriptionDetailsModel(nino: String,
+                                            accountingPeriod: AccountingPeriodModel,
                                             selfEmploymentsData: Option[Seq[SelfEmploymentData]],
                                             accountingMethod: Option[AccountingMethod],
                                             incomeSource: FeIncomeSourceModel,

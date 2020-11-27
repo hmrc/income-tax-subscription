@@ -18,11 +18,13 @@ package services.monitoring
 
 import javax.inject.{Inject, Singleton}
 import play.api.Configuration
+import play.api.libs.json.JsValue
 import play.api.mvc.Request
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.audit.AuditExtensions
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
-import uk.gov.hmrc.play.audit.model.DataEvent
+import uk.gov.hmrc.play.audit.model.{DataEvent, ExtendedDataEvent}
+import utils.Implicits.eitherUtilLeft
 
 import scala.concurrent.ExecutionContext
 
@@ -34,6 +36,9 @@ class AuditService @Inject()(configuration: Configuration,
 
   def audit(dataSource: AuditModel)(implicit hc: HeaderCarrier, ec: ExecutionContext, request: Request[_]): Unit =
     auditConnector.sendEvent(toDataEvent(appName, dataSource, request.path))
+
+  def extendedAudit(dataSource: ExtendedAuditModel)(implicit hc: HeaderCarrier, ec: ExecutionContext, request: Request[_]): Unit =
+    auditConnector.sendExtendedEvent(toExtendedDataEvent(appName, dataSource, request.path))
 
   def toDataEvent(appName: String, auditModel: AuditModel, path: String)(implicit hc: HeaderCarrier): DataEvent = {
     val auditType: String = auditModel.auditType
@@ -48,10 +53,30 @@ class AuditService @Inject()(configuration: Configuration,
       detail = AuditExtensions.auditHeaderCarrier(hc).toAuditDetails(detail.toSeq: _*)
     )
   }
+
+  def toExtendedDataEvent(appName: String, extendedAuditModel: ExtendedAuditModel, path: String)(implicit hc: HeaderCarrier): ExtendedDataEvent = {
+    val auditType: String = extendedAuditModel.auditType
+    val transactionName: String = extendedAuditModel.transactionName
+    val detail: JsValue = extendedAuditModel.detail
+    val tags: Map[String, String] = Map.empty[String, String]
+
+    ExtendedDataEvent(
+      auditSource = appName,
+      auditType = auditType,
+      tags = AuditExtensions.auditHeaderCarrier(hc).toAuditTags(transactionName, path) ++ tags,
+      detail = detail
+    )
+  }
 }
 
 trait AuditModel {
   val auditType: String
   val transactionName: String
   val detail: Map[String, String]
+}
+
+trait ExtendedAuditModel {
+  val auditType: String
+  val transactionName: String
+  val detail: JsValue
 }

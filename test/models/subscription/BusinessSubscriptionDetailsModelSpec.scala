@@ -26,6 +26,7 @@ class BusinessSubscriptionDetailsModelSpec extends UnitSpec {
 
   "Creating a model for a subscription request with all values" should {
     val businessDetailsModel = BusinessSubscriptionDetailsModel(
+      nino = "AA111111A",
       accountingPeriod = AccountingPeriodModel(DateModel("6", "4", "2018"), DateModel("5", "4", "2019")),
       selfEmploymentsData = Some(Seq(SelfEmploymentData(
         id = "id1",
@@ -42,7 +43,8 @@ class BusinessSubscriptionDetailsModelSpec extends UnitSpec {
       overseasAccountingMethodProperty = Some(OverseasAccountingMethodPropertyModel(Cash))
     )
 
-    val json = Json.obj("businessDetails" -> Json.arr(
+    val json = Json.obj(
+      "businessDetails" -> Json.arr(
       Json.obj("accountingPeriodStartDate" -> "2018-04-06", "cashOrAccrualsFlag" -> "CASH", "typeOfBusiness" -> "self-employment",
         "addressDetails" -> Json.obj("addressLine1" -> "line1", "addressLine2" ->"line2", "addressLine3" -> "line3", "addressLine4" -> "line4",
           "postalCode" -> "TF3 4NT", "countryCode" -> "GB"),
@@ -67,6 +69,7 @@ class BusinessSubscriptionDetailsModelSpec extends UnitSpec {
         businessTradeName = Some(BusinessTradeNameModel("Plumbing")),
         businessAddress = Some(BusinessAddressModel("12345", Address(Seq("line1", "line2", "line3"), "TF3 4NT")))
       ))),
+      nino = "AA111111A",
       accountingMethod = Some(Cash),
       incomeSource = FeIncomeSourceModel(true, true, false),
       propertyCommencementDate = Some(PropertyCommencementDateModel(DateModel("6", "7", "2018"))),
@@ -97,6 +100,7 @@ class BusinessSubscriptionDetailsModelSpec extends UnitSpec {
         businessTradeName = Some(BusinessTradeNameModel("Plumbing")),
         businessAddress = Some(BusinessAddressModel("12345", Address(Seq("line1", "line2", "line3"), "TF3 4NT")))
       ))),
+      nino = "AA111111A",
       accountingMethod = Some(Cash),
       incomeSource = FeIncomeSourceModel(true, true, false),
       propertyCommencementDate = Some(PropertyCommencementDateModel(DateModel("6", "7", "2018"))),

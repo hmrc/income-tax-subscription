@@ -23,8 +23,11 @@ import play.api.Logger.logger
 import play.api.libs.json.JsValue
 import play.api.mvc._
 import services.AuthService
+import uk.gov.hmrc.auth.core.{Enrolment, EnrolmentIdentifier, Enrolments}
+import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals
 import uk.gov.hmrc.play.bootstrap.controller.BackendController
 
+import scala.collection.immutable.::
 import scala.concurrent.ExecutionContext
 
 @Singleton
@@ -33,9 +36,12 @@ class BusinessIncomeSourcesController @Inject()(authService: AuthService,
                                                 cc: ControllerComponents)(implicit ec: ExecutionContext) extends BackendController(cc) {
 
   def createIncomeSource(mtdbsaRef: String): Action[JsValue] = Action.async(parse.json) { implicit request =>
-    authService.authorised() {
+    authService.authorised().retrieve(Retrievals.allEnrolments) { enrolments =>
+
+      val agentReferenceNumber : Option[String] = getArnFromEnrolments(enrolments)
+
       withJsonBody[BusinessSubscriptionDetailsModel] { incomeSourceRequest =>
-        createIncomeSourcesConnector.createBusinessIncome(mtdbsaRef, incomeSourceRequest).map {
+        createIncomeSourcesConnector.createBusinessIncome(agentReferenceNumber, mtdbsaRef, incomeSourceRequest).map {
           case Right(_) => NoContent
           case Left(error) => logger.error(s"Error processing Business Income Source with status ${error.status} and message ${error.reason}")
             InternalServerError("Business Income Source Failure")
@@ -44,5 +50,8 @@ class BusinessIncomeSourcesController @Inject()(authService: AuthService,
     }
   }
 
+  private def getArnFromEnrolments(enrolments: Enrolments): Option[String] = enrolments.enrolments.collectFirst {
+    case Enrolment("HMRC-AS-AGENT", EnrolmentIdentifier(_, value) :: _, _, _) => value
+  }
 
 }

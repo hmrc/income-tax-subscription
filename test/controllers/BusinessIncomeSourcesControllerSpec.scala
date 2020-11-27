@@ -21,6 +21,7 @@ import play.api.http.Status._
 import play.api.test.FakeRequest
 import play.api.test.Helpers.stubControllerComponents
 import services.mocks.{MockAuthService, MockIncomeSourcesConnector}
+import uk.gov.hmrc.auth.core.{Enrolment, EnrolmentIdentifier, Enrolments}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.test.UnitSpec
 import utils.MaterializerSupport
@@ -42,8 +43,8 @@ class BusinessIncomeSourcesControllerSpec extends UnitSpec with MockAuthService 
 
         implicit val hc: HeaderCarrier = HeaderCarrier()
 
-        mockAuthSuccess()
-        createBusinessIncome("XAIT0000006", testCreateIncomeSubmissionModel)(Future.successful(Right(CreateIncomeSourceSuccessModel())))
+        mockRetrievalSuccess(Enrolments(Set(Enrolment("HMRC-AS-AGENT", Seq(EnrolmentIdentifier("AgentReferenceNumber", "1223456")), "Activated"))))
+        createBusinessIncome(Some("1223456"),"XAIT0000006", testCreateIncomeSubmissionModel)(Future.successful(Right(CreateIncomeSourceSuccessModel())))
 
         val result = await(TestController.createIncomeSource("XAIT0000006")(fakeRequest))
         status(result) shouldBe NO_CONTENT
@@ -58,8 +59,8 @@ class BusinessIncomeSourcesControllerSpec extends UnitSpec with MockAuthService 
 
         implicit val hc: HeaderCarrier = HeaderCarrier()
 
-        mockAuthSuccess()
-        createBusinessIncome("XAIT0000006", testCreateIncomeSubmissionModel)(Future.successful(Left(CreateIncomeSourceErrorModel(INTERNAL_SERVER_ERROR, "error body"))))
+        mockRetrievalSuccess(Enrolments(Set(Enrolment("HMRC-AS-AGENT", Seq(EnrolmentIdentifier("AgentReferenceNumber", "1223456")), "Activated"))))
+        createBusinessIncome(Some("1223456"),"XAIT0000006", testCreateIncomeSubmissionModel)(Future.successful(Left(CreateIncomeSourceErrorModel(INTERNAL_SERVER_ERROR, "error body"))))
 
         val result = await(TestController.createIncomeSource("XAIT0000006")(fakeRequest))
         status(result) shouldBe INTERNAL_SERVER_ERROR
