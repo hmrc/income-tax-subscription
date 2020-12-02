@@ -48,8 +48,8 @@ class SubmissionOrchestrationService @Inject()(registrationConnector: Registrati
       case _ => signUpIncomeSources(signUpRequest).map(id => Right(SuccessfulSubmission(id)))
     } map {
       case Right(success) =>
-        val path: String = request.headers.get(ITSASessionKeys.RequestURI).getOrElse("-")
-        auditService.audit(RegistrationSuccessAudit(signUpRequest, success.mtditId, path))
+        val path: Option[String] = request.headers.get(ITSASessionKeys.RequestURI)
+        auditService.audit(RegistrationSuccessAudit(signUpRequest.arn, signUpRequest.nino, success.mtditId, appConfig.desAuthorisationToken,path))
         Right(success)
       case left => left
     }

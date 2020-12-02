@@ -47,6 +47,15 @@ object IntegrationTestConstants {
   lazy val testEndDate: DateModel = LocalDate.now().plusDays(2)
   lazy val testAccountingPeriod: AccountingPeriod = AccountingPeriod(testStartDate, testEndDate)
 
+  object Audit {
+    val testAuditType = "testAuditType"
+    val testTransactionName = "testTransactionName"
+    val testDetail = Map("foo" -> "bar")
+    val agentServiceIdentifierKey = "AgentReferenceNumber"
+    val agentServiceEnrolmentName = "HMRC-AS-AGENT"
+  }
+
+
   val INVALID_NINO_MODEL = ErrorModel(BAD_REQUEST, "INVALID_NINO", "Submission has not passed validation. Invalid parameter NINO.")
   val INVALID_PAYLOAD_MODEL = ErrorModel(BAD_REQUEST, "INVALID_PAYLOAD", "Submission has not passed validation. Invalid PAYLOAD.")
   val MALFORMED_PAYLOAD_MODEL = ErrorModel(BAD_REQUEST, "MALFORMED_PAYLOAD", "Invalid JSON message received.")

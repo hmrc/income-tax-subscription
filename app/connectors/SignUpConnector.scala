@@ -22,7 +22,6 @@ import parsers.SignUpParser.PostSignUpResponse
 import parsers.SignUpParser.signUpResponseHttpReads
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.Request
-import services.monitoring.AuditService
 import uk.gov.hmrc.http.{HeaderCarrier, HttpReads}
 import uk.gov.hmrc.http.logging.Authorization
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
@@ -31,8 +30,7 @@ import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class SignUpConnector @Inject()(http: HttpClient,
-                                appConfig: AppConfig,
-                                auditService: AuditService)(implicit ec: ExecutionContext) {
+                                appConfig: AppConfig)(implicit ec: ExecutionContext) {
 
   def signUpUrl(nino: String): String = s"${appConfig.desURL}/income-tax/sign-up/ITSA"
 

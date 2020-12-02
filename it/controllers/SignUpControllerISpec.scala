@@ -7,6 +7,7 @@ import helpers.IntegrationTestConstants._
 import helpers.servicemocks.{AuthStub, SignUpStub}
 import models.SignUpResponse
 import play.api.http.Status._
+import play.api.libs.json.Json
 
 class SignUpControllerISpec extends ComponentSpecBase {
 
@@ -16,7 +17,7 @@ class SignUpControllerISpec extends ComponentSpecBase {
 
   "signUp" should {
     "call sign up connector successfully when auth succeeds for a sign up submission 200" in {
-      AuthStub.stubAuthSuccess()
+      AuthStub.stubAuth(OK, Json.obj())
       SignUpStub.stubSignUp(testNino, testSignUpSubmission(testNino), appConfig.desAuthorisationToken, appConfig.desEnvironment)(
         OK, testSignUpSuccessBody
       )

@@ -17,10 +17,12 @@
 package helpers.servicemocks
 
 import com.github.tomakehurst.wiremock.stubbing.StubMapping
+import helpers.IntegrationTestConstants.Audit.{agentServiceEnrolmentName, agentServiceIdentifierKey}
+import helpers.IntegrationTestConstants.testArn
 import models.auth.UserIds
 import play.api.http.HeaderNames
 import play.api.http.Status._
-import play.api.libs.json.{JsObject, Json}
+import play.api.libs.json.{JsObject, Json, Writes}
 
 object AuthStub extends WireMockMethods {
   val authIDs = "/uri/to/ids"
@@ -35,6 +37,29 @@ object AuthStub extends WireMockMethods {
     when(method = POST, uri = authority)
       .thenReturn(status = OK, body = successfulAuthResponse)
   }
+
+  def stubAuth[T](status: Int, body: T)(implicit writes: Writes[T]): StubMapping = {
+    when(method = POST, uri = authority)
+      .thenReturn(status = status, body = successfulAuthResponse(arnEnrolment))
+  }
+
+  private val arnEnrolment = Json.obj(
+    "key" -> agentServiceEnrolmentName,
+    "identifiers" -> Json.arr(
+      Json.obj(
+        "key" -> agentServiceIdentifierKey,
+        "value" -> testArn
+      )
+    )
+  )
+
+  private def successfulAuthResponse(enrolments: JsObject*): JsObject =
+  //Written out manually as the json writer for Enrolment doesn't match the reader
+    Json.obj(
+      "allEnrolments" -> enrolments
+    )
+
+
 
   private def exceptionHeaders(value: String) = Map(HeaderNames.WWW_AUTHENTICATE -> s"""MDTP detail="$value"""")
 
