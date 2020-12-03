@@ -58,9 +58,7 @@ case class SignUpCompleteAudit(agentReferenceNumber: Option[String],
 
   val seBusinessIncomeSource: JsObject = Json.obj(
     "incomeSource" -> "selfEmployment",
-    "businesses" -> Json.arr(
-      businessSubscriptionDetailsModel.selfEmploymentsData.getOrElse(Nil).map(seBusinessJson)
-    )
+    "businesses" -> businessSubscriptionDetailsModel.selfEmploymentsData.getOrElse(Nil).map(seBusinessJson)
   ) ++ optionToJson("accountingType", businessSubscriptionDetailsModel.accountingMethod.map(_.stringValue.toLowerCase)) ++
     optionToJson("numberOfBusinesses", businessSubscriptionDetailsModel.selfEmploymentsData.map(_.length.toString))
 
@@ -76,7 +74,7 @@ case class SignUpCompleteAudit(agentReferenceNumber: Option[String],
       (selfEmployment.businessAddress match {
         case Some(businessAddress) => Json.obj(
           "businessAddress" -> Json.obj(
-            "lines" -> Json.arr(businessAddress.address.lines),
+            "lines" -> businessAddress.address.lines,
             "postcode" -> businessAddress.address.postcode
           )
         )
