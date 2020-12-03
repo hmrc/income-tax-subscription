@@ -46,12 +46,12 @@ case class SignUpCompleteAudit(agentReferenceNumber: Option[String],
   val taxYear: String = s"${businessSubscriptionDetailsModel.accountingPeriod.taxEndYear - 1}-${businessSubscriptionDetailsModel.accountingPeriod.taxEndYear}"
 
   val ukPropertyIncomeSource: JsObject = Json.obj(
-    "incomeSource" -> "ukProperty",
+    "incomeSource" -> "ukProperty"
   ) ++ optionToJson("commencementDate", businessSubscriptionDetailsModel.propertyCommencementDate.map(_.startDate.toDesDateFormat)) ++
     optionToJson("accountingType", businessSubscriptionDetailsModel.propertyAccountingMethod.map(_.propertyAccountingMethod.stringValue.toLowerCase))
 
   val foreignPropertyIncomeSource: JsObject = Json.obj(
-    "incomeSource" -> "foreignProperty",
+    "incomeSource" -> "foreignProperty"
   ) ++ optionToJson("commencementDate", businessSubscriptionDetailsModel.overseasPropertyCommencementDate.map(_.startDate.toDesDateFormat)) ++
     optionToJson("accountingType", businessSubscriptionDetailsModel.overseasAccountingMethodProperty.map(_.overseasPropertyAccountingMethod.
       stringValue.toLowerCase))
@@ -92,7 +92,6 @@ case class SignUpCompleteAudit(agentReferenceNumber: Option[String],
     "taxYear" -> taxYear,
     "income" -> income,
     "Authorization" -> urlHeaderAuthorization
-
   ) ++ optionToJson("agentReferenceNumber", agentReferenceNumber)
 }
 
@@ -100,6 +99,5 @@ object SignUpCompleteAuditAudit {
 
   val transactionName: String = "income-tax-subscription"
   val auditType: String = "mtdItsaSubscription"
-
 
 }
