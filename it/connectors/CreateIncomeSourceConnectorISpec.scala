@@ -44,7 +44,7 @@ class CreateIncomeSourceConnectorISpec extends ComponentSpecBase {
           OK, testCreateIncomeSuccessBody
         )
 
-        val result = createIncomeSourceConnector.createBusinessIncome(testMtdbsaRef, testCreateIncomeSubmissionModel)
+        val result = createIncomeSourceConnector.createBusinessIncome(Some(testArn), testMtdbsaRef, testCreateIncomeSubmissionModel)
 
         await(result) shouldBe Right(CreateIncomeSourceSuccessModel())
       }
@@ -61,7 +61,7 @@ class CreateIncomeSourceConnectorISpec extends ComponentSpecBase {
           INTERNAL_SERVER_ERROR, testCreateIncomeFailureBody
         )
 
-        val result = createIncomeSourceConnector.createBusinessIncome(testMtdbsaRef, testCreateIncomeSubmissionModel)
+        val result = createIncomeSourceConnector.createBusinessIncome(Some(testArn), testMtdbsaRef, testCreateIncomeSubmissionModel)
 
         await(result) shouldBe Left(CreateIncomeSourceErrorModel(INTERNAL_SERVER_ERROR, testCreateIncomeFailureBody.toString()))
       }

@@ -50,8 +50,8 @@ trait MockIncomeSourcesConnector extends MockitoSugar with BeforeAndAfterEach wi
   val connector = new CreateIncomeSourcesConnector(mockHttpClient, appConfig, auditService)
 
 
-  def createBusinessIncome(mtdbsaRef: String, incomeSourceRequest: BusinessSubscriptionDetailsModel)(response: Future[PostIncomeSourceResponse])(implicit hc: HeaderCarrier): Unit = {
-    when(mockIncomeSourcesConnector.createBusinessIncome(ArgumentMatchers.eq(mtdbsaRef),ArgumentMatchers.eq(incomeSourceRequest))
+  def createBusinessIncome(agentreferenceNumber: Option[String], mtdbsaRef: String, incomeSourceRequest: BusinessSubscriptionDetailsModel)(response: Future[PostIncomeSourceResponse])(implicit hc: HeaderCarrier): Unit = {
+    when(mockIncomeSourcesConnector.createBusinessIncome(ArgumentMatchers.eq(agentreferenceNumber),ArgumentMatchers.eq(mtdbsaRef),ArgumentMatchers.eq(incomeSourceRequest))
     (ArgumentMatchers.any[HeaderCarrier],ArgumentMatchers.any[Request[_]])).thenReturn(response)
 
   }
