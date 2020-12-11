@@ -214,7 +214,7 @@ object IntegrationTestConstants {
     selfEmploymentsData = Seq(),
     accountingMethod = None,
     incomeSource = FeIncomeSourceModel(selfEmployment = false, ukProperty = true, foreignProperty = false),
-    propertyCommencementDate = Some(PropertyCommencementDateModel(LocalDate.now())),
+    propertyStartDate = Some(PropertyStartDateModel(LocalDate.now())),
     propertyAccountingMethod = Some(AccountingMethodPropertyModel(Cash))
   )
 
@@ -245,7 +245,7 @@ object IntegrationTestConstants {
          |     "ukProperty": true,
          |     "foreignProperty":false
          |   },
-         |   "propertyCommencementDate": {
+         |   "propertyStartDate": {
          |     "startDate": {
          |    "day": "${date.getDayOfMonth}",
          |    "month": "${date.getMonthValue}",

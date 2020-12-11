@@ -37,9 +37,9 @@ class BusinessSubscriptionDetailsModelSpec extends UnitSpec {
       ))),
       accountingMethod = Some(Cash),
       incomeSource = FeIncomeSourceModel(true, true, true),
-      propertyCommencementDate = Some(PropertyCommencementDateModel(DateModel("6", "7", "2018"))),
+      propertyStartDate = Some(PropertyStartDateModel(DateModel("6", "7", "2018"))),
       propertyAccountingMethod = Some(AccountingMethodPropertyModel(Accruals)),
-      overseasPropertyCommencementDate = Some(OverseasPropertyCommencementDateModel(DateModel("6", "8", "2018"))),
+      overseasPropertyStartDate = Some(OverseasPropertyStartDateModel(DateModel("6", "8", "2018"))),
       overseasAccountingMethodProperty = Some(OverseasAccountingMethodPropertyModel(Cash))
     )
 
@@ -72,7 +72,7 @@ class BusinessSubscriptionDetailsModelSpec extends UnitSpec {
       nino = "AA111111A",
       accountingMethod = Some(Cash),
       incomeSource = FeIncomeSourceModel(true, true, false),
-      propertyCommencementDate = Some(PropertyCommencementDateModel(DateModel("6", "7", "2018"))),
+      propertyStartDate = Some(PropertyStartDateModel(DateModel("6", "7", "2018"))),
       propertyAccountingMethod = Some(AccountingMethodPropertyModel(Accruals))
     )
 
@@ -103,7 +103,7 @@ class BusinessSubscriptionDetailsModelSpec extends UnitSpec {
       nino = "AA111111A",
       accountingMethod = Some(Cash),
       incomeSource = FeIncomeSourceModel(true, true, false),
-      propertyCommencementDate = Some(PropertyCommencementDateModel(DateModel("6", "7", "2018"))),
+      propertyStartDate = Some(PropertyStartDateModel(DateModel("6", "7", "2018"))),
       propertyAccountingMethod = Some(AccountingMethodPropertyModel(Accruals))
     )
 
