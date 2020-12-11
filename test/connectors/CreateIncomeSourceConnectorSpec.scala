@@ -66,7 +66,7 @@ class CreateIncomeSourceConnectorSpec extends MockHttp with GuiceOneAppPerSuite 
     selfEmploymentsData = None,
     accountingMethod = None,
     incomeSource = FeIncomeSourceModel(selfEmployment = false, ukProperty = true, foreignProperty = false),
-    propertyCommencementDate = Some(PropertyCommencementDateModel(LocalDate.now())),
+    propertyStartDate = Some(PropertyStartDateModel(LocalDate.now())),
     propertyAccountingMethod = Some(AccountingMethodPropertyModel(Cash))
   )
 

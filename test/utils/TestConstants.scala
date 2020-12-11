@@ -24,7 +24,7 @@ import models.digitalcontact.PaperlessPreferenceKey
 import models.frontend._
 import models.lockout.LockoutRequest
 import models.matching.LockoutResponse
-import models.subscription.{AccountingMethodPropertyModel, AccountingPeriodModel, BusinessSubscriptionDetailsModel, FeIncomeSourceModel, IncomeSourceModel, PropertyCommencementDateModel}
+import models.subscription.{AccountingMethodPropertyModel, AccountingPeriodModel, BusinessSubscriptionDetailsModel, FeIncomeSourceModel, IncomeSourceModel, PropertyStartDateModel}
 import models.subscription.business.Cash
 import models.subscription.incomesource.{AccountingPeriod, BusinessIncomeModel, PropertyIncomeModel, SignUpRequest}
 import models.subscription.property.PropertySubscriptionResponseModel
@@ -333,7 +333,7 @@ object TestConstants {
     selfEmploymentsData = Seq(),
     accountingMethod = None,
     incomeSource = FeIncomeSourceModel(selfEmployment = false, ukProperty = true, foreignProperty = false),
-    propertyCommencementDate = Some(PropertyCommencementDateModel(LocalDate.now())),
+    propertyStartDate = Some(PropertyStartDateModel(LocalDate.now())),
     propertyAccountingMethod = Some(AccountingMethodPropertyModel(Cash))
   )
 
@@ -364,7 +364,7 @@ object TestConstants {
          |     "ukProperty": true,
          |     "foreignProperty":false
          |   },
-         |   "propertyCommencementDate": {
+         |   "propertyStartDate": {
          |     "startDate": {
          |    "day": "${date.getDayOfMonth}",
          |    "month": "${date.getMonthValue}",

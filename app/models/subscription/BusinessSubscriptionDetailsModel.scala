@@ -86,10 +86,10 @@ object FeIncomeSourceModel {
   implicit val format: Format[FeIncomeSourceModel] = Json.format[FeIncomeSourceModel]
 }
 
-case class PropertyCommencementDateModel(startDate: DateModel)
+case class PropertyStartDateModel(startDate: DateModel)
 
-object PropertyCommencementDateModel {
-  implicit val format: OFormat[PropertyCommencementDateModel] = Json.format[PropertyCommencementDateModel]
+object PropertyStartDateModel {
+  implicit val format: OFormat[PropertyStartDateModel] = Json.format[PropertyStartDateModel]
 }
 
 case class AccountingMethodPropertyModel(propertyAccountingMethod: AccountingMethod)
@@ -98,10 +98,10 @@ object AccountingMethodPropertyModel {
   implicit val format: OFormat[AccountingMethodPropertyModel] = Json.format[AccountingMethodPropertyModel]
 }
 
-case class OverseasPropertyCommencementDateModel(startDate: DateModel)
+case class OverseasPropertyStartDateModel(startDate: DateModel)
 
-object OverseasPropertyCommencementDateModel {
-  implicit val format: OFormat[OverseasPropertyCommencementDateModel] = Json.format[OverseasPropertyCommencementDateModel]
+object OverseasPropertyStartDateModel {
+  implicit val format: OFormat[OverseasPropertyStartDateModel] = Json.format[OverseasPropertyStartDateModel]
 }
 
 case class OverseasAccountingMethodPropertyModel(overseasPropertyAccountingMethod: AccountingMethod)
@@ -115,9 +115,9 @@ case class BusinessSubscriptionDetailsModel(nino: String,
                                             selfEmploymentsData: Option[Seq[SelfEmploymentData]],
                                             accountingMethod: Option[AccountingMethod],
                                             incomeSource: FeIncomeSourceModel,
-                                            propertyCommencementDate: Option[PropertyCommencementDateModel] = None,
+                                            propertyStartDate: Option[PropertyStartDateModel] = None,
                                             propertyAccountingMethod: Option[AccountingMethodPropertyModel] = None,
-                                            overseasPropertyCommencementDate: Option[OverseasPropertyCommencementDateModel] = None,
+                                            overseasPropertyStartDate: Option[OverseasPropertyStartDateModel] = None,
                                             overseasAccountingMethodProperty: Option[OverseasAccountingMethodPropertyModel] = None
                                            )
 
@@ -158,7 +158,7 @@ object BusinessSubscriptionDetailsModel {
       "ukPropertyDetails" -> Json.toJson(
         if(details.incomeSource.ukProperty)
           Json.obj(
-            "tradingStartDate" -> details.propertyCommencementDate.map(_.startDate.toDesDateFormat),
+            "tradingStartDate" -> details.propertyStartDate.map(_.startDate.toDesDateFormat),
             "cashOrAccrualsFlag" -> details.propertyAccountingMethod.map(_.propertyAccountingMethod.stringValue.toUpperCase),
             "startDate" -> details.accountingPeriod.startDate.toDesDateFormat
           )
@@ -167,7 +167,7 @@ object BusinessSubscriptionDetailsModel {
       "foreignPropertyDetails" -> Json.toJson(
         if(details.incomeSource.foreignProperty)
           Json.obj(
-          "tradingStartDate" -> details.overseasPropertyCommencementDate.map(_.startDate.toDesDateFormat),
+          "tradingStartDate" -> details.overseasPropertyStartDate.map(_.startDate.toDesDateFormat),
           "cashOrAccrualsFlag" -> details.overseasAccountingMethodProperty.map(_.overseasPropertyAccountingMethod.stringValue.toUpperCase),
           "startDate" -> details.accountingPeriod.startDate.toDesDateFormat
           )

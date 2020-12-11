@@ -47,12 +47,12 @@ case class SignUpCompleteAudit(agentReferenceNumber: Option[String],
 
   val ukPropertyIncomeSource: JsObject = Json.obj(
     "incomeSource" -> "ukProperty"
-  ) ++ optionToJson("commencementDate", businessSubscriptionDetailsModel.propertyCommencementDate.map(_.startDate.toDesDateFormat)) ++
+  ) ++ optionToJson("commencementDate", businessSubscriptionDetailsModel.propertyStartDate.map(_.startDate.toDesDateFormat)) ++
     optionToJson("accountingType", businessSubscriptionDetailsModel.propertyAccountingMethod.map(_.propertyAccountingMethod.stringValue.toLowerCase))
 
   val foreignPropertyIncomeSource: JsObject = Json.obj(
     "incomeSource" -> "foreignProperty"
-  ) ++ optionToJson("commencementDate", businessSubscriptionDetailsModel.overseasPropertyCommencementDate.map(_.startDate.toDesDateFormat)) ++
+  ) ++ optionToJson("commencementDate", businessSubscriptionDetailsModel.overseasPropertyStartDate.map(_.startDate.toDesDateFormat)) ++
     optionToJson("accountingType", businessSubscriptionDetailsModel.overseasAccountingMethodProperty.map(_.overseasPropertyAccountingMethod.
       stringValue.toLowerCase))
 
