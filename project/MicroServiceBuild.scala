@@ -27,20 +27,19 @@ private object AppDependencies {
   import play.sbt.PlayImport._
 
   private val domainVersion = "5.6.0-play-26"
-  private val hmrcTestVersion = "3.9.0-play-26"
-  private val scalaTestVersion = "3.0.5"
-  private val scalaTestPlusVersion = "3.1.2"
+  private val hmrcTestVersion = "3.10.0-play-26"
+  private val scalaTestVersion = "3.0.9"
+  private val scalaTestPlusVersion = "3.1.3"
   private val pegdownVersion = "1.6.0"
-  private val mockitoVersion = "2.7.17"
+  private val mockitoVersion = "3.7.0"
 
-  private val scalaJVersion = "2.4.1"
-  private val cucumberVersion = "1.2.5"
+  private val scalaJVersion = "2.4.2"
 
   private val reactiveMongoVersion = "7.30.0-play-26"
 
   private val wiremockVersion = "2.21.0"
 
-  private val bootstrapVersion = "1.5.0"
+  private val bootstrapVersion = "2.3.0"
 
   val compile = Seq(
     ws,
@@ -64,8 +63,6 @@ private object AppDependencies {
         "com.typesafe.play" %% "play-test" % PlayVersion.current % scope,
         "org.scalatestplus.play" %% "scalatestplus-play" % scalaTestPlusVersion % scope,
         "org.scalaj" %% "scalaj-http" % scalaJVersion % scope,
-        "info.cukes" %% "cucumber-scala" % cucumberVersion % scope,
-        "info.cukes" % "cucumber-junit" % cucumberVersion % scope,
         "org.mockito" % "mockito-core" % mockitoVersion % scope,
         "com.github.fge" % "json-schema-validator" % "2.2.6" % scope
       )
@@ -84,8 +81,6 @@ private object AppDependencies {
         "com.typesafe.play" %% "play-test" % PlayVersion.current % scope,
         "org.scalatestplus.play" %% "scalatestplus-play" % scalaTestPlusVersion % scope,
         "org.scalaj" %% "scalaj-http" % scalaJVersion % scope,
-        "info.cukes" %% "cucumber-scala" % cucumberVersion % scope,
-        "info.cukes" % "cucumber-junit" % cucumberVersion % scope,
         "org.mockito" % "mockito-core" % mockitoVersion % scope,
         "com.github.fge" % "json-schema-validator" % "2.2.6" % scope,
         "com.github.tomakehurst" % "wiremock" % wiremockVersion % scope
@@ -116,7 +111,7 @@ private object AppDependencies {
 
   def tmpMacWorkaround(): Seq[ModuleID] =
     if (sys.props.get("os.name").exists(_.toLowerCase.contains("mac")))
-      Seq("org.reactivemongo" % "reactivemongo-shaded-native" % "0.17.1-osx-x86-64" % "runtime,test,it")
+      Seq("org.reactivemongo" % "reactivemongo-shaded-native" % "1.0.1-osx-x86-64" % "runtime,test,it")
     else Seq()
 
   def apply(): Seq[ModuleID] = compile ++ Test() ++ IntegrationTest() ++ tmpMacWorkaround()
