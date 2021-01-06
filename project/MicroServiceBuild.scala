@@ -34,7 +34,6 @@ private object AppDependencies {
   private val mockitoVersion = "3.7.0"
 
   private val scalaJVersion = "2.4.2"
-  private val cucumberVersion = "1.2.6"
 
   private val reactiveMongoVersion = "7.30.0-play-26"
 
@@ -64,8 +63,6 @@ private object AppDependencies {
         "com.typesafe.play" %% "play-test" % PlayVersion.current % scope,
         "org.scalatestplus.play" %% "scalatestplus-play" % scalaTestPlusVersion % scope,
         "org.scalaj" %% "scalaj-http" % scalaJVersion % scope,
-        "info.cukes" %% "cucumber-scala" % cucumberVersion % scope,
-        "info.cukes" % "cucumber-junit" % cucumberVersion % scope,
         "org.mockito" % "mockito-core" % mockitoVersion % scope,
         "com.github.fge" % "json-schema-validator" % "2.2.6" % scope
       )
@@ -84,8 +81,6 @@ private object AppDependencies {
         "com.typesafe.play" %% "play-test" % PlayVersion.current % scope,
         "org.scalatestplus.play" %% "scalatestplus-play" % scalaTestPlusVersion % scope,
         "org.scalaj" %% "scalaj-http" % scalaJVersion % scope,
-        "info.cukes" %% "cucumber-scala" % cucumberVersion % scope,
-        "info.cukes" % "cucumber-junit" % cucumberVersion % scope,
         "org.mockito" % "mockito-core" % mockitoVersion % scope,
         "com.github.fge" % "json-schema-validator" % "2.2.6" % scope,
         "com.github.tomakehurst" % "wiremock" % wiremockVersion % scope
