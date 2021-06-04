@@ -19,7 +19,7 @@ package services.monitoring
 import org.mockito.ArgumentMatchers
 import org.mockito.Mockito._
 import org.scalatest.BeforeAndAfterEach
-import org.scalatest.mockito.MockitoSugar
+import org.scalatestplus.mockito.MockitoSugar
 import play.api.Configuration
 import play.api.test.FakeRequest
 import uk.gov.hmrc.http.HeaderCarrier

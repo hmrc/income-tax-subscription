@@ -32,15 +32,7 @@ class BusinessDetailsConnectorSpec extends TestBusinessDetailsConnector {
   implicit val hc = HeaderCarrier()
   implicit val request: Request[_] = FakeRequest()
 
-  lazy val env = appConfig.desEnvironment
-  lazy val authToken = appConfig.desToken
-
   "BusinessDetailsConnector.getBusinessDetails" should {
-    "Put in the correct headers" in {
-      val rHc = TestBusinessDetailsConnector.createHeaderCarrierGet(hc)
-      rHc.headers.contains("Authorization" -> s"Bearer $authToken") shouldBe true
-      rHc.headers.contains("Environment" -> env) shouldBe true
-    }
 
     "GET to the correct url" in {
       TestBusinessDetailsConnector.getBusinessDetailsUrl(testNino) should endWith(s"/registration/business-details/nino/$testNino")

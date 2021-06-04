@@ -19,7 +19,7 @@ package controllers
 import connectors.CreateIncomeSourcesConnector
 import javax.inject.{Inject, Singleton}
 import models.subscription.BusinessSubscriptionDetailsModel
-import play.api.Logger.logger
+import play.api.Logger
 import play.api.libs.json.JsValue
 import play.api.mvc._
 import services.AuthService
@@ -34,6 +34,8 @@ import scala.concurrent.ExecutionContext
 class BusinessIncomeSourcesController @Inject()(authService: AuthService,
                                                 createIncomeSourcesConnector: CreateIncomeSourcesConnector,
                                                 cc: ControllerComponents)(implicit ec: ExecutionContext) extends BackendController(cc) {
+
+  val logger: Logger = Logger(this.getClass)
 
   def createIncomeSource(mtdbsaRef: String): Action[JsValue] = Action.async(parse.json) { implicit request =>
     authService.authorised().retrieve(Retrievals.allEnrolments) { enrolments =>

@@ -22,10 +22,13 @@ object AuditStub extends WireMockMethods {
   val appName = "income-tax-subscription"
 
   def stubAuditing(): Unit = {
-    when(method = POST, uri = "/write/audit")
-      .thenReturn(status = 200, body = """{"x":2}""")
+
     when(method = POST, uri = "/write/audit/merged")
       .thenReturn(status = 200, body = """{"x":2}""")
+
+    when(method = POST, uri = "/write/audit")
+      .thenReturn(status = 200, body = """{"x":2}""")
+
   }
 
   def verifyAudit()(implicit hc: HeaderCarrier): Unit = {

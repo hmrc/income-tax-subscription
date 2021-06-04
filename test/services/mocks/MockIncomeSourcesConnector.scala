@@ -17,22 +17,18 @@
 package services.mocks
 
 import config.AppConfig
-import connectors.{CreateIncomeSourcesConnector, SignUpConnector}
+import connectors.CreateIncomeSourcesConnector
 import connectors.mocks.MockHttp
 import models.subscription.BusinessSubscriptionDetailsModel
 import org.mockito.ArgumentMatchers
 import org.mockito.Mockito.{reset, when}
-import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{BeforeAndAfterEach, Suite}
+import org.scalatestplus.mockito.MockitoSugar
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import parsers.CreateIncomeSourceParser.PostIncomeSourceResponse
-import parsers.SignUpParser.PostSignUpResponse
-import play.api.libs.json.JsValue
 import play.api.mvc.Request
 import services.monitoring.AuditService
 import uk.gov.hmrc.http.HeaderCarrier
-import utils.TestConstants.testCreateIncomeSubmissionModel
-import play.api.libs.json.Json
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future

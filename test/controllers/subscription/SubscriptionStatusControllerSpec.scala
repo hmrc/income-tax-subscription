@@ -23,7 +23,7 @@ import play.api.test.FakeRequest
 import play.api.test.Helpers.stubControllerComponents
 import services.mocks.{MockAuthService, MockSubscriptionStatusService}
 import uk.gov.hmrc.play.test.UnitSpec
-import utils.{Logging, MaterializerSupport}
+import utils.MaterializerSupport
 import utils.TestConstants._
 
 import scala.concurrent.Future

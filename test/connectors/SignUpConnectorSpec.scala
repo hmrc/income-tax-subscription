@@ -27,8 +27,7 @@ import play.api.http.Status._
 import play.api.libs.json.JsValue
 import play.api.mvc.Request
 import play.api.test.FakeRequest
-import services.monitoring.AuditService
-import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.http.{HeaderCarrier, HeaderNames}
 import uk.gov.hmrc.play.test.UnitSpec
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -39,12 +38,15 @@ class SignUpConnectorSpec extends UnitSpec with MockHttp with GuiceOneAppPerSuit
   class Test(nino: String, response: PostSignUpResponse) {
     val appConfig: AppConfig = app.injector.instanceOf[AppConfig]
     val connector = new SignUpConnector(mockHttpClient, appConfig)
-
+    val headers = Seq(
+      HeaderNames.authorisation -> appConfig.desAuthorisationToken,
+      appConfig.desEnvironmentHeader
+    )
 
     when(mockHttpClient.POST[JsValue, PostSignUpResponse](
       ArgumentMatchers.eq(s"${appConfig.desURL}/income-tax/sign-up/ITSA"),
       ArgumentMatchers.eq(connector.requestBody(nino)),
-      ArgumentMatchers.any()
+      ArgumentMatchers.eq(headers)
     )(ArgumentMatchers.any(), ArgumentMatchers.any(), ArgumentMatchers.any(), ArgumentMatchers.any()))
       .thenReturn(Future.successful(response))
   }

@@ -21,19 +21,14 @@ import connectors.SignUpConnector
 import connectors.mocks.MockHttp
 import org.mockito.ArgumentMatchers
 import org.mockito.Mockito.{reset, when}
-import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{BeforeAndAfterEach, Suite}
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import parsers.SignUpParser.PostSignUpResponse
-import play.api.libs.json.JsValue
-import play.api.mvc.Request
-import services.monitoring.AuditService
-import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-trait MockSignUpConnector extends MockitoSugar with BeforeAndAfterEach with MockHttp with GuiceOneAppPerSuite {
+trait MockSignUpConnector extends BeforeAndAfterEach with MockHttp with GuiceOneAppPerSuite {
   this: Suite =>
 
   override def beforeEach(): Unit = {
@@ -45,8 +40,8 @@ trait MockSignUpConnector extends MockitoSugar with BeforeAndAfterEach with Mock
   val connector = new SignUpConnector(mockHttpClient, appConfig)
 
 
-  def signUp(nino: String)(response: Future[PostSignUpResponse])(implicit hc: HeaderCarrier): Unit = {
-    when(mockSignUpConnector.signUp(ArgumentMatchers.eq(nino))(ArgumentMatchers.any[HeaderCarrier],ArgumentMatchers.any[Request[_]])).thenReturn(response)
+  def signUp(nino: String)(response: Future[PostSignUpResponse])(): Unit = {
+    when(mockSignUpConnector.signUp(ArgumentMatchers.eq(nino))(ArgumentMatchers.any())).thenReturn(response)
 
   }
 }

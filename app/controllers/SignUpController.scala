@@ -20,13 +20,13 @@ import config.AppConfig
 import connectors.SignUpConnector
 import javax.inject.{Inject, Singleton}
 import models.monitoring.RegistrationSuccessAudit
-import play.api.Logger.logger
+import play.api.Logger
 import play.api.libs.json.Json
 import play.api.mvc._
 import services.AuthService
 import services.monitoring.AuditService
 import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals
-import uk.gov.hmrc.play.bootstrap.controller.BackendController
+import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 import uk.gov.hmrc.auth.core.{Enrolment, EnrolmentIdentifier, Enrolments}
 
 import scala.concurrent.ExecutionContext
@@ -34,6 +34,8 @@ import scala.concurrent.ExecutionContext
 @Singleton
 class SignUpController @Inject()(authService: AuthService, auditService: AuditService, signUpConnector: SignUpConnector,
                                  cc: ControllerComponents, appConfig: AppConfig)(implicit ec: ExecutionContext) extends BackendController(cc) {
+
+  val logger: Logger = Logger(this.getClass)
 
   def signUp(nino: String): Action[AnyContent] = Action.async { implicit request =>
     authService.authorised().retrieve(Retrievals.allEnrolments) { enrolments =>

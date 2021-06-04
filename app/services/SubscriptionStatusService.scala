@@ -37,14 +37,17 @@ class SubscriptionStatusService @Inject()(businessDetailsConnector: BusinessDeta
   **/
   def checkMtditsaSubscription(nino: String)
                               (implicit hc: HeaderCarrier, ec: ExecutionContext, request: Request[_]): Future[Either[ErrorModel, Option[FESuccessResponse]]] = {
-    Logger.debug(s"Request: NINO=$nino")
+
+    val logger: Logger = Logger(this.getClass)
+
+    logger.debug(s"Request: NINO=$nino")
     businessDetailsConnector.getBusinessDetails(nino).flatMap {
       // if the subscription is not found, convert it to OK with {}
       case Left(error: ErrorModel) if error.status == NOT_FOUND =>
-        Logger.debug(s"SubscriptionStatusService.checkMtditsaEnrolment - No mtditsa enrolment for nino=$nino")
+        logger.debug(s"SubscriptionStatusService.checkMtditsaEnrolment - No mtditsa enrolment for nino=$nino")
         Right(None)
       case Right(x) =>
-        Logger.debug(s"SubscriptionStatusService.checkMtditsaEnrolment - Client is already enrolled with mtditsa, ref=${x.mtdbsa}")
+        logger.debug(s"SubscriptionStatusService.checkMtditsaEnrolment - Client is already enrolled with mtditsa, ref=${x.mtdbsa}")
         Right(Some(FESuccessResponse(x.mtdbsa)))
       case Left(x) => Left(x)
     }

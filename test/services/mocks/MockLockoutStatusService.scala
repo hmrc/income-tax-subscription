@@ -19,17 +19,16 @@ package services.mocks
 import models.ErrorModel
 import models.matching.LockoutResponse
 import org.mockito.ArgumentMatchers
-import org.scalatest.mockito.MockitoSugar
-import services.LockoutStatusService
 import org.mockito.Mockito._
 import org.scalatest.BeforeAndAfterEach
-import repositories.LockoutMongoRepository
+import org.scalatestplus.mockito.MockitoSugar
 import repositories.mocks.MockLockoutRepository
+import services.LockoutStatusService
+import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.test.UnitSpec
 import utils.TestConstants._
 
 import scala.concurrent.{ExecutionContext, Future}
-import uk.gov.hmrc.http.HeaderCarrier
 
 trait MockLockoutStatusService extends UnitSpec with MockitoSugar with BeforeAndAfterEach {
 

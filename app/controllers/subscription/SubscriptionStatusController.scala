@@ -21,7 +21,7 @@ import models.frontend.FEFailureResponse
 import play.api.Logger
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import services.{AuthService, SubscriptionStatusService}
-import uk.gov.hmrc.play.bootstrap.controller.BackendController
+import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 import utils.JsonUtils.toJsValue
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -30,14 +30,16 @@ class SubscriptionStatusController @Inject()(authService: AuthService,
                                              subscriptionStatusService: SubscriptionStatusService,
                                              cc: ControllerComponents) extends BackendController(cc) {
 
+  val logger: Logger = Logger(this.getClass)
+
   def checkSubscriptionStatus(nino: String): Action[AnyContent] = Action.async { implicit request =>
     authService.authorised() {
       subscriptionStatusService.checkMtditsaSubscription(nino).map {
         case Right(success) =>
-          Logger.debug(s"SubscriptionStatusController.checkSubscriptionStatus - successful, responding with\n$success")
+          logger.debug(s"SubscriptionStatusController.checkSubscriptionStatus - successful, responding with\n$success")
           Ok(toJsValue(success))
         case Left(failure) =>
-          Logger.warn(s"SubscriptionStatusController.checkSubscriptionStatus - failed, responding with\nstatus=${failure.status}\nreason=${failure.reason}")
+          logger.warn(s"SubscriptionStatusController.checkSubscriptionStatus - failed, responding with\nstatus=${failure.status}\nreason=${failure.reason}")
           Status(failure.status)(toJsValue(FEFailureResponse(failure.reason)))
       }
     }

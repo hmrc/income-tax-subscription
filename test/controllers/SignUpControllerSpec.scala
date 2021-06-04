@@ -16,17 +16,14 @@
 
 package controllers
 
-
-import controllers.Assets.OK
 import models.{SignUpFailure, SignUpResponse}
-import play.api.http.Status.INTERNAL_SERVER_ERROR
+import play.api.http.Status.{INTERNAL_SERVER_ERROR, OK}
 import play.api.libs.json.Json
 import play.api.test.FakeRequest
 import play.api.test.Helpers.stubControllerComponents
 import services.mocks.{MockAuthService, MockSignUpConnector}
 import services.monitoring.AuditService
 import uk.gov.hmrc.auth.core.{Enrolment, EnrolmentIdentifier, Enrolments}
-import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.test.UnitSpec
 import utils.MaterializerSupport
 import utils.TestConstants.{testNino, testSignUpSubmission}
@@ -45,7 +42,6 @@ class SignUpControllerSpec extends UnitSpec with MockAuthService with MockSignUp
     "signup is submitted" should {
       "return a 200 response" in {
         val fakeRequest = FakeRequest().withJsonBody(Json.toJson(testSignUpSubmission(testNino)))
-        implicit val hc: HeaderCarrier = HeaderCarrier()
 
         mockRetrievalSuccess(Enrolments(Set(Enrolment("HMRC-AS-AGENT", Seq(EnrolmentIdentifier("AgentReferenceNumber", "123456789")), "Activated"))))
         signUp(testNino)(Future.successful(Right(SignUpResponse("XAIT000000"))))
@@ -63,7 +59,6 @@ class SignUpControllerSpec extends UnitSpec with MockAuthService with MockSignUp
     "signup is submitted" should {
       "return a Json parse failure when invalid json is found" in {
         val fakeRequest = FakeRequest().withJsonBody(Json.toJson(testSignUpSubmission(testNino)))
-        implicit val hc: HeaderCarrier = HeaderCarrier()
 
         mockRetrievalSuccess(Enrolments(Set(Enrolment("HMRC-AS-AGENT", Seq(EnrolmentIdentifier("AgentReferenceNumber", "123456789")), "Activated"))))
 
@@ -82,7 +77,6 @@ class SignUpControllerSpec extends UnitSpec with MockAuthService with MockSignUp
     "signup is submitted" should {
       "return an error" in {
         val fakeRequest = FakeRequest().withJsonBody(Json.toJson(testSignUpSubmission(testNino)))
-        implicit val hc = HeaderCarrier()
 
         mockRetrievalSuccess(Enrolments(Set(Enrolment("HMRC-AS-AGENT", Seq(EnrolmentIdentifier("AgentReferenceNumber", "123456789")), "Activated"))))
         signUp(testNino)(Future.successful(Left(SignUpFailure(INTERNAL_SERVER_ERROR, "Failure"))))

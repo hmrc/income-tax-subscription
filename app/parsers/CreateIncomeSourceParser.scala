@@ -26,14 +26,15 @@ object CreateIncomeSourceParser {
   type PostIncomeSourceResponse = Either[CreateIncomeSourceErrorModel, CreateIncomeSourceSuccessModel]
 
   implicit val incomeSourceResponseHttpReads: HttpReads[PostIncomeSourceResponse] = {
+    val logger: Logger = Logger(this.getClass)
     new HttpReads[PostIncomeSourceResponse] {
       override def read(method: String, url: String, response: HttpResponse): PostIncomeSourceResponse =
         response.status match {
           case OK =>
-            Logger.debug("[IncomeSourceResponseHttpReads][read]: Status OK")
+            logger.debug("[IncomeSourceResponseHttpReads][read]: Status OK")
             Right(CreateIncomeSourceSuccessModel())
           case status =>
-            Logger.warn(s"[IncomeSourceResponseHttpReads][read]: Unexpected response, status $status returned. Body: ${response.body}")
+            logger.warn(s"[IncomeSourceResponseHttpReads][read]: Unexpected response, status $status returned. Body: ${response.body}")
             Left(CreateIncomeSourceErrorModel(status,response.body))
         }
     }
