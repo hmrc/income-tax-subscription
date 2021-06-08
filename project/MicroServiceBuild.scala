@@ -26,7 +26,7 @@ private object AppDependencies {
   import play.core.PlayVersion
   import play.sbt.PlayImport._
 
-  private val domainVersion = "5.6.0-play-26"
+  private val domainVersion = "5.11.0-play-26"
   private val hmrcTestVersion = "3.10.0-play-26"
   private val scalaTestVersion = "3.0.9"
   private val scalaTestPlusVersion = "3.1.3"
@@ -39,11 +39,11 @@ private object AppDependencies {
 
   private val wiremockVersion = "2.21.0"
 
-  private val bootstrapVersion = "2.3.0"
+  private val bootstrapBackendVersion = "5.3.0"
 
   val compile = Seq(
     ws,
-    "uk.gov.hmrc" %% "bootstrap-play-26" % bootstrapVersion,
+    "uk.gov.hmrc" %% "bootstrap-backend-play-26" % bootstrapBackendVersion,
     "uk.gov.hmrc" %% "domain" % domainVersion,
     "uk.gov.hmrc" %% "simple-reactivemongo" % reactiveMongoVersion
   )
@@ -56,7 +56,7 @@ private object AppDependencies {
   object Test {
     def apply(): Seq[ModuleID] = new TestDependencies {
       override lazy val test = Seq(
-        "uk.gov.hmrc" %% "bootstrap-play-26" % bootstrapVersion % scope,
+        "uk.gov.hmrc" %% "bootstrap-backend-play-26" % bootstrapBackendVersion % scope,
         "uk.gov.hmrc" %% "hmrctest" % hmrcTestVersion % scope,
         "org.scalatest" %% "scalatest" % scalaTestVersion % scope,
         "org.pegdown" % "pegdown" % pegdownVersion % scope,

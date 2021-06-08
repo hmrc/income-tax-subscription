@@ -18,7 +18,7 @@ package services.mocks
 
 import models.digitalcontact.PaperlessPreferenceKey
 import org.mockito.Mockito._
-import org.scalatest.mockito.MockitoSugar
+import org.scalatestplus.mockito.MockitoSugar
 import repositories.mocks.MockPaperlessPreferenceRepository
 import services.digitalcontact.PaperlessPreferenceService
 import utils.TestConstants._

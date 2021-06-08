@@ -25,7 +25,7 @@ class SignUpRequestSpec extends UnitSpec {
   "IncomeSourceType" should {
 
     "Provide the correct reader and writer for Business" in {
-      val business: JsValue = Json.toJson(Business)
+      val business: JsValue = Json.toJson[IncomeSourceType](Business)
       val expected = JsString(IncomeSourceType.business)
       business shouldBe expected
       val readBack = Json.fromJson[IncomeSourceType](business).get
@@ -33,7 +33,7 @@ class SignUpRequestSpec extends UnitSpec {
     }
 
     "Provide the correct reader and writer for Property" in {
-      val property: JsValue = Json.toJson(Property)
+      val property: JsValue = Json.toJson[IncomeSourceType](Property)
       val expected = JsString(IncomeSourceType.property)
       property shouldBe expected
       val readBack = Json.fromJson[IncomeSourceType](property).get
@@ -41,7 +41,7 @@ class SignUpRequestSpec extends UnitSpec {
     }
 
     "Provide the correct reader and writer for Both" in {
-      val both: JsValue = Json.toJson(Both)
+      val both: JsValue = Json.toJson[IncomeSourceType](Both)
       val expected = JsString(IncomeSourceType.both)
       both shouldBe expected
       val readBack = Json.fromJson[IncomeSourceType](both).get

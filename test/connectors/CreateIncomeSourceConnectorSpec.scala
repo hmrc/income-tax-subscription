@@ -16,13 +16,11 @@
 
 package connectors
 
-import java.time.LocalDate
-
 import config.AppConfig
 import connectors.mocks.MockHttp
 import models.monitoring.SignUpCompleteAudit
-import models.subscription.business.{Cash, CreateIncomeSourceErrorModel, CreateIncomeSourceSuccessModel}
 import models.subscription._
+import models.subscription.business.{Cash, CreateIncomeSourceErrorModel, CreateIncomeSourceSuccessModel}
 import org.mockito.ArgumentMatchers
 import org.mockito.Mockito._
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
@@ -32,10 +30,9 @@ import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.Request
 import play.api.test.FakeRequest
 import services.mocks.monitoring.MockAuditService
-import services.monitoring.AuditService
-import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.play.bootstrap.http.HttpClient
+import uk.gov.hmrc.http.{HeaderCarrier, HeaderNames, HttpClient}
 
+import java.time.LocalDate
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
@@ -47,11 +44,15 @@ class CreateIncomeSourceConnectorSpec extends MockHttp with GuiceOneAppPerSuite 
   class Test(mtdbsaRef: String, expectedBody: JsValue, response: PostIncomeSourceResponse) {
     val appConfig: AppConfig = app.injector.instanceOf[AppConfig]
     val httpClient: HttpClient = mockHttpClient
+    val headers = Seq(
+      HeaderNames.authorisation -> appConfig.desAuthorisationToken,
+      appConfig.desEnvironmentHeader
+    )
 
     when(httpClient.POST[JsValue, PostIncomeSourceResponse](
       ArgumentMatchers.eq(s"${appConfig.desURL}/income-tax/income-sources/mtdbsa/$mtdbsaRef/ITSA/business"),
       ArgumentMatchers.eq(expectedBody),
-      ArgumentMatchers.any())(
+      ArgumentMatchers.eq(headers))(
       ArgumentMatchers.any(),
       ArgumentMatchers.any(),
       ArgumentMatchers.any(),

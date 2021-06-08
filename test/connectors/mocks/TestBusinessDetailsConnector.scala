@@ -22,14 +22,13 @@ import models.ErrorModel
 import models.registration.GetBusinessDetailsSuccessResponseModel
 import org.mockito.ArgumentMatchers
 import org.mockito.Mockito._
-import org.scalatest.mockito.MockitoSugar
+import  org.scalatestplus.mockito.MockitoSugar
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.http.Status._
 import play.api.libs.json.JsValue
 import services.monitoring.AuditService
-import uk.gov.hmrc.play.bootstrap.http.HttpClient
+import uk.gov.hmrc.http.{HeaderNames, HttpClient}
 import utils.Implicits._
-import utils.Logging
 import utils.TestConstants._
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -52,8 +51,13 @@ trait TestBusinessDetailsConnector extends MockHttp with GuiceOneAppPerSuite {
   val getBusinessDetailsServerError = (INTERNAL_SERVER_ERROR, GetBusinessDetailsResponse.failureResponse("SERVER_ERROR", "DES is currently experiencing problems that require live service intervention"))
   val getBusinessDetailsServiceUnavailable = (SERVICE_UNAVAILABLE, GetBusinessDetailsResponse.failureResponse("SERVICE_UNAVAILABLE", "Dependent systems are currently not responding"))
 
-  def setupMockBusinessDetails(nino: String)(status: Int, response: JsValue): Unit =
-    setupMockHttpGet(url = TestBusinessDetailsConnector.getBusinessDetailsUrl(nino))(status, response)
+  def setupMockBusinessDetails(nino: String)(status: Int, response: JsValue): Unit = {
+    val headers = Seq(
+      HeaderNames.authorisation -> appConfig.desAuthorisationToken,
+      appConfig.desEnvironmentHeader
+    )
+    setupMockHttpGet(url = TestBusinessDetailsConnector.getBusinessDetailsUrl(nino), headers = headers)(status, response)
+  }
 }
 
 trait MockBusinessDetailsConnector extends MockitoSugar {

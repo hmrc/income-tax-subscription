@@ -20,7 +20,7 @@ import connectors.PropertyConnector
 import models.subscription.incomesource.PropertyIncomeModel
 import org.mockito.ArgumentMatchers
 import org.mockito.Mockito.when
-import org.scalatest.mockito.MockitoSugar
+import org.scalatestplus.mockito.MockitoSugar
 import play.api.mvc.Request
 import uk.gov.hmrc.http.HeaderCarrier
 

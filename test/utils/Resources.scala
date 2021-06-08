@@ -21,7 +21,6 @@ import com.fasterxml.jackson.databind.{JsonNode, ObjectMapper}
 import com.github.fge.jsonschema.main.{JsonSchema, JsonSchemaFactory}
 import play.api.Logger
 import play.api.libs.json.{JsValue, Json}
-
 import scala.io.Source
 import scala.util.{Failure, Success, Try}
 

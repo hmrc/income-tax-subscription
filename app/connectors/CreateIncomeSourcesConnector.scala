@@ -17,17 +17,15 @@
 package connectors
 
 import config.AppConfig
-import javax.inject.{Inject, Singleton}
 import models.monitoring.SignUpCompleteAudit
 import models.subscription.BusinessSubscriptionDetailsModel
 import parsers.CreateIncomeSourceParser._
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.Request
 import services.monitoring.AuditService
-import uk.gov.hmrc.http.logging.Authorization
-import uk.gov.hmrc.http.{HeaderCarrier, HttpReads}
-import uk.gov.hmrc.play.bootstrap.http.HttpClient
+import uk.gov.hmrc.http.{Authorization, HeaderCarrier, HeaderNames, HttpClient, HttpReads}
 
+import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
@@ -50,9 +48,12 @@ class CreateIncomeSourcesConnector @Inject()(http: HttpClient,
       .copy(authorization = Some(Authorization(appConfig.desAuthorisationToken)))
       .withExtraHeaders(appConfig.desEnvironmentHeader)
 
-    http.POST[JsValue, PostIncomeSourceResponse](businessIncomeUrl(mtdbsaRef), Json.toJson(incomeSourceRequest))(implicitly,
+    val desHeaders: Seq[(String, String)] = Seq(
+      HeaderNames.authorisation -> appConfig.desAuthorisationToken,
+      appConfig.desEnvironmentHeader
+    )
+
+    http.POST[JsValue, PostIncomeSourceResponse](businessIncomeUrl(mtdbsaRef), Json.toJson(incomeSourceRequest), headers = desHeaders)(implicitly,
       implicitly[HttpReads[PostIncomeSourceResponse]], headerCarrier, implicitly)
   }
 }
-
-

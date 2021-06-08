@@ -18,7 +18,6 @@ package connectors
 
 import config.AppConfig
 import connectors.utilities.ConnectorUtils
-import javax.inject.Inject
 import models.ErrorModel
 import models.monitoring.getBusinessDetails.getBusinessDetailsModel
 import models.registration.{GetBusinessDetailsFailureResponseModel, GetBusinessDetailsSuccessResponseModel}
@@ -26,11 +25,10 @@ import play.api.Logger
 import play.api.http.Status._
 import play.api.mvc.Request
 import services.monitoring.AuditService
-import uk.gov.hmrc.http.logging.Authorization
-import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, HttpResponse}
-import uk.gov.hmrc.play.bootstrap.http.HttpClient
+import uk.gov.hmrc.http.{HeaderCarrier, HeaderNames, HttpClient, HttpReads, HttpResponse}
 import utils.Logging._
 
+import javax.inject.Inject
 import scala.annotation.switch
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -39,26 +37,28 @@ class BusinessDetailsConnector @Inject()(appConfig: AppConfig,
                                          auditService: AuditService
                                         )(implicit ec: ExecutionContext) extends RawResponseReads {
 
+  val logger: Logger = Logger(this.getClass)
+
   lazy val urlHeaderAuthorization: String = s"Bearer ${appConfig.desToken}"
 
   // API 5
   def getBusinessDetailsUrl(nino: String): String = s"${appConfig.desURL}${BusinessDetailsConnector.getBusinessDetailsUri(nino)}"
 
-  def createHeaderCarrierGet(headerCarrier: HeaderCarrier): HeaderCarrier =
-    headerCarrier.withExtraHeaders("Environment" -> appConfig.desEnvironment)
-      .copy(authorization = Some(Authorization(urlHeaderAuthorization)))
+  val desHeaders: Seq[(String, String)] = Seq(
+    HeaderNames.authorisation -> appConfig.desAuthorisationToken,
+    appConfig.desEnvironmentHeader
+  )
 
   def getBusinessDetails(nino: String)(implicit hc: HeaderCarrier, request: Request[_]): Future[GetBusinessDetailsUtil.Response] = {
     import GetBusinessDetailsUtil._
     lazy val requestDetails: Map[String, String] = Map("nino" -> nino)
-    val updatedHc = createHeaderCarrierGet(hc)
-    Logger.debug(s"BusinessDetailsConnector.getBusinessDetails - Request:\n$requestDetails\n\nRequest Headers:\n$updatedHc")
+    logger.debug(s"BusinessDetailsConnector.getBusinessDetails - Request:\n$requestDetails\n\nRequest Headers:\n$hc")
 
-    httpClient.GET[HttpResponse](getBusinessDetailsUrl(nino))(implicitly[HttpReads[HttpResponse]], updatedHc, ec)
+    httpClient.GET[HttpResponse](getBusinessDetailsUrl(nino), headers = desHeaders)(implicitly[HttpReads[HttpResponse]], hc, ec)
       .map { response =>
         response.status match {
           case OK =>
-            Logger.info("BusinessDetailsConnector.getBusinessDetails - Get Business Details responded with OK")
+            logger.info("BusinessDetailsConnector.getBusinessDetails - Get Business Details responded with OK")
             parseSuccess(response.body)
           case status =>
             @switch
@@ -75,10 +75,11 @@ class BusinessDetailsConnector @Inject()(appConfig: AppConfig,
             (status, code) match {
               case (NOT_FOUND, "NOT_FOUND_NINO") =>
                 // expected case, do not audit
-                Logger.info(s"BusinessDetailsConnector.getBusinessDetails - Get Business Details responded with nino not found")
+                logger.info(s"BusinessDetailsConnector.getBusinessDetails - Get Business Details responded with nino not found")
               case _ =>
-                auditService.audit(getBusinessDetailsModel(nino, suffix, response.body))(updatedHc, ec, request)
-                Logger.warn(s"BusinessDetailsConnector.getBusinessDetails - Get Business Details responded with an error, status=$status code=$code message=$message")
+                auditService.audit(getBusinessDetailsModel(nino, suffix, response.body))(hc, ec, request)
+                logger.warn(s"BusinessDetailsConnector.getBusinessDetails - Get Business Details responded with an error," +
+                  s" status=$status code=$code message=$message")
             }
             parseResponse
         }

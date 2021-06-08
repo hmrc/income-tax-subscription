@@ -19,13 +19,13 @@ package connectors.mocks
 import org.mockito.ArgumentMatchers
 import org.mockito.Mockito._
 import org.scalatest.BeforeAndAfterEach
-import org.scalatest.mockito.MockitoSugar
+import org.scalatestplus.mockito.MockitoSugar
 import play.api.libs.json.JsValue
+import uk.gov.hmrc.http.{HttpClient, HttpResponse}
 import uk.gov.hmrc.play.test.UnitSpec
 
 import scala.concurrent.{ExecutionContext, Future}
-import uk.gov.hmrc.http.{HttpGet, HttpPost, HttpResponse}
-import uk.gov.hmrc.play.bootstrap.http.HttpClient
+
 
 
 trait MockHttp extends UnitSpec with MockitoSugar with BeforeAndAfterEach {
@@ -61,10 +61,11 @@ trait MockHttp extends UnitSpec with MockitoSugar with BeforeAndAfterEach {
     verify(mockHttpClient, times(count)).POSTEmpty[HttpResponse](urlMatcher)(ArgumentMatchers.any(), ArgumentMatchers.any(), ArgumentMatchers.any[ExecutionContext])
   }
 
-  def setupMockHttpGet(url: Option[String] = None)(status: Int, response: JsValue): Unit = {
+  def setupMockHttpGet(url: Option[String] = None, headers: Option[Seq[(String, String)]] = None)(status: Int, response: JsValue): Unit = {
     lazy val urlMatcher = url.fold(ArgumentMatchers.any[String]())(x => ArgumentMatchers.eq(x))
+    lazy val headersMatcher = headers.fold(ArgumentMatchers.any[Seq[(String, String)]])(x => ArgumentMatchers.eq(x))
 
-    when(mockHttpClient.GET[HttpResponse](urlMatcher)(ArgumentMatchers.any(), ArgumentMatchers.any(), ArgumentMatchers.any[ExecutionContext])).thenReturn(Future.successful(HttpResponse(status, Some(response))))
+    when(mockHttpClient.GET[HttpResponse](urlMatcher, ArgumentMatchers.any() , headersMatcher)(ArgumentMatchers.any(), ArgumentMatchers.any(), ArgumentMatchers.any[ExecutionContext])).thenReturn(Future.successful(HttpResponse(status, Some(response))))
   }
 
   def setupMockHttpGetWithParams(url: Option[String], params: Option[Seq[(String, String)]])(status: Int, response: JsValue): Unit = {

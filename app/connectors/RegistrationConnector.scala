@@ -18,7 +18,6 @@ package connectors
 
 import config.AppConfig
 import connectors.RegistrationConnector._
-import javax.inject.Inject
 import models.ErrorModel
 import models.monitoring.RegistrationFailureAudit
 import play.api.Logger
@@ -26,15 +25,16 @@ import play.api.http.Status._
 import play.api.libs.json._
 import play.api.mvc.Request
 import services.monitoring.AuditService
-import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.http.logging.Authorization
-import uk.gov.hmrc.play.bootstrap.http.HttpClient
+import uk.gov.hmrc.http.{Authorization, HeaderCarrier, HeaderNames, HttpClient}
 
+import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
 class RegistrationConnector @Inject()(appConfig: AppConfig,
                                       httpClient: HttpClient,
                                       auditService: AuditService)(implicit ec: ExecutionContext) extends RawResponseReads {
+
+  val logger: Logger = Logger(this.getClass)
 
   def registerUrl(nino: String): String = s"${appConfig.desURL}/registration/individual/nino/$nino"
 
@@ -44,8 +44,12 @@ class RegistrationConnector @Inject()(appConfig: AppConfig,
       .withExtraHeaders(appConfig.desEnvironmentHeader)
       .copy(authorization = Some(Authorization(appConfig.desAuthorisationToken)))
 
+    val desHeaders: Seq[(String, String)] = Seq(
+      HeaderNames.authorisation -> appConfig.desAuthorisationToken,
+      appConfig.desEnvironmentHeader
+    )
 
-    httpClient.POST(registerUrl(nino), registerRequestBody(isAnAgent))(
+    httpClient.POST(registerUrl(nino), registerRequestBody(isAnAgent), headers = desHeaders)(
       implicitly,
       httpReads,
       headerCarrier,
@@ -53,10 +57,10 @@ class RegistrationConnector @Inject()(appConfig: AppConfig,
     ) map { response =>
       response.status match {
         case OK =>
-          Logger.info(s"[RegistrationConnector][register] - Successfully registered $nino")
+          logger.info(s"[RegistrationConnector][register] - Successfully registered $nino")
           Right(RegistrationSuccess)
         case status =>
-          Logger.warn(s"[RegistrationConnector][register] - Failed to register $nino, status: $status")
+          logger.warn(s"[RegistrationConnector][register] - Failed to register $nino, status: $status")
           auditService.audit(RegistrationFailureAudit(nino, status, registerRequestBody(isAnAgent), response.body))(
             headerCarrier, implicitly, implicitly
           )

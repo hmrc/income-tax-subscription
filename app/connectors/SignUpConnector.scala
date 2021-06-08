@@ -17,15 +17,12 @@
 package connectors
 
 import config.AppConfig
-import javax.inject.{Inject, Singleton}
-import parsers.SignUpParser.PostSignUpResponse
-import parsers.SignUpParser.signUpResponseHttpReads
+import parsers.SignUpParser.{PostSignUpResponse, signUpResponseHttpReads}
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.Request
-import uk.gov.hmrc.http.{HeaderCarrier, HttpReads}
-import uk.gov.hmrc.http.logging.Authorization
-import uk.gov.hmrc.play.bootstrap.http.HttpClient
+import uk.gov.hmrc.http.{Authorization, HeaderCarrier, HeaderNames, HttpClient, HttpReads}
 
+import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
@@ -44,14 +41,18 @@ class SignUpConnector @Inject()(http: HttpClient,
       """.stripMargin)
   }
 
-  def signUp(nino: String)(implicit hc: HeaderCarrier, request: Request[_]): Future[PostSignUpResponse] = {
+  def signUp(nino: String)(implicit hc: HeaderCarrier): Future[PostSignUpResponse] = {
 
     val headerCarrier: HeaderCarrier = hc
       .copy(authorization = Some(Authorization(appConfig.desAuthorisationToken)))
       .withExtraHeaders(appConfig.desEnvironmentHeader)
 
-    http.POST[JsValue, PostSignUpResponse](signUpUrl(nino), requestBody(nino))(implicitly, implicitly[HttpReads[PostSignUpResponse]], headerCarrier, implicitly)
+    val desHeaders: Seq[(String, String)] = Seq(
+      HeaderNames.authorisation -> appConfig.desAuthorisationToken,
+      appConfig.desEnvironmentHeader
+    )
+
+    http.POST[JsValue, PostSignUpResponse](signUpUrl(nino), requestBody(nino), headers = desHeaders)(
+      implicitly, implicitly[HttpReads[PostSignUpResponse]], headerCarrier, implicitly)
   }
 }
-
-
