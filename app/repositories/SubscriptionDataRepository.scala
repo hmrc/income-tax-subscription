@@ -16,10 +16,7 @@
 
 package repositories
 
-import java.time.Instant
-
 import config.MicroserviceAppConfig
-import javax.inject.{Inject, Singleton}
 import play.api.libs.json.{Format, JsObject, JsValue, Json}
 import play.modules.reactivemongo.ReactiveMongoComponent
 import reactivemongo.api.Cursor.FailOnError
@@ -29,6 +26,8 @@ import reactivemongo.bson.{BSONDocument, BSONObjectID}
 import reactivemongo.play.json.ImplicitBSONHandlers._
 import uk.gov.hmrc.mongo.ReactiveRepository
 
+import java.time.Instant
+import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
@@ -99,8 +98,17 @@ class SubscriptionDataRepository @Inject()(mongo: ReactiveMongoComponent,
   )
 
   collection.indexesManager.ensure(sessionIdIndex)
+
   collection.indexesManager.drop(ttlIndex.name.get) onComplete {
     _ => collection.indexesManager.ensure(ttlIndex)
   }
+
+  collection.update(ordered = false).one(q = Json.obj(), u = Json.obj(
+    "$set" -> Json.obj(
+      "lastUpdatedTimestamp" -> Json.obj(
+        "$date" -> Instant.now.toEpochMilli
+      ).as[JsValue]
+    ).as[JsValue]
+  ), multi = true)
 
 }
