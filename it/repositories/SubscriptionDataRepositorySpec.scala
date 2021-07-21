@@ -16,9 +16,9 @@
 
 package repositories
 
-import org.scalatest.BeforeAndAfterEach
+import org.scalatest.{Assertion, BeforeAndAfterEach}
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
-import play.api.libs.json.{JsObject, Json}
+import play.api.libs.json.{JsObject, JsValue, Json}
 import uk.gov.hmrc.play.test.UnitSpec
 
 import scala.concurrent.ExecutionContext.Implicits._
@@ -86,27 +86,40 @@ class SubscriptionDataRepositorySpec extends UnitSpec with GuiceOneAppPerSuite w
       "there is no document with the sessionId" in new Setup(testDocument("testSessionIdTwo")) {
         await(testSelfEmploymentsRepository.insertDataWithSession(testSessionId, testDataId, testData))
 
-        await(testSelfEmploymentsRepository.getSessionIdData(testSessionId)) shouldBe Some(Json.obj(
-          "sessionId" -> testSessionId,
-          testDataId -> testData
-        ))
+        val optionalData: Option[JsValue] = await(testSelfEmploymentsRepository.getSessionIdData(testSessionId))
+        optionalData.isDefined shouldBe true
+        val data: JsValue = optionalData.get
+        (data \ "sessionId").asOpt[String] shouldBe Some(testSessionId)
+        (data \ testDataId).asOpt[JsObject] shouldBe Some(testData)
+        (data \ "lastUpdatedTimestamp").isDefined shouldBe true
       }
+
+
 
       "there is a document with the sessionId but does not contain with the dataId" in new Setup(testDocument(testSessionId)) {
 
         await(testSelfEmploymentsRepository.insertDataWithSession(testSessionId, testDataId, testData))
 
-        await(testSelfEmploymentsRepository.getSessionIdData(testSessionId)) shouldBe Some(
-          testDocument(testSessionId) ++ Json.obj(testDataId -> testData)
-        )
+        val optionalData: Option[JsValue] = await(testSelfEmploymentsRepository.getSessionIdData(testSessionId))
+        optionalData.isDefined shouldBe true
+        val data: JsValue = optionalData.get
+        (data \ "sessionId").asOpt[String] shouldBe Some(testSessionId)
+        (data \ testDataId).asOpt[JsObject] shouldBe Some(testData)
+        (data \ "lastUpdatedTimestamp").isDefined shouldBe true
+        (data \ "testDataIdOne" \ "testDataIdOneKey").asOpt[String] shouldBe Some("testDataIdOneValue")
+        (data \ "testDataIdTwo" \ "testDataIdTwoKey").asOpt[String] shouldBe Some("testDataIdTwoValue")
       }
 
       "there is a document with the sessionId and the dataId" in new Setup(testDocument(testSessionId)) {
         await(testSelfEmploymentsRepository.insertDataWithSession(testSessionId, "testDataIdOne", testData))
 
-        await(testSelfEmploymentsRepository.getSessionIdData(testSessionId)) shouldBe Some(
-          testDocument(testSessionId) ++ Json.obj("testDataIdOne" -> testData)
-        )
+        val optionalData: Option[JsValue] = await(testSelfEmploymentsRepository.getSessionIdData(testSessionId))
+        optionalData.isDefined shouldBe true
+        val data: JsValue = optionalData.get
+        (data \ "sessionId").asOpt[String] shouldBe Some(testSessionId)
+        (data \ "lastUpdatedTimestamp").isDefined shouldBe true
+        (data \ "testDataIdOne").asOpt[JsObject] shouldBe Some(testData)
+        (data \ "testDataIdTwo" \ "testDataIdTwoKey").asOpt[String] shouldBe Some("testDataIdTwoValue")
       }
 
     }

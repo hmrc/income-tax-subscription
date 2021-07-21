@@ -65,7 +65,7 @@ class MicroserviceAppConfig @Inject()(servicesConfig: ServicesConfig) extends Ap
     servicesConfig.getInt(s"paperless-preference.expiry-seconds")
   }
 
-  lazy val timeToLiveSeconds: Long = loadConfig("mongodb.timeToLiveSeconds").toLong
+  lazy val timeToLiveSeconds: Int = loadConfig("mongodb.timeToLiveSeconds").toInt
 
   def businessSubscribeUrl(nino: String): String = s"$desURL/income-tax-self-assessment/nino/$nino/business"
 

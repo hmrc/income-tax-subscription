@@ -16,6 +16,8 @@
 
 package repositories
 
+import java.time.Instant
+
 import config.MicroserviceAppConfig
 import javax.inject.{Inject, Singleton}
 import play.api.libs.json.{Format, JsObject, JsValue, Json}
@@ -59,7 +61,11 @@ class SubscriptionDataRepository @Inject()(mongo: ReactiveMongoComponent,
 
   def insertDataWithSession(sessionId: String, dataId: String, data: JsValue): Future[Option[JsValue]] = {
     val selector: JsObject = Json.obj("sessionId" -> sessionId)
-    val set: JsValue = selector ++ Json.obj(dataId -> data)
+    val set: JsValue = selector ++ Json.obj(dataId -> data) ++ Json.obj(
+      "lastUpdatedTimestamp" -> Json.obj(
+        "$date" -> Instant.now.toEpochMilli
+      ).as[JsValue]
+    )
     val update: JsObject = Json.obj("$set" -> set)
     findAndUpdate(selector, update, fetchNewObject = true, upsert = true).map(_.result[JsValue])
   }
@@ -69,7 +75,7 @@ class SubscriptionDataRepository @Inject()(mongo: ReactiveMongoComponent,
     remove("sessionId" -> Json.toJson(sessionId))
   }
 
-  val creationTimestampKey = "creationTimestamp"
+  val lastUpdatedTimestampKey = "lastUpdatedTimestamp"
 
   private val sessionIdIndex =
     Index(Seq(("sessionId", IndexType.Ascending)),
@@ -82,7 +88,7 @@ class SubscriptionDataRepository @Inject()(mongo: ReactiveMongoComponent,
       options = BSONDocument())
 
   private lazy val ttlIndex = Index(
-    Seq((creationTimestampKey, IndexType.Ascending)),
+    Seq((lastUpdatedTimestampKey, IndexType.Ascending)),
     name = Some("selfEmploymentsDataExpires"),
     unique = false,
     background = false,
@@ -92,6 +98,9 @@ class SubscriptionDataRepository @Inject()(mongo: ReactiveMongoComponent,
     options = BSONDocument("expireAfterSeconds" -> appConfig.timeToLiveSeconds)
   )
 
-  collection.indexesManager.ensure(ttlIndex)
   collection.indexesManager.ensure(sessionIdIndex)
+  collection.indexesManager.drop(ttlIndex.name.get) onComplete {
+    _ => collection.indexesManager.ensure(ttlIndex)
+  }
+
 }
