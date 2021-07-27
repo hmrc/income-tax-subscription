@@ -98,17 +98,7 @@ class SubscriptionDataRepository @Inject()(mongo: ReactiveMongoComponent,
   )
 
   collection.indexesManager.ensure(sessionIdIndex)
-
-  collection.indexesManager.drop(ttlIndex.name.get) onComplete {
-    _ => collection.indexesManager.ensure(ttlIndex)
-  }
-
-  collection.update(ordered = false).one(q = Json.obj(), u = Json.obj(
-    "$set" -> Json.obj(
-      "lastUpdatedTimestamp" -> Json.obj(
-        "$date" -> Instant.now.toEpochMilli
-      ).as[JsValue]
-    ).as[JsValue]
-  ), multi = true)
-
+  collection.indexesManager.ensure(ttlIndex)
 }
+
+
