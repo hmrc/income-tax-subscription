@@ -27,7 +27,10 @@ sealed trait FeatureSwitch {
 object FeatureSwitch {
   val prefix = "feature-switch"
 
-  val switches: Set[FeatureSwitch] = Set(StubDESFeature)
+  val switches: Set[FeatureSwitch] = Set(
+    StubDESFeature,
+    SaveAndRetrieve
+  )
 
   def apply(str: String): FeatureSwitch =
     switches find (_.name == str) match {
@@ -45,4 +48,9 @@ object FeatureSwitch {
 object StubDESFeature extends FeatureSwitch {
   val displayName = s"Use stub for DES connection"
   val name = s"$prefix.stub-des"
+}
+
+object SaveAndRetrieve extends FeatureSwitch {
+  val displayName = s"Save & Retrieve"
+  val name = s"$prefix.enable-save-and-retrieve"
 }
