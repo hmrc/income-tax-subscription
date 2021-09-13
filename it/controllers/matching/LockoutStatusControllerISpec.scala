@@ -24,6 +24,7 @@ import org.scalatest.BeforeAndAfterEach
 import play.api.http.Status._
 import play.modules.reactivemongo.ReactiveMongoComponent
 import repositories.LockoutMongoRepository
+
 import scala.concurrent.ExecutionContext.Implicits.global
 
 class LockoutStatusControllerISpec extends ComponentSpecBase with BeforeAndAfterEach {
@@ -84,14 +85,16 @@ class LockoutStatusControllerISpec extends ComponentSpecBase with BeforeAndAfter
 
     }
     "returns an error if lock already exists" in {
+      def lockoutRequest = LockoutRequest(30)
+
       Given("I setup the wiremock stubs")
       AuthStub.stubAuthSuccess()
 
-      def lockoutRequest = LockoutRequest(30)
+      And("There is a previous lock set for the user")
+      IncomeTaxSubscription.lockoutAgent(testArn, lockoutRequest)
 
       When("I call POST /client-matching/lock/:arn where arn is the test arn")
       def res = IncomeTaxSubscription.lockoutAgent(testArn, lockoutRequest)
-      await(res)
 
       Then("The result should have a HTTP status of INTERNAL_SERVER_ERROR")
       res should have(

@@ -16,19 +16,19 @@
 
 package controllers.subscription
 
-import javax.inject.Inject
 import models.frontend.FEFailureResponse
 import play.api.Logger
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import services.{AuthService, SubscriptionStatusService}
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
-import utils.JsonUtils.toJsValue
+import utils.JsonUtils
 
+import javax.inject.Inject
 import scala.concurrent.ExecutionContext.Implicits.global
 
 class SubscriptionStatusController @Inject()(authService: AuthService,
                                              subscriptionStatusService: SubscriptionStatusService,
-                                             cc: ControllerComponents) extends BackendController(cc) {
+                                             cc: ControllerComponents) extends BackendController(cc) with JsonUtils {
 
   val logger: Logger = Logger(this.getClass)
 

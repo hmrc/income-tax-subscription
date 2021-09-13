@@ -16,9 +16,6 @@
 
 package helpers
 
-import java.time.{Instant, LocalDate, OffsetDateTime, ZoneId}
-import java.util.UUID
-
 import models.digitalcontact.PaperlessPreferenceKey
 import models.lockout.LockoutRequest
 import models.subscription._
@@ -28,9 +25,12 @@ import models.{DateModel, ErrorModel}
 import play.api.http.Status._
 import play.api.libs.json.{JsObject, JsValue, Json}
 import uk.gov.hmrc.domain.Generator
-import utils.JsonUtils._
+import utils.JsonUtils
 
-object IntegrationTestConstants {
+import java.time.{Instant, LocalDate, OffsetDateTime, ZoneId}
+import java.util.UUID
+
+object IntegrationTestConstants extends JsonUtils {
 
   lazy val testNino = new Generator().nextNino.nino
   // for the purpose of unit tests we only need a random string for the ARN
@@ -129,7 +129,7 @@ object IntegrationTestConstants {
     ),
     propertyIncome = PropertyIncomeModel(Cash)
   )
-  
+
   object GetBusinessDetailsResponse {
     val successResponse: (String, String, String) => JsValue = (nino: String, safeId: String, mtdbsa: String) =>
       s"""{
@@ -218,8 +218,8 @@ object IntegrationTestConstants {
     propertyAccountingMethod = Some(AccountingMethodPropertyModel(Cash))
   )
 
-  val testCreateIncomeSubmissionJson: JsValue =  {
-    val date=LocalDate.now()
+  val testCreateIncomeSubmissionJson: JsValue = {
+    val date = LocalDate.now()
     Json.parse(
       s"""
          | {

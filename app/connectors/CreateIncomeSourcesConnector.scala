@@ -17,8 +17,8 @@
 package connectors
 
 import config.AppConfig
-import models.monitoring.SignUpCompleteAudit
-import models.subscription.BusinessSubscriptionDetailsModel
+import models.monitoring.{CompletedSignUpAudit, SignUpCompleteAudit}
+import models.subscription.{BusinessSubscriptionDetailsModel, CreateIncomeSourcesModel}
 import parsers.CreateIncomeSourceParser._
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.Request
@@ -35,6 +35,30 @@ class CreateIncomeSourcesConnector @Inject()(http: HttpClient,
 
   def businessIncomeUrl(mtdbsaRef: String): String = s"${appConfig.desURL}/income-tax/income-sources/mtdbsa/$mtdbsaRef/ITSA/business"
 
+  def createBusinessIncomeSources(agentReferenceNumber: Option[String],
+                                  mtdbsaRef: String,
+                                  createIncomeSources: CreateIncomeSourcesModel)
+                                 (implicit hc: HeaderCarrier, request: Request[_]): Future[PostIncomeSourceResponse] = {
+
+    auditService.extendedAudit(CompletedSignUpAudit(agentReferenceNumber, createIncomeSources, appConfig.desAuthorisationToken))
+
+    val headerCarrier: HeaderCarrier = hc
+      .copy(authorization = Some(Authorization(appConfig.desAuthorisationToken)))
+      .withExtraHeaders(appConfig.desEnvironmentHeader)
+
+    val desHeaders: Seq[(String, String)] = Seq(
+      HeaderNames.authorisation -> appConfig.desAuthorisationToken,
+      appConfig.desEnvironmentHeader
+    )
+
+    http.POST[JsValue, PostIncomeSourceResponse](businessIncomeUrl(mtdbsaRef), Json.toJson(createIncomeSources), headers = desHeaders)(
+      implicitly,
+      implicitly[HttpReads[PostIncomeSourceResponse]],
+      headerCarrier,
+      implicitly
+    )
+
+  }
 
   def createBusinessIncome(agentReferenceNumber: Option[String],
                            mtdbsaRef: String,
