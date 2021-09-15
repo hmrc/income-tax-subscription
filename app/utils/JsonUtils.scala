@@ -33,4 +33,17 @@ trait JsonUtils extends Implicits {
 
 }
 
-object JsonUtils extends JsonUtils
+object JsonUtils {
+
+  implicit class JsObjectUtil(jsObject: JsObject) {
+
+    def ++(optJsObject: Option[JsObject]): JsObject = {
+      optJsObject match {
+        case None => jsObject
+        case Some(value) => jsObject ++ value
+      }
+    }
+
+  }
+
+}

@@ -19,13 +19,13 @@ package services.mocks
 import config.AppConfig
 import connectors.CreateIncomeSourcesConnector
 import connectors.mocks.MockHttp
-import models.subscription.BusinessSubscriptionDetailsModel
+import models.subscription.{BusinessSubscriptionDetailsModel, CreateIncomeSourcesModel}
 import org.mockito.ArgumentMatchers
 import org.mockito.Mockito.{reset, when}
 import org.scalatest.{BeforeAndAfterEach, Suite}
 import org.scalatestplus.mockito.MockitoSugar
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
-import parsers.CreateIncomeSourceParser.PostIncomeSourceResponse
+import parsers.CreateIncomeSourceParser.{PostIncomeSourceResponse, incomeSourceResponseHttpReads}
 import play.api.mvc.Request
 import services.monitoring.AuditService
 import uk.gov.hmrc.http.HeaderCarrier
@@ -40,15 +40,34 @@ trait MockIncomeSourcesConnector extends MockitoSugar with BeforeAndAfterEach wi
     super.beforeEach()
     reset(mockIncomeSourcesConnector)
   }
+
   val mockIncomeSourcesConnector: CreateIncomeSourcesConnector = mock[CreateIncomeSourcesConnector]
   val appConfig: AppConfig = app.injector.instanceOf[AppConfig]
   val auditService: AuditService = app.injector.instanceOf[AuditService]
   val connector = new CreateIncomeSourcesConnector(mockHttpClient, appConfig, auditService)
 
+  def mockCreateBusinessIncome(agentReferenceNumber: Option[String],
+                               mtdbsaRef: String,
+                               incomeSourceRequest: BusinessSubscriptionDetailsModel)
+                              (response: PostIncomeSourceResponse): Unit = {
+    when(mockIncomeSourcesConnector.createBusinessIncome(
+      ArgumentMatchers.eq(agentReferenceNumber),
+      ArgumentMatchers.eq(mtdbsaRef),
+      ArgumentMatchers.eq(incomeSourceRequest)
+    )(ArgumentMatchers.any[HeaderCarrier], ArgumentMatchers.any[Request[_]])).thenReturn(Future.successful(response))
+  }
 
-  def createBusinessIncome(agentreferenceNumber: Option[String], mtdbsaRef: String, incomeSourceRequest: BusinessSubscriptionDetailsModel)(response: Future[PostIncomeSourceResponse])(implicit hc: HeaderCarrier): Unit = {
-    when(mockIncomeSourcesConnector.createBusinessIncome(ArgumentMatchers.eq(agentreferenceNumber),ArgumentMatchers.eq(mtdbsaRef),ArgumentMatchers.eq(incomeSourceRequest))
-    (ArgumentMatchers.any[HeaderCarrier],ArgumentMatchers.any[Request[_]])).thenReturn(response)
+  def mockCreateBusinessIncomeSource(agentReferenceNumber: Option[String],
+                                     mtdbsaRef: String,
+                                     createIncomeSource: CreateIncomeSourcesModel)
+                                    (response: PostIncomeSourceResponse): Unit = {
+
+    when(mockIncomeSourcesConnector.createBusinessIncomeSources(
+      ArgumentMatchers.eq(agentReferenceNumber),
+      ArgumentMatchers.eq(mtdbsaRef),
+      ArgumentMatchers.eq(createIncomeSource)
+    )(ArgumentMatchers.any[HeaderCarrier], ArgumentMatchers.any[Request[_]])).thenReturn(Future.successful(response))
 
   }
+
 }

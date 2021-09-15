@@ -45,7 +45,7 @@ class SubscriptionStatusServiceSpec extends UnitSpec with TestSubscriptionStatus
     "return the Right(Some(FESuccessResponse)) when the person already have a mtditsa subscription" in {
       mockGetBusinessDetailsSuccess(testNino)
       // testMtditId must be the same value defined in getBusinessDetailsSuccess
-      call.right.get shouldBe Some(FESuccessResponse(testMtditId))
+      call.right.get shouldBe Some(FESuccessResponse(Some(testMtditId)))
     }
 
     "return the error for other error type" in {

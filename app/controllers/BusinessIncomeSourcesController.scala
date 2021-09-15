@@ -16,37 +16,47 @@
 
 package controllers
 
+import config.featureswitch.{FeatureSwitching, SaveAndRetrieve}
 import connectors.CreateIncomeSourcesConnector
-import javax.inject.{Inject, Singleton}
-import models.subscription.BusinessSubscriptionDetailsModel
+import models.subscription.{BusinessSubscriptionDetailsModel, CreateIncomeSourcesModel}
 import play.api.Logger
 import play.api.libs.json.JsValue
 import play.api.mvc._
 import services.AuthService
-import uk.gov.hmrc.auth.core.{Enrolment, EnrolmentIdentifier, Enrolments}
 import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals
-import uk.gov.hmrc.play.bootstrap.controller.BackendController
+import uk.gov.hmrc.auth.core.{Enrolment, EnrolmentIdentifier, Enrolments}
+import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
+import javax.inject.{Inject, Singleton}
 import scala.collection.immutable.::
 import scala.concurrent.ExecutionContext
 
 @Singleton
 class BusinessIncomeSourcesController @Inject()(authService: AuthService,
                                                 createIncomeSourcesConnector: CreateIncomeSourcesConnector,
-                                                cc: ControllerComponents)(implicit ec: ExecutionContext) extends BackendController(cc) {
+                                                cc: ControllerComponents)
+                                               (implicit ec: ExecutionContext) extends BackendController(cc) with FeatureSwitching {
 
   val logger: Logger = Logger(this.getClass)
 
   def createIncomeSource(mtdbsaRef: String): Action[JsValue] = Action.async(parse.json) { implicit request =>
     authService.authorised().retrieve(Retrievals.allEnrolments) { enrolments =>
-
-      val agentReferenceNumber : Option[String] = getArnFromEnrolments(enrolments)
-
-      withJsonBody[BusinessSubscriptionDetailsModel] { incomeSourceRequest =>
-        createIncomeSourcesConnector.createBusinessIncome(agentReferenceNumber, mtdbsaRef, incomeSourceRequest).map {
-          case Right(_) => NoContent
-          case Left(error) => logger.error(s"Error processing Business Income Source with status ${error.status} and message ${error.reason}")
-            InternalServerError("Business Income Source Failure")
+      val agentReferenceNumber: Option[String] = getArnFromEnrolments(enrolments)
+      if (isEnabled(SaveAndRetrieve)) {
+        withJsonBody[CreateIncomeSourcesModel] { incomeSources =>
+          createIncomeSourcesConnector.createBusinessIncomeSources(agentReferenceNumber, mtdbsaRef, incomeSources).map {
+            case Right(_) => NoContent
+            case Left(error) => logger.error(s"Error processing Business Income Source with status ${error.status} and message ${error.reason}")
+              InternalServerError("Business Income Source Failure")
+          }
+        }
+      } else {
+        withJsonBody[BusinessSubscriptionDetailsModel] { incomeSourceRequest =>
+          createIncomeSourcesConnector.createBusinessIncome(agentReferenceNumber, mtdbsaRef, incomeSourceRequest).map {
+            case Right(_) => NoContent
+            case Left(error) => logger.error(s"Error processing Business Income Source with status ${error.status} and message ${error.reason}")
+              InternalServerError("Business Income Source Failure")
+          }
         }
       }
     }

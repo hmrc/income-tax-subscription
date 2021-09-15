@@ -53,6 +53,15 @@ trait CustomMatchers {
       )
   }
 
+  def bodyOf(expectedValue: String): HavePropertyMatcher[WSResponse, String] = HavePropertyMatcher[WSResponse, String] { response =>
+    HavePropertyMatchResult(
+      response.body == expectedValue,
+      "bodyOf",
+      expectedValue,
+      response.body
+    )
+  }
+
   val emptyBody: HavePropertyMatcher[WSResponse, String] =
     new HavePropertyMatcher[WSResponse, String] {
       def apply(response: WSResponse) =

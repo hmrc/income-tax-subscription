@@ -22,13 +22,12 @@ import models.ErrorModel
 import models.registration.GetBusinessDetailsSuccessResponseModel
 import org.mockito.ArgumentMatchers
 import org.mockito.Mockito._
-import  org.scalatestplus.mockito.MockitoSugar
+import org.scalatestplus.mockito.MockitoSugar
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.http.Status._
 import play.api.libs.json.JsValue
 import services.monitoring.AuditService
 import uk.gov.hmrc.http.{HeaderNames, HttpClient}
-import utils.Implicits._
 import utils.TestConstants._
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -39,7 +38,6 @@ trait TestBusinessDetailsConnector extends MockHttp with GuiceOneAppPerSuite {
   lazy val appConfig: AppConfig = app.injector.instanceOf[AppConfig]
   lazy val httpClient: HttpClient = mockHttpClient
   lazy val auditService: AuditService = app.injector.instanceOf[AuditService]
-
 
   val mockBusinessDetails = (setupMockBusinessDetails(testNino) _).tupled
 
@@ -56,7 +54,7 @@ trait TestBusinessDetailsConnector extends MockHttp with GuiceOneAppPerSuite {
       HeaderNames.authorisation -> appConfig.desAuthorisationToken,
       appConfig.desEnvironmentHeader
     )
-    setupMockHttpGet(url = TestBusinessDetailsConnector.getBusinessDetailsUrl(nino), headers = headers)(status, response)
+    setupMockHttpGet(url = Some(TestBusinessDetailsConnector.getBusinessDetailsUrl(nino)), headers = Some(headers))(status, response)
   }
 }
 
@@ -65,7 +63,7 @@ trait MockBusinessDetailsConnector extends MockitoSugar {
   val mockBusinessDetailsConnector = mock[BusinessDetailsConnector]
 
   private def setupMockBusinessDetails(nino: String)(response: Future[GetBusinessDetailsUtil.Response]): Unit =
-    when(mockBusinessDetailsConnector.getBusinessDetails(ArgumentMatchers.eq(nino))(ArgumentMatchers.any(),ArgumentMatchers.any())).thenReturn(response)
+    when(mockBusinessDetailsConnector.getBusinessDetails(ArgumentMatchers.eq(nino))(ArgumentMatchers.any(), ArgumentMatchers.any())).thenReturn(response)
 
   def mockGetBusinessDetailsSuccess(nino: String): Unit =
     setupMockBusinessDetails(nino)(Future.successful(Right(GetBusinessDetailsSuccessResponseModel(testMtditId))))
