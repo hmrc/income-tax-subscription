@@ -45,10 +45,10 @@ class BusinessSubscriptionDetailsModelSpec extends UnitSpec {
 
     val json = Json.obj(
       "businessDetails" -> Json.arr(
-      Json.obj("accountingPeriodStartDate" -> "2018-04-06", "cashOrAccrualsFlag" -> "CASH", "typeOfBusiness" -> "self-employment",
+      Json.obj("accountingPeriodStartDate" -> "2018-04-06", "cashOrAccrualsFlag" -> "CASH", "typeOfBusiness" -> "Plumbing",
         "addressDetails" -> Json.obj("addressLine1" -> "line1", "addressLine2" ->"line2", "addressLine3" -> "line3", "addressLine4" -> "line4",
           "postalCode" -> "TF3 4NT", "countryCode" -> "GB"),
-        "tradingName" -> "Plumbing", "tradingStartDate" -> "2017-01-01", "accountingPeriodEndDate" -> "2019-04-05")),
+        "tradingName" -> "ABC Limited", "tradingStartDate" -> "2017-01-01", "accountingPeriodEndDate" -> "2019-04-05")),
       "ukPropertyDetails" -> Json.obj("tradingStartDate" -> "2018-07-06","cashOrAccrualsFlag" -> "ACCRUALS",
         "startDate" -> "2018-04-06"),
       "foreignPropertyDetails" -> Json.obj("tradingStartDate" -> "2018-08-06", "cashOrAccrualsFlag" -> "CASH", "startDate" -> "2018-04-06"))
@@ -77,10 +77,10 @@ class BusinessSubscriptionDetailsModelSpec extends UnitSpec {
     )
 
     val json = Json.obj("businessDetails" -> Json.arr(
-      Json.obj("accountingPeriodStartDate" -> "2018-04-06", "cashOrAccrualsFlag" -> "CASH", "typeOfBusiness" -> "self-employment",
+      Json.obj("accountingPeriodStartDate" -> "2018-04-06", "cashOrAccrualsFlag" -> "CASH", "typeOfBusiness" -> "Plumbing",
         "addressDetails" -> Json.obj("addressLine1" -> "line1", "addressLine2" ->"line2", "addressLine3" -> "line3",
           "postalCode" -> "TF3 4NT", "countryCode" -> "GB"),
-        "tradingName" -> "Plumbing", "tradingStartDate" -> "2017-01-01", "accountingPeriodEndDate" -> "2019-04-05")),
+        "tradingName" -> "ABC Limited", "tradingStartDate" -> "2017-01-01", "accountingPeriodEndDate" -> "2019-04-05")),
       "ukPropertyDetails" -> Json.obj("tradingStartDate" -> "2018-07-06","cashOrAccrualsFlag" -> "ACCRUALS",
         "startDate" -> "2018-04-06"))
 

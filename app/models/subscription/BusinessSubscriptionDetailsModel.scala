@@ -141,7 +141,7 @@ object BusinessSubscriptionDetailsModel {
       "businessDetails" -> details.selfEmploymentsData.map(_.map(
         data => Map("accountingPeriodStartDate" -> JsString(details.accountingPeriod.startDate.toDesDateFormat),
           "accountingPeriodEndDate" -> JsString(details.accountingPeriod.endDate.toDesDateFormat),
-          "tradingName" -> JsString(data.businessTradeName.map(_.businessTradeName).getOrElse(throw new Exception("Missing tradingName parameter"))),
+          "tradingName" -> JsString(data.businessName.map(_.businessName).getOrElse(throw new Exception("Missing businessName parameter"))),
           "addressDetails" -> JsObject(Json.obj(
             "addressLine1" -> data.businessAddress.map(_.address.lines.head).getOrElse(throw new Exception("Missing addressLine1 parameter")),
             "addressLine2" -> data.businessAddress.map(model => if(model.address.lines.length > 1) model.address.lines(1) else ""),
@@ -150,7 +150,7 @@ object BusinessSubscriptionDetailsModel {
             "postalCode" -> data.businessAddress.map(_.address.postcode).getOrElse(throw new Exception("Missing postalCode parameter")),
             "countryCode" -> "GB"
           ).fields.filterNot(json => withoutValue(json._2))),
-          "typeOfBusiness" -> JsString("self-employment"),
+          "typeOfBusiness" -> JsString(data.businessTradeName.map(_.businessTradeName).getOrElse(throw new Exception("Missing tradingName parameter"))),
           "tradingStartDate" -> JsString(data.businessStartDate.getOrElse(
             throw new Exception("Missing businessStartDate Parameter")).startDate.toDesDateFormat),
           "cashOrAccrualsFlag" -> details.accountingMethod.map(method =>JsString(method.stringValue.toUpperCase)).getOrElse(JsNull)
