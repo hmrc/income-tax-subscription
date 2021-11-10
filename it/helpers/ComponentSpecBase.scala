@@ -17,12 +17,9 @@
 package helpers
 
 import controllers.ITSASessionKeys
-import helpers.IntegrationTestConstants.testCreateIncomeSubmissionJson
 import helpers.servicemocks.AuditStub.stubAuditing
 import helpers.servicemocks.WireMockMethods
 import models.lockout.LockoutRequest
-import models.subscription.BusinessSubscriptionDetailsModel
-import models.subscription.incomesource.SignUpRequest
 import org.scalatest._
 import org.scalatest.concurrent.{Eventually, IntegrationPatience, ScalaFutures}
 import org.scalatestplus.play.guice.GuiceOneServerPerSuite
@@ -86,8 +83,6 @@ trait ComponentSpecBase extends UnitSpec
 
     def get(uri: String): WSResponse = await(buildClient(uri).get())
 
-    def createSubscription(body: SignUpRequest): WSResponse = post(s"/subscription-v2/${body.nino}", body)
-
     def signUp(nino: String): WSResponse = post(s"/mis/sign-up/${nino}", Json.parse("{}"))
 
     def businessIncomeSource(mtdbsaRef: String, body: JsValue): WSResponse = post(s"/mis/create/${mtdbsaRef}", body)
@@ -117,8 +112,8 @@ trait ComponentSpecBase extends UnitSpec
 
     def deleteDeleteAllSessionData: WSResponse = await(
       buildClient(s"/subscription-data/all")
-       .withHttpHeaders("X-Session-ID" -> "testSessionId")
-       .delete()
+        .withHttpHeaders("X-Session-ID" -> "testSessionId")
+        .delete()
     )
 
     def getAllSelfEmployments: WSResponse = await(

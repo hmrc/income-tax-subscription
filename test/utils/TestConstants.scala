@@ -23,7 +23,6 @@ import models.lockout.LockoutRequest
 import models.matching.LockoutResponse
 import models.subscription._
 import models.subscription.business.Cash
-import models.subscription.incomesource.{AccountingPeriod, BusinessIncomeModel, PropertyIncomeModel, SignUpRequest}
 import models.subscription.property.PropertySubscriptionResponseModel
 import play.api.http.Status._
 import play.api.libs.json.{JsValue, Json}
@@ -269,38 +268,6 @@ object TestConstants extends JsonUtils {
 
   val testEndDate = LocalDate.now().plusDays(1)
 
-  val testBusinessIncomeSourceModel = SignUpRequest(
-    nino = testNino,
-    arn = None,
-    businessIncome = Some(BusinessIncomeModel(
-      tradingName = None,
-      accountingPeriod = AccountingPeriod(testStartDate, testEndDate),
-      accountingMethod = Cash
-    )),
-    propertyIncome = None
-  )
-
-  val testPropertyIncomeSourceModel = SignUpRequest(
-    nino = testNino,
-    arn = None,
-    businessIncome = None,
-    propertyIncome = Some(PropertyIncomeModel(
-      accountingMethod = Cash
-    ))
-  )
-
-  val testBothIncomeSourceModel = SignUpRequest(
-    nino = testNino,
-    arn = None,
-    businessIncome = Some(BusinessIncomeModel(
-      tradingName = None,
-      accountingPeriod = AccountingPeriod(testStartDate, testEndDate),
-      accountingMethod = Cash
-    )),
-    propertyIncome = Some(PropertyIncomeModel(
-      accountingMethod = Cash
-    ))
-  )
 
   def testSignUpSubmission(nino: String): JsValue = Json.parse(
     s"""

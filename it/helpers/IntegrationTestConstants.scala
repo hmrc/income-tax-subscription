@@ -19,11 +19,10 @@ package helpers
 import models.digitalcontact.PaperlessPreferenceKey
 import models.lockout.LockoutRequest
 import models.subscription._
-import models.subscription.business.{Accruals, Cash}
-import models.subscription.incomesource.{AccountingPeriod, BusinessIncomeModel, PropertyIncomeModel, SignUpRequest}
+import models.subscription.business.Cash
 import models.{DateModel, ErrorModel}
 import play.api.http.Status._
-import play.api.libs.json.{JsObject, JsValue, Json}
+import play.api.libs.json.{JsValue, Json}
 import uk.gov.hmrc.domain.Generator
 import utils.JsonUtils
 
@@ -45,7 +44,6 @@ object IntegrationTestConstants extends JsonUtils {
   lazy val testTradingName: String = UUID.randomUUID().toString
   lazy val testStartDate: DateModel = LocalDate.now()
   lazy val testEndDate: DateModel = LocalDate.now().plusDays(2)
-  lazy val testAccountingPeriod: AccountingPeriod = AccountingPeriod(testStartDate, testEndDate)
 
   object Audit {
     val testAuditType = "testAuditType"
@@ -73,61 +71,12 @@ object IntegrationTestConstants extends JsonUtils {
 
   def offsetDateTime: OffsetDateTime = OffsetDateTime.ofInstant(Instant.now, ZoneId.systemDefault())
 
-  val testBusinessIncomeModel = BusinessIncomeModel(
-    tradingName = Some(testTradingName),
-    accountingPeriod = testAccountingPeriod,
-    accountingMethod = Cash
-  )
-
-  val testBusinessIncomeJson: JsObject = BusinessIncomeModel.writeToDes(testBusinessIncomeModel)
-
   val testPropertyIncomeCash = Json.obj("cashAccrualsFlag" -> "C")
   val testPropertyIncomeAccruals = Json.obj("cashAccrualsFlag" -> "A")
   val testPropertyIncomeNone = Json.obj()
 
-
-  val testPropertyIncomeModel = PropertyIncomeModel(
-    accountingMethod = Cash
-  )
-
   val lockoutRequest = LockoutRequest(
     timeoutSeconds = 10
-  )
-
-  val incomeSourceBusiness = SignUpRequest(
-    nino = testNino,
-    arn = None,
-    businessIncome = BusinessIncomeModel(
-      tradingName = testTradingName,
-      accountingPeriod = testAccountingPeriod,
-      accountingMethod = Cash
-    ),
-    propertyIncome = None
-  )
-
-  val incomeSourcePropertyCash = SignUpRequest(
-    nino = testNino,
-    arn = None,
-    businessIncome = None,
-    propertyIncome = PropertyIncomeModel(Cash)
-  )
-
-  val incomeSourcePropertyAccruals = SignUpRequest(
-    nino = testNino,
-    arn = None,
-    businessIncome = None,
-    propertyIncome = PropertyIncomeModel(Accruals)
-  )
-
-  val incomeSourceBoth = SignUpRequest(
-    nino = testNino,
-    arn = None,
-    businessIncome = BusinessIncomeModel(
-      tradingName = testTradingName,
-      accountingPeriod = testAccountingPeriod,
-      accountingMethod = Cash
-    ),
-    propertyIncome = PropertyIncomeModel(Cash)
   )
 
   object GetBusinessDetailsResponse {
