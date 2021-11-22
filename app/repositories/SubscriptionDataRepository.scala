@@ -17,6 +17,7 @@
 package repositories
 
 import config.MicroserviceAppConfig
+import config.featureswitch.{FeatureSwitching, SaveAndRetrieve}
 import play.api.libs.json.{Format, JsObject, JsValue, Json}
 import play.modules.reactivemongo.ReactiveMongoComponent
 import reactivemongo.api.Cursor.FailOnError
@@ -38,7 +39,7 @@ class SubscriptionDataRepository @Inject()(mongo: ReactiveMongoComponent,
     mongo.mongoConnector.db,
     implicitly[Format[JsObject]],
     implicitly[Format[BSONObjectID]]
-  ) {
+  ) with FeatureSwitching {
 
   private def find(selector: JsObject, projection: Option[JsObject] = None): Future[List[JsValue]] = {
     collection.find(selector, projection).cursor[JsObject]().collect(maxDocs = -1, FailOnError[List[JsObject]]())
@@ -86,6 +87,12 @@ class SubscriptionDataRepository @Inject()(mongo: ReactiveMongoComponent,
       version = None,
       options = BSONDocument())
 
+  private val ttlLength = if(isEnabled(SaveAndRetrieve)) {
+    appConfig.timeToLiveSecondsSaveAndRetrieve
+  }else{
+    appConfig.timeToLiveSeconds
+  }
+
   private lazy val ttlIndex = Index(
     Seq((lastUpdatedTimestampKey, IndexType.Ascending)),
     name = Some("selfEmploymentsDataExpires"),
@@ -94,10 +101,11 @@ class SubscriptionDataRepository @Inject()(mongo: ReactiveMongoComponent,
     dropDups = false,
     sparse = false,
     version = None,
-    options = BSONDocument("expireAfterSeconds" -> appConfig.timeToLiveSeconds)
+    options = BSONDocument("expireAfterSeconds" -> ttlLength)
   )
 
   collection.indexesManager.ensure(sessionIdIndex)
+  collection.indexesManager.drop("selfEmploymentsDataExpires")
   collection.indexesManager.ensure(ttlIndex)
 }
 

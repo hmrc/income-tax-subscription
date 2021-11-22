@@ -67,6 +67,8 @@ class MicroserviceAppConfig @Inject()(servicesConfig: ServicesConfig) extends Ap
 
   lazy val timeToLiveSeconds: Int = loadConfig("mongodb.timeToLiveSeconds").toInt
 
+  lazy val timeToLiveSecondsSaveAndRetrieve: Int = loadConfig("mongodb.timeToLiveSecondsSaveAndRetrieve").toInt
+
   def businessSubscribeUrl(nino: String): String = s"$desURL/income-tax-self-assessment/nino/$nino/business"
 
   def propertySubscribeUrl(nino: String): String = s"$desURL/income-tax-self-assessment/nino/$nino/properties"
