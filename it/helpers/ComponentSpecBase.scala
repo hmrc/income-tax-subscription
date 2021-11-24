@@ -41,8 +41,8 @@ trait ComponentSpecBase extends UnitSpec
     .configure(config)
     .build
 
-  val mockHost = WiremockHelper.wiremockHost
-  val mockPort = WiremockHelper.wiremockPort.toString
+  val mockHost: String = WiremockHelper.wiremockHost
+  val mockPort: String = WiremockHelper.wiremockPort.toString
   val mockUrl = s"http://$mockHost:$mockPort"
 
   def config: Map[String, String] = Map(
@@ -83,9 +83,9 @@ trait ComponentSpecBase extends UnitSpec
 
     def get(uri: String): WSResponse = await(buildClient(uri).get())
 
-    def signUp(nino: String): WSResponse = post(s"/mis/sign-up/${nino}", Json.parse("{}"))
+    def signUp(nino: String): WSResponse = post(s"/mis/sign-up/$nino", Json.parse("{}"))
 
-    def businessIncomeSource(mtdbsaRef: String, body: JsValue): WSResponse = post(s"/mis/create/${mtdbsaRef}", body)
+    def businessIncomeSource(mtdbsaRef: String, body: JsValue): WSResponse = post(s"/mis/create/$mtdbsaRef", body)
 
     def checkLockoutStatus(arn: String): WSResponse = get(s"/client-matching/lock/$arn")
 
@@ -95,29 +95,34 @@ trait ComponentSpecBase extends UnitSpec
 
     def getNino(token: String): WSResponse = get(s"/identifier-mapping/$token")
 
-    def getRetrieveSelfEmployments(dataId: String): WSResponse = await(
-      buildClient(s"/self-employments/id/$dataId")
+    def postRetrieveReference(utr: String): WSResponse = await(
+      buildClient(s"/subscription-data")
+        .withHttpHeaders("X-Session-ID" -> "testSessionId")
+        .post(Json.obj("utr" -> utr))
+    )
+
+    def getRetrieveSelfEmployments(reference: String, dataId: String): WSResponse = await(
+      buildClient(s"/subscription-data/$reference/id/$dataId")
         .withHttpHeaders("X-Session-ID" -> "testSessionId")
         .get()
     )
 
-    def postInsertSelfEmployments(dataId: String, body: JsValue): WSResponse = await(
-      buildClient(s"/self-employments/id/$dataId")
+    def postInsertSelfEmployments(reference: String, dataId: String, body: JsValue): WSResponse = await(
+      buildClient(s"/subscription-data/$reference/id/$dataId")
         .withHttpHeaders(
           "X-Session-ID" -> "testSessionId",
           "Content-Type" -> "application/json"
-        )
-        .post(body.toString())
+        ).post(body.toString())
     )
 
-    def deleteDeleteAllSessionData: WSResponse = await(
-      buildClient(s"/subscription-data/all")
+    def deleteDeleteAllSessionData(reference: String): WSResponse = await(
+      buildClient(s"/subscription-data/$reference/all")
         .withHttpHeaders("X-Session-ID" -> "testSessionId")
         .delete()
     )
 
-    def getAllSelfEmployments: WSResponse = await(
-      buildClient(s"/self-employments/all")
+    def getAllSelfEmployments(reference: String): WSResponse = await(
+      buildClient(s"/subscription-data/$reference/all")
         .withHttpHeaders("X-Session-ID" -> "testSessionId")
         .get()
     )
