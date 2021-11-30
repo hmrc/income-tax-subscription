@@ -16,6 +16,7 @@
 
 package controllers
 
+import config.featureswitch.{FeatureSwitching, SaveAndRetrieve}
 import helpers.ComponentSpecBase
 import helpers.servicemocks.AuthStub
 import play.api.http.Status._
@@ -24,12 +25,17 @@ import repositories.SubscriptionDataRepository
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
-class SubscriptionDataControllerISpec extends ComponentSpecBase {
+class SubscriptionDataControllerISpec extends ComponentSpecBase with FeatureSwitching {
 
   val repository: SubscriptionDataRepository = app.injector.instanceOf[SubscriptionDataRepository]
+
+  val reference: String = "test-reference"
+  val utr: String = "1234567890"
+
   val testJson: JsObject = Json.obj("testDataIdKey" -> "testDataIdValue")
   val testDocument: JsObject = Json.obj(
     "sessionId" -> "testSessionId",
+    "reference" -> reference,
     "testDataId" -> Json.obj(
       "testDataIdKey" -> "testDataIdValue",
       "testDataIdKey2" -> 1
@@ -38,6 +44,7 @@ class SubscriptionDataControllerISpec extends ComponentSpecBase {
 
   val testDocumentAll: JsObject = Json.obj(
     "sessionId" -> "testSessionId",
+    "reference" -> reference,
     "testDataId" -> Json.obj(
       "testDataIdKey" -> "testDataIdValue",
       "testDataIdKey2" -> 1
@@ -50,141 +57,212 @@ class SubscriptionDataControllerISpec extends ComponentSpecBase {
 
   override def beforeEach(): Unit = {
     await(repository.drop)
+    disable(SaveAndRetrieve)
     super.beforeEach()
   }
 
-  s"GET ${controllers.routes.SubscriptionDataController.getAllSelfEmployments().url}" should {
-    "return OK with all the data related to the user in mongo" when {
-      "the sessionId exists in mongo for the user" in {
-        AuthStub.stubAuthSuccess()
-        await(repository.insert(testDocumentAll))
+  def saveAndRetrieve(enableFeature: Boolean): Unit = {
+    if(enableFeature) enable(SaveAndRetrieve) else disable(SaveAndRetrieve)
+  }
 
-        IncomeTaxSubscription.getAllSelfEmployments should have(
+  s"POST ${controllers.routes.SubscriptionDataController.retrieveReference().url}" should {
+    "return OK with a reference" when {
+      "it already exists in the database" in {
+        AuthStub.stubAuthSuccess()
+        await(repository.insert(Json.obj(
+          "reference" -> reference,
+          "utr" -> utr,
+          "credId" -> "test-cred-id"
+        )))
+
+        IncomeTaxSubscription.postRetrieveReference(utr) should have(
           httpStatus(OK),
           jsonBodyOf(Json.obj(
-            "sessionId" -> "testSessionId",
-            "testDataId" -> Json.obj(
-              "testDataIdKey" -> "testDataIdValue",
-              "testDataIdKey2" -> 1
-            ),
-            "testDataId2" -> Json.obj(
-              "testDataId2Key" -> "testDataId2Value",
-              "testDataId2Key2" -> 2
+            "reference" -> reference
+          ))
+        )
+      }
+      "it is not already in the database" in {
+        AuthStub.stubAuthSuccess()
+
+        IncomeTaxSubscription.postRetrieveReference(utr) should have(
+          httpStatus(OK),
+          jsonBodyContainsField("reference")
+        )
+      }
+    }
+    "return UNAUTHORISED" when {
+      "the user is not authorised" in {
+        AuthStub.stubAuthFailure()
+
+        IncomeTaxSubscription.postRetrieveReference(utr) should have(
+          httpStatus(UNAUTHORIZED)
+        )
+      }
+    }
+  }
+
+  Seq(false, true) map { flag =>
+    s"when the save & retrieve feature switch is set to $flag" when {
+      s"GET ${controllers.routes.SubscriptionDataController.getAllSubscriptionData(reference).url}" should {
+        "return OK with all the data related to the user in mongo" when {
+          "the sessionId exists in mongo for the user" in {
+            saveAndRetrieve(flag)
+
+            AuthStub.stubAuthSuccess()
+            await(repository.insert(testDocumentAll))
+
+            IncomeTaxSubscription.getAllSelfEmployments(reference) should have(
+              httpStatus(OK),
+              jsonBodyOf(Json.obj(
+                "sessionId" -> "testSessionId",
+                "reference" -> reference,
+                "testDataId" -> Json.obj(
+                  "testDataIdKey" -> "testDataIdValue",
+                  "testDataIdKey2" -> 1
+                ),
+                "testDataId2" -> Json.obj(
+                  "testDataId2Key" -> "testDataId2Value",
+                  "testDataId2Key2" -> 2
+                )
+              ))
             )
-          ))
-        )
+          }
+        }
+        "return NO_CONTENT" when {
+          "the user's sessionId could not be found in mongo" in {
+            saveAndRetrieve(flag)
+
+            AuthStub.stubAuthSuccess()
+
+            IncomeTaxSubscription.getAllSelfEmployments(reference) should have(
+              httpStatus(NO_CONTENT),
+              emptyBody
+            )
+          }
+        }
+        "return unauthorised" when {
+          "the user is not authorised" in {
+            saveAndRetrieve(flag)
+
+            AuthStub.stubAuthFailure()
+
+            IncomeTaxSubscription.getAllSelfEmployments(reference) should have(
+              httpStatus(UNAUTHORIZED)
+            )
+          }
+        }
       }
-    }
-    "return NO_CONTENT" when {
-      "the user's sessionId could not be found in mongo" in {
-        AuthStub.stubAuthSuccess()
 
-        IncomeTaxSubscription.getAllSelfEmployments should have(
-          httpStatus(NO_CONTENT),
-          emptyBody
-        )
+      s"GET ${controllers.routes.SubscriptionDataController.retrieveSubscriptionData(reference, "testDataId").url}" should {
+        "return OK with the data related to the key in mongo" when {
+          "the data exists in mongo for the user" in {
+            saveAndRetrieve(flag)
+
+            AuthStub.stubAuthSuccess()
+            await(repository.insert(testDocument))
+
+            IncomeTaxSubscription.getRetrieveSelfEmployments(reference, "testDataId") should have(
+              httpStatus(OK),
+              jsonBodyOf(Json.obj(
+                "testDataIdKey" -> "testDataIdValue",
+                "testDataIdKey2" -> 1
+              ))
+            )
+          }
+        }
+        "return NO_CONTENT" when {
+          "the data could not be retrieved from mongo" in {
+            saveAndRetrieve(flag)
+
+            AuthStub.stubAuthSuccess()
+
+            IncomeTaxSubscription.getRetrieveSelfEmployments(reference, "testDataId") should have(
+              httpStatus(NO_CONTENT),
+              emptyBody
+            )
+          }
+        }
+        "return unauthorised" when {
+          "the user is not authorised" in {
+            saveAndRetrieve(flag)
+
+            AuthStub.stubAuthFailure()
+
+            IncomeTaxSubscription.getRetrieveSelfEmployments(reference, "testDataId") should have(
+              httpStatus(UNAUTHORIZED)
+            )
+          }
+        }
       }
-    }
-    "return unauthorised" when {
-      "the user is not authorised" in {
-        AuthStub.stubAuthFailure()
 
-        IncomeTaxSubscription.getAllSelfEmployments should have(
-          httpStatus(UNAUTHORIZED)
-        )
+      s"POST ${controllers.routes.SubscriptionDataController.insertSubscriptionData(reference, "testDataId").url}" should {
+        "return OK to upsert the data in mongo" when {
+          "the session document already existed for the user" in {
+            saveAndRetrieve(flag)
+
+            AuthStub.stubAuthSuccess()
+            await(repository.insert(testDocument))
+
+            IncomeTaxSubscription.postInsertSelfEmployments(reference, "testDataId", testJson) should have(
+              httpStatus(OK)
+            )
+          }
+          "the session document did not exist for the user" in {
+            saveAndRetrieve(flag)
+
+            AuthStub.stubAuthSuccess()
+
+            IncomeTaxSubscription.postInsertSelfEmployments(reference, "testDataId", testJson) should have(
+              httpStatus(OK)
+            )
+          }
+          "the data being stored is simple values" in {
+            saveAndRetrieve(flag)
+
+            AuthStub.stubAuthSuccess()
+
+            IncomeTaxSubscription.postInsertSelfEmployments(reference, "testDataId", Json.toJson("testValue")) should have(
+              httpStatus(OK)
+            )
+          }
+        }
+
+        "return unauthorised" when {
+          "the user is not authorised" in {
+            saveAndRetrieve(flag)
+
+            AuthStub.stubAuthFailure()
+
+            IncomeTaxSubscription.postInsertSelfEmployments(reference, "testDataId", testJson) should have(
+              httpStatus(UNAUTHORIZED)
+            )
+          }
+        }
       }
-    }
-  }
 
-  s"GET ${controllers.routes.SubscriptionDataController.retrieveSelfEmployments("testDataId").url}" should {
-    "return OK with the data related to the key in mongo" when {
-      "the data exists in mongo for the user" in {
-        AuthStub.stubAuthSuccess()
-        await(repository.insert(testDocument))
+      s"DELETE ${controllers.routes.SubscriptionDataController.deleteAllSubscriptionData(reference).url}" should {
+        "return OK remove all the data related to the user in mongo" when {
+          "the sessionId exists in mongo for the user" in {
+            saveAndRetrieve(flag)
 
-        IncomeTaxSubscription.getRetrieveSelfEmployments("testDataId") should have(
-          httpStatus(OK),
-          jsonBodyOf(Json.obj(
-            "testDataIdKey" -> "testDataIdValue",
-            "testDataIdKey2" -> 1
-          ))
-        )
-      }
-    }
-    "return NO_CONTENT" when {
-      "the data could not be retrieved from mongo" in {
-        AuthStub.stubAuthSuccess()
+            AuthStub.stubAuthSuccess()
+            await(repository.insert(testDocumentAll))
+            IncomeTaxSubscription.deleteDeleteAllSessionData(reference) should have(httpStatus(OK))
+          }
+        }
 
-        IncomeTaxSubscription.getRetrieveSelfEmployments("testDataId") should have(
-          httpStatus(NO_CONTENT),
-          emptyBody
-        )
-      }
-    }
-    "return unauthorised" when {
-      "the user is not authorised" in {
-        AuthStub.stubAuthFailure()
+        "return unauthorised" when {
+          "the user is not authorised" in {
+            saveAndRetrieve(flag)
 
-        IncomeTaxSubscription.getRetrieveSelfEmployments("testDataId") should have(
-          httpStatus(UNAUTHORIZED)
-        )
-      }
-    }
-  }
+            AuthStub.stubAuthFailure()
 
-  s"POST ${controllers.routes.SubscriptionDataController.insertSelfEmployments("testDataId").url}" should {
-    "return OK to upsert the data in mongo" when {
-      "the session document already existed for the user" in {
-        AuthStub.stubAuthSuccess()
-        await(repository.insert(testDocument))
-
-        IncomeTaxSubscription.postInsertSelfEmployments("testDataId", testJson) should have(
-          httpStatus(OK)
-        )
-      }
-      "the session document did not exist for the user" in {
-        AuthStub.stubAuthSuccess()
-
-        IncomeTaxSubscription.postInsertSelfEmployments("testDataId", testJson) should have(
-          httpStatus(OK)
-        )
-      }
-      "the data being stored is simple values" in {
-        AuthStub.stubAuthSuccess()
-
-        IncomeTaxSubscription.postInsertSelfEmployments("testDataId", Json.toJson("testValue")) should have(
-          httpStatus(OK)
-        )
-      }
-    }
-
-    "return unauthorised" when {
-      "the user is not authorised" in {
-        AuthStub.stubAuthFailure()
-
-        IncomeTaxSubscription.postInsertSelfEmployments("testDataId", testJson) should have(
-          httpStatus(UNAUTHORIZED)
-        )
-      }
-    }
-  }
-
-    s"DELETE ${controllers.routes.SubscriptionDataController.deleteAllSessionData().url}" should {
-    "return OK remove all the data related to the user in mongo" when {
-      "the sessionId exists in mongo for the user" in {
-        AuthStub.stubAuthSuccess()
-        await(repository.insert(testDocumentAll))
-        IncomeTaxSubscription.deleteDeleteAllSessionData should have(httpStatus(OK))
-      }
-    }
-
-    "return unauthorised" when {
-      "the user is not authorised" in {
-        AuthStub.stubAuthFailure()
-
-        IncomeTaxSubscription.deleteDeleteAllSessionData should have(
-          httpStatus(UNAUTHORIZED)
-        )
+            IncomeTaxSubscription.deleteDeleteAllSessionData(reference) should have(
+              httpStatus(UNAUTHORIZED)
+            )
+          }
+        }
       }
     }
   }

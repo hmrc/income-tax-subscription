@@ -18,8 +18,8 @@ package services.mocks
 
 import org.mockito.ArgumentMatchers
 import org.mockito.Mockito._
-import org.scalatestplus.mockito.MockitoSugar
 import org.scalatest.{BeforeAndAfterEach, Suite}
+import org.scalatestplus.mockito.MockitoSugar
 import play.api.libs.json.JsObject
 import reactivemongo.api.commands.WriteResult
 import services.SubscriptionDataService
@@ -29,7 +29,7 @@ import scala.concurrent.Future
 trait MockSubscriptionDataService extends BeforeAndAfterEach with MockitoSugar {
   self: Suite =>
 
-  val mockSubscriptionDataService = mock[SubscriptionDataService]
+  val mockSubscriptionDataService: SubscriptionDataService = mock[SubscriptionDataService]
 
   val mockDataId: String = "DataId"
 
@@ -38,23 +38,29 @@ trait MockSubscriptionDataService extends BeforeAndAfterEach with MockitoSugar {
     reset(mockSubscriptionDataService)
   }
 
-  def mockGetAllSelfEmployments(result: Option[JsObject]): Unit = {
-    when(mockSubscriptionDataService.getAllSelfEmployments(ArgumentMatchers.any()))
+  def mockRetrieveReference(utr: String, credId: String)(result: String): Unit = {
+    when(mockSubscriptionDataService.retrieveReference(ArgumentMatchers.eq(utr), ArgumentMatchers.eq(credId))(ArgumentMatchers.any()))
       .thenReturn(Future.successful(result))
   }
 
-  def mockRetrieveSelfEmployments(result: Option[JsObject]): Unit = {
-    when(mockSubscriptionDataService.retrieveSelfEmployments(ArgumentMatchers.eq(mockDataId))(ArgumentMatchers.any()))
+  def mockGetAllSelfEmployments(reference: String)(result: Option[JsObject]): Unit = {
+    when(mockSubscriptionDataService.getAllSubscriptionData(ArgumentMatchers.eq(reference))(ArgumentMatchers.any()))
       .thenReturn(Future.successful(result))
   }
 
-  def mockInsertSelfEmployments(data: JsObject)(result: Option[JsObject]): Unit = {
-    when(mockSubscriptionDataService.insertSelfEmployments(ArgumentMatchers.eq(mockDataId), ArgumentMatchers.eq(data))(ArgumentMatchers.any()))
+  def mockRetrieveSelfEmployments(reference: String)(result: Option[JsObject]): Unit = {
+    when(mockSubscriptionDataService.retrieveSubscriptionData(ArgumentMatchers.eq(reference), ArgumentMatchers.eq(mockDataId))(ArgumentMatchers.any()))
       .thenReturn(Future.successful(result))
   }
 
-  def mockDeleteSessionData(result: WriteResult): Unit = {
-    when(mockSubscriptionDataService.deleteSessionData(ArgumentMatchers.any()))
+  def mockInsertSelfEmployments(reference: String, data: JsObject)(result: Option[JsObject]): Unit = {
+    when(mockSubscriptionDataService.insertSubscriptionData(
+      ArgumentMatchers.eq(reference), ArgumentMatchers.eq(mockDataId), ArgumentMatchers.eq(data))(ArgumentMatchers.any()
+    )).thenReturn(Future.successful(result))
+  }
+
+  def mockDeleteSessionData(reference: String)(result: WriteResult): Unit = {
+    when(mockSubscriptionDataService.deleteAllSubscriptionData(ArgumentMatchers.eq(reference))(ArgumentMatchers.any()))
       .thenReturn(Future.successful(result))
   }
 

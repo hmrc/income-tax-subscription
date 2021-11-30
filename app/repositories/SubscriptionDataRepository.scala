@@ -25,9 +25,11 @@ import reactivemongo.api.commands.WriteResult
 import reactivemongo.api.indexes.{Index, IndexType}
 import reactivemongo.bson.{BSONDocument, BSONObjectID}
 import reactivemongo.play.json.ImplicitBSONHandlers._
+import uk.gov.hmrc.http.InternalServerException
 import uk.gov.hmrc.mongo.ReactiveRepository
 
 import java.time.Instant
+import java.util.UUID
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -45,22 +47,36 @@ class SubscriptionDataRepository @Inject()(mongo: ReactiveMongoComponent,
     collection.find(selector, projection).cursor[JsObject]().collect(maxDocs = -1, FailOnError[List[JsObject]]())
   }
 
-  def getSessionIdData(sessionId: String): Future[Option[JsValue]] = {
-    val selector = Json.obj("sessionId" -> sessionId)
+  def getSessionIdData(reference: String, sessionId: String): Future[Option[JsValue]] = {
+    val selector = Json.obj("reference" -> reference, "sessionId" -> sessionId)
     val projection = Json.obj(_Id -> 0)
     find(selector, Some(projection)) map (_.headOption)
   }
 
-  def getDataFromSession(sessionId: String, dataId: String): Future[Option[JsValue]] = {
-    getSessionIdData(sessionId) map { optData =>
+  def getReferenceData(reference: String): Future[Option[JsValue]] = {
+    val selector = Json.obj("reference" -> reference)
+    val projection = Json.obj(_Id -> 0)
+    find(selector, Some(projection)) map (_.headOption)
+  }
+
+  def getDataFromSession(reference: String, sessionId: String, dataId: String): Future[Option[JsValue]] = {
+    getSessionIdData(reference, sessionId) map { optData =>
       optData.flatMap { json =>
         (json \ dataId).asOpt[JsValue]
       }
     }
   }
 
-  def insertDataWithSession(sessionId: String, dataId: String, data: JsValue): Future[Option[JsValue]] = {
-    val selector: JsObject = Json.obj("sessionId" -> sessionId)
+  def getDataFromReference(reference: String, dataId: String): Future[Option[JsValue]] = {
+    getReferenceData(reference) map { optData =>
+      optData.flatMap { json =>
+        (json \ dataId).asOpt[JsValue]
+      }
+    }
+  }
+
+  def insertDataWithSession(reference: String, sessionId: String, dataId: String, data: JsValue): Future[Option[JsValue]] = {
+    val selector: JsObject = Json.obj("reference" -> reference, "sessionId" -> sessionId)
     val set: JsValue = selector ++ Json.obj(dataId -> data) ++ Json.obj(
       "lastUpdatedTimestamp" -> Json.obj(
         "$date" -> Instant.now.toEpochMilli
@@ -70,34 +86,105 @@ class SubscriptionDataRepository @Inject()(mongo: ReactiveMongoComponent,
     findAndUpdate(selector, update, fetchNewObject = true, upsert = true).map(_.result[JsValue])
   }
 
-  def deleteDataFromSessionId(sessionId: String): Future[WriteResult] = {
-    val selector = Json.obj("sessionId" -> sessionId)
-    remove("sessionId" -> Json.toJson(sessionId))
+  def insertDataWithReference(reference: String, dataId: String, data: JsValue): Future[Option[JsValue]] = {
+    val selector: JsObject = Json.obj("reference" -> reference)
+    val set: JsValue = selector ++ Json.obj(dataId -> data) ++ Json.obj(
+      "lastUpdatedTimestamp" -> Json.obj(
+        "$date" -> Instant.now.toEpochMilli
+      ).as[JsValue]
+    )
+    val update: JsObject = Json.obj("$set" -> set)
+    findAndUpdate(selector, update, fetchNewObject = true, upsert = true) map (_.result[JsValue])
+  }
+
+  def deleteDataFromSessionId(reference: String, sessionId: String): Future[WriteResult] = {
+    remove("reference" -> reference, "sessionId" -> Json.toJson(sessionId))
+  }
+
+  def deleteDataFromReference(reference: String): Future[WriteResult] = {
+    remove("reference" -> Json.toJson(reference))
+  }
+
+  def retrieveReference(utr: String, credId: String): Future[Option[String]] = {
+    val selector: JsObject = Json.obj("utr" -> utr, "credId" -> credId)
+    val projection = Json.obj(_Id -> 0)
+    find(selector, Some(projection)).map {
+      _.headOption map { json =>
+        (json \ "reference").asOpt[String] match {
+          case Some(reference) =>
+            reference
+          case None =>
+            throw new InternalServerException("[SubscriptionDataRepository][retrieveReference] - Document exists without reference, unable to retrieve")
+        }
+      }
+    }
+  }
+
+  def createReference(utr: String, credId: String, sessionId: String): Future[String] = {
+    val reference: String = UUID.randomUUID().toString
+    val document: JsObject = Json.obj(
+      "utr" -> utr,
+      "credId" -> credId,
+      "reference" -> reference,
+      "sessionId" -> sessionId,
+      "lastUpdatedTimestamp" -> Json.obj(
+        "$date" -> Instant.now.toEpochMilli
+      ).as[JsValue]
+    )
+    insert(document).map { result =>
+      if (result.ok) reference
+      else throw new InternalServerException("[SubscriptionDataRepository][createReference] - Unable to create document reference")
+    }
   }
 
   val lastUpdatedTimestampKey = "lastUpdatedTimestamp"
 
-  private val sessionIdIndex =
+  val sessionIdIndex: Index =
     Index(Seq(("sessionId", IndexType.Ascending)),
       name = Some("sessionIdIndex"),
       unique = false,
-      background = true,
       dropDups = false,
-      sparse = false,
+      sparse = true,
       version = None,
       options = BSONDocument())
 
-  private val ttlLength = if(isEnabled(SaveAndRetrieve)) {
+  private val ttlLength = if (isEnabled(SaveAndRetrieve)) {
     appConfig.timeToLiveSecondsSaveAndRetrieve
-  }else{
+  } else {
     appConfig.timeToLiveSeconds
   }
 
-  private lazy val ttlIndex = Index(
+  val utrCredIndex: Index =
+    Index(
+      key = Seq(
+        "utr" -> IndexType.Ascending,
+        "credId" -> IndexType.Ascending
+      ),
+      name = Some("utrCredIndex"),
+      unique = true,
+      dropDups = false,
+      sparse = true,
+      version = None,
+      options = BSONDocument()
+    )
+
+  val referenceIndex: Index =
+    Index(
+      key = Seq(
+        "reference" -> IndexType.Ascending,
+      ),
+      name = Some("referenceIndex"),
+      unique = true,
+      dropDups = false,
+      sparse = true,
+      version = None,
+      options = BSONDocument()
+    )
+
+  lazy val ttlIndex: Index = Index(
     Seq((lastUpdatedTimestampKey, IndexType.Ascending)),
     name = Some("selfEmploymentsDataExpires"),
     unique = false,
-    background = false,
     dropDups = false,
     sparse = false,
     version = None,
@@ -105,8 +192,15 @@ class SubscriptionDataRepository @Inject()(mongo: ReactiveMongoComponent,
   )
 
   collection.indexesManager.ensure(sessionIdIndex)
+
   collection.indexesManager.drop("selfEmploymentsDataExpires")
   collection.indexesManager.ensure(ttlIndex)
+
+  collection.indexesManager.drop("utrCredIndex")
+  collection.indexesManager.ensure(utrCredIndex)
+
+  collection.indexesManager.ensure(referenceIndex)
+
 }
 
 

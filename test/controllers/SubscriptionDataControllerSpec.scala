@@ -17,11 +17,12 @@
 package controllers
 
 import play.api.libs.json.{JsObject, Json}
-import play.api.mvc.Result
+import play.api.mvc.{AnyContentAsEmpty, Result}
 import play.api.test.FakeRequest
-import play.api.test.Helpers.{stubControllerComponents, _}
+import play.api.test.Helpers._
 import reactivemongo.api.commands.UpdateWriteResult
 import services.mocks.{MockAuthService, MockSubscriptionDataService}
+import uk.gov.hmrc.auth.core.retrieve.Credentials
 import uk.gov.hmrc.play.test.UnitSpec
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -34,16 +35,45 @@ class SubscriptionDataControllerSpec extends UnitSpec with MockSubscriptionDataS
   val testJson: JsObject = Json.obj(
     "testDataIdKey" -> "testDataIdValue"
   )
+  val reference: String = "test-reference"
 
-  val request = FakeRequest()
+  val request: FakeRequest[AnyContentAsEmpty.type] = FakeRequest()
+
+  "retrieveReference" should {
+    "return an InternalServerError" when {
+      "the user has no credentials" in {
+        mockRetrievalSuccess[Option[Credentials]](None)
+
+        val result = TestController.retrieveReference()(request.withBody(Json.obj()))
+
+        status(result) shouldBe INTERNAL_SERVER_ERROR
+      }
+      "an invalid payload is received" in {
+        mockRetrievalSuccess[Option[Credentials]](Some(Credentials("test-cred-id", "ggProvider")))
+
+        val result = TestController.retrieveReference()(request.withBody(Json.obj()))
+
+        status(result) shouldBe INTERNAL_SERVER_ERROR
+      }
+    }
+    "return Ok with a reference" in {
+      mockRetrievalSuccess[Option[Credentials]](Some(Credentials("test-cred-id", "ggProvider")))
+      mockRetrieveReference("1234567890", "test-cred-id")(reference)
+
+      val result = TestController.retrieveReference()(request.withBody(Json.obj("utr" -> "1234567890")))
+
+      status(result) shouldBe OK
+    }
+  }
 
   "getAllSelfEmployments" should {
     "return OK" when {
       "some data is returned from the service" in {
         mockAuthSuccess()
-        mockGetAllSelfEmployments(Some(testJson))
 
-        val result = TestController.getAllSelfEmployments(request)
+        mockGetAllSelfEmployments(reference)(Some(testJson))
+
+        val result = TestController.getAllSubscriptionData(reference)(request)
 
         status(result) shouldBe OK
         contentAsJson(result) shouldBe testJson
@@ -53,9 +83,9 @@ class SubscriptionDataControllerSpec extends UnitSpec with MockSubscriptionDataS
     "return NoContent" when {
       "no data is returned from the service" in {
         mockAuthSuccess()
-        mockGetAllSelfEmployments(None)
+        mockGetAllSelfEmployments(reference)(None)
 
-        val result = TestController.getAllSelfEmployments(request)
+        val result = TestController.getAllSubscriptionData(reference)(request)
 
         status(result) shouldBe NO_CONTENT
       }
@@ -66,9 +96,9 @@ class SubscriptionDataControllerSpec extends UnitSpec with MockSubscriptionDataS
     "return OK" when {
       "some data related to the dataId is returned from the service" in {
         mockAuthSuccess()
-        mockRetrieveSelfEmployments(Some(testJson))
+        mockRetrieveSelfEmployments(reference)(Some(testJson))
 
-        val result = TestController.retrieveSelfEmployments(mockDataId)(request)
+        val result = TestController.retrieveSubscriptionData(reference, mockDataId)(request)
 
         status(result) shouldBe OK
         contentAsJson(result) shouldBe testJson
@@ -78,9 +108,9 @@ class SubscriptionDataControllerSpec extends UnitSpec with MockSubscriptionDataS
     "return NoContent" when {
       "no data is returned from the service for the dataId" in {
         mockAuthSuccess()
-        mockRetrieveSelfEmployments(None)
+        mockRetrieveSelfEmployments(reference)(None)
 
-        val result = TestController.retrieveSelfEmployments(mockDataId)(request)
+        val result = TestController.retrieveSubscriptionData(reference, mockDataId)(request)
 
         status(result) shouldBe NO_CONTENT
       }
@@ -93,9 +123,9 @@ class SubscriptionDataControllerSpec extends UnitSpec with MockSubscriptionDataS
         val fakeRequest = FakeRequest().withBody(testJson)
 
         mockAuthSuccess()
-        mockInsertSelfEmployments(testJson)(Some(testJson))
+        mockInsertSelfEmployments(reference, testJson)(Some(testJson))
 
-        val result: Future[Result] = TestController.insertSelfEmployments(mockDataId)(fakeRequest)
+        val result: Future[Result] = TestController.insertSubscriptionData(reference, mockDataId)(fakeRequest)
 
         status(result) shouldBe OK
       }
@@ -106,9 +136,9 @@ class SubscriptionDataControllerSpec extends UnitSpec with MockSubscriptionDataS
     "return OK" when {
       "the data related to the given sessionId have been deleted successfully and an OK status returned from the service" in {
         mockAuthSuccess()
-        mockDeleteSessionData(UpdateWriteResult(true, 1, 1, Seq(), Seq(), None, None, None))
+        mockDeleteSessionData(reference)(UpdateWriteResult(ok = true, 1, 1, Seq(), Seq(), None, None, None))
 
-        val result = await(TestController.deleteAllSessionData(request))
+        val result = await(TestController.deleteAllSubscriptionData(reference)(request))
 
         status(result) shouldBe OK
       }
@@ -117,9 +147,9 @@ class SubscriptionDataControllerSpec extends UnitSpec with MockSubscriptionDataS
     "throw an exception" when {
       "delete session data fails" in {
         mockAuthSuccess()
-        mockDeleteSessionData(UpdateWriteResult(false, 1, 1, Seq(), Seq(), None, Some(500), None))
+        mockDeleteSessionData(reference)(UpdateWriteResult(ok = false, 1, 1, Seq(), Seq(), None, Some(INTERNAL_SERVER_ERROR), None))
 
-        val ex = intercept[RuntimeException](await(TestController.deleteAllSessionData(request)))
+        val ex = intercept[RuntimeException](await(TestController.deleteAllSubscriptionData(reference)(request)))
         ex.getMessage shouldBe "[SubscriptionDataController][deleteAllSessionData] - delete session data failed with code 500"
       }
     }

@@ -16,7 +16,11 @@
 
 package services
 
+import config.featureswitch.{FeatureSwitching, SaveAndRetrieve}
+import controllers.Assets.OK
+import org.mockito.ArgumentMatchers
 import org.mockito.Mockito._
+import org.scalatest.BeforeAndAfterEach
 import org.scalatestplus.mockito.MockitoSugar
 import play.api.libs.json.{JsObject, Json}
 import reactivemongo.api.commands.UpdateWriteResult
@@ -27,11 +31,16 @@ import uk.gov.hmrc.play.test.UnitSpec
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class SubscriptionDataServiceSpec extends UnitSpec with MockitoSugar {
+class SubscriptionDataServiceSpec extends UnitSpec with MockitoSugar with FeatureSwitching with BeforeAndAfterEach {
+
+  override def beforeEach(): Unit = {
+    super.beforeEach()
+    disable(SaveAndRetrieve)
+  }
 
   trait Setup {
-    val mockSelfEmploymentsRepository: SubscriptionDataRepository = mock[SubscriptionDataRepository]
-    val service = new SubscriptionDataService(mockSelfEmploymentsRepository)
+    val mockSubscriptionDataRepository: SubscriptionDataRepository = mock[SubscriptionDataRepository]
+    val service = new SubscriptionDataService(mockSubscriptionDataRepository)
   }
 
   val testJson: JsObject = Json.obj(
@@ -39,12 +48,15 @@ class SubscriptionDataServiceSpec extends UnitSpec with MockitoSugar {
   )
   val testSessionId: String = "sessionId"
   val testDataId: String = "dataId"
+  val reference: String = "test-reference"
+  val utr: String = "1234567890"
+  val credId: String = "test-cred-id"
 
   "sessionIdFromHC" should {
     "return the sessionId" when {
       "there is one sessionId value" in new Setup {
         implicit val hc: HeaderCarrier = HeaderCarrier(sessionId = Some(SessionId(testSessionId)))
-        val result = service.sessionIdFromHC(hc)
+        val result: String = service.sessionIdFromHC(hc)
         result shouldBe testSessionId
       }
     }
@@ -60,54 +72,140 @@ class SubscriptionDataServiceSpec extends UnitSpec with MockitoSugar {
 
   }
 
-  "getAllSelfEmployments" should {
-    "call the repo with the sessionId" when {
-      "available in the headerCarrier" in new Setup {
+  "retrieveReference" should {
+    "return the reference from the database" when {
+      "it exists in the database" in new Setup {
         implicit val hc: HeaderCarrier = HeaderCarrier(sessionId = Some(SessionId(testSessionId)))
 
-        when(mockSelfEmploymentsRepository.getSessionIdData(testSessionId))
-          .thenReturn(Future.successful(Some(testJson)))
+        when(mockSubscriptionDataRepository.retrieveReference(ArgumentMatchers.eq(utr), ArgumentMatchers.eq(credId)))
+          .thenReturn(Future.successful(Some(reference)))
 
-        await(service.getAllSelfEmployments) shouldBe Some(testJson)
+        val result: String = await(service.retrieveReference(utr, credId))
+
+        result shouldBe reference
+      }
+    }
+    "create a reference in the database" when {
+      "it doesn't exist in the database" in new Setup {
+        implicit val hc: HeaderCarrier = HeaderCarrier(sessionId = Some(SessionId(testSessionId)))
+
+        when(mockSubscriptionDataRepository.retrieveReference(ArgumentMatchers.eq(utr), ArgumentMatchers.eq(credId)))
+          .thenReturn(Future.successful(None))
+        when(mockSubscriptionDataRepository.createReference(ArgumentMatchers.eq(utr), ArgumentMatchers.eq(credId), ArgumentMatchers.eq(testSessionId)))
+          .thenReturn(Future.successful(reference))
+
+        val result: String = await(service.retrieveReference(utr, credId))
+
+        result shouldBe reference
       }
     }
   }
 
-  "retrieveSelfEmployments" should {
-    "call the repo with the sessionId and dataId" when {
-      "sessionId is available in the headerCarrier" in new Setup {
-        implicit val hc: HeaderCarrier = HeaderCarrier(sessionId = Some(SessionId(testSessionId)))
+  "getAllSubscriptionData" when {
+    "the save & retrieve feature switch is disabled" should {
+      "retrieve all data using the session id" when {
+        "available in the headerCarrier" in new Setup {
+          implicit val hc: HeaderCarrier = HeaderCarrier(sessionId = Some(SessionId(testSessionId)))
 
-        when(mockSelfEmploymentsRepository.getDataFromSession(testSessionId, testDataId))
+          when(mockSubscriptionDataRepository.getSessionIdData(reference, testSessionId))
+            .thenReturn(Future.successful(Some(testJson)))
+
+          await(service.getAllSubscriptionData(reference)) shouldBe Some(testJson)
+        }
+      }
+    }
+    "the save and retrieve feature switch is enabled" should {
+      "retrieve all data using the reference" in new Setup {
+        enable(SaveAndRetrieve)
+
+        implicit val hc: HeaderCarrier = HeaderCarrier()
+
+        when(mockSubscriptionDataRepository.getReferenceData(ArgumentMatchers.eq(reference)))
           .thenReturn(Future.successful(Some(testJson)))
 
-        await(service.retrieveSelfEmployments(testDataId)) shouldBe Some(testJson)
+        await(service.getAllSubscriptionData(reference)) shouldBe Some(testJson)
       }
     }
   }
 
-  "insertSelfEmployments" should {
-    "call the repo with the sessionId, dataId and data" when {
-      "sessionId is available in the headerCarrier" in new Setup {
-        implicit val hc: HeaderCarrier = HeaderCarrier(sessionId = Some(SessionId(testSessionId)))
+  "retrieveSubscriptionData" when {
+    "the save and retrieve feature switch is disabled" should {
+      "retrieve the data using session id and the data id" when {
+        "sessionId is available in the headerCarrier" in new Setup {
+          implicit val hc: HeaderCarrier = HeaderCarrier(sessionId = Some(SessionId(testSessionId)))
 
-        when(mockSelfEmploymentsRepository.insertDataWithSession(testSessionId, testDataId, testJson))
+          when(mockSubscriptionDataRepository.getDataFromSession(reference, testSessionId, testDataId))
+            .thenReturn(Future.successful(Some(testJson)))
+
+          await(service.retrieveSubscriptionData(reference, testDataId)) shouldBe Some(testJson)
+        }
+      }
+    }
+    "the save and retrieve feature switch is enabled" should {
+      "retrieve the data using reference and data id" in new Setup {
+        enable(SaveAndRetrieve)
+
+        implicit val hc: HeaderCarrier = HeaderCarrier()
+
+        when(mockSubscriptionDataRepository.getDataFromReference(ArgumentMatchers.eq(reference), ArgumentMatchers.eq(testDataId)))
           .thenReturn(Future.successful(Some(testJson)))
 
-        await(service.insertSelfEmployments(testDataId, testJson)) shouldBe Some(testJson)
+        await(service.retrieveSubscriptionData(reference, testDataId)) shouldBe Some(testJson)
       }
     }
   }
 
-  "deleteSessionData" should {
-    "call the repo with the sessionId" when {
-      "sessionId is available in the headerCarrier" in new Setup {
-        implicit val hc: HeaderCarrier = HeaderCarrier(sessionId = Some(SessionId(testSessionId)))
+  "insertSubscriptionData" when {
+    "the save and retrieve feature switch is disabled" should {
+      "insert the data using the session id" when {
+        "sessionId is available in the headerCarrier" in new Setup {
+          implicit val hc: HeaderCarrier = HeaderCarrier(sessionId = Some(SessionId(testSessionId)))
 
-        when(mockSelfEmploymentsRepository.deleteDataFromSessionId(testSessionId))
-          .thenReturn(Future.successful(UpdateWriteResult(true, 1, 1, Seq(), Seq(), None, Some(200), None)))
+          when(mockSubscriptionDataRepository.insertDataWithSession(reference, testSessionId, testDataId, testJson))
+            .thenReturn(Future.successful(Some(testJson)))
 
-        await(service.deleteSessionData).ok shouldBe true
+          await(service.insertSubscriptionData(reference, testDataId, testJson)) shouldBe Some(testJson)
+        }
+      }
+    }
+    "the save and retrieve feature switch is enabled" should {
+      "insert the data using the reference" in new Setup {
+        enable(SaveAndRetrieve)
+
+        implicit val hc: HeaderCarrier = HeaderCarrier()
+
+        when(mockSubscriptionDataRepository.insertDataWithReference(
+          ArgumentMatchers.eq(reference), ArgumentMatchers.eq(testDataId), ArgumentMatchers.eq(testJson))
+        ) thenReturn Future.successful(Some(testJson))
+
+        await(service.insertSubscriptionData(reference, testDataId, testJson)) shouldBe Some(testJson)
+      }
+    }
+  }
+
+  "deleteAllSubscriptionData" when {
+    "the save & retrieve feature switch is disabled" should {
+      "delete the document using session id" when {
+        "sessionId is available in the headerCarrier" in new Setup {
+          implicit val hc: HeaderCarrier = HeaderCarrier(sessionId = Some(SessionId(testSessionId)))
+
+          when(mockSubscriptionDataRepository.deleteDataFromSessionId(ArgumentMatchers.eq(reference), ArgumentMatchers.eq(testSessionId)))
+            .thenReturn(Future.successful(UpdateWriteResult(ok = true, 1, 1, Seq(), Seq(), None, Some(OK), None)))
+
+          await(service.deleteAllSubscriptionData(reference)).ok shouldBe true
+        }
+      }
+    }
+    "the save & retrieve feature switch is enabled" should {
+      "delete the document using reference" in new Setup {
+        enable(SaveAndRetrieve)
+
+        implicit val hc: HeaderCarrier = HeaderCarrier()
+
+        when(mockSubscriptionDataRepository.deleteDataFromReference(ArgumentMatchers.eq(reference)))
+          .thenReturn(Future.successful(UpdateWriteResult(ok = true, 1, 1, Seq(), Seq(), None, Some(OK), None)))
+
+        await(service.deleteAllSubscriptionData(reference)).ok shouldBe true
       }
     }
   }

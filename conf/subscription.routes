@@ -6,10 +6,11 @@ POST        /client-matching/lock/:arn        controllers.matching.LockoutStatus
 GET         /identifier-mapping/:token        controllers.digitalcontact.PaperlessPreferenceController.getNino(token:String)
 POST        /identifier-mapping/:token        controllers.digitalcontact.PaperlessPreferenceController.storeNino(token:String)
 
-GET         /self-employments/all             controllers.SubscriptionDataController.getAllSelfEmployments
-GET         /self-employments/id/:id          controllers.SubscriptionDataController.retrieveSelfEmployments(id:String)
-POST        /self-employments/id/:id          controllers.SubscriptionDataController.insertSelfEmployments(id:String)
-DELETE      /subscription-data/all            controllers.SubscriptionDataController.deleteAllSessionData
+GET         /subscription-data/:reference/all             controllers.SubscriptionDataController.getAllSubscriptionData(reference: String)
+GET         /subscription-data/:reference/id/:id          controllers.SubscriptionDataController.retrieveSubscriptionData(reference: String, id: String)
+POST        /subscription-data/:reference/id/:id          controllers.SubscriptionDataController.insertSubscriptionData(reference: String, id: String)
+DELETE      /subscription-data/:reference/all            controllers.SubscriptionDataController.deleteAllSubscriptionData(reference: String)
+POST        /subscription-data                           controllers.SubscriptionDataController.retrieveReference
 
 POST        /mis/sign-up/:nino                controllers.SignUpController.signUp(nino: String)
 

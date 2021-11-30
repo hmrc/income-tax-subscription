@@ -16,17 +16,18 @@
 
 package services
 
-import javax.inject.{Inject, Singleton}
+import config.featureswitch.{FeatureSwitching, SaveAndRetrieve}
 import play.api.libs.json.JsValue
 import reactivemongo.api.commands.WriteResult
 import repositories.SubscriptionDataRepository
 import uk.gov.hmrc.http.{HeaderCarrier, InternalServerException}
 
+import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class SubscriptionDataService @Inject()(subscriptionDataRepository: SubscriptionDataRepository)
-                                       (implicit ec: ExecutionContext) {
+                                       (implicit ec: ExecutionContext) extends FeatureSwitching {
 
 
   private[services] def sessionIdFromHC(implicit hc: HeaderCarrier): String = {
@@ -35,26 +36,59 @@ class SubscriptionDataService @Inject()(subscriptionDataRepository: Subscription
     )(_.value)
   }
 
-  def retrieveSelfEmployments(dataId: String)(implicit hc: HeaderCarrier): Future[Option[JsValue]] = {
-    subscriptionDataRepository.getDataFromSession(
-      sessionId = sessionIdFromHC,
-      dataId = dataId
-    )
+  def retrieveReference(utr: String, credId: String)(implicit hc: HeaderCarrier): Future[String] = {
+    subscriptionDataRepository.retrieveReference(utr, credId) flatMap {
+      case Some(value) => Future.successful(value)
+      case None => subscriptionDataRepository.createReference(utr, credId, sessionIdFromHC)
+    }
   }
 
-  def getAllSelfEmployments(implicit hc: HeaderCarrier): Future[Option[JsValue]] = {
-    subscriptionDataRepository.getSessionIdData(sessionId = sessionIdFromHC)
+  def retrieveSubscriptionData(reference: String, dataId: String)(implicit hc: HeaderCarrier): Future[Option[JsValue]] = {
+    if (isEnabled(SaveAndRetrieve)) {
+      subscriptionDataRepository.getDataFromReference(
+        reference = reference,
+        dataId = dataId
+      )
+    } else {
+      subscriptionDataRepository.getDataFromSession(
+        reference = reference,
+        sessionId = sessionIdFromHC,
+        dataId = dataId
+      )
+    }
   }
 
-  def insertSelfEmployments(dataId: String, data: JsValue)(implicit hc: HeaderCarrier): Future[Option[JsValue]] = {
-    subscriptionDataRepository.insertDataWithSession(
-      sessionId = sessionIdFromHC,
-      dataId = dataId,
-      data = data)
+  def getAllSubscriptionData(reference: String)(implicit hc: HeaderCarrier): Future[Option[JsValue]] = {
+    if (isEnabled(SaveAndRetrieve)) {
+      subscriptionDataRepository.getReferenceData(reference = reference)
+    } else {
+      subscriptionDataRepository.getSessionIdData(reference = reference, sessionId = sessionIdFromHC)
+    }
   }
 
-  def deleteSessionData(implicit hc: HeaderCarrier): Future[WriteResult] = {
-    subscriptionDataRepository.deleteDataFromSessionId(sessionId = sessionIdFromHC)
+  def insertSubscriptionData(reference: String, dataId: String, data: JsValue)(implicit hc: HeaderCarrier): Future[Option[JsValue]] = {
+    if (isEnabled(SaveAndRetrieve)) {
+      subscriptionDataRepository.insertDataWithReference(
+        reference = reference,
+        dataId = dataId,
+        data = data
+      )
+    } else {
+      subscriptionDataRepository.insertDataWithSession(
+        reference = reference,
+        sessionId = sessionIdFromHC,
+        dataId = dataId,
+        data = data
+      )
+    }
+  }
+
+  def deleteAllSubscriptionData(reference: String)(implicit hc: HeaderCarrier): Future[WriteResult] = {
+    if (isEnabled(SaveAndRetrieve)) {
+      subscriptionDataRepository.deleteDataFromReference(reference)
+    } else {
+      subscriptionDataRepository.deleteDataFromSessionId(reference, sessionIdFromHC)
+    }
   }
 
 }

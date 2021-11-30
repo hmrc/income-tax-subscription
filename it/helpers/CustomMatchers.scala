@@ -53,6 +53,16 @@ trait CustomMatchers {
       )
   }
 
+  def jsonBodyContainsField(field: String): HavePropertyMatcher[WSResponse, Boolean] = HavePropertyMatcher[WSResponse, Boolean] {
+    response =>
+      HavePropertyMatchResult[Boolean](
+        (response.json \ field).asOpt[JsValue].isDefined,
+        "jsonBodyContainsField",
+        true,
+        (response.json \ field).asOpt[JsValue].isDefined
+      )
+  }
+
   def bodyOf(expectedValue: String): HavePropertyMatcher[WSResponse, String] = HavePropertyMatcher[WSResponse, String] { response =>
     HavePropertyMatchResult(
       response.body == expectedValue,
