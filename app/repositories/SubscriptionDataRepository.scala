@@ -171,7 +171,7 @@ class SubscriptionDataRepository @Inject()(mongo: ReactiveMongoComponent,
   val referenceIndex: Index =
     Index(
       key = Seq(
-        "reference" -> IndexType.Ascending,
+        "reference" -> IndexType.Ascending
       ),
       name = Some("referenceIndex"),
       unique = true,
