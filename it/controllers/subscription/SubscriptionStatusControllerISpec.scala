@@ -21,7 +21,7 @@ import helpers.IntegrationTestConstants._
 import helpers.servicemocks.{AuthStub, BusinessDetailsStub}
 import models.frontend.FESuccessResponse
 import play.api.http.Status._
-import play.api.libs.json.{JsObject, Json}
+import play.api.libs.json.Json
 
 class SubscriptionStatusControllerISpec extends ComponentSpecBase {
   "subscribe" should {

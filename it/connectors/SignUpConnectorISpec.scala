@@ -18,12 +18,12 @@ package connectors
 
 import config.MicroserviceAppConfig
 import helpers.ComponentSpecBase
-import helpers.servicemocks.SignUpStub
-import play.api.mvc.Request
-import play.api.test.FakeRequest
 import helpers.IntegrationTestConstants._
+import helpers.servicemocks.SignUpStub
 import models.{SignUpFailure, SignUpResponse}
 import play.api.http.Status._
+import play.api.mvc.Request
+import play.api.test.FakeRequest
 
 class SignUpConnectorISpec extends ComponentSpecBase {
 
@@ -42,7 +42,7 @@ class SignUpConnectorISpec extends ComponentSpecBase {
 
         val result = signUpConnector.signUp(testNino)
 
-        await(result) shouldBe Right(SignUpResponse("XQIT00000000001"))
+        result.futureValue shouldBe Right(SignUpResponse("XQIT00000000001"))
       }
 
       "return a Json parse failure when invalid json is found" in {
@@ -52,7 +52,7 @@ class SignUpConnectorISpec extends ComponentSpecBase {
 
         val result = signUpConnector.signUp(testNino)
 
-        await(result) shouldBe Left(SignUpFailure(200,  "Failed to read Json for MTD Sign Up Response"))
+        result.futureValue shouldBe Left(SignUpFailure(status = 200,  "Failed to read Json for MTD Sign Up Response"))
       }
     }
 
@@ -65,7 +65,7 @@ class SignUpConnectorISpec extends ComponentSpecBase {
 
         val result = signUpConnector.signUp(testNino)
 
-        await(result) shouldBe Left(SignUpFailure(INTERNAL_SERVER_ERROR, """{"code":"code","reason":"reason"}"""))
+        result.futureValue shouldBe Left(SignUpFailure(INTERNAL_SERVER_ERROR, """{"code":"code","reason":"reason"}"""))
       }
     }
   }

@@ -16,13 +16,13 @@
 
 package models
 
+import common.CommonSpec
+import models.subscription.IncomeSourceModel
 import models.subscription.property.PropertySubscriptionResponseModel
 import play.api.libs.json.Json
-import uk.gov.hmrc.play.test.UnitSpec
 import utils.Resources
-import models.subscription.IncomeSourceModel
 
-class PropertySubscriptionResponseModelSpec extends UnitSpec {
+class PropertySubscriptionResponseModelSpec extends CommonSpec {
   "Creating a model for a subscription request" should {
     val IncomeModel = IncomeSourceModel(incomeSourceId = "sourceId0001")
     val ResponseModel = PropertySubscriptionResponseModel(safeId = "XA0001234567890", mtditId = "mdtitId001", incomeSource = IncomeModel)

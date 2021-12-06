@@ -17,9 +17,9 @@
 package config
 
 import config.featureswitch.FeatureSwitching
-import javax.inject.{Inject, Singleton}
-import play.api.Configuration
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
+
+import javax.inject.{Inject, Singleton}
 
 
 trait AppConfig {
@@ -61,7 +61,6 @@ class MicroserviceAppConfig @Inject()(servicesConfig: ServicesConfig) extends Ap
   override lazy val desEnvironment = loadConfig(s"$desBase.environment")
   override lazy val desToken = loadConfig(s"$desBase.authorization-token")
   override val paperlessPreferencesExpirySeconds: Int = {
-    val key = s"paperless-preference.expiry-seconds"
     servicesConfig.getInt(s"paperless-preference.expiry-seconds")
   }
 

@@ -16,7 +16,7 @@
 
 package controllers
 
-import play.api.Logger
+import play.api.Logging
 import play.api.libs.json.{JsError, JsSuccess, JsValue, Json}
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import services.{AuthService, SubscriptionDataService}
@@ -30,9 +30,9 @@ import scala.concurrent.{ExecutionContext, Future}
 class SubscriptionDataController @Inject()(authService: AuthService,
                                            subscriptionDataService: SubscriptionDataService,
                                            cc: ControllerComponents)
-                                          (implicit ec: ExecutionContext) extends BackendController(cc) {
+                                          (implicit ec: ExecutionContext) extends BackendController(cc) with Logging {
 
-  def retrieveReference(): Action[JsValue] = Action.async(parse.json) { implicit request =>
+  def retrieveReference: Action[JsValue] = Action.async(parse.json) { implicit request =>
     authService.authorised().retrieve(Retrievals.credentials) {
       case Some(credentials) =>
         (request.body \ "utr").validate[String] match {
@@ -40,13 +40,13 @@ class SubscriptionDataController @Inject()(authService: AuthService,
             subscriptionDataService.retrieveReference(utr, credentials.providerId)
               .map(reference => Ok(Json.obj("reference" -> reference)))
           case JsError(_) =>
-            Logger.error("[SubscriptionDataController][retrieveReference] - Could not parse json request.")
+            logger.error("[SubscriptionDataController][retrieveReference] - Could not parse json request.")
             Future.successful(InternalServerError(
               s"[SubscriptionDataController][retrieveReference] - Could not parse json request."
             ))
         }
       case None =>
-        Logger.error("[SubscriptionDataController][retrieveReference] - Could not retrieve users credentials.")
+        logger.error("[SubscriptionDataController][retrieveReference] - Could not retrieve users credentials.")
         Future.successful(InternalServerError(
           "[SubscriptionDataController][retrieveReference] - Could not retrieve users credentials."
         ))

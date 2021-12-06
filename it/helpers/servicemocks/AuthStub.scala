@@ -22,7 +22,7 @@ import helpers.IntegrationTestConstants.testArn
 import models.auth.UserIds
 import play.api.http.HeaderNames
 import play.api.http.Status._
-import play.api.libs.json.{JsObject, Json, Writes}
+import play.api.libs.json.{JsObject, Json}
 
 object AuthStub extends WireMockMethods {
   val authIDs = "/uri/to/ids"
@@ -38,7 +38,7 @@ object AuthStub extends WireMockMethods {
       .thenReturn(status = OK, body = successfulAuthResponse)
   }
 
-  def stubAuth[T](status: Int, body: T)(implicit writes: Writes[T]): StubMapping = {
+  def stubAuth[T](status: Int, body: T): StubMapping = {
     when(method = POST, uri = authority)
       .thenReturn(status = status, body = successfulAuthResponse(arnEnrolment))
   }

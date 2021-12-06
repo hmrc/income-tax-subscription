@@ -16,22 +16,22 @@
 
 package controllers
 
+import common.CommonSpec
 import models.{SignUpFailure, SignUpResponse}
 import play.api.http.Status.{INTERNAL_SERVER_ERROR, OK}
 import play.api.libs.json.Json
 import play.api.test.FakeRequest
-import play.api.test.Helpers.stubControllerComponents
+import play.api.test.Helpers.{contentAsJson, contentAsString, defaultAwaitTimeout, status, stubControllerComponents}
 import services.mocks.{MockAuthService, MockSignUpConnector}
 import services.monitoring.AuditService
 import uk.gov.hmrc.auth.core.{Enrolment, EnrolmentIdentifier, Enrolments}
-import uk.gov.hmrc.play.test.UnitSpec
 import utils.MaterializerSupport
 import utils.TestConstants.{testNino, testSignUpSubmission}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class SignUpControllerSpec extends UnitSpec with MockAuthService with MockSignUpConnector with MaterializerSupport {
+class SignUpControllerSpec extends CommonSpec with MockAuthService with MockSignUpConnector with MaterializerSupport {
   lazy val mockCC = stubControllerComponents()
 
   val mockAuditService: AuditService = app.injector.instanceOf[AuditService]
@@ -47,9 +47,9 @@ class SignUpControllerSpec extends UnitSpec with MockAuthService with MockSignUp
         signUp(testNino)(Future.successful(Right(SignUpResponse("XAIT000000"))))
 
 
-        val result = await(TestController.signUp(testNino)(fakeRequest))
+        val result = TestController.signUp(testNino)(fakeRequest)
         status(result) shouldBe OK
-        jsonBodyOf(result).as[SignUpResponse].mtdbsa shouldBe {"XAIT000000"}
+        contentAsJson(result).as[SignUpResponse].mtdbsa shouldBe {"XAIT000000"}
       }
 
     }
@@ -64,11 +64,9 @@ class SignUpControllerSpec extends UnitSpec with MockAuthService with MockSignUp
 
         signUp(testNino)(Future.successful(Left(SignUpFailure(200,  "Failed to read Json for MTD Sign Up Response"))))
 
-        val result = await(TestController.signUp(testNino)(fakeRequest))
+        val result = TestController.signUp(testNino)(fakeRequest)
         status(result) shouldBe INTERNAL_SERVER_ERROR
-        bodyOf(result) shouldBe "Failed Sign up"
-
-
+        contentAsString(result) shouldBe "Failed Sign up"
       }
     }
   }
@@ -81,10 +79,10 @@ class SignUpControllerSpec extends UnitSpec with MockAuthService with MockSignUp
         mockRetrievalSuccess(Enrolments(Set(Enrolment("HMRC-AS-AGENT", Seq(EnrolmentIdentifier("AgentReferenceNumber", "123456789")), "Activated"))))
         signUp(testNino)(Future.successful(Left(SignUpFailure(INTERNAL_SERVER_ERROR, "Failure"))))
 
-        val result = await(TestController.signUp(testNino)(fakeRequest))
+        val result = TestController.signUp(testNino)(fakeRequest)
 
         status(result) shouldBe INTERNAL_SERVER_ERROR
-        bodyOf(result) shouldBe "Failed Sign up"
+        contentAsString(result) shouldBe "Failed Sign up"
       }
     }
   }

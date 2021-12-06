@@ -16,6 +16,7 @@
 
 package controllers
 
+import common.CommonSpec
 import config.featureswitch.{FeatureSwitching, SaveAndRetrieve}
 import models.subscription._
 import models.subscription.business.{Accruals, Cash, CreateIncomeSourceErrorModel, CreateIncomeSourceSuccessModel}
@@ -23,10 +24,9 @@ import play.api.http.Status._
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.{ControllerComponents, Request, Result}
 import play.api.test.FakeRequest
-import play.api.test.Helpers.stubControllerComponents
+import play.api.test.Helpers.{contentAsString, defaultAwaitTimeout, status, stubControllerComponents}
 import services.mocks.{MockAuthService, MockIncomeSourcesConnector}
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.play.test.UnitSpec
 import utils.MaterializerSupport
 import utils.TestConstants.{testCreateIncomeSubmissionJson, testCreateIncomeSubmissionModel, testNino}
 
@@ -34,7 +34,7 @@ import java.time.LocalDate
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class BusinessIncomeSourcesControllerSpec extends UnitSpec
+class BusinessIncomeSourcesControllerSpec extends CommonSpec
   with MockAuthService with MockIncomeSourcesConnector with MaterializerSupport with FeatureSwitching {
 
   override def beforeEach(): Unit = {
@@ -201,7 +201,7 @@ class BusinessIncomeSourcesControllerSpec extends UnitSpec
           val result: Future[Result] = TestController.createIncomeSource(mtditid)(postSaveAndRetrieveRequest)
 
           status(result) shouldBe INTERNAL_SERVER_ERROR
-          await(bodyOf(result)) shouldBe "Business Income Source Failure"
+          contentAsString(result) shouldBe "Business Income Source Failure"
         }
       }
     }
@@ -228,7 +228,7 @@ class BusinessIncomeSourcesControllerSpec extends UnitSpec
           val result: Future[Result] = TestController.createIncomeSource(mtditid)(preSaveAndRetrieveRequest)
 
           status(result) shouldBe INTERNAL_SERVER_ERROR
-          await(bodyOf(result)) shouldBe "Business Income Source Failure"
+          contentAsString(result) shouldBe "Business Income Source Failure"
         }
       }
     }

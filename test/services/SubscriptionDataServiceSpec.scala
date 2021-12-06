@@ -16,22 +16,23 @@
 
 package services
 
+import common.CommonSpec
 import config.featureswitch.{FeatureSwitching, SaveAndRetrieve}
-import controllers.Assets.OK
 import org.mockito.ArgumentMatchers
 import org.mockito.Mockito._
 import org.scalatest.BeforeAndAfterEach
 import org.scalatestplus.mockito.MockitoSugar
+import play.api.http.Status.OK
 import play.api.libs.json.{JsObject, Json}
+import play.api.test.Helpers.{await, defaultAwaitTimeout}
 import reactivemongo.api.commands.UpdateWriteResult
 import repositories.SubscriptionDataRepository
 import uk.gov.hmrc.http.{HeaderCarrier, InternalServerException, SessionId}
-import uk.gov.hmrc.play.test.UnitSpec
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class SubscriptionDataServiceSpec extends UnitSpec with MockitoSugar with FeatureSwitching with BeforeAndAfterEach {
+class SubscriptionDataServiceSpec extends CommonSpec with MockitoSugar with FeatureSwitching with BeforeAndAfterEach {
 
   override def beforeEach(): Unit = {
     super.beforeEach()
@@ -65,7 +66,7 @@ class SubscriptionDataServiceSpec extends UnitSpec with MockitoSugar with Featur
       "the sessionId is not in the headerCarrier" in new Setup {
         implicit val hc: HeaderCarrier = HeaderCarrier()
 
-        val result: InternalServerException = intercept[InternalServerException](await(service.sessionIdFromHC(hc)))
+        val result: InternalServerException = intercept[InternalServerException](service.sessionIdFromHC(hc))
         result.message shouldBe "[SubscriptionDataService][retrieveSelfEmployments] - No session id in header carrier"
       }
     }

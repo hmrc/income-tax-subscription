@@ -19,7 +19,6 @@ package connectors
 import config.AppConfig
 import parsers.SignUpParser.{PostSignUpResponse, signUpResponseHttpReads}
 import play.api.libs.json.{JsValue, Json}
-import play.api.mvc.Request
 import uk.gov.hmrc.http.{Authorization, HeaderCarrier, HeaderNames, HttpClient, HttpReads}
 
 import javax.inject.{Inject, Singleton}

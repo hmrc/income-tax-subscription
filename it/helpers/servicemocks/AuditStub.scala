@@ -16,8 +16,6 @@
 
 package helpers.servicemocks
 
-import uk.gov.hmrc.http.HeaderCarrier
-
 object AuditStub extends WireMockMethods {
   val appName = "income-tax-subscription"
 
@@ -31,7 +29,7 @@ object AuditStub extends WireMockMethods {
 
   }
 
-  def verifyAudit()(implicit hc: HeaderCarrier): Unit = {
+  def verifyAudit(): Unit = {
     //We cannot verify content of audit body without string matching/regex
     //It is tested in more detail at unit level
     verify(method = POST, uri = "/write/audit")

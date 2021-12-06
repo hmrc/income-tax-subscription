@@ -18,14 +18,15 @@ package repositories
 
 import helpers.IntegrationTestConstants._
 import models.matching.LockoutResponse
-import org.scalatest.BeforeAndAfterEach
+import org.scalatest.concurrent.ScalaFutures.convertScalaFuture
+import org.scalatest.{BeforeAndAfterEach, Matchers, OptionValues, WordSpecLike}
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
+import play.api.test.Helpers.{await, defaultAwaitTimeout}
 import play.modules.reactivemongo.ReactiveMongoComponent
-import uk.gov.hmrc.play.test.UnitSpec
 
 import scala.concurrent.ExecutionContext.Implicits._
 
-class LockoutMongoRepositorySpec extends UnitSpec with GuiceOneAppPerSuite with BeforeAndAfterEach {
+class LockoutMongoRepositorySpec extends WordSpecLike with Matchers with OptionValues with GuiceOneAppPerSuite with BeforeAndAfterEach {
   implicit lazy val mongo = app.injector.instanceOf[ReactiveMongoComponent]
 
   object TestLockoutMongoRepository extends LockoutMongoRepository
@@ -36,10 +37,12 @@ class LockoutMongoRepositorySpec extends UnitSpec with GuiceOneAppPerSuite with 
 
   "lockoutAgent" should {
     "return the model when there is no lock" in {
-      val (insertRes, stored) = await(for {
+      val result = for {
         insertRes <- TestLockoutMongoRepository.lockoutAgent(testArn, 10)
         stored <- TestLockoutMongoRepository.find(LockoutResponse.arn -> testArn)
-      } yield (insertRes.get, stored))
+      } yield (insertRes.get, stored)
+
+      val (insertRes, stored) = result.futureValue
 
       stored.size shouldBe 1
       insertRes shouldBe stored.head
@@ -48,19 +51,19 @@ class LockoutMongoRepositorySpec extends UnitSpec with GuiceOneAppPerSuite with 
 
   "getLockoutStatus" should {
     "return None when there is no lock" in {
-      val res = await(TestLockoutMongoRepository.getLockoutStatus(testArn))
+      val res = TestLockoutMongoRepository.getLockoutStatus(testArn).futureValue
       res shouldBe empty
     }
 
     "return a LockModel if there is a lock" in {
       val lockOutModel = LockoutResponse(testArn, offsetDateTime)
 
-      val res = await(for {
+      val res = for {
         _ <- TestLockoutMongoRepository.insert(lockOutModel)
         res <- TestLockoutMongoRepository.getLockoutStatus(testArn)
-      } yield res)
+      } yield res
 
-      res shouldBe Some(lockOutModel)
+      res.futureValue shouldBe Some(lockOutModel)
     }
   }
 }

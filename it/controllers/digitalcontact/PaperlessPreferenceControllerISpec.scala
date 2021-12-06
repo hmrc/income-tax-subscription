@@ -17,13 +17,13 @@
 package controllers.digitalcontact
 
 import helpers.ComponentSpecBase
+import helpers.IntegrationTestConstants._
 import helpers.servicemocks.AuthStub
 import models.digitalcontact.PaperlessPreferenceKey
 import org.scalatest.BeforeAndAfterEach
 import play.api.http.Status
-import repositories.digitalcontact.PaperlessPreferenceMongoRepository
-import helpers.IntegrationTestConstants._
 import play.api.libs.json.Json
+import repositories.digitalcontact.PaperlessPreferenceMongoRepository
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -32,7 +32,7 @@ class PaperlessPreferenceControllerISpec extends ComponentSpecBase with BeforeAn
 
   override def beforeEach(): Unit = {
     super.beforeEach()
-    await(paperlessPreferenceRepository.drop)
+    paperlessPreferenceRepository.drop.futureValue
   }
 
   s"POST /identifier-mapping/$testPreferencesToken" should {
@@ -49,7 +49,7 @@ class PaperlessPreferenceControllerISpec extends ComponentSpecBase with BeforeAn
       )
 
       Then("The database should contain the inserted NINO")
-      val dbRes = await(paperlessPreferenceRepository.find("_id" -> testPreferencesToken)).headOption
+      val dbRes = paperlessPreferenceRepository.find("_id" -> testPreferencesToken).futureValue.headOption
 
       dbRes should contain(PaperlessPreferenceKey(testPreferencesToken, testNino))
     }

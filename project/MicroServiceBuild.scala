@@ -26,24 +26,23 @@ private object AppDependencies {
   import play.core.PlayVersion
   import play.sbt.PlayImport._
 
-  private val domainVersion = "5.11.0-play-26"
-  private val hmrcTestVersion = "3.10.0-play-26"
+  private val domainVersion = "6.2.0-play-28"
   private val scalaTestVersion = "3.0.9"
-  private val scalaTestPlusVersion = "3.1.3"
+  private val scalaTestPlusVersion = "5.0.0"
   private val pegdownVersion = "1.6.0"
   private val mockitoVersion = "3.7.0"
 
   private val scalaJVersion = "2.4.2"
 
-  private val reactiveMongoVersion = "7.30.0-play-26"
+  private val reactiveMongoVersion = "8.0.0-play-28"
 
   private val wiremockVersion = "2.21.0"
 
-  private val bootstrapBackendVersion = "5.3.0"
+  private val bootstrapBackendVersion = "5.7.0"
 
   val compile = Seq(
     ws,
-    "uk.gov.hmrc" %% "bootstrap-backend-play-26" % bootstrapBackendVersion,
+    "uk.gov.hmrc" %% "bootstrap-backend-play-28" % bootstrapBackendVersion,
     "uk.gov.hmrc" %% "domain" % domainVersion,
     "uk.gov.hmrc" %% "simple-reactivemongo" % reactiveMongoVersion
   )
@@ -56,8 +55,7 @@ private object AppDependencies {
   object Test {
     def apply(): Seq[ModuleID] = new TestDependencies {
       override lazy val test = Seq(
-        "uk.gov.hmrc" %% "bootstrap-backend-play-26" % bootstrapBackendVersion % scope,
-        "uk.gov.hmrc" %% "hmrctest" % hmrcTestVersion % scope,
+        "uk.gov.hmrc" %% "bootstrap-backend-play-28" % bootstrapBackendVersion % scope,
         "org.scalatest" %% "scalatest" % scalaTestVersion % scope,
         "org.pegdown" % "pegdown" % pegdownVersion % scope,
         "com.typesafe.play" %% "play-test" % PlayVersion.current % scope,
@@ -75,7 +73,6 @@ private object AppDependencies {
       override lazy val scope: String = "it"
 
       override lazy val test = Seq(
-        "uk.gov.hmrc" %% "hmrctest" % hmrcTestVersion % scope,
         "org.scalatest" %% "scalatest" % scalaTestVersion % scope,
         "org.pegdown" % "pegdown" % pegdownVersion % scope,
         "com.typesafe.play" %% "play-test" % PlayVersion.current % scope,

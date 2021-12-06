@@ -16,19 +16,19 @@
 
 package services
 
+import common.CommonSpec
 import models.frontend.FESuccessResponse
 import play.api.http.Status._
 import play.api.mvc.Request
 import play.api.test.FakeRequest
+import play.api.test.Helpers.{await, defaultAwaitTimeout}
 import services.mocks.TestSubscriptionStatusService
+import uk.gov.hmrc.http.HeaderCarrier
 import utils.TestConstants._
 
 import scala.concurrent.ExecutionContext.Implicits.global
-import utils.Implicits._
-import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.play.test.UnitSpec
 
-class SubscriptionStatusServiceSpec extends UnitSpec with TestSubscriptionStatusService {
+class SubscriptionStatusServiceSpec extends CommonSpec with TestSubscriptionStatusService {
 
   implicit val hc = HeaderCarrier()
   implicit val request: Request[_] = FakeRequest()

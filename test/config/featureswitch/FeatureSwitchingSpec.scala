@@ -16,9 +16,9 @@
 
 package config.featureswitch
 
-import uk.gov.hmrc.play.test.UnitSpec
+import common.CommonSpec
 
-class FeatureSwitchingSpec extends UnitSpec with FeatureSwitching {
+class FeatureSwitchingSpec extends CommonSpec with FeatureSwitching {
 
   val testFeatureSwitch = StubDESFeature
 

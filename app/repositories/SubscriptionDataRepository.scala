@@ -82,7 +82,7 @@ class SubscriptionDataRepository @Inject()(mongo: ReactiveMongoComponent,
         "$date" -> Instant.now.toEpochMilli
       ).as[JsValue]
     )
-    val update: JsObject = Json.obj("$set" -> set)
+    val update: JsObject = Json.obj(f"$$set" -> set)
     findAndUpdate(selector, update, fetchNewObject = true, upsert = true).map(_.result[JsValue])
   }
 
@@ -93,7 +93,7 @@ class SubscriptionDataRepository @Inject()(mongo: ReactiveMongoComponent,
         "$date" -> Instant.now.toEpochMilli
       ).as[JsValue]
     )
-    val update: JsObject = Json.obj("$set" -> set)
+    val update: JsObject = Json.obj(f"$$set" -> set)
     findAndUpdate(selector, update, fetchNewObject = true, upsert = true) map (_.result[JsValue])
   }
 

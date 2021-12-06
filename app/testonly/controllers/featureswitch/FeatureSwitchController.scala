@@ -16,14 +16,14 @@
 
 package testonly.controllers.featureswitch
 
-import javax.inject.Inject
 import config.featureswitch.FeatureSwitch._
 import config.featureswitch.{FeatureSwitch, FeatureSwitching}
 import play.api.i18n.MessagesApi
 import play.api.libs.json.Json
-import play.api.mvc.{Action, ControllerComponents, Result}
-import uk.gov.hmrc.play.bootstrap.controller.BackendController
+import play.api.mvc.{ControllerComponents, Result}
+import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
+import javax.inject.Inject
 import scala.concurrent.Future
 
 class FeatureSwitchController @Inject()(override val messagesApi: MessagesApi,
@@ -32,7 +32,7 @@ class FeatureSwitchController @Inject()(override val messagesApi: MessagesApi,
 
   private def returnCurrentSettings = Ok(Json.toJson(switches.map(fs => FeatureSwitchSetting(fs, isEnabled(fs)))))
 
-  lazy val get = Action.async { implicit req => Future.successful(returnCurrentSettings) }
+  lazy val get = Action.async { _ => Future.successful(returnCurrentSettings) }
 
   lazy val update = Action.async { implicit req =>
     Future.successful(

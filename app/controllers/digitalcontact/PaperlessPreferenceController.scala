@@ -16,15 +16,15 @@
 
 package controllers.digitalcontact
 
-import javax.inject.{Inject, Singleton}
 import common.Constants._
 import models.digitalcontact.PaperlessPreferenceKey
 import play.api.libs.json.{JsError, JsSuccess, JsValue, Json}
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import services.AuthService
 import services.digitalcontact.PaperlessPreferenceService
-import uk.gov.hmrc.play.bootstrap.controller.BackendController
+import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
+import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton

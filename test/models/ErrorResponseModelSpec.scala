@@ -16,16 +16,46 @@
 
 package models
 
+import common.CommonSpec
 import org.scalatest.Matchers
 import play.api.libs.json.Json
-import uk.gov.hmrc.play.test.UnitSpec
 
-class ErrorResponseModelSpec extends UnitSpec with Matchers{
+class ErrorResponseModelSpec extends CommonSpec with Matchers {
+
   "errorResponse" should {
-    "be translated to error Json with only the required fields" in {
-      Json.toJson(ErrorAcceptHeaderInvalid).toString() shouldBe
+    "translate ErrorUnauthorized to error Json with only the required fields" in {
+      Json.toJson {
+        ErrorUnauthorized
+      }.toString() shouldBe
+        """{"code":"UNAUTHORIZED","message":"Bearer token is missing or not authorized"}"""
+    }
+
+    "translate ErrorNotFound to error Json with only the required fields" in {
+      Json.toJson {
+        ErrorNotFound
+      }.toString() shouldBe
+        """{"code":"NOT_FOUND","message":"Resource was not found"}"""
+    }
+
+    "translate ErrorGenericBadRequest to error Json with only the required fields" in {
+      Json.toJson {
+        ErrorGenericBadRequest
+      }.toString() shouldBe
+        """{"code":"BAD_REQUEST","message":"Bad Request"}"""
+    }
+
+    "translate ErrorAcceptHeaderInvalid to error Json with only the required fields" in {
+      Json.toJson {
+        ErrorAcceptHeaderInvalid
+      }.toString() shouldBe
         """{"code":"ACCEPT_HEADER_INVALID","message":"The accept header is missing or invalid"}"""
     }
-  }
 
+    "translate ErrorInternalServerError to error Json with only the required fields" in {
+      Json.toJson {
+        ErrorInternalServerError
+      }.toString() shouldBe
+        """{"code":"INTERNAL_SERVER_ERROR","message":"Internal server error"}"""
+    }
+  }
 }

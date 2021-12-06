@@ -16,31 +16,31 @@
 
 package parsers
 
+import common.CommonSpec
 import models.{SignUpFailure, SignUpResponse}
 import play.api.http.Status._
 import play.api.libs.json.Json
 import uk.gov.hmrc.http.HttpResponse
-import uk.gov.hmrc.play.test.UnitSpec
 
-class SignUpParserSpec extends UnitSpec {
+class SignUpParserSpec extends CommonSpec {
 
   "The sign up parser" when {
 
     "supplied with an OK response" should {
 
       "return a SignUpResponse when the response has valid json" in {
-        val response = HttpResponse(OK, Some(Json.toJson(SignUpResponse("XAIT000000"))))
+        val response = HttpResponse(OK, body = Json.toJson(SignUpResponse("XAIT000000")).toString())
 
         SignUpParser.signUpResponseHttpReads.read("", "", response) shouldBe Right(SignUpResponse("XAIT000000"))
       }
 
       "return a SignUpFailure when the response has invalid json" in {
-        val response = HttpResponse(OK, Some(Json.parse(
+        val response = HttpResponse(OK, body =
           """
             |{
             | "invalid" : "json"
             |}
-          """.stripMargin)))
+          """.stripMargin)
 
         SignUpParser.signUpResponseHttpReads.read("", "", response) shouldBe Left(SignUpFailure(OK, "Failed to read Json for MTD Sign Up Response"))
       }
@@ -49,7 +49,7 @@ class SignUpParserSpec extends UnitSpec {
     "supplied with a non-OK response" should {
 
       "return a SignUpFailure with the response message" in {
-        val response = HttpResponse(INTERNAL_SERVER_ERROR, responseString = Some("Error body"))
+        val response = HttpResponse(INTERNAL_SERVER_ERROR, body = "Error body")
 
         SignUpParser.signUpResponseHttpReads.read("", "", response) shouldBe Left(SignUpFailure(INTERNAL_SERVER_ERROR,  "Error body"))
       }

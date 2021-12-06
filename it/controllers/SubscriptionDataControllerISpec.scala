@@ -21,6 +21,7 @@ import helpers.ComponentSpecBase
 import helpers.servicemocks.AuthStub
 import play.api.http.Status._
 import play.api.libs.json.{JsObject, Json}
+import play.api.test.Helpers.{await, defaultAwaitTimeout}
 import repositories.SubscriptionDataRepository
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -65,7 +66,7 @@ class SubscriptionDataControllerISpec extends ComponentSpecBase with FeatureSwit
     if(enableFeature) enable(SaveAndRetrieve) else disable(SaveAndRetrieve)
   }
 
-  s"POST ${controllers.routes.SubscriptionDataController.retrieveReference().url}" should {
+  s"POST ${controllers.routes.SubscriptionDataController.retrieveReference.url}" should {
     "return OK with a reference" when {
       "it already exists in the database" in {
         AuthStub.stubAuthSuccess()

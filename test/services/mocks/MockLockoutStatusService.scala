@@ -16,6 +16,7 @@
 
 package services.mocks
 
+import common.CommonSpec
 import models.ErrorModel
 import models.matching.LockoutResponse
 import org.mockito.ArgumentMatchers
@@ -24,13 +25,11 @@ import org.scalatest.BeforeAndAfterEach
 import org.scalatestplus.mockito.MockitoSugar
 import repositories.mocks.MockLockoutRepository
 import services.LockoutStatusService
-import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.play.test.UnitSpec
 import utils.TestConstants._
 
 import scala.concurrent.{ExecutionContext, Future}
 
-trait MockLockoutStatusService extends UnitSpec with MockitoSugar with BeforeAndAfterEach {
+trait MockLockoutStatusService extends CommonSpec with MockitoSugar with BeforeAndAfterEach {
 
   val mockLockoutStatusService = mock[LockoutStatusService]
 
@@ -41,7 +40,6 @@ trait MockLockoutStatusService extends UnitSpec with MockitoSugar with BeforeAnd
 
   private def mockLockoutAgent(arn: String)(result: Future[Either[ErrorModel, Option[LockoutResponse]]]): Unit =
     when(mockLockoutStatusService.lockoutAgent(ArgumentMatchers.eq(arn), ArgumentMatchers.any())(
-      ArgumentMatchers.any[HeaderCarrier],
       ArgumentMatchers.any[ExecutionContext]
     )).thenReturn(result)
 
@@ -53,7 +51,6 @@ trait MockLockoutStatusService extends UnitSpec with MockitoSugar with BeforeAnd
 
   private def mockGetLockoutStatus(arn: String)(result: Future[Either[ErrorModel, Option[LockoutResponse]]]): Unit =
     when(mockLockoutStatusService.checkLockoutStatus(ArgumentMatchers.eq(arn))(
-      ArgumentMatchers.any[HeaderCarrier],
       ArgumentMatchers.any[ExecutionContext]
     )).thenReturn(result)
 

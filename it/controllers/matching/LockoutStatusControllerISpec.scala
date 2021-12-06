@@ -33,7 +33,7 @@ class LockoutStatusControllerISpec extends ComponentSpecBase with BeforeAndAfter
   object TestLockoutMongoRepository extends LockoutMongoRepository
 
   override def beforeEach(): Unit = {
-    await(TestLockoutMongoRepository.drop)
+    TestLockoutMongoRepository.drop.futureValue
   }
 
   "checkLockoutStatus" should {
@@ -43,7 +43,7 @@ class LockoutStatusControllerISpec extends ComponentSpecBase with BeforeAndAfter
 
       def insert = TestLockoutMongoRepository.lockoutAgent(testArn, 10)
 
-      await(insert).isDefined shouldBe true
+      insert.futureValue.isDefined shouldBe true
 
       When("I call GET /client-matching/lock/:arn where arn is the test arn and lock exists")
       val res = IncomeTaxSubscription.checkLockoutStatus(testArn)

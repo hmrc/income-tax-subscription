@@ -16,25 +16,26 @@
 
 package services
 
+import common.CommonSpec
 import models.digitalcontact.PaperlessPreferenceKey
+import org.scalatest.concurrent.ScalaFutures.convertScalaFuture
 import services.mocks.TestPaperlessPreferenceService
-import uk.gov.hmrc.play.test.UnitSpec
 import utils.TestConstants._
 
-class PaperlessPreferenceServiceSpec extends UnitSpec with TestPaperlessPreferenceService {
+class PaperlessPreferenceServiceSpec extends CommonSpec with TestPaperlessPreferenceService {
   "storeNino" should {
     "return the model when it is successfully stored" in {
       mockNinoStore(testPaperlessPreferenceKey)
 
       val res = TestPaperlessPreferenceService.storeNino(testPaperlessPreferenceKey)
-      await(res) shouldBe testPaperlessPreferenceKey
+      res.futureValue shouldBe testPaperlessPreferenceKey
     }
 
     "return the failure when the storage fails" in {
       mockNinoStoreFailed(testPaperlessPreferenceKey)
 
       val res = TestPaperlessPreferenceService.storeNino(testPaperlessPreferenceKey)
-      intercept[Exception](await(res)) shouldBe testException
+      res.failed.futureValue shouldBe testException
     }
   }
 
@@ -43,21 +44,20 @@ class PaperlessPreferenceServiceSpec extends UnitSpec with TestPaperlessPreferen
       mockNinoRetrieve(testPreferencesToken)
 
       val res = TestPaperlessPreferenceService.getNino(testPreferencesToken)
-      await(res) shouldBe Some(PaperlessPreferenceKey(testPreferencesToken, testNino))
+      res.futureValue shouldBe Some(PaperlessPreferenceKey(testPreferencesToken, testNino))
     }
     "not found response" in {
       mockNinoRetrieveNotFound(testPreferencesToken)
 
       val res = TestPaperlessPreferenceService.getNino(testPreferencesToken)
-      await(res) shouldBe None
+      res.futureValue shouldBe None
     }
 
     "return exception when failed" in {
       mockNinoRetrieveFailed(testPreferencesToken)
 
       val res = TestPaperlessPreferenceService.getNino(testPreferencesToken)
-      intercept[Exception](await(res)) shouldBe testException
+      res.failed.futureValue shouldBe testException
     }
-
   }
 }

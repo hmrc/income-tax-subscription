@@ -16,7 +16,6 @@
 
 package services.monitoring
 
-import javax.inject.{Inject, Singleton}
 import play.api.Configuration
 import play.api.libs.json.JsValue
 import play.api.mvc.Request
@@ -24,8 +23,8 @@ import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.audit.AuditExtensions
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
 import uk.gov.hmrc.play.audit.model.{DataEvent, ExtendedDataEvent}
-import utils.Implicits.eitherUtilLeft
 
+import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext
 
 @Singleton

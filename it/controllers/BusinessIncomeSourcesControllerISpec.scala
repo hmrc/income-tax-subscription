@@ -3,14 +3,13 @@ package controllers
 
 import config.MicroserviceAppConfig
 import config.featureswitch.{FeatureSwitching, SaveAndRetrieve}
-import controllers.Assets.NO_CONTENT
 import helpers.ComponentSpecBase
 import helpers.IntegrationTestConstants._
 import helpers.servicemocks.AuditStub.{stubAuditing, verifyAudit}
 import helpers.servicemocks.{AuthStub, CreateIncomeSourceStub}
 import models.subscription._
 import models.subscription.business.{Accruals, Cash}
-import play.api.http.Status.{INTERNAL_SERVER_ERROR, OK}
+import play.api.http.Status.{INTERNAL_SERVER_ERROR, NO_CONTENT, OK}
 import play.api.libs.json.{JsValue, Json}
 import play.api.libs.ws.WSResponse
 
