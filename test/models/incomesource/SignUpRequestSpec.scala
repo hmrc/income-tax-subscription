@@ -16,19 +16,16 @@
 
 package models.incomesource
 
+import common.CommonSpec
 import models.DateModel
 import models.subscription.business.{AccountingMethod, Cash}
 import models.subscription.incomesource.{AccountingPeriod, BusinessIncomeModel, PropertyIncomeModel}
 import play.api.libs.json.Json
-import uk.gov.hmrc.play.test.UnitSpec
 
-class SignUpRequestSpec extends UnitSpec {
-
+class SignUpRequestSpec extends CommonSpec {
 
   "Creating a model for a subscription request" should {
 
-    val testNino = "nino"
-    val testArn = "arn"
     val testTradingName = "trader joe"
     val startDay = "06"
     val startMonth = "6"
@@ -53,8 +50,6 @@ class SignUpRequestSpec extends UnitSpec {
     )
 
     def propertyIncomeJson() = Json.obj("cashAccrualsFlag" -> "C")
-
-    def propertyNoIncomeJson() = Json.obj()
 
     "send the correct json to DES for business income source" in {
       BusinessIncomeModel.writeToDes(businessIncome) shouldBe businessIncomeJson()

@@ -19,12 +19,13 @@ package utils
 import com.fasterxml.jackson.core.{JsonParseException, JsonProcessingException}
 import com.fasterxml.jackson.databind.{JsonNode, ObjectMapper}
 import com.github.fge.jsonschema.main.{JsonSchema, JsonSchemaFactory}
-import play.api.Logger
+import play.api.Logging
 import play.api.libs.json.{JsValue, Json}
+
 import scala.io.Source
 import scala.util.{Failure, Success, Try}
 
-trait Resources {
+trait Resources extends Logging {
 
   private final lazy val jsonMapper = new ObjectMapper()
   private final lazy val jsonFactory = jsonMapper.getFactory
@@ -61,13 +62,13 @@ trait Resources {
     } match {
       case Success(result) => result
       case Failure(e: JsonParseException) =>
-        Logger.error(s"getJsonValidationReport: There was an error parsing the Json: ${e.getMessage}")
+        logger.error(s"getJsonValidationReport: There was an error parsing the Json: ${e.getMessage}")
         false
       case Failure(e: JsonProcessingException) =>
-        Logger.error(s"getJsonValidationReport: There was an Json Validator Processing Exception: ${e.getMessage}")
+        logger.error(s"getJsonValidationReport: There was an Json Validator Processing Exception: ${e.getMessage}")
         false
       case Failure(e) =>
-        Logger.error(s"getJsonValidationReport: There was an a general exception: ${e.getMessage}")
+        logger.error(s"getJsonValidationReport: There was an a general exception: ${e.getMessage}")
         false
     }
   }

@@ -16,20 +16,20 @@
 
 package controllers.matching
 
+import common.CommonSpec
 import models.matching.LockoutResponse
 import play.api.libs.json.Json
 import play.api.mvc.Result
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import services.mocks.{MockAuthService, MockLockoutStatusService}
-import uk.gov.hmrc.play.test.UnitSpec
 import utils.MaterializerSupport
-import utils.TestConstants.{testArn, testLockoutRequest, testLockoutResponse}
+import utils.TestConstants.{testLockoutRequest, testLockoutResponse}
 
 import scala.concurrent.Future
 
 
-class LockoutStatusControllerSpec extends UnitSpec with MockLockoutStatusService with MaterializerSupport with MockAuthService {
+class LockoutStatusControllerSpec extends CommonSpec with MockLockoutStatusService with MaterializerSupport with MockAuthService {
   lazy val mockCC = stubControllerComponents()
   object TestController extends LockoutStatusController(mockAuthService, mockLockoutStatusService, mockCC)
 

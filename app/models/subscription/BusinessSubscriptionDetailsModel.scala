@@ -132,11 +132,6 @@ object BusinessSubscriptionDetailsModel {
   }
 
   implicit val businessSubscriptionWrites: Writes[BusinessSubscriptionDetailsModel] = new Writes[BusinessSubscriptionDetailsModel] {
-
-    def businessJson() = {
-
-    }
-
     def writes(details: BusinessSubscriptionDetailsModel): JsObject = JsObject(Json.obj(
       "businessDetails" -> details.selfEmploymentsData.map(_.map(
         data => Map("accountingPeriodStartDate" -> JsString(details.accountingPeriod.startDate.toDesDateFormat),

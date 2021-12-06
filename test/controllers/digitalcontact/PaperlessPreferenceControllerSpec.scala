@@ -16,24 +16,22 @@
 
 package controllers.digitalcontact
 
+import common.CommonSpec
 import common.Constants._
 import models.digitalcontact.PaperlessPreferenceKey
+import org.scalatest.concurrent.ScalaFutures.convertScalaFuture
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.Result
-import play.api.test.Helpers.stubControllerComponents
 import play.api.test.FakeRequest
+import play.api.test.Helpers._
 import services.mocks.{MockAuthService, MockPaperlessPreferenceService}
-import uk.gov.hmrc.play.test.UnitSpec
 import utils.MaterializerSupport
 import utils.TestConstants._
-import play.api.test.Helpers._
-import play.api.test.Helpers.stubControllerComponents
-import uk.gov.hmrc.play.bootstrap
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class PaperlessPreferenceControllerSpec extends UnitSpec with MaterializerSupport with MockPaperlessPreferenceService with MockAuthService {
+class PaperlessPreferenceControllerSpec extends CommonSpec with MaterializerSupport with MockPaperlessPreferenceService with MockAuthService {
 
   lazy val mockCC = stubControllerComponents()
 
@@ -63,7 +61,7 @@ class PaperlessPreferenceControllerSpec extends UnitSpec with MaterializerSuppor
 
       val res: Future[Result] = TestPaperlessPreferenceController.storeNino(testPreferencesToken)(request)
 
-      intercept[Exception](await(res)) shouldBe testException
+      res.failed.futureValue shouldBe testException
     }
 
     "return a bad request when the json cannot be parsed" in {
@@ -104,11 +102,9 @@ class PaperlessPreferenceControllerSpec extends UnitSpec with MaterializerSuppor
       mockAuthSuccess()
       mockNinoGetFailed(testPreferencesToken)
 
-      val request: FakeRequest[JsValue] = FakeRequest().withBody(Json.obj())
-
       val res: Future[Result] = TestPaperlessPreferenceController.getNino(testPreferencesToken)(FakeRequest())
 
-      intercept[Exception](await(res)) shouldBe testException
+      res.failed.futureValue shouldBe testException
     }
   }
 

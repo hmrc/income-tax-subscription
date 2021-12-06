@@ -16,19 +16,19 @@
 
 package controllers.subscription
 
+import common.CommonSpec
 import models.frontend.FESuccessResponse
 import play.api.http.Status._
 import play.api.mvc.Result
 import play.api.test.FakeRequest
-import play.api.test.Helpers.stubControllerComponents
+import play.api.test.Helpers.{contentAsJson, defaultAwaitTimeout, status, stubControllerComponents}
 import services.mocks.{MockAuthService, MockSubscriptionStatusService}
-import uk.gov.hmrc.play.test.UnitSpec
 import utils.MaterializerSupport
 import utils.TestConstants._
 
 import scala.concurrent.Future
 
-class SubscriptionStatusControllerSpec extends UnitSpec with MockSubscriptionStatusService with MaterializerSupport with MockAuthService {
+class SubscriptionStatusControllerSpec extends CommonSpec with MockSubscriptionStatusService with MaterializerSupport with MockAuthService {
   lazy val mockCC = stubControllerComponents()
 
   object TestController extends SubscriptionStatusController(mockAuthService, mockSubscriptionStatusService, mockCC)
@@ -42,7 +42,7 @@ class SubscriptionStatusControllerSpec extends UnitSpec with MockSubscriptionSta
 
       val result = call
       status(result) shouldBe OK
-      jsonBodyOf(result).as[FESuccessResponse].mtditId shouldBe None
+      contentAsJson(result).as[FESuccessResponse].mtditId shouldBe None
     }
 
     "when the queried person has a prior mtditsa subscription return OK with the id" in {
@@ -51,7 +51,7 @@ class SubscriptionStatusControllerSpec extends UnitSpec with MockSubscriptionSta
 
       val result = call
       status(result) shouldBe OK
-      jsonBodyOf(result).as[FESuccessResponse].mtditId shouldBe Some(testMtditId)
+      contentAsJson(result).as[FESuccessResponse].mtditId shouldBe Some(testMtditId)
     }
   }
 

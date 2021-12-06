@@ -16,13 +16,13 @@
 
 package models
 
+import common.CommonSpec
+import org.scalatest.Matchers
+
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
-import org.scalatest.Matchers
-import uk.gov.hmrc.play.test.UnitSpec
-
-class DateModelSpec extends UnitSpec with Matchers {
+class DateModelSpec extends CommonSpec with Matchers {
 
   "the DateModel" should {
 

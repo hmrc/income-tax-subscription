@@ -28,9 +28,9 @@ import play.api.libs.json.{JsValue, Json, Writes}
 import play.api.libs.ws.WSResponse
 import play.api.{Application, Environment, Mode}
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.play.test.UnitSpec
 
-trait ComponentSpecBase extends UnitSpec
+trait ComponentSpecBase extends WordSpecLike
+  with OptionValues
   with GivenWhenThen with TestSuite
   with GuiceOneServerPerSuite with ScalaFutures with IntegrationPatience with Matchers with Assertions
   with WiremockHelper with BeforeAndAfterEach with BeforeAndAfterAll with Eventually
@@ -81,7 +81,7 @@ trait ComponentSpecBase extends UnitSpec
   object IncomeTaxSubscription {
     def getSubscriptionStatus(nino: String): WSResponse = get(s"/subscription/$nino")
 
-    def get(uri: String): WSResponse = await(buildClient(uri).get())
+    def get(uri: String): WSResponse = buildClient(uri).get().futureValue
 
     def signUp(nino: String): WSResponse = post(s"/mis/sign-up/$nino", Json.parse("{}"))
 
@@ -95,48 +95,47 @@ trait ComponentSpecBase extends UnitSpec
 
     def getNino(token: String): WSResponse = get(s"/identifier-mapping/$token")
 
-    def postRetrieveReference(utr: String): WSResponse = await(
+    def postRetrieveReference(utr: String): WSResponse =
       buildClient(s"/subscription-data")
         .withHttpHeaders("X-Session-ID" -> "testSessionId")
         .post(Json.obj("utr" -> utr))
-    )
+        .futureValue
 
-    def getRetrieveSelfEmployments(reference: String, dataId: String): WSResponse = await(
+    def getRetrieveSelfEmployments(reference: String, dataId: String): WSResponse =
       buildClient(s"/subscription-data/$reference/id/$dataId")
         .withHttpHeaders("X-Session-ID" -> "testSessionId")
         .get()
-    )
+        .futureValue
 
-    def postInsertSelfEmployments(reference: String, dataId: String, body: JsValue): WSResponse = await(
+    def postInsertSelfEmployments(reference: String, dataId: String, body: JsValue): WSResponse =
       buildClient(s"/subscription-data/$reference/id/$dataId")
         .withHttpHeaders(
           "X-Session-ID" -> "testSessionId",
           "Content-Type" -> "application/json"
-        ).post(body.toString())
-    )
+        )
+        .post(body.toString())
+        .futureValue
 
-    def deleteDeleteAllSessionData(reference: String): WSResponse = await(
+    def deleteDeleteAllSessionData(reference: String): WSResponse =
       buildClient(s"/subscription-data/$reference/all")
         .withHttpHeaders("X-Session-ID" -> "testSessionId")
         .delete()
-    )
+        .futureValue
 
-    def getAllSelfEmployments(reference: String): WSResponse = await(
+    def getAllSelfEmployments(reference: String): WSResponse =
       buildClient(s"/subscription-data/$reference/all")
         .withHttpHeaders("X-Session-ID" -> "testSessionId")
         .get()
-    )
+        .futureValue
 
-    def post[T](uri: String, body: T)(implicit writes: Writes[T]): WSResponse = {
-      await(
-        buildClient(uri)
-          .withHttpHeaders(
-            "Content-Type" -> "application/json",
-            ITSASessionKeys.RequestURI -> IntegrationTestConstants.requestUri
-          )
-          .post(writes.writes(body).toString())
-      )
-    }
+    def post[T](uri: String, body: T)(implicit writes: Writes[T]): WSResponse =
+      buildClient(uri)
+        .withHttpHeaders(
+          "Content-Type" -> "application/json",
+          ITSASessionKeys.RequestURI -> IntegrationTestConstants.requestUri
+        )
+        .post(writes.writes(body).toString())
+        .futureValue
 
   }
 

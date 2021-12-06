@@ -14,25 +14,12 @@
  * limitations under the License.
  */
 
-package models.digitalcontact
+package common
 
-import common.CommonSpec
-import play.api.libs.json.Json
-import utils.Implicits
-import utils.TestConstants._
+import org.scalatest.{Matchers, OptionValues, WordSpecLike}
 
-class PaperlessPreferenceKeyModelSpec extends CommonSpec with Implicits {
+trait CommonSpec extends WordSpecLike with Matchers with OptionValues {
+  import scala.concurrent.duration._
 
-  "model writer" should {
-    import utils.TestConstants.PaperlessPreferenceResponse.successResponse
-
-    "format the class into the expected format" in {
-      val token = "ABC"
-      val nino = testNino
-      val response: PaperlessPreferenceKey = PaperlessPreferenceKey(token, nino)
-      Json.toJson[PaperlessPreferenceKey](response) shouldBe successResponse(nino)
-
-    }
-  }
-
+  implicit val defaultTimeout: FiniteDuration = 5 seconds
 }

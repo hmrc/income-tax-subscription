@@ -16,13 +16,13 @@
 
 package connectors
 
+import _root_.utils.TestConstants._
+import connectors.mocks.TestBusinessDetailsConnector
 import models.ErrorModel
 import models.registration._
+import org.scalatest.concurrent.ScalaFutures.convertScalaFuture
 import play.api.http.Status._
 import play.api.libs.json.JsValue
-import connectors.mocks.TestBusinessDetailsConnector
-import _root_.utils.JsonUtils._
-import _root_.utils.TestConstants._
 import play.api.mvc.Request
 import play.api.test.FakeRequest
 import uk.gov.hmrc.http.HeaderCarrier
@@ -38,7 +38,7 @@ class BusinessDetailsConnectorSpec extends TestBusinessDetailsConnector {
       TestBusinessDetailsConnector.getBusinessDetailsUrl(testNino) should endWith(s"/registration/business-details/nino/$testNino")
     }
 
-    def result = await(TestBusinessDetailsConnector.getBusinessDetails(testNino))
+    def result = TestBusinessDetailsConnector.getBusinessDetails(testNino).futureValue
 
     "parse and return the success response correctly" in {
       mockBusinessDetails(getBusinessDetailsSuccess)

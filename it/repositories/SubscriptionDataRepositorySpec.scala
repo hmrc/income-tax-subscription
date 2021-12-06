@@ -16,15 +16,16 @@
 
 package repositories
 
-import org.scalatest.BeforeAndAfterEach
+import org.scalatest.concurrent.ScalaFutures.convertScalaFuture
+import org.scalatest.{BeforeAndAfterEach, Matchers, OptionValues, WordSpecLike}
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.libs.json.{JsObject, JsValue, Json}
-import uk.gov.hmrc.play.test.UnitSpec
+import play.api.test.Helpers.{await, defaultAwaitTimeout}
 
 import scala.concurrent.ExecutionContext.Implicits._
 import scala.concurrent.Future
 
-class SubscriptionDataRepositorySpec extends UnitSpec with GuiceOneAppPerSuite with BeforeAndAfterEach {
+class SubscriptionDataRepositorySpec extends WordSpecLike with Matchers with OptionValues  with GuiceOneAppPerSuite with BeforeAndAfterEach {
 
   val testSelfEmploymentsRepository: SubscriptionDataRepository = app.injector.instanceOf[SubscriptionDataRepository]
 
@@ -75,17 +76,17 @@ class SubscriptionDataRepositorySpec extends UnitSpec with GuiceOneAppPerSuite w
         testDocument(testSessionId),
         testDocument("testSessionIdTwo", "test-reference-2")
       ) {
-        await(testSelfEmploymentsRepository.getDataFromSession(reference, testSessionId, "testDataIdOne")).get shouldBe Json.obj(
+        testSelfEmploymentsRepository.getDataFromSession(reference, testSessionId, "testDataIdOne").futureValue.get shouldBe Json.obj(
           "testDataIdOneKey" -> "testDataIdOneValue"
         )
       }
     }
     "return none" when {
       "no document with the sessionId and reference was found" in new Setup(testDocument("testSessionIdTwo")) {
-        await(testSelfEmploymentsRepository.getDataFromSession(reference, testSessionId, "testDataIdOne")) shouldBe None
+        testSelfEmploymentsRepository.getDataFromSession(reference, testSessionId, "testDataIdOne").futureValue shouldBe None
       }
       "a document with the sessionId and reference was found but did not contain dataId" in new Setup(testDocument(testSessionId)) {
-        await(testSelfEmploymentsRepository.getDataFromSession(reference, testSessionId, "testDataIdThree")) shouldBe None
+        testSelfEmploymentsRepository.getDataFromSession(reference, testSessionId, "testDataIdThree").futureValue shouldBe None
       }
     }
   }
@@ -93,17 +94,17 @@ class SubscriptionDataRepositorySpec extends UnitSpec with GuiceOneAppPerSuite w
   "getDataFromReference" should {
     "return the data relating to the dataId" when {
       "a document with the reference and dataId is found" in new Setup(testDocumentWithoutSession(), testDocumentWithoutSession("test-reference-2")) {
-        await(testSelfEmploymentsRepository.getDataFromReference(reference, "testDataIdOne")) shouldBe Some(Json.obj(
+        testSelfEmploymentsRepository.getDataFromReference(reference, "testDataIdOne").futureValue shouldBe Some(Json.obj(
           "testDataIdOneKey" -> "testDataIdOneValue"
         ))
       }
     }
     "return none" when {
       "no document with the reference was found" in new Setup(testDocumentWithoutSession("test-reference-2")) {
-        await(testSelfEmploymentsRepository.getDataFromReference(reference, "testDataIdOne")) shouldBe None
+        testSelfEmploymentsRepository.getDataFromReference(reference, "testDataIdOne").futureValue shouldBe None
       }
       "a document with the reference was found but did not contain dataId" in new Setup(testDocumentWithoutSession()) {
-        await(testSelfEmploymentsRepository.getDataFromReference(reference, "testDataIdThree")) shouldBe None
+        testSelfEmploymentsRepository.getDataFromReference(reference, "testDataIdThree").futureValue shouldBe None
       }
     }
   }
@@ -114,12 +115,12 @@ class SubscriptionDataRepositorySpec extends UnitSpec with GuiceOneAppPerSuite w
         testDocument(testSessionId),
         testDocument("testSessionIdTwo", "test-reference-2")
       ) {
-        await(testSelfEmploymentsRepository.getSessionIdData(reference, testSessionId)).get shouldBe testDocument(testSessionId)
+        testSelfEmploymentsRepository.getSessionIdData(reference, testSessionId).futureValue.get shouldBe testDocument(testSessionId)
       }
     }
     "return none" when {
       "no document with the sessionId and reference was found" in new Setup(testDocument("testSessionIdTwo")) {
-        await(testSelfEmploymentsRepository.getSessionIdData(reference, testSessionId)) shouldBe None
+        testSelfEmploymentsRepository.getSessionIdData(reference, testSessionId).futureValue shouldBe None
       }
     }
   }
@@ -127,12 +128,12 @@ class SubscriptionDataRepositorySpec extends UnitSpec with GuiceOneAppPerSuite w
   "getReferenceData" should {
     "return the data relating to the reference" when {
       "a document with the reference is found" in new Setup(testDocumentWithoutSession(), testDocumentWithoutSession("test-reference-2")) {
-        await(testSelfEmploymentsRepository.getReferenceData(reference)) shouldBe Some(testDocumentWithoutSession(reference))
+        testSelfEmploymentsRepository.getReferenceData(reference).futureValue shouldBe Some(testDocumentWithoutSession(reference))
       }
     }
     "return None" when {
       "no document with the reference was found" in new Setup(testDocumentWithoutSession("test-reference-2")) {
-        await(testSelfEmploymentsRepository.getReferenceData(reference)) shouldBe None
+        testSelfEmploymentsRepository.getReferenceData(reference).futureValue shouldBe None
       }
     }
   }
@@ -142,7 +143,7 @@ class SubscriptionDataRepositorySpec extends UnitSpec with GuiceOneAppPerSuite w
       "there is no document with the sessionId and reference" in new Setup(testDocument("testSessionIdTwo")) {
         await(testSelfEmploymentsRepository.insertDataWithSession("test-reference-2", testSessionId, testDataId, testData))
 
-        val optionalData: Option[JsValue] = await(testSelfEmploymentsRepository.getSessionIdData("test-reference-2", testSessionId))
+        val optionalData: Option[JsValue] =testSelfEmploymentsRepository.getSessionIdData("test-reference-2", testSessionId).futureValue
         optionalData.isDefined shouldBe true
         val data: JsValue = optionalData.get
         (data \ "sessionId").asOpt[String] shouldBe Some(testSessionId)
@@ -156,7 +157,7 @@ class SubscriptionDataRepositorySpec extends UnitSpec with GuiceOneAppPerSuite w
 
         await(testSelfEmploymentsRepository.insertDataWithSession(reference, testSessionId, testDataId, testData))
 
-        val optionalData: Option[JsValue] = await(testSelfEmploymentsRepository.getSessionIdData(reference, testSessionId))
+        val optionalData: Option[JsValue] = testSelfEmploymentsRepository.getSessionIdData(reference, testSessionId).futureValue
         optionalData.isDefined shouldBe true
         val data: JsValue = optionalData.get
         (data \ "sessionId").asOpt[String] shouldBe Some(testSessionId)
@@ -170,7 +171,7 @@ class SubscriptionDataRepositorySpec extends UnitSpec with GuiceOneAppPerSuite w
       "there is a document with the sessionId, reference and the dataId" in new Setup(testDocument(testSessionId)) {
         await(testSelfEmploymentsRepository.insertDataWithSession(reference, testSessionId, "testDataIdOne", testData))
 
-        val optionalData: Option[JsValue] = await(testSelfEmploymentsRepository.getSessionIdData(reference, testSessionId))
+        val optionalData: Option[JsValue] = testSelfEmploymentsRepository.getSessionIdData(reference, testSessionId).futureValue
         optionalData.isDefined shouldBe true
         val data: JsValue = optionalData.get
         (data \ "sessionId").asOpt[String] shouldBe Some(testSessionId)
@@ -187,7 +188,7 @@ class SubscriptionDataRepositorySpec extends UnitSpec with GuiceOneAppPerSuite w
       "there is no document with the reference" in new Setup(testDocumentWithoutSession("test-reference-2")) {
         await(testSelfEmploymentsRepository.insertDataWithReference(reference, testDataId, testData))
 
-        val optionalData: Option[JsValue] = await(testSelfEmploymentsRepository.getReferenceData(reference))
+        val optionalData: Option[JsValue] = testSelfEmploymentsRepository.getReferenceData(reference).futureValue
         optionalData.isDefined shouldBe true
         val data: JsValue = optionalData.get
         (data \ "reference").asOpt[String] shouldBe Some(reference)
@@ -197,7 +198,7 @@ class SubscriptionDataRepositorySpec extends UnitSpec with GuiceOneAppPerSuite w
       "there is a document with the reference but does not contain the dataId" in new Setup(testDocumentWithoutSession()) {
         await(testSelfEmploymentsRepository.insertDataWithReference(reference, testDataId, testData))
 
-        val optionalData: Option[JsValue] = await(testSelfEmploymentsRepository.getReferenceData(reference))
+        val optionalData: Option[JsValue] = testSelfEmploymentsRepository.getReferenceData(reference).futureValue
         optionalData.isDefined shouldBe true
         val data: JsValue = optionalData.get
         (data \ "reference").asOpt[String] shouldBe Some(reference)
@@ -209,7 +210,7 @@ class SubscriptionDataRepositorySpec extends UnitSpec with GuiceOneAppPerSuite w
       "there is a document with the reference and the dataId" in new Setup(testDocumentWithoutSession()) {
         await(testSelfEmploymentsRepository.insertDataWithReference(reference, "testDataIdOne", testData))
 
-        val optionalData: Option[JsValue] = await(testSelfEmploymentsRepository.getReferenceData(reference))
+        val optionalData: Option[JsValue] = testSelfEmploymentsRepository.getReferenceData(reference).futureValue
         optionalData.isDefined shouldBe true
         val data: JsValue = optionalData.get
         (data \ "reference").asOpt[String] shouldBe Some(reference)
@@ -222,35 +223,35 @@ class SubscriptionDataRepositorySpec extends UnitSpec with GuiceOneAppPerSuite w
 
   "deleteDataFromSessionId" should {
     "remove a document which has the same reference and session id when one exists" in new Setup(testDocument(testSessionId)) {
-      await(testSelfEmploymentsRepository.getSessionIdData(reference, testSessionId)) shouldBe Some(testDocument(testSessionId))
+      testSelfEmploymentsRepository.getSessionIdData(reference, testSessionId).futureValue shouldBe Some(testDocument(testSessionId))
 
-      await(testSelfEmploymentsRepository.deleteDataFromSessionId(reference, testSessionId)).ok shouldBe true
+      testSelfEmploymentsRepository.deleteDataFromSessionId(reference, testSessionId).futureValue.ok shouldBe true
 
-      await(testSelfEmploymentsRepository.getSessionIdData(reference, testSessionId)) shouldBe None
+      testSelfEmploymentsRepository.getSessionIdData(reference, testSessionId).futureValue shouldBe None
     }
     "return success when there are no matching documents" in new Setup(testDocument("testSessionIdTwo")) {
-      await(testSelfEmploymentsRepository.getSessionIdData(reference, testSessionId)) shouldBe None
+      testSelfEmploymentsRepository.getSessionIdData(reference, testSessionId).futureValue shouldBe None
 
-      await(testSelfEmploymentsRepository.deleteDataFromSessionId(reference, testSessionId)).ok shouldBe true
+      testSelfEmploymentsRepository.deleteDataFromSessionId(reference, testSessionId).futureValue.ok shouldBe true
 
-      await(testSelfEmploymentsRepository.getSessionIdData(reference, testSessionId)) shouldBe None
+      testSelfEmploymentsRepository.getSessionIdData(reference, testSessionId).futureValue shouldBe None
     }
   }
 
   "deleteDataFromReference" should {
     "remove a document which has the same reference when one exists" in new Setup(testDocumentWithoutSession()) {
-      await(testSelfEmploymentsRepository.getReferenceData(reference)) shouldBe Some(testDocumentWithoutSession())
+      testSelfEmploymentsRepository.getReferenceData(reference).futureValue shouldBe Some(testDocumentWithoutSession())
 
-      await(testSelfEmploymentsRepository.deleteDataFromReference(reference)).ok shouldBe true
+      testSelfEmploymentsRepository.deleteDataFromReference(reference).futureValue.ok shouldBe true
 
-      await(testSelfEmploymentsRepository.getReferenceData(reference)) shouldBe None
+      testSelfEmploymentsRepository.getReferenceData(reference).futureValue shouldBe None
     }
     "return success when there are no matching documents" in new Setup(testDocumentWithoutSession("test-reference-2")) {
-      await(testSelfEmploymentsRepository.getReferenceData(reference)) shouldBe None
+      testSelfEmploymentsRepository.getReferenceData(reference).futureValue shouldBe None
 
-      await(testSelfEmploymentsRepository.deleteDataFromReference(reference)).ok shouldBe true
+      testSelfEmploymentsRepository.deleteDataFromReference(reference).futureValue.ok shouldBe true
 
-      await(testSelfEmploymentsRepository.getReferenceData(reference)) shouldBe None
+      testSelfEmploymentsRepository.getReferenceData(reference).futureValue shouldBe None
     }
   }
 
@@ -258,7 +259,7 @@ class SubscriptionDataRepositorySpec extends UnitSpec with GuiceOneAppPerSuite w
     "create a document in the database with the details required for its use" in {
       val createdReference: String = await(testSelfEmploymentsRepository.createReference(utr, credId, testSessionId))
 
-      val optionalData: Option[JsValue] = await(testSelfEmploymentsRepository.getReferenceData(createdReference))
+      val optionalData: Option[JsValue] = testSelfEmploymentsRepository.getReferenceData(createdReference).futureValue
       optionalData.isDefined shouldBe true
       val data: JsValue = optionalData.get
 
@@ -280,12 +281,12 @@ class SubscriptionDataRepositorySpec extends UnitSpec with GuiceOneAppPerSuite w
       "the related utr + cred id exists in the database" in {
         val createdReference: String = await(testSelfEmploymentsRepository.createReference(utr, credId, testSessionId))
 
-        await(testSelfEmploymentsRepository.retrieveReference(utr, credId)) shouldBe Some(createdReference)
+        testSelfEmploymentsRepository.retrieveReference(utr, credId).futureValue shouldBe Some(createdReference)
       }
     }
     "return no reference" when {
       "the related utr + cred id does not exist in the database" in {
-        await(testSelfEmploymentsRepository.retrieveReference(utr, credId)) shouldBe None
+        testSelfEmploymentsRepository.retrieveReference(utr, credId).futureValue shouldBe None
       }
     }
   }

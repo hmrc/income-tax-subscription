@@ -16,11 +16,11 @@
 
 package models
 
+import common.CommonSpec
 import models.frontend.{Both, Business, IncomeSourceType, Property}
 import play.api.libs.json.{JsString, JsValue, Json}
-import uk.gov.hmrc.play.test.UnitSpec
 
-class SignUpRequestSpec extends UnitSpec {
+class SignUpRequestSpec extends CommonSpec {
 
   "IncomeSourceType" should {
 

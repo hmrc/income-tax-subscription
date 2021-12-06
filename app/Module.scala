@@ -16,11 +16,6 @@
 
 import com.google.inject.AbstractModule
 import config.AppConfig
-import services._
-import uk.gov.hmrc.auth.core.AuthConnector
-import uk.gov.hmrc.play.audit.http.connector.AuditConnector
-import uk.gov.hmrc.play.http.ws._
-import uk.gov.hmrc.http.{ HttpDelete, HttpGet, HttpPost, HttpPut }
 
 class Module extends AbstractModule {
 

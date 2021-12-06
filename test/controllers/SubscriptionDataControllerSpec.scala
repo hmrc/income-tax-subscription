@@ -16,6 +16,7 @@
 
 package controllers
 
+import common.CommonSpec
 import play.api.libs.json.{JsObject, Json}
 import play.api.mvc.{AnyContentAsEmpty, Result}
 import play.api.test.FakeRequest
@@ -23,12 +24,11 @@ import play.api.test.Helpers._
 import reactivemongo.api.commands.UpdateWriteResult
 import services.mocks.{MockAuthService, MockSubscriptionDataService}
 import uk.gov.hmrc.auth.core.retrieve.Credentials
-import uk.gov.hmrc.play.test.UnitSpec
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class SubscriptionDataControllerSpec extends UnitSpec with MockSubscriptionDataService with MockAuthService {
+class SubscriptionDataControllerSpec extends CommonSpec with MockSubscriptionDataService with MockAuthService {
 
   object TestController extends SubscriptionDataController(mockAuthService, mockSubscriptionDataService, stubControllerComponents())
 
@@ -138,7 +138,7 @@ class SubscriptionDataControllerSpec extends UnitSpec with MockSubscriptionDataS
         mockAuthSuccess()
         mockDeleteSessionData(reference)(UpdateWriteResult(ok = true, 1, 1, Seq(), Seq(), None, None, None))
 
-        val result = await(TestController.deleteAllSubscriptionData(reference)(request))
+        val result = TestController.deleteAllSubscriptionData(reference)(request)
 
         status(result) shouldBe OK
       }

@@ -16,10 +16,10 @@
 
 package models.registration
 
+import common.CommonSpec
 import play.api.libs.json.{JsObject, JsSuccess, Json}
-import uk.gov.hmrc.play.test.UnitSpec
 
-class RegistrationResponseModelSpec extends UnitSpec {
+class RegistrationResponseModelSpec extends CommonSpec {
 
   "GetBusinessDetailsSuccessResponseModel" should {
 

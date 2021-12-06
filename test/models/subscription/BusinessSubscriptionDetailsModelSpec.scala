@@ -16,13 +16,13 @@
 
 package models.subscription
 
+import common.CommonSpec
 import models.DateModel
-import org.scalatest.MustMatchers.convertToAnyMustWrapper
 import models.subscription.business.{Accruals, Cash}
+import org.scalatest.MustMatchers.convertToAnyMustWrapper
 import play.api.libs.json.Json
-import uk.gov.hmrc.play.test.UnitSpec
 
-class BusinessSubscriptionDetailsModelSpec extends UnitSpec {
+class BusinessSubscriptionDetailsModelSpec extends CommonSpec {
 
   "Creating a model for a subscription request with all values" should {
     val businessDetailsModel = BusinessSubscriptionDetailsModel(

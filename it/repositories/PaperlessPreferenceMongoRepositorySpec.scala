@@ -17,14 +17,17 @@
 package repositories
 
 import helpers.IntegrationTestConstants._
-import org.scalatest.BeforeAndAfterEach
+import org.scalatest.concurrent.ScalaFutures.convertScalaFuture
+import org.scalatest.{BeforeAndAfterEach, Matchers, OptionValues, WordSpecLike}
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
+import play.api.test.Helpers.{await, defaultAwaitTimeout}
 import repositories.digitalcontact.PaperlessPreferenceMongoRepository
-import uk.gov.hmrc.play.test.UnitSpec
 
 import scala.concurrent.ExecutionContext.Implicits._
 
-class PaperlessPreferenceMongoRepositorySpec extends UnitSpec with GuiceOneAppPerSuite with BeforeAndAfterEach {
+class PaperlessPreferenceMongoRepositorySpec extends WordSpecLike
+  with Matchers
+  with OptionValues with GuiceOneAppPerSuite with BeforeAndAfterEach {
   val TestPaperlessPreferenceMongoRepository = app.injector.instanceOf[PaperlessPreferenceMongoRepository]
 
   override def beforeEach(): Unit = {
@@ -48,23 +51,23 @@ class PaperlessPreferenceMongoRepositorySpec extends UnitSpec with GuiceOneAppPe
         _ <- TestPaperlessPreferenceMongoRepository.storeNino(testPaperlessPreferenceKey)
       } yield ()
 
-      intercept[Exception](await(res))
+      res.failed.futureValue shouldBe a[Exception]
     }
   }
 
   "getLockoutStatus" should {
     "return None when there is no lock" in {
-      val res = await(TestPaperlessPreferenceMongoRepository.retrieveNino(testPreferencesToken))
-      res shouldBe empty
+      val res = TestPaperlessPreferenceMongoRepository.retrieveNino(testPreferencesToken)
+      res.futureValue shouldBe empty
     }
 
     "return a LockModel if there is a lock" in {
-      val res = await(for {
-        insertRes <- TestPaperlessPreferenceMongoRepository.storeNino(testPaperlessPreferenceKey)
+      val res = for {
+        _ <- TestPaperlessPreferenceMongoRepository.storeNino(testPaperlessPreferenceKey)
         stored <- TestPaperlessPreferenceMongoRepository.retrieveNino(testPreferencesToken)
-      } yield stored)
+      } yield stored
 
-      res shouldBe Some(testPaperlessPreferenceKey)
+      res.futureValue shouldBe Some(testPaperlessPreferenceKey)
     }
   }
 }

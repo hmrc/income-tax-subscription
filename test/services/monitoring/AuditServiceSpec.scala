@@ -16,6 +16,7 @@
 
 package services.monitoring
 
+import common.CommonSpec
 import org.mockito.ArgumentMatchers
 import org.mockito.Mockito._
 import org.scalatest.BeforeAndAfterEach
@@ -24,12 +25,11 @@ import play.api.Configuration
 import play.api.test.FakeRequest
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
-import uk.gov.hmrc.play.test.UnitSpec
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.ExecutionContext.Implicits.global
 
-class AuditServiceSpec extends UnitSpec with MockitoSugar with BeforeAndAfterEach {
+class AuditServiceSpec extends CommonSpec with MockitoSugar with BeforeAndAfterEach {
   val mockAuditConnector = mock[AuditConnector]
   val mockConfiguration = mock[Configuration]
   val testAppName = "app"

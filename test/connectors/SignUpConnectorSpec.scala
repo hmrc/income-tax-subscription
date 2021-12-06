@@ -16,6 +16,7 @@
 
 package connectors
 
+import common.CommonSpec
 import config.AppConfig
 import connectors.mocks.MockHttp
 import models.{SignUpFailure, SignUpResponse}
@@ -27,13 +28,13 @@ import play.api.http.Status._
 import play.api.libs.json.JsValue
 import play.api.mvc.Request
 import play.api.test.FakeRequest
+import play.api.test.Helpers.{await, defaultAwaitTimeout}
 import uk.gov.hmrc.http.{HeaderCarrier, HeaderNames}
-import uk.gov.hmrc.play.test.UnitSpec
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class SignUpConnectorSpec extends UnitSpec with MockHttp with GuiceOneAppPerSuite {
+class SignUpConnectorSpec extends CommonSpec with MockHttp with GuiceOneAppPerSuite {
 
   class Test(nino: String, response: PostSignUpResponse) {
     val appConfig: AppConfig = app.injector.instanceOf[AppConfig]

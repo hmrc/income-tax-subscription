@@ -16,14 +16,15 @@
 
 package services
 
+import common.CommonSpec
+import play.api.test.Helpers.{await, defaultAwaitTimeout}
 import services.mocks.TestLockoutStatusService
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.play.test.UnitSpec
 import utils.TestConstants._
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
-class LockoutStatusServiceSpec extends UnitSpec with TestLockoutStatusService {
+class LockoutStatusServiceSpec extends CommonSpec with TestLockoutStatusService {
 
   implicit val hc = HeaderCarrier()
 

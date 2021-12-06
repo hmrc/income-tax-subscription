@@ -16,15 +16,15 @@
 
 package models.monitoring
 
+import common.CommonSpec
 import models.subscription._
 import models.subscription.business.{Accruals, Cash}
 import org.scalatest.Matchers
 import play.api.libs.json.Json
-import uk.gov.hmrc.play.test.UnitSpec
 
 import java.time.LocalDate
 
-class CompletedSignUpAuditSpec extends UnitSpec with Matchers {
+class CompletedSignUpAuditSpec extends CommonSpec with Matchers {
   private val now: LocalDate = LocalDate.of(2021, 11, 26)
 
   private val testNino = "testNino"
