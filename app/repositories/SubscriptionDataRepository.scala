@@ -199,7 +199,11 @@ class SubscriptionDataRepository @Inject()(mongo: ReactiveMongoComponent,
   collection.indexesManager.drop("utrCredIndex")
   collection.indexesManager.ensure(utrCredIndex)
 
-  collection.indexesManager.ensure(referenceIndex)
+  collection.indexesManager.drop("referenceIndex")
+
+  if(isEnabled(SaveAndRetrieve)) {
+    collection.indexesManager.ensure(referenceIndex)
+  }
 
 }
 
