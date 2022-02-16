@@ -132,6 +132,21 @@ class SubscriptionDataControllerSpec extends CommonSpec with MockSubscriptionDat
     }
   }
 
+  "deleteSelfEmployments" should {
+    "return OK" when {
+      "the result is returned from the service" in {
+        val fakeRequest = FakeRequest().withBody(testJson)
+
+        mockAuthSuccess()
+        mockDeleteSubscriptionData(reference, testJson)(Some(testJson))
+
+        val result: Future[Result] = TestController.deleteSubscriptionData(reference, mockDataId)(request)
+
+        status(result) shouldBe OK
+      }
+    }
+  }
+
   "deleteAllSessionData" should {
     "return OK" when {
       "the data related to the given sessionId have been deleted successfully and an OK status returned from the service" in {

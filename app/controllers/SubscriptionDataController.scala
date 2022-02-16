@@ -81,6 +81,15 @@ class SubscriptionDataController @Inject()(authService: AuthService,
     }
   }
 
+  def deleteSubscriptionData(reference: String, id: String): Action[AnyContent] = Action.async { implicit request =>
+    authService.authorised() {
+      subscriptionDataService.deleteSubscriptionData(
+        reference = reference,
+        dataId = id
+      ).map(_ => Ok)
+    }
+  }
+
   def deleteAllSubscriptionData(reference: String): Action[AnyContent] = Action.async { implicit request =>
     authService.authorised() {
       subscriptionDataService.deleteAllSubscriptionData(reference).map { result =>

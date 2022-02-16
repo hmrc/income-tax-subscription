@@ -122,6 +122,12 @@ trait ComponentSpecBase extends WordSpecLike
         .delete()
         .futureValue
 
+    def deleteSubscriptionData(reference: String, id: String): WSResponse =
+      buildClient(s"/subscription-data/$reference/id/$id")
+        .withHttpHeaders("X-Session-ID" -> "testSessionId")
+        .delete()
+        .futureValue
+
     def getAllSelfEmployments(reference: String): WSResponse =
       buildClient(s"/subscription-data/$reference/all")
         .withHttpHeaders("X-Session-ID" -> "testSessionId")

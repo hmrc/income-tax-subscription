@@ -12,6 +12,9 @@ POST        /subscription-data/:reference/id/:id          controllers.Subscripti
 DELETE      /subscription-data/:reference/all            controllers.SubscriptionDataController.deleteAllSubscriptionData(reference: String)
 POST        /subscription-data                           controllers.SubscriptionDataController.retrieveReference
 
+
+DELETE      /subscription-data/:reference/id/:id    controllers.SubscriptionDataController.deleteSubscriptionData(reference: String, id: String)
+
 POST        /mis/sign-up/:nino                controllers.SignUpController.signUp(nino: String)
 
 POST        /mis/create/:mtdbsaRef            controllers.BusinessIncomeSourcesController.createIncomeSource(mtdbsaRef: String)

@@ -97,6 +97,20 @@ class SubscriptionDataRepository @Inject()(mongo: ReactiveMongoComponent,
     findAndUpdate(selector, update, fetchNewObject = true, upsert = true) map (_.result[JsValue])
   }
 
+  def deleteDataWithReference(reference: String, dataId: String): Future[Option[JsValue]] = {
+    val selector: JsObject = Json.obj("reference" -> reference)
+    val unset: JsValue = Json.obj(dataId -> "")
+    val update: JsObject = Json.obj(f"$$unset" -> unset)
+    findAndUpdate(selector, update) map (_.result[JsValue])
+  }
+
+  def deleteDataWithReferenceAndSessionId(reference: String, sessionId: String, dataId: String): Future[Option[JsValue]] = {
+    val selector: JsObject = Json.obj("reference" -> reference, "sessionId" -> sessionId)
+    val unset: JsValue = Json.obj(dataId -> "")
+    val update: JsObject = Json.obj(f"$$unset" -> unset)
+    findAndUpdate(selector, update) map (_.result[JsValue])
+  }
+
   def deleteDataFromSessionId(reference: String, sessionId: String): Future[WriteResult] = {
     remove("reference" -> reference, "sessionId" -> Json.toJson(sessionId))
   }
