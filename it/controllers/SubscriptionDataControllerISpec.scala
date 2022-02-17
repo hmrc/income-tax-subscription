@@ -103,7 +103,7 @@ class SubscriptionDataControllerISpec extends ComponentSpecBase with FeatureSwit
     }
   }
 
-  Seq(false, true) map { flag =>
+  Seq(false, true) foreach { flag =>
     s"when the save & retrieve feature switch is set to $flag" when {
       s"GET ${controllers.routes.SubscriptionDataController.getAllSubscriptionData(reference).url}" should {
         "return OK with all the data related to the user in mongo" when {
@@ -241,6 +241,18 @@ class SubscriptionDataControllerISpec extends ComponentSpecBase with FeatureSwit
           }
         }
       }
+
+      s"DELETE ${controllers.routes.SubscriptionDataController.deleteSubscriptionData(reference, "testDataId").url}" should {
+        "return OK and remove select data related to the user in mongo" when {
+          "the sessionId exists in mongo for the user" in {
+            saveAndRetrieve(flag)
+            AuthStub.stubAuthSuccess()
+            await(repository.insert(testDocumentAll))
+            IncomeTaxSubscription.deleteSubscriptionData(reference,id = "testDataId") should have(httpStatus(OK))
+            }
+          }
+        }
+
 
       s"DELETE ${controllers.routes.SubscriptionDataController.deleteAllSubscriptionData(reference).url}" should {
         "return OK remove all the data related to the user in mongo" when {

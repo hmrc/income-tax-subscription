@@ -83,6 +83,21 @@ class SubscriptionDataService @Inject()(subscriptionDataRepository: Subscription
     }
   }
 
+  def deleteSubscriptionData(reference: String, dataId: String)(implicit hc: HeaderCarrier): Future[Option[JsValue]] = {
+    if (isEnabled(SaveAndRetrieve)) {
+      subscriptionDataRepository.deleteDataWithReference(
+        reference = reference,
+        dataId = dataId
+      )
+    } else {
+      subscriptionDataRepository.deleteDataWithReferenceAndSessionId(
+        reference = reference,
+        sessionId = sessionIdFromHC,
+        dataId = dataId
+      )
+    }
+  }
+
   def deleteAllSubscriptionData(reference: String)(implicit hc: HeaderCarrier): Future[WriteResult] = {
     if (isEnabled(SaveAndRetrieve)) {
       subscriptionDataRepository.deleteDataFromReference(reference)

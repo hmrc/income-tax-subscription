@@ -221,6 +221,93 @@ class SubscriptionDataRepositorySpec extends WordSpecLike with Matchers with Opt
     }
   }
 
+  "deleteDataWithReferenceAndSessionId" when {
+    "the document was found" should {
+      "update the document so that it no longer contains the specified key" when {
+        "The document contains the requested key" in new Setup(testDocument(testSessionId)) {
+          testSelfEmploymentsRepository.deleteDataWithReferenceAndSessionId(reference, testSessionId ,"testDataIdOne").futureValue.isDefined shouldBe true
+
+          val optionalData: Option[JsValue] = testSelfEmploymentsRepository.getReferenceData(reference).futureValue
+          optionalData.isDefined shouldBe true
+          val data: JsValue = optionalData.get
+          (data \ "sessionId").asOpt[String] shouldBe Some(testSessionId)
+          (data \ "reference").asOpt[String] shouldBe Some(reference)
+          (data \ "testDataIdOne").isDefined shouldBe false
+          (data \ "testDataIdTwo").isDefined shouldBe true
+        }
+        "The document does not contain the requested key" in new Setup(testDocument(testSessionId)) {
+          testSelfEmploymentsRepository.deleteDataWithReferenceAndSessionId(reference, testSessionId, "testDataIdThree").futureValue.isDefined shouldBe true
+
+          val optionalData: Option[JsValue] = testSelfEmploymentsRepository.getReferenceData(reference).futureValue
+          optionalData.isDefined shouldBe true
+          val data: JsValue = optionalData.get
+          (data \ "sessionId").asOpt[String] shouldBe Some(testSessionId)
+          (data \ "reference").asOpt[String] shouldBe Some(reference)
+          (data \ "testDataIdOne").isDefined shouldBe true
+          (data \ "testDataIdTwo").isDefined shouldBe true
+          (data \ "testDataIdThree").isDefined shouldBe false
+        }
+      }
+    }
+    "the document is not found" should {
+      "return no document" in new Setup(testDocument(testSessionId)) {
+        testSelfEmploymentsRepository.deleteDataWithReferenceAndSessionId(reference, testSessionId + "-2", "testDataIdOne").futureValue shouldBe None
+
+        val optionalData: Option[JsValue] = testSelfEmploymentsRepository.getReferenceData(reference).futureValue
+        optionalData.isDefined shouldBe true
+        val data: JsValue = optionalData.get
+        (data \ "sessionId").asOpt[String] shouldBe Some(testSessionId)
+        (data \ "reference").asOpt[String] shouldBe Some(reference)
+        (data \ "testDataIdOne").isDefined shouldBe true
+        (data \ "testDataIdTwo").isDefined shouldBe true
+      }
+    }
+  }
+
+  "deleteDataWithReference" when {
+    "the document was found" should {
+      "update the document so that it no longer contains the specified key" when {
+        "The document contains the requested key" in new Setup(testDocumentWithoutSession()) {
+          testSelfEmploymentsRepository.deleteDataWithReference(reference, "testDataIdOne").futureValue.isDefined shouldBe true
+
+          val optionalData: Option[JsValue] = testSelfEmploymentsRepository.getReferenceData(reference).futureValue
+          optionalData.isDefined shouldBe true
+          val data: JsValue = optionalData.get
+          (data \ "reference").asOpt[String] shouldBe Some(reference)
+          (data \ "testDataIdOne").isDefined shouldBe false
+          (data \ "testDataIdTwo").isDefined shouldBe true
+        }
+        "The document does not contain the requested key" in new Setup(testDocumentWithoutSession()) {
+          testSelfEmploymentsRepository.deleteDataWithReference(reference, "testDataIdThree").futureValue.isDefined shouldBe true
+
+          val optionalData: Option[JsValue] = testSelfEmploymentsRepository.getReferenceData(reference).futureValue
+          optionalData.isDefined shouldBe true
+          val data: JsValue = optionalData.get
+          (data \ "reference").asOpt[String] shouldBe Some(reference)
+          (data \ "testDataIdOne").isDefined shouldBe true
+          (data \ "testDataIdTwo").isDefined shouldBe true
+          (data \ "testDataIdThree").isDefined shouldBe false
+        }
+      }
+    }
+    "the document is not found" should {
+      "return no document" in new Setup(testDocumentWithoutSession()) {
+        testSelfEmploymentsRepository.deleteDataWithReference(reference + "-2", "testDataIdOne").futureValue shouldBe None
+
+        val optionalData: Option[JsValue] = testSelfEmploymentsRepository.getReferenceData(reference).futureValue
+        optionalData.isDefined shouldBe true
+        val data: JsValue = optionalData.get
+        (data \ "reference").asOpt[String] shouldBe Some(reference)
+        (data \ "testDataIdOne").isDefined shouldBe true
+        (data \ "testDataIdTwo").isDefined shouldBe true
+      }
+    }
+  }
+
+
+
+
+
   "deleteDataFromSessionId" should {
     "remove a document which has the same reference and session id when one exists" in new Setup(testDocument(testSessionId)) {
       testSelfEmploymentsRepository.getSessionIdData(reference, testSessionId).futureValue shouldBe Some(testDocument(testSessionId))

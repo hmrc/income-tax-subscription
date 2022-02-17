@@ -59,6 +59,12 @@ trait MockSubscriptionDataService extends BeforeAndAfterEach with MockitoSugar {
     )).thenReturn(Future.successful(result))
   }
 
+  def mockDeleteSubscriptionData(reference: String, data: JsObject)(result: Option[JsObject]): Unit = {
+    when(mockSubscriptionDataService.deleteSubscriptionData(
+      ArgumentMatchers.eq(reference), ArgumentMatchers.eq(mockDataId))(ArgumentMatchers.any()
+    )).thenReturn(Future.successful(result))
+  }
+
   def mockDeleteSessionData(reference: String)(result: WriteResult): Unit = {
     when(mockSubscriptionDataService.deleteAllSubscriptionData(ArgumentMatchers.eq(reference))(ArgumentMatchers.any()))
       .thenReturn(Future.successful(result))
