@@ -18,8 +18,9 @@ package controllers
 
 import config.AppConfig
 import connectors.SignUpConnector
+
 import javax.inject.{Inject, Singleton}
-import models.monitoring.RegistrationSuccessAudit
+import models.monitoring.{RegistrationFailureAudit, RegistrationSuccessAudit}
 import play.api.Logger
 import play.api.libs.json.Json
 import play.api.mvc._
@@ -46,6 +47,7 @@ class SignUpController @Inject()(authService: AuthService, auditService: AuditSe
           Ok(Json.toJson(response))
         }
         case Left(error) => logger.error(s"Error processing Sign up request with status ${error.status} and message ${error.reason}")
+          auditService.audit(RegistrationFailureAudit(nino, error.status, error.reason))
           InternalServerError("Failed Sign up")
       }
 

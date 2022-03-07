@@ -16,17 +16,27 @@
 
 package models.monitoring
 
+import models.monitoring.RegistrationFailureAudit.suffix
 import play.api.http.Status._
-import play.api.libs.json.JsObject
 import services.monitoring.AuditModel
 import utils.Logging._
 
 case class RegistrationFailureAudit(nino: String,
                                     status: Int,
-                                    registration: JsObject,
-                                    responseBody: String) extends AuditModel {
+                                    reason: String) extends AuditModel {
 
-  private val suffix: String = status match {
+  override val auditType: String = s"${transactionName}-${suffix(status)}"
+  override val transactionName: String = RegistrationFailureAudit.transactionName
+  override val detail: Map[String, String] = Map(
+    "nino" -> nino,
+    "response" -> reason
+  )
+
+}
+
+object RegistrationFailureAudit {
+
+  def suffix(status: Int): String = status match {
     case BAD_REQUEST => eventTypeBadRequest
     case NOT_FOUND => eventTypeNotFound
     case CONFLICT => eventTypeConflict
@@ -34,18 +44,6 @@ case class RegistrationFailureAudit(nino: String,
     case SERVICE_UNAVAILABLE => eventTypeServerUnavailable
     case _ => eventTypeUnexpectedError
   }
-
-  override val auditType: String = s"${RegistrationFailureAudit.transactionName}-$suffix"
-  override val transactionName: String = RegistrationFailureAudit.transactionName
-  override val detail: Map[String, String] = Map(
-    "nino" -> nino,
-    "requestJson" -> registration.toString,
-    "response" -> responseBody
-  )
-
-}
-
-object RegistrationFailureAudit {
 
   val transactionName: String = "register-api-4"
 

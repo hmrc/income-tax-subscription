@@ -69,7 +69,9 @@ object IntegrationTestConstants extends JsonUtils {
   val UNAVAILABLE = (SERVICE_UNAVAILABLE, failureResponse(UNAVAILABLE_MODEL.code.get, UNAVAILABLE_MODEL.reason))
   val CONFLICT_ERROR = (CONFLICT, failureResponse(CONFLICT_ERROR_MODEL.code.get, CONFLICT_ERROR_MODEL.reason))
 
-  def offsetDateTime: OffsetDateTime = OffsetDateTime.ofInstant(Instant.now, ZoneId.systemDefault())
+  // mongo uses millis, so we need to get an instant with millis
+  val instant = Instant.ofEpochMilli(Instant.now().toEpochMilli)
+  val offsetDateTime = OffsetDateTime.ofInstant(instant, ZoneId.systemDefault())
 
   val testPropertyIncomeCash = Json.obj("cashAccrualsFlag" -> "C")
   val testPropertyIncomeAccruals = Json.obj("cashAccrualsFlag" -> "A")
