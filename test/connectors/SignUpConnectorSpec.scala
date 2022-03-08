@@ -19,7 +19,7 @@ package connectors
 import common.CommonSpec
 import config.AppConfig
 import connectors.mocks.MockHttp
-import models.{SignUpFailure, SignUpResponse}
+import models.{ErrorModel, SignUpResponse}
 import org.mockito.ArgumentMatchers
 import org.mockito.Mockito._
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
@@ -68,10 +68,10 @@ class SignUpConnectorSpec extends CommonSpec with MockHttp with GuiceOneAppPerSu
 
     "a PostSignUpFailure is returned" should {
 
-      "return a sign up failure with the correct status and message" in new Test("AA111111A", Left(SignUpFailure(INTERNAL_SERVER_ERROR, "Failure"))) {
+      "return a sign up failure with the correct status and message" in new Test("AA111111A", Left(ErrorModel(INTERNAL_SERVER_ERROR, "Failure"))) {
         val result: PostSignUpResponse = await(connector.signUp("AA111111A"))
 
-        result shouldBe Left(SignUpFailure(INTERNAL_SERVER_ERROR, "Failure"))
+        result shouldBe Left(ErrorModel(INTERNAL_SERVER_ERROR, "Failure"))
       }
     }
   }

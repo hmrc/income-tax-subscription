@@ -24,17 +24,17 @@ trait ConnectorUtils[L <: ErrorResponsesModel, R] extends JsonUtils {
 
   type Response = Either[ErrorModel, R]
 
-  def parseFailure(status: Int, jsValue: JsValue)(implicit lReader: Reads[L]): Response = {
+  def parseFailure(status: Int, jsValue: JsValue)(implicit lReader: Reads[L]): Response = Left (
     parseUtil[L](jsValue).fold(
       _ => ErrorModel.parseFailure(jsValue),
       valid => ErrorModel(status, valid)
     )
-  }
+  )
 
   def parseSuccess(jsValue: JsValue)(implicit rReader: Reads[R]): Response  = {
     parseUtil[R](jsValue).fold(
-      _ => ErrorModel.parseFailure(jsValue),
-      valid => valid
+      _ => Left(ErrorModel.parseFailure(jsValue)),
+      valid => Right(valid)
     )
   }
 

@@ -18,7 +18,6 @@ package models
 
 import play.api.http.Status
 import play.api.libs.json.{JsValue, Json}
-import utils.Implicits._
 
 trait ErrorResponsesModel {
 
@@ -28,40 +27,18 @@ trait ErrorResponsesModel {
 
 }
 
-trait ErrorModel extends ErrorResponsesModel {
-
-  def status: Int
-
-  override def equals(obj: scala.Any): Boolean =
-    obj match {
-      case that: ErrorModel if that.status.equals(this.status) && that.code.equals(this.code) && that.reason.equals(this.reason) => true
-      case _ => false
-    }
-
-  override def hashCode(): Int = {
-    val prime = 37
-    ((prime + status.hashCode) * prime + code.hashCode) * prime + reason.hashCode
-  }
-
+case class ErrorModel(status: Int, code: Option[String], reason: String) extends ErrorResponsesModel {
   override def toString: String = s"ErrorModel($status,${code.fold("")(x => x + ",")}$reason)"
 }
 
 
-object ErrorModel {
+case object ErrorModel {
 
-  private def newErrorModel(statusCode: Int, msgCode: Option[String], msg: String): ErrorModel = new ErrorModel {
-    override def reason: String = msg
+  def apply(status: Int, errorResponse: ErrorResponsesModel): ErrorModel = ErrorModel(status, errorResponse.code, errorResponse.reason)
 
-    override def code: Option[String] = msgCode
+  def apply(status: Int, message: String): ErrorModel = ErrorModel(status, None, message)
 
-    override def status: Int = statusCode
-  }
-
-  def apply(status: Int, errorResponse: ErrorResponsesModel): ErrorModel = newErrorModel(status, errorResponse.code, errorResponse.reason)
-
-  def apply(status: Int, message: String): ErrorModel = newErrorModel(status, None, message)
-
-  def apply(status: Int, code: Option[String], message: String): ErrorModel = newErrorModel(status, code, message)
+  def apply(status: Int, code: String, message: String): ErrorModel = ErrorModel(status, Some(code), message)
 
   def unapply(error: ErrorModel): Option[(Int, Option[String], String)] = Some((error.status, error.code, error.reason))
 
