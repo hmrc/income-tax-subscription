@@ -16,8 +16,6 @@
 
 package repositories
 
-import java.time._
-import javax.inject.Inject
 import models.lockout.CheckLockout
 import models.matching.LockoutResponse
 import play.api.libs.json.{JsObject, Json}
@@ -28,7 +26,8 @@ import reactivemongo.play.json.ImplicitBSONHandlers._
 import uk.gov.hmrc.mongo.ReactiveRepository
 import uk.gov.hmrc.mongo.json.ReactiveMongoFormats
 
-import java.time.temporal.{ChronoField, TemporalField}
+import java.time._
+import javax.inject.Inject
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 

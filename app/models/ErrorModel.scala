@@ -17,14 +17,11 @@
 package models
 
 import play.api.http.Status
-import play.api.libs.json.{JsValue, Json}
+import play.api.libs.json.JsValue
 
 trait ErrorResponsesModel {
-
   def code: Option[String]
-
   def reason: String
-
 }
 
 case class ErrorModel(status: Int, code: Option[String], reason: String) extends ErrorResponsesModel {
@@ -32,18 +29,12 @@ case class ErrorModel(status: Int, code: Option[String], reason: String) extends
 }
 
 
-case object ErrorModel {
-
+object ErrorModel {
   def apply(status: Int, errorResponse: ErrorResponsesModel): ErrorModel = ErrorModel(status, errorResponse.code, errorResponse.reason)
 
   def apply(status: Int, message: String): ErrorModel = ErrorModel(status, None, message)
 
   def apply(status: Int, code: String, message: String): ErrorModel = ErrorModel(status, Some(code), message)
 
-  def unapply(error: ErrorModel): Option[(Int, Option[String], String)] = Some((error.status, error.code, error.reason))
-
   lazy val parseFailure: JsValue => ErrorModel = (js: JsValue) => ErrorModel(Status.INTERNAL_SERVER_ERROR, "PARSE_ERROR", js.toString)
-
-  implicit val format = Json.format[ErrorModel]
-
 }

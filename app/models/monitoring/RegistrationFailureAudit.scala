@@ -25,8 +25,8 @@ case class RegistrationFailureAudit(nino: String,
                                     status: Int,
                                     reason: String) extends AuditModel {
 
-  override val auditType: String = s"${transactionName}-${suffix(status)}"
   override val transactionName: String = RegistrationFailureAudit.transactionName
+  override val auditType: String = s"${transactionName}-${suffix(status)}"
   override val detail: Map[String, String] = Map(
     "nino" -> nino,
     "response" -> reason
