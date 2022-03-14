@@ -17,7 +17,6 @@
 package repositories
 
 import java.time._
-
 import javax.inject.Inject
 import models.lockout.CheckLockout
 import models.matching.LockoutResponse
@@ -29,6 +28,7 @@ import reactivemongo.play.json.ImplicitBSONHandlers._
 import uk.gov.hmrc.mongo.ReactiveRepository
 import uk.gov.hmrc.mongo.json.ReactiveMongoFormats
 
+import java.time.temporal.{ChronoField, TemporalField}
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
@@ -42,12 +42,15 @@ class LockoutMongoRepository @Inject()(implicit mongo: ReactiveMongoComponent)
 
   def lockoutAgent(arn: String, timeoutSeconds: Int): Future[Option[LockoutResponse]] = {
     val ttl: Duration = Duration.ofSeconds(timeoutSeconds)
-    val expiryTimestamp = OffsetDateTime.ofInstant(Instant.now.plusSeconds(ttl.getSeconds), ZoneId.systemDefault())
+
+    // mongo uses millis, so we need to get an instant with millis
+    val instant = Instant.ofEpochMilli(Instant.now.plusSeconds(ttl.getSeconds).toEpochMilli)
+    val expiryTimestamp = OffsetDateTime.ofInstant(instant, ZoneId.systemDefault())
 
     val model = LockoutResponse(arn, expiryTimestamp)
     collection.insert(ordered = false).one(model).map {
       case result if result.ok => Some(model)
-      case result => None
+      case _ => None
     }
   }
 
