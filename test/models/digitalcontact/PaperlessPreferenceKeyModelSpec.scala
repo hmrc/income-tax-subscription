@@ -18,10 +18,9 @@ package models.digitalcontact
 
 import common.CommonSpec
 import play.api.libs.json.Json
-import utils.Implicits
 import utils.TestConstants._
 
-class PaperlessPreferenceKeyModelSpec extends CommonSpec with Implicits {
+class PaperlessPreferenceKeyModelSpec extends CommonSpec {
 
   "model writer" should {
     import utils.TestConstants.PaperlessPreferenceResponse.successResponse

@@ -296,7 +296,7 @@ object TestConstants extends JsonUtils {
   val testCreateIncomeSubmissionModel: BusinessSubscriptionDetailsModel = BusinessSubscriptionDetailsModel(
     nino = "AA111111A",
     accountingPeriod = AccountingPeriodModel(LocalDate.now(), LocalDate.now()),
-    selfEmploymentsData = Seq(),
+    selfEmploymentsData = Some(Seq()),
     accountingMethod = None,
     incomeSource = FeIncomeSourceModel(selfEmployment = false, ukProperty = true, foreignProperty = false),
     propertyStartDate = Some(PropertyStartDateModel(LocalDate.now())),

@@ -17,7 +17,7 @@
 package parsers
 
 import common.CommonSpec
-import models.{SignUpFailure, SignUpResponse}
+import models.{ErrorModel, SignUpResponse}
 import play.api.http.Status._
 import play.api.libs.json.Json
 import uk.gov.hmrc.http.HttpResponse
@@ -42,7 +42,7 @@ class SignUpParserSpec extends CommonSpec {
             |}
           """.stripMargin)
 
-        SignUpParser.signUpResponseHttpReads.read("", "", response) shouldBe Left(SignUpFailure(OK, "Failed to read Json for MTD Sign Up Response"))
+        SignUpParser.signUpResponseHttpReads.read("", "", response) shouldBe Left(ErrorModel(OK, "Failed to read Json for MTD Sign Up Response"))
       }
     }
 
@@ -51,7 +51,7 @@ class SignUpParserSpec extends CommonSpec {
       "return a SignUpFailure with the response message" in {
         val response = HttpResponse(INTERNAL_SERVER_ERROR, body = "Error body")
 
-        SignUpParser.signUpResponseHttpReads.read("", "", response) shouldBe Left(SignUpFailure(INTERNAL_SERVER_ERROR,  "Error body"))
+        SignUpParser.signUpResponseHttpReads.read("", "", response) shouldBe Left(ErrorModel(INTERNAL_SERVER_ERROR,  "Error body"))
       }
     }
   }

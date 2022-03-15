@@ -24,7 +24,6 @@ import play.api.Logger
 import play.api.http.Status._
 import play.api.mvc.Request
 import uk.gov.hmrc.http.HeaderCarrier
-import utils.Implicits._
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -41,14 +40,14 @@ class SubscriptionStatusService @Inject()(businessDetailsConnector: BusinessDeta
     val logger: Logger = Logger(this.getClass)
 
     logger.debug(s"Request: NINO=$nino")
-    businessDetailsConnector.getBusinessDetails(nino).flatMap {
+    businessDetailsConnector.getBusinessDetails(nino).map {
       // if the subscription is not found, convert it to OK with {}
       case Left(error: ErrorModel) if error.status == NOT_FOUND =>
         logger.debug(s"SubscriptionStatusService.checkMtditsaEnrolment - No mtditsa enrolment for nino=$nino")
         Right(None)
       case Right(x) =>
         logger.debug(s"SubscriptionStatusService.checkMtditsaEnrolment - Client is already enrolled with mtditsa, ref=${x.mtdbsa}")
-        Right(Some(FESuccessResponse(x.mtdbsa)))
+        Right(Some(FESuccessResponse(Some(x.mtdbsa))))
       case Left(x) => Left(x)
     }
   }

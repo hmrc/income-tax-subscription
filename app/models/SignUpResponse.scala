@@ -23,7 +23,3 @@ case class SignUpResponse(mtdbsa: String)
 object SignUpResponse {
   implicit val format: OFormat[SignUpResponse] = Json.format[SignUpResponse]
 }
-
-sealed trait SignUpResponseFailure extends ErrorModel
-
-case class SignUpFailure(status: Int, reason: String, code: Option[String] = None) extends SignUpResponseFailure

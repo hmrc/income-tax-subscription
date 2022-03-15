@@ -20,7 +20,7 @@ import config.MicroserviceAppConfig
 import helpers.ComponentSpecBase
 import helpers.IntegrationTestConstants._
 import helpers.servicemocks.SignUpStub
-import models.{SignUpFailure, SignUpResponse}
+import models.{ErrorModel, SignUpResponse}
 import play.api.http.Status._
 import play.api.mvc.Request
 import play.api.test.FakeRequest
@@ -52,7 +52,7 @@ class SignUpConnectorISpec extends ComponentSpecBase {
 
         val result = signUpConnector.signUp(testNino)
 
-        result.futureValue shouldBe Left(SignUpFailure(status = 200,  "Failed to read Json for MTD Sign Up Response"))
+        result.futureValue shouldBe Left(ErrorModel(status = 200,  "Failed to read Json for MTD Sign Up Response"))
       }
     }
 
@@ -65,7 +65,7 @@ class SignUpConnectorISpec extends ComponentSpecBase {
 
         val result = signUpConnector.signUp(testNino)
 
-        result.futureValue shouldBe Left(SignUpFailure(INTERNAL_SERVER_ERROR, """{"code":"code","reason":"reason"}"""))
+        result.futureValue shouldBe Left(ErrorModel(INTERNAL_SERVER_ERROR, """{"code":"code","reason":"reason"}"""))
       }
     }
   }
