@@ -26,29 +26,32 @@ object CheckLockout {
 
   val arn = "_id"
   val expiry = "expiryTimestamp"
+  val dollarDate = "$date"
 
-  val temporalReads: Reads[OffsetDateTime] = new Reads[OffsetDateTime] {
+  private implicit val temporalReads: Reads[OffsetDateTime] = new Reads[OffsetDateTime] {
     override def reads(json: JsValue): JsResult[OffsetDateTime] = {
-      (json \ "$date").validate[Long] map (millis =>
+      (json \ dollarDate).validate[Long] map (millis =>
         OffsetDateTime.ofInstant(Instant.ofEpochMilli(millis), ZoneId.systemDefault()))
     }
   }
 
-  val temporalWrites: Writes[OffsetDateTime] = new Writes[OffsetDateTime] {
-    override def writes(o: OffsetDateTime): JsValue = Json.obj("$date" -> Instant.from(o).toEpochMilli)
+  private implicit val temporalWrites: Writes[OffsetDateTime] = new Writes[OffsetDateTime] {
+    override def writes(o: OffsetDateTime): JsValue = Json.obj(dollarDate -> Instant.from(o).toEpochMilli)
   }
 
-  val reader: Reads[CheckLockout] = new Reads[CheckLockout] {
+  private val reader: Reads[CheckLockout] = new Reads[CheckLockout] {
     override def reads(json: JsValue): JsResult[CheckLockout] = {
       val arnv = (json \ arn).validate[String]
       val exp = (json \ expiry).validate[OffsetDateTime]
-      JsSuccess(CheckLockout(arnv.get, exp.get))
+      val arnValueValidated = arnv.get
+      val expiryValueValidated = exp.get
+      JsSuccess(CheckLockout(arnValueValidated, expiryValueValidated))
     }
   }
 
-  val writer: OWrites[CheckLockout] = new OWrites[CheckLockout] {
+  private val writer: OWrites[CheckLockout] = new OWrites[CheckLockout] {
     override def writes(o: CheckLockout): JsObject =
-      Json.obj(arn -> o.arn, expiry -> Json.obj("$date" -> Instant.from(o.expiryTimestamp).toEpochMilli))
+      Json.obj(arn -> o.arn, expiry -> Json.toJson(o.expiryTimestamp))
   }
 
   implicit val oformats: OFormat[CheckLockout] = OFormat[CheckLockout](reader, writer)
