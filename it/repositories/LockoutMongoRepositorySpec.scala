@@ -42,8 +42,9 @@ class LockoutMongoRepositorySpec extends WordSpecLike with Matchers with OptionV
         stored <- TestLockoutMongoRepository.find(LockoutResponse.arn -> testArn)
       } yield (insertRes.get, stored)
 
-      val (insertRes, stored) = result.futureValue
+      val r = await(result)
 
+      val (insertRes, stored) = r
       stored.size shouldBe 1
       insertRes shouldBe stored.head
     }
