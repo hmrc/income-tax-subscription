@@ -17,6 +17,7 @@
 package services
 
 import common.CommonSpec
+import models.ErrorModel
 import models.frontend.FESuccessResponse
 import play.api.http.Status._
 import play.api.mvc.Request
@@ -30,15 +31,18 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 class SubscriptionStatusServiceSpec extends CommonSpec with TestSubscriptionStatusService {
 
-  implicit val hc = HeaderCarrier()
+  implicit val hc: HeaderCarrier = HeaderCarrier()
   implicit val request: Request[_] = FakeRequest()
 
   "SubscriptionStatusService.checkMtditsaSubscroption" should {
 
-    def call = await(TestSubscriptionStatusService.checkMtditsaSubscription(testNino))
+    def call: Either[ErrorModel, Option[FESuccessResponse]] = {
+      await(TestSubscriptionStatusService.checkMtditsaSubscription(testNino))
+    }
 
     "return the Right(NONE) when the person does not have a mtditsa subscription" in {
       mockGetBusinessDetailsNotFound(testNino)
+
       call.right.get shouldBe None
     }
 
