@@ -17,29 +17,26 @@
 package services
 
 import connectors.BusinessDetailsConnector
-import javax.inject.{Inject, Singleton}
 import models.ErrorModel
 import models.frontend.FESuccessResponse
-import play.api.Logger
+import play.api.Logging
 import play.api.http.Status._
 import play.api.mvc.Request
 import uk.gov.hmrc.http.HeaderCarrier
 
+import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class SubscriptionStatusService @Inject()(businessDetailsConnector: BusinessDetailsConnector) {
+class SubscriptionStatusService @Inject()(businessDetailsConnector: BusinessDetailsConnector) extends Logging {
   /*
   * This method will check to see if a user with the supplied nino has an MTD IT SA subscription
   * if will return OK with the reference if it is found, or OK with {} if it is not found
   * it will return all other errors as they were
   **/
+
   def checkMtditsaSubscription(nino: String)
                               (implicit hc: HeaderCarrier, ec: ExecutionContext, request: Request[_]): Future[Either[ErrorModel, Option[FESuccessResponse]]] = {
-
-    val logger: Logger = Logger(this.getClass)
-
-    logger.debug(s"Request: NINO=$nino")
     businessDetailsConnector.getBusinessDetails(nino).map {
       // if the subscription is not found, convert it to OK with {}
       case Left(error: ErrorModel) if error.status == NOT_FOUND =>
