@@ -43,7 +43,7 @@ class SubscriptionDataRepository @Inject()(mongo: ReactiveMongoComponent,
     implicitly[Format[BSONObjectID]]
   ) with FeatureSwitching {
 
-  private def find(selector: JsObject, projection: Option[JsObject] = None): Future[List[JsValue]] = {
+  private def find(selector: JsObject, projection: Option[JsObject]): Future[List[JsValue]] = {
     collection.find(selector, projection).cursor[JsObject]().collect(maxDocs = -1, FailOnError[List[JsObject]]())
   }
 

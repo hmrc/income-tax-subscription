@@ -17,10 +17,9 @@
 package models.monitoring
 
 import common.CommonSpec
-import org.scalatest.{FunSuite, Matchers}
-import play.api.http.Status.{BAD_REQUEST, CONFLICT, INTERNAL_SERVER_ERROR, NOT_FOUND, SERVICE_UNAVAILABLE}
-import play.api.libs.json.Json
-import utils.Logging.{eventTypeBadRequest, eventTypeConflict, eventTypeInternalServerError, eventTypeNotFound, eventTypeServerUnavailable, eventTypeUnexpectedError}
+import org.scalatest.Matchers
+import play.api.http.Status._
+import utils.Logging._
 
 class RegistrationFailureAuditSpec extends CommonSpec with Matchers {
 
