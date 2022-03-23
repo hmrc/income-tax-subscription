@@ -1,62 +1,49 @@
-Income Tax Subscription MicroService
-====================================
 [![Apache-2.0 license](http://img.shields.io/badge/license-Apache-brightgreen.svg)](http://www.apache.org/licenses/LICENSE-2.0.html)
 [![Build Status](https://travis-ci.org/hmrc/income-tax-subscription.svg?branch=master)](https://travis-ci.org/hmrc/income-tax-subscription) [ ![Download](https://api.bintray.com/packages/hmrc/releases/income-tax-subscription/images/download.svg) ](https://bintray.com/hmrc/releases/income-tax-subscription/_latestVersion)
 
-This is the protected backend MicroService for the Sign Up to Report your Income and Expenses Quarterly (MTD ITSA) service.
+# Income Tax Subscription MicroService
 
-This service provides the backend interactions with other backend MicroServices
+This is a scala/Play protected backend MicroService for the Sign Up to Report your Income and Expenses Quarterly (MTD ITSA) service.
 
-### Running the subscription services locally
+This service provides the backend interactions with other backend MicroServices.
 
-You will need [sbt](http://www.scala-sbt.org/)
+Local development requires:
 
-1) **[Install Service-Manager](https://github.com/hmrc/service-manager/wiki/Install#install-service-manager)**
+  * [sbt](http://www.scala-sbt.org/)
+  * MongoDB available on port 27017
+  * HMRC Service manager (if using the provided scripts)
+    * [Install Service-Manager](https://github.com/hmrc/service-manager/wiki/Install#install-service-manager)**
+  * The services in the ITSA_SUBSC_ALL profile (a subset can be used)
 
+# How to start this service (main section)
 
-2) **Start the ITSA subscription dependencies:**
+See `scripts/start`
 
-   `sm --start ITSA_SUBSC_DEP -f`
+The active port is 9560
 
+# How to use
 
-3) **Clone the frontend service:**
+The entry page for this service running locally is
 
-  - SSH 
-  
-    `git clone git@github.com:hmrc/income-tax-subscription-frontend.git`
-  
-  - HTTPS 
-  
-    `git clone https://github.com/hmrc/income-tax-subscription-frontend.git`
-  
-  
-4) **Start the frontend service:**
+  http://localhost:9561/report-quarterly/income-and-expenses/sign-up
 
-   `sbt "run 9561" -Dapplication.router=testOnlyDoNotUseInAppConf.Routes`
-   
-  
-5) **Clone the protected service:**
+The entry page for this service on staging (requires HMRC VPN) is
 
-  - SSH 
-  
-     `git clone git@github.com:hmrc/income-tax-subscription.git`
-  
-  - HTTPS 
-  
-     `git clone https://github.com/hmrc/income-tax-subscription.git`
-  
-   
-6) **Start the protected service:**
+  https://www.staging.tax.service.gov.uk/report-quarterly/income-and-expenses/sign-up
 
-   `sbt "run 9560" -Dapplication.router=testOnlyDoNotUseInAppConf.Routes`
+# How to test
 
-7) **Start the stubbed services:**
+There are two built in test sets: `test` and `it:test`. See build.sbt for details.
 
-   `sm --start INCOME_TAX_SUBSCRIPTION_STUBS -f`
+# Persistence
 
-8) **Go to the homepage:**
+Data is stored as key/value in Mongo DB. See json reads/writes implementations (especially tests) for details.
 
-   http://localhost:9561/report-quarterly/income-and-expenses/sign-up
+To connect to the mongo db provided by docker (recommended) please use
+
+```
+docker exec -it mongo-db mongosh
+```
 
 ### License
   
