@@ -17,7 +17,7 @@
 package models
 
 import common.CommonSpec
-import org.scalatest.Matchers
+import org.scalatest.matchers.should.Matchers
 import play.api.http.Status.{INTERNAL_SERVER_ERROR, NOT_FOUND}
 import play.api.libs.json.{JsValue, Json}
 

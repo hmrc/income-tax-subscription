@@ -19,13 +19,13 @@ package utils
 import com.fasterxml.jackson.core.{JsonParseException, JsonProcessingException}
 import com.fasterxml.jackson.databind.{JsonNode, ObjectMapper}
 import com.github.fge.jsonschema.main.{JsonSchema, JsonSchemaFactory}
-import play.api.Logging
+import play.api.{Logging => Logger}
 import play.api.libs.json.{JsValue, Json}
 
 import scala.io.Source
 import scala.util.{Failure, Success, Try}
 
-trait Resources extends Logging {
+trait Resources extends Logger {
 
   private final lazy val jsonMapper = new ObjectMapper()
   private final lazy val jsonFactory = jsonMapper.getFactory

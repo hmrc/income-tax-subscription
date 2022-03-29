@@ -19,14 +19,16 @@ package repositories
 import helpers.IntegrationTestConstants._
 import models.matching.LockoutResponse
 import org.scalatest.concurrent.ScalaFutures.convertScalaFuture
-import org.scalatest.{BeforeAndAfterEach, Matchers, OptionValues, WordSpecLike}
+import org.scalatest.wordspec.AnyWordSpecLike
+import org.scalatest.{BeforeAndAfterEach, OptionValues}
+import org.scalatest.matchers.should.Matchers
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
 import play.modules.reactivemongo.ReactiveMongoComponent
 
 import scala.concurrent.ExecutionContext.Implicits._
 
-class LockoutMongoRepositorySpec extends WordSpecLike with Matchers with OptionValues with GuiceOneAppPerSuite with BeforeAndAfterEach {
+class LockoutMongoRepositorySpec extends AnyWordSpecLike with Matchers with OptionValues with GuiceOneAppPerSuite with BeforeAndAfterEach {
   implicit lazy val mongo = app.injector.instanceOf[ReactiveMongoComponent]
 
   object TestLockoutMongoRepository extends LockoutMongoRepository

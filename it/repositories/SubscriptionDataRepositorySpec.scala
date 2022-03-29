@@ -17,7 +17,9 @@
 package repositories
 
 import org.scalatest.concurrent.ScalaFutures.convertScalaFuture
-import org.scalatest.{BeforeAndAfterEach, Matchers, OptionValues, WordSpecLike}
+import org.scalatest.wordspec.AnyWordSpecLike
+import org.scalatest.{BeforeAndAfterEach, OptionValues}
+import org.scalatest.matchers.should.Matchers
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.libs.json.{JsObject, JsValue, Json}
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
@@ -25,7 +27,7 @@ import play.api.test.Helpers.{await, defaultAwaitTimeout}
 import scala.concurrent.ExecutionContext.Implicits._
 import scala.concurrent.Future
 
-class SubscriptionDataRepositorySpec extends WordSpecLike with Matchers with OptionValues  with GuiceOneAppPerSuite with BeforeAndAfterEach {
+class SubscriptionDataRepositorySpec extends AnyWordSpecLike with Matchers with OptionValues  with GuiceOneAppPerSuite with BeforeAndAfterEach {
 
   val testSelfEmploymentsRepository: SubscriptionDataRepository = app.injector.instanceOf[SubscriptionDataRepository]
 

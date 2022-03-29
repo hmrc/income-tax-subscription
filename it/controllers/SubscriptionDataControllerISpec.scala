@@ -96,7 +96,7 @@ class SubscriptionDataControllerISpec extends ComponentSpecBase with FeatureSwit
       "the user is not authorised" in {
         AuthStub.stubAuthFailure()
 
-        IncomeTaxSubscription.postRetrieveReference(utr) should have(
+        IncomeTaxSubscription.postUnauthorisedRetrieveReference(utr) should have(
           httpStatus(UNAUTHORIZED)
         )
       }
@@ -235,7 +235,9 @@ class SubscriptionDataControllerISpec extends ComponentSpecBase with FeatureSwit
 
             AuthStub.stubAuthFailure()
 
-            IncomeTaxSubscription.postInsertSelfEmployments(reference, "testDataId", testJson) should have(
+            val res = IncomeTaxSubscription.postInsertSelfEmployments(reference, "testDataId", testJson)
+
+            res should have(
               httpStatus(UNAUTHORIZED)
             )
           }

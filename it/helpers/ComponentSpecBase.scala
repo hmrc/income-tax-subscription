@@ -22,6 +22,8 @@ import helpers.servicemocks.WireMockMethods
 import models.lockout.LockoutRequest
 import org.scalatest._
 import org.scalatest.concurrent.{Eventually, IntegrationPatience, ScalaFutures}
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpecLike
 import org.scalatestplus.play.guice.GuiceOneServerPerSuite
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.{JsValue, Json, Writes}
@@ -29,7 +31,7 @@ import play.api.libs.ws.WSResponse
 import play.api.{Application, Environment, Mode}
 import uk.gov.hmrc.http.HeaderCarrier
 
-trait ComponentSpecBase extends WordSpecLike
+trait ComponentSpecBase extends AnyWordSpecLike
   with OptionValues
   with GivenWhenThen with TestSuite
   with GuiceOneServerPerSuite with ScalaFutures with IntegrationPatience with Matchers with Assertions
@@ -81,56 +83,54 @@ trait ComponentSpecBase extends WordSpecLike
   object IncomeTaxSubscription {
     def getSubscriptionStatus(nino: String): WSResponse = get(s"/subscription/$nino")
 
-    def get(uri: String): WSResponse = buildClient(uri).get().futureValue
+    def get(uri: String): WSResponse = authorisedClient(uri).get().futureValue
 
     def signUp(nino: String): WSResponse = post(s"/mis/sign-up/$nino", Json.parse("{}"))
 
     def businessIncomeSource(mtdbsaRef: String, body: JsValue): WSResponse = post(s"/mis/create/$mtdbsaRef", body)
 
-    def checkLockoutStatus(arn: String): WSResponse = get(s"/client-matching/lock/$arn")
+    def checkLockoutStatus(arn: String): WSResponse = authorisedClient(s"/client-matching/lock/$arn")
+      .get()
+      .futureValue
 
     def lockoutAgent(arn: String, body: LockoutRequest): WSResponse = post(s"/client-matching/lock/$arn", body)
 
     def storeNino(token: String, nino: String): WSResponse = post(s"/identifier-mapping/$token", Json.obj("nino" -> nino))
 
-    def getNino(token: String): WSResponse = get(s"/identifier-mapping/$token")
+    def getNino(token: String): WSResponse = authorisedClient(s"/identifier-mapping/$token").get().futureValue
+
+    def postUnauthorisedRetrieveReference(utr: String): WSResponse =
+      buildClient(s"/subscription-data")
+        .post(Json.obj("utr" -> utr))
+        .futureValue
 
     def postRetrieveReference(utr: String): WSResponse =
-      buildClient(s"/subscription-data")
-        .withHttpHeaders("X-Session-ID" -> "testSessionId")
+      authorisedClient(s"/subscription-data")
         .post(Json.obj("utr" -> utr))
         .futureValue
 
     def getRetrieveSelfEmployments(reference: String, dataId: String): WSResponse =
-      buildClient(s"/subscription-data/$reference/id/$dataId")
-        .withHttpHeaders("X-Session-ID" -> "testSessionId")
+      authorisedClient(s"/subscription-data/$reference/id/$dataId")
         .get()
         .futureValue
 
     def postInsertSelfEmployments(reference: String, dataId: String, body: JsValue): WSResponse =
-      buildClient(s"/subscription-data/$reference/id/$dataId")
-        .withHttpHeaders(
-          "X-Session-ID" -> "testSessionId",
-          "Content-Type" -> "application/json"
-        )
+      authorisedClient(s"/subscription-data/$reference/id/$dataId", "Content-Type" -> "application/json")
         .post(body.toString())
         .futureValue
 
     def deleteDeleteAllSessionData(reference: String): WSResponse =
-      buildClient(s"/subscription-data/$reference/all")
-        .withHttpHeaders("X-Session-ID" -> "testSessionId")
+      authorisedClient(s"/subscription-data/$reference/all")
         .delete()
         .futureValue
 
     def deleteSubscriptionData(reference: String, id: String): WSResponse =
-      buildClient(s"/subscription-data/$reference/id/$id")
-        .withHttpHeaders("X-Session-ID" -> "testSessionId")
+      authorisedClient(s"/subscription-data/$reference/id/$id")
         .delete()
         .futureValue
 
     def getAllSelfEmployments(reference: String): WSResponse =
-      buildClient(s"/subscription-data/$reference/all")
-        .withHttpHeaders("X-Session-ID" -> "testSessionId")
+      authorisedClient(s"/subscription-data/$reference/all")
         .get()
         .futureValue
 
@@ -138,6 +138,7 @@ trait ComponentSpecBase extends WordSpecLike
       buildClient(uri)
         .withHttpHeaders(
           "Content-Type" -> "application/json",
+          "Authorization" -> "Bearer 123",
           ITSASessionKeys.RequestURI -> IntegrationTestConstants.requestUri
         )
         .post(writes.writes(body).toString())
@@ -145,4 +146,11 @@ trait ComponentSpecBase extends WordSpecLike
 
   }
 
+  private def authorisedClient(path: String, extraHeaders: (String, String)*) = {
+    val sessionId = "X-Session-ID" -> "testSessionId"
+    val authorisation = "Authorization" -> "Bearer 123"
+    val headers = extraHeaders.toList :+ sessionId :+ authorisation
+    buildClient(path)
+      .withHttpHeaders(headers:_*)
+  }
 }

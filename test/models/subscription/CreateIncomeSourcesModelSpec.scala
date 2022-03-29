@@ -18,12 +18,11 @@ package models.subscription
 
 import models.DateModel
 import models.subscription.business.{Accruals, Cash}
-import org.scalatest.MustMatchers
 import org.scalatestplus.play.PlaySpec
 import play.api.libs.json._
 import uk.gov.hmrc.http.InternalServerException
 import utils.TestConstants.testNino
-
+import org.scalatest.matchers.must.{Matchers => MustMatchers}
 import java.time.LocalDate
 
 class CreateIncomeSourcesModelSpec extends PlaySpec with MustMatchers {

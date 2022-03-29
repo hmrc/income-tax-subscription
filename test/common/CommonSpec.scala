@@ -16,9 +16,11 @@
 
 package common
 
-import org.scalatest.{Matchers, OptionValues, WordSpecLike}
+import org.scalatest.OptionValues
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpecLike
 
-trait CommonSpec extends WordSpecLike with Matchers with OptionValues {
+trait CommonSpec extends AnyWordSpecLike with Matchers with OptionValues {
   import scala.concurrent.duration._
 
   implicit val defaultTimeout: FiniteDuration = 5 seconds
