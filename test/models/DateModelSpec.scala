@@ -17,7 +17,7 @@
 package models
 
 import common.CommonSpec
-import org.scalatest.Matchers
+import org.scalatest.matchers.should.Matchers
 
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter

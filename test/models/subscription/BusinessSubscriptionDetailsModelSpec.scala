@@ -19,7 +19,7 @@ package models.subscription
 import common.CommonSpec
 import models.DateModel
 import models.subscription.business.{Accruals, Cash}
-import org.scalatest.MustMatchers.convertToAnyMustWrapper
+import org.scalatest.matchers.must.Matchers.convertToAnyMustWrapper
 import play.api.libs.json.Json
 
 class BusinessSubscriptionDetailsModelSpec extends CommonSpec {

@@ -26,19 +26,20 @@ private object AppDependencies {
   import play.core.PlayVersion
   import play.sbt.PlayImport._
 
-  private val domainVersion = "6.2.0-play-28"
-  private val scalaTestVersion = "3.0.9"
-  private val scalaTestPlusVersion = "5.0.0"
-  private val pegdownVersion = "1.6.0"
-  private val mockitoVersion = "3.7.0"
+  private val domainVersion = "8.0.0-play-28"
+  private val scalaTestVersion = "3.2.11"
+  private val scalaTestPlusVersion = "5.1.0"
+  private val mockitoVersion = "4.4.0"
 
   private val scalaJVersion = "2.4.2"
 
   private val reactiveMongoVersion = "8.0.0-play-28"
 
-  private val wiremockVersion = "2.21.0"
+  private val wiremockVersion = "2.32.0"
 
-  private val bootstrapBackendVersion = "5.19.0"
+  private val bootstrapBackendVersion = "5.21.0"
+
+  private val playVersion = "2.8.14"
 
   val compile = Seq(
     ws,
@@ -57,12 +58,14 @@ private object AppDependencies {
       override lazy val test = Seq(
         "uk.gov.hmrc" %% "bootstrap-backend-play-28" % bootstrapBackendVersion % scope,
         "org.scalatest" %% "scalatest" % scalaTestVersion % scope,
-        "org.pegdown" % "pegdown" % pegdownVersion % scope,
-        "com.typesafe.play" %% "play-test" % PlayVersion.current % scope,
+        "org.scalatestplus" %% "mockito-3-12" % "3.2.10.0" % scope,
+        "com.typesafe.play" %% "play-test" % playVersion % scope,
         "org.scalatestplus.play" %% "scalatestplus-play" % scalaTestPlusVersion % scope,
+        "com.vladsch.flexmark" % "flexmark-all" % "0.62.2" % scope,
+        "com.fasterxml.jackson.module" %% "jackson-module-scala" % "2.13.2" % scope,
         "org.scalaj" %% "scalaj-http" % scalaJVersion % scope,
         "org.mockito" % "mockito-core" % mockitoVersion % scope,
-        "com.github.fge" % "json-schema-validator" % "2.2.6" % scope
+        "com.github.fge" % "json-schema-validator" % "2.2.14" % scope
       )
     }.test
   }
@@ -74,36 +77,16 @@ private object AppDependencies {
 
       override lazy val test = Seq(
         "org.scalatest" %% "scalatest" % scalaTestVersion % scope,
-        "org.pegdown" % "pegdown" % pegdownVersion % scope,
-        "com.typesafe.play" %% "play-test" % PlayVersion.current % scope,
+        "com.typesafe.play" %% "play-test" % playVersion % scope,
         "org.scalatestplus.play" %% "scalatestplus-play" % scalaTestPlusVersion % scope,
+        "com.vladsch.flexmark" % "flexmark-all" % "0.62.2" % scope,
+        "com.fasterxml.jackson.module" %% "jackson-module-scala" % "2.13.2" % scope,
         "org.scalaj" %% "scalaj-http" % scalaJVersion % scope,
         "org.mockito" % "mockito-core" % mockitoVersion % scope,
-        "com.github.fge" % "json-schema-validator" % "2.2.6" % scope,
+        "com.github.fge" % "json-schema-validator" % "2.2.14" % scope,
         "com.github.tomakehurst" % "wiremock" % wiremockVersion % scope
       )
     }.test
-  }
-
-  // Fixes a transitive dependency clash between wiremock and scalatestplus-play
-  val overrides: Seq[ModuleID] = {
-    val jettyFromWiremockVersion = "9.2.24.v20180105"
-    Seq(
-      "org.eclipse.jetty" % "jetty-client" % jettyFromWiremockVersion,
-      "org.eclipse.jetty" % "jetty-continuation" % jettyFromWiremockVersion,
-      "org.eclipse.jetty" % "jetty-http" % jettyFromWiremockVersion,
-      "org.eclipse.jetty" % "jetty-io" % jettyFromWiremockVersion,
-      "org.eclipse.jetty" % "jetty-security" % jettyFromWiremockVersion,
-      "org.eclipse.jetty" % "jetty-server" % jettyFromWiremockVersion,
-      "org.eclipse.jetty" % "jetty-servlet" % jettyFromWiremockVersion,
-      "org.eclipse.jetty" % "jetty-servlets" % jettyFromWiremockVersion,
-      "org.eclipse.jetty" % "jetty-util" % jettyFromWiremockVersion,
-      "org.eclipse.jetty" % "jetty-webapp" % jettyFromWiremockVersion,
-      "org.eclipse.jetty" % "jetty-xml" % jettyFromWiremockVersion,
-      "org.eclipse.jetty.websocket" % "websocket-api" % jettyFromWiremockVersion,
-      "org.eclipse.jetty.websocket" % "websocket-client" % jettyFromWiremockVersion,
-      "org.eclipse.jetty.websocket" % "websocket-common" % jettyFromWiremockVersion
-    )
   }
 
   def tmpMacWorkaround(): Seq[ModuleID] =

@@ -19,7 +19,7 @@ package models.monitoring
 import common.CommonSpec
 import models.subscription._
 import models.subscription.business.{Accruals, Cash}
-import org.scalatest.Matchers
+import org.scalatest.matchers.should.Matchers
 import play.api.libs.json.Json
 
 import java.time.LocalDate

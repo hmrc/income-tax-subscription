@@ -17,7 +17,7 @@
 package models
 
 import common.CommonSpec
-import org.scalatest.Matchers
+import org.scalatest.matchers.should.Matchers
 import play.api.libs.json.Json
 
 class ErrorResponseModelSpec extends CommonSpec with Matchers {

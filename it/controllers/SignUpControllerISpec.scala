@@ -25,7 +25,9 @@ class SignUpControllerISpec extends ComponentSpecBase {
       val res = IncomeTaxSubscription.signUp(testNino)
 
       res should have(
-        httpStatus(OK),
+        httpStatus(OK)
+      )
+      res should have(
         jsonBodyAs[SignUpResponse](SignUpResponse("XQIT00000000001"))
       )
     }

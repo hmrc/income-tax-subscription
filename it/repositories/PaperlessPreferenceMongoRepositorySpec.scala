@@ -18,14 +18,16 @@ package repositories
 
 import helpers.IntegrationTestConstants._
 import org.scalatest.concurrent.ScalaFutures.convertScalaFuture
-import org.scalatest.{BeforeAndAfterEach, Matchers, OptionValues, WordSpecLike}
+import org.scalatest.wordspec.AnyWordSpecLike
+import org.scalatest.{BeforeAndAfterEach, OptionValues}
+import org.scalatest.matchers.should.Matchers
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
 import repositories.digitalcontact.PaperlessPreferenceMongoRepository
 
 import scala.concurrent.ExecutionContext.Implicits._
 
-class PaperlessPreferenceMongoRepositorySpec extends WordSpecLike
+class PaperlessPreferenceMongoRepositorySpec extends AnyWordSpecLike
   with Matchers
   with OptionValues with GuiceOneAppPerSuite with BeforeAndAfterEach {
   val TestPaperlessPreferenceMongoRepository = app.injector.instanceOf[PaperlessPreferenceMongoRepository]

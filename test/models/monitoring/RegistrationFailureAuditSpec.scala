@@ -17,7 +17,7 @@
 package models.monitoring
 
 import common.CommonSpec
-import org.scalatest.Matchers
+import org.scalatest.matchers.should.Matchers
 import play.api.http.Status._
 import utils.Logging._
 
