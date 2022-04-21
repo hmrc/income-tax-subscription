@@ -44,7 +44,7 @@ class CreateIncomeSourcesModelSpec extends PlaySpec with MustMatchers {
         businessTradeName = Some(BusinessTradeNameModel("testBusinessTrade")),
         businessAddress = Some(BusinessAddressModel(
           auditRef = "testAuditRef",
-          address = Address(lines = Seq("line 1", "line 2"), postcode = "testPostcode")
+          address = Address(lines = Seq("line 1", "line 2"), postcode = Some("testPostcode"))
         ))
       )
     )
@@ -221,7 +221,7 @@ class CreateIncomeSourcesModelSpec extends PlaySpec with MustMatchers {
         val missingAddressLineModel = fullCreateIncomeSourcesModel.copy(
           soleTraderBusinesses = Some(fullSoleTraderBusinesses.copy(
             businesses = fullSoleTraderBusinesses.businesses.map { business =>
-              business.copy(businessAddress = business.businessAddress.map(_.copy(address = Address(lines = Nil, postcode = "testPostcode"))))
+              business.copy(businessAddress = business.businessAddress.map(_.copy(address = Address(lines = Nil, postcode = Some("testPostcode")))))
             }
           ))
         )

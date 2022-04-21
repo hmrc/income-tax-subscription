@@ -36,7 +36,7 @@ class CompletedSignUpAuditSpec extends CommonSpec with Matchers {
     businessTradeName = Some(BusinessTradeNameModel("testBusinessTrade")),
     businessAddress = Some(BusinessAddressModel(
       auditRef = "testAuditRef",
-      address = Address(lines = Seq("line 1", "line 2"), postcode = "testPostcode")
+      address = Address(lines = Seq("line 1", "line 2"), postcode = Some("testPostcode"))
     ))
   )
   private val testSoleTraderBusinesses = SoleTraderBusinesses(
@@ -50,7 +50,7 @@ class CompletedSignUpAuditSpec extends CommonSpec with Matchers {
         businessTradeName = Some(BusinessTradeNameModel("testBusinessTrade")),
         businessAddress = Some(BusinessAddressModel(
           auditRef = "testAuditRef",
-          address = Address(lines = Seq("line 1", "line 2"), postcode = "testPostcode")
+          address = Address(lines = Seq("line 1", "line 2"), postcode = Some("testPostcode"))
         ))
       )
     )
