@@ -33,7 +33,7 @@ class BusinessSubscriptionDetailsModelSpec extends CommonSpec {
         businessStartDate = Some(BusinessStartDate(DateModel("1", "1", "2017"))),
         businessName = Some(BusinessNameModel("ABC Limited")),
         businessTradeName = Some(BusinessTradeNameModel("Plumbing")),
-        businessAddress = Some(BusinessAddressModel("12345", Address(Seq("line1", "line2", "line3", "line4"), "TF3 4NT")))
+        businessAddress = Some(BusinessAddressModel("12345", Address(Seq("line1", "line2", "line3", "line4"), Some("TF3 4NT"))))
       ))),
       accountingMethod = Some(Cash),
       incomeSource = FeIncomeSourceModel(true, true, true),
@@ -67,7 +67,7 @@ class BusinessSubscriptionDetailsModelSpec extends CommonSpec {
         businessStartDate = Some(BusinessStartDate(DateModel("1", "1", "2017"))),
         businessName = Some(BusinessNameModel("ABC Limited")),
         businessTradeName = Some(BusinessTradeNameModel("Plumbing")),
-        businessAddress = Some(BusinessAddressModel("12345", Address(Seq("line1", "line2", "line3"), "TF3 4NT")))
+        businessAddress = Some(BusinessAddressModel("12345", Address(Seq("line1", "line2", "line3"), Some("TF3 4NT"))))
       ))),
       nino = "AA111111A",
       accountingMethod = Some(Cash),
@@ -90,6 +90,37 @@ class BusinessSubscriptionDetailsModelSpec extends CommonSpec {
     }
   }
 
+  "Creating a model for a subscription request with all values except foreign property, address line4 and postcode" should {
+    val businessDetailsModel = BusinessSubscriptionDetailsModel(
+      accountingPeriod = AccountingPeriodModel(DateModel("6", "4", "2018"), DateModel("5", "4", "2019")),
+      selfEmploymentsData = Some(Seq(SelfEmploymentData(
+        id = "id1",
+        businessStartDate = Some(BusinessStartDate(DateModel("1", "1", "2017"))),
+        businessName = Some(BusinessNameModel("ABC Limited")),
+        businessTradeName = Some(BusinessTradeNameModel("Plumbing")),
+        businessAddress = Some(BusinessAddressModel("12345", Address(Seq("line1", "line2", "line3"), None)))
+      ))),
+      nino = "AA111111A",
+      accountingMethod = Some(Cash),
+      incomeSource = FeIncomeSourceModel(true, true, false),
+      propertyStartDate = Some(PropertyStartDateModel(DateModel("6", "7", "2018"))),
+      propertyAccountingMethod = Some(AccountingMethodPropertyModel(Accruals))
+    )
+
+    val json = Json.obj("businessDetails" -> Json.arr(
+      Json.obj("accountingPeriodStartDate" -> "2018-04-06", "cashOrAccrualsFlag" -> "CASH", "typeOfBusiness" -> "Plumbing",
+        "addressDetails" -> Json.obj("addressLine1" -> "line1", "addressLine2" ->"line2", "addressLine3" -> "line3",
+          "countryCode" -> "GB"),
+        "tradingName" -> "ABC Limited", "tradingStartDate" -> "2017-01-01", "accountingPeriodEndDate" -> "2019-04-05")),
+      "ukPropertyDetails" -> Json.obj("tradingStartDate" -> "2018-07-06","cashOrAccrualsFlag" -> "ACCRUALS",
+        "startDate" -> "2018-04-06"))
+
+
+    "write from Json correctly" in {
+      Json.toJson(businessDetailsModel) mustBe json
+    }
+  }
+
   "Creating a model for a subscription request with mandatory fields missing" should {
     val businessDetailsModel = BusinessSubscriptionDetailsModel(
       accountingPeriod = AccountingPeriodModel(DateModel("6", "4", "2018"), DateModel("5", "4", "2019")),
@@ -98,7 +129,7 @@ class BusinessSubscriptionDetailsModelSpec extends CommonSpec {
         businessStartDate = None,
         businessName = Some(BusinessNameModel("ABC Limited")),
         businessTradeName = Some(BusinessTradeNameModel("Plumbing")),
-        businessAddress = Some(BusinessAddressModel("12345", Address(Seq("line1", "line2", "line3"), "TF3 4NT")))
+        businessAddress = Some(BusinessAddressModel("12345", Address(Seq("line1", "line2", "line3"), Some("TF3 4NT"))))
       ))),
       nino = "AA111111A",
       accountingMethod = Some(Cash),

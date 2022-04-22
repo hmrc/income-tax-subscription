@@ -53,7 +53,7 @@ object BusinessTradeNameModel {
   implicit val format: OFormat[BusinessTradeNameModel] = Json.format[BusinessTradeNameModel]
 }
 
-case class Address(lines: Seq[String], postcode: String) {
+case class Address(lines: Seq[String], postcode: Option[String]) {
   override def toString: String = s"${lines.mkString(", ")}, $postcode"
 }
 
@@ -142,7 +142,7 @@ object BusinessSubscriptionDetailsModel {
             "addressLine2" -> data.businessAddress.map(model => if(model.address.lines.length > 1) model.address.lines(1) else ""),
             "addressLine3" -> data.businessAddress.map(model => if(model.address.lines.length > 2) model.address.lines(2) else ""),
             "addressLine4" -> data.businessAddress.map(model => if(model.address.lines.length > 3) model.address.lines(3) else ""),
-            "postalCode" -> data.businessAddress.map(_.address.postcode).getOrElse(throw new Exception("Missing postalCode parameter")),
+            "postalCode" -> data.businessAddress.map(_.address.postcode),
             "countryCode" -> "GB"
           ).fields.filterNot(json => withoutValue(json._2))),
           "typeOfBusiness" -> JsString(data.businessTradeName.map(_.businessTradeName).getOrElse(throw new Exception("Missing tradingName parameter"))),
