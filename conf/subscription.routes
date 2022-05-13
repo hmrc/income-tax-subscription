@@ -1,22 +1,22 @@
-GET         /subscription/:nino               controllers.subscription.SubscriptionStatusController.checkSubscriptionStatus(nino: String)
+GET         /subscription/:nino                         controllers.subscription.SubscriptionStatusController.checkSubscriptionStatus(nino: String)
 
-GET         /client-matching/lock/:arn        controllers.matching.LockoutStatusController.checkLockoutStatus(arn:String)
-POST        /client-matching/lock/:arn        controllers.matching.LockoutStatusController.lockoutAgent(arn:String)
+GET         /client-matching/lock/:arn                  controllers.matching.LockoutStatusController.checkLockoutStatus(arn:String)
+POST        /client-matching/lock/:arn                  controllers.matching.LockoutStatusController.lockoutAgent(arn:String)
 
-GET         /identifier-mapping/:token        controllers.digitalcontact.PaperlessPreferenceController.getNino(token:String)
-POST        /identifier-mapping/:token        controllers.digitalcontact.PaperlessPreferenceController.storeNino(token:String)
+GET         /identifier-mapping/:token                  controllers.digitalcontact.PaperlessPreferenceController.getNino(token:String)
+POST        /identifier-mapping/:token                  controllers.digitalcontact.PaperlessPreferenceController.storeNino(token:String)
 
-GET         /subscription-data/:reference/all             controllers.SubscriptionDataController.getAllSubscriptionData(reference: String)
-GET         /subscription-data/:reference/id/:id          controllers.SubscriptionDataController.retrieveSubscriptionData(reference: String, id: String)
-POST        /subscription-data/:reference/id/:id          controllers.SubscriptionDataController.insertSubscriptionData(reference: String, id: String)
-DELETE      /subscription-data/:reference/all            controllers.SubscriptionDataController.deleteAllSubscriptionData(reference: String)
-POST        /subscription-data                           controllers.SubscriptionDataController.retrieveReference
-
-
-DELETE      /subscription-data/:reference/id/:id    controllers.SubscriptionDataController.deleteSubscriptionData(reference: String, id: String)
-
-POST        /mis/sign-up/:nino                controllers.SignUpController.signUp(nino: String)
-
-POST        /mis/create/:mtdbsaRef            controllers.BusinessIncomeSourcesController.createIncomeSource(mtdbsaRef: String)
+GET         /subscription-data/:reference/all           controllers.SubscriptionDataController.getAllSubscriptionData(reference: String)
+GET         /subscription-data/:reference/id/:id        controllers.SubscriptionDataController.retrieveSubscriptionData(reference: String, id: String)
+POST        /subscription-data/:reference/id/:id        controllers.SubscriptionDataController.insertSubscriptionData(reference: String, id: String)
+DELETE      /subscription-data/:reference/all           controllers.SubscriptionDataController.deleteAllSubscriptionData(reference: String)
+POST        /subscription-data                          controllers.SubscriptionDataController.retrieveReference
 
 
+DELETE      /subscription-data/:reference/id/:id        controllers.SubscriptionDataController.deleteSubscriptionData(reference: String, id: String)
+
+POST        /mis/sign-up/:nino                          controllers.SignUpController.signUp(nino: String)
+
+POST        /mis/create/:mtdbsaRef                      controllers.BusinessIncomeSourcesController.createIncomeSource(mtdbsaRef: String)
+
+POST        /throttled                                  controllers.throttle.ThrottlingController.throttled(throttleId: String)

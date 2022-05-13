@@ -59,7 +59,9 @@ trait ComponentSpecBase extends AnyWordSpecLike
     "microservice.services.government-gateway.port" -> mockPort,
     "microservice.services.gg-authentication.host" -> mockHost,
     "microservice.services.gg-authentication.port" -> mockPort,
-    "microservice.services.throttle-threshold" -> "2"
+    "microservice.services.throttle-threshold" -> "2",
+    "throttle.testThrottle.max"-> "10",
+    "throttle.zeroTestThrottle.max"-> "0"
   )
 
   override def beforeAll(): Unit = {
@@ -86,6 +88,8 @@ trait ComponentSpecBase extends AnyWordSpecLike
     def get(uri: String): WSResponse = authorisedClient(uri).get().futureValue
 
     def signUp(nino: String): WSResponse = post(s"/mis/sign-up/$nino", Json.parse("{}"))
+
+    def throttled(throttleId: String): WSResponse = post(s"/throttled?throttleId=$throttleId", Json.parse("{}"))
 
     def businessIncomeSource(mtdbsaRef: String, body: JsValue): WSResponse = post(s"/mis/create/$mtdbsaRef", body)
 
