@@ -16,17 +16,26 @@
 
 package config.featureswitch
 
+import config.AppConfig
+import play.api.Configuration
+
 trait FeatureSwitching {
+  val appConfig: AppConfig
+
+  protected def isEnabled(featureSwitch: FeatureSwitch): Boolean =
+    (sys.props.get(featureSwitch.name) orElse appConfig.configuration.getOptional[String](featureSwitch.name)) contains FeatureSwitching.FEATURE_SWITCH_ON
+
+  protected def enable(featureSwitch: FeatureSwitch): Unit =
+    sys.props += featureSwitch.name -> FeatureSwitching.FEATURE_SWITCH_ON
+
+  protected def disable(featureSwitch: FeatureSwitch): Unit =
+    sys.props += featureSwitch.name -> FeatureSwitching.FEATURE_SWITCH_OFF
+}
+
+object FeatureSwitching {
   val FEATURE_SWITCH_ON = "true"
   val FEATURE_SWITCH_OFF = "false"
 
-
-  protected def isEnabled(featureSwitch: FeatureSwitch): Boolean =
-    sys.props get featureSwitch.name contains FEATURE_SWITCH_ON
-
-  protected def enable(featureSwitch: FeatureSwitch): Unit =
-    sys.props += featureSwitch.name -> FEATURE_SWITCH_ON
-
-  protected def disable(featureSwitch: FeatureSwitch): Unit =
-    sys.props += featureSwitch.name -> FEATURE_SWITCH_OFF
+  def isEnabled(featureSwitch: FeatureSwitch, configuration: Configuration): Boolean =
+    (sys.props.get(featureSwitch.name) orElse configuration.getOptional[String](featureSwitch.name)) contains FEATURE_SWITCH_ON
 }

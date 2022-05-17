@@ -16,6 +16,7 @@
 
 package controllers
 
+import config.AppConfig
 import config.featureswitch.{FeatureSwitching, SaveAndRetrieve}
 import helpers.ComponentSpecBase
 import helpers.servicemocks.AuthStub
@@ -28,6 +29,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 class SubscriptionDataControllerISpec extends ComponentSpecBase with FeatureSwitching {
 
+  val appConfig: AppConfig = app.injector.instanceOf[AppConfig]
   val repository: SubscriptionDataRepository = app.injector.instanceOf[SubscriptionDataRepository]
 
   val reference: String = "test-reference"

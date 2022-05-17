@@ -33,7 +33,7 @@ class ThrottlingController @Inject()(throttlingRepository: ThrottlingRepository,
                                      cc: ControllerComponents
                                   ) extends BackendController(cc) with Logging {
 
-  def throttled(throttleId: String): Action[AnyContent] = Action.async { implicit request =>
+  def throttled(throttleId: String): Action[AnyContent] = Action.async { _ =>
     val throttleKey = s"throttle.$throttleId.max"
     Try {
       servicesConfig.getInt(throttleKey)

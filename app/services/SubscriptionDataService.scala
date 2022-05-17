@@ -16,6 +16,7 @@
 
 package services
 
+import config.AppConfig
 import config.featureswitch.{FeatureSwitching, SaveAndRetrieve}
 import play.api.libs.json.JsValue
 import reactivemongo.api.commands.WriteResult
@@ -26,7 +27,7 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class SubscriptionDataService @Inject()(subscriptionDataRepository: SubscriptionDataRepository)
+class SubscriptionDataService @Inject()(subscriptionDataRepository: SubscriptionDataRepository, val appConfig: AppConfig)
                                        (implicit ec: ExecutionContext) extends FeatureSwitching {
 
 
