@@ -16,6 +16,7 @@
 
 package testonly.controllers.featureswitch
 
+import config.AppConfig
 import config.featureswitch.FeatureSwitch._
 import config.featureswitch.{FeatureSwitch, FeatureSwitching}
 import play.api.i18n.MessagesApi
@@ -27,7 +28,9 @@ import javax.inject.Inject
 import scala.concurrent.Future
 
 class FeatureSwitchController @Inject()(override val messagesApi: MessagesApi,
-                                        cc: ControllerComponents)
+                                        cc: ControllerComponents,
+                                        val appConfig: AppConfig
+                                       )
   extends BackendController(cc) with FeatureSwitching {
 
   private def returnCurrentSettings = Ok(Json.toJson(switches.map(fs => FeatureSwitchSetting(fs, isEnabled(fs)))))

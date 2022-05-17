@@ -44,7 +44,7 @@ class BusinessIncomeSourcesControllerSpec extends CommonSpec
 
   lazy val mockCC: ControllerComponents = stubControllerComponents()
 
-  object TestController extends BusinessIncomeSourcesController(mockAuthService, mockIncomeSourcesConnector, mockCC)
+  object TestController extends BusinessIncomeSourcesController(mockAuthService, mockIncomeSourcesConnector, mockCC, appConfig)
 
   implicit val hc: HeaderCarrier = HeaderCarrier()
 

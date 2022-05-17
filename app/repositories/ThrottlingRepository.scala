@@ -39,7 +39,7 @@ class InstantProvider @Inject()() {
 
 @Singleton
 class ThrottlingRepository @Inject()(mongo: ReactiveMongoComponent,
-                                     appConfig: MicroserviceAppConfig,
+                                     val appConfig: MicroserviceAppConfig,
                                      instantProvider: InstantProvider)(implicit ec: ExecutionContext)
 
   extends ReactiveRepository[JsObject, BSONObjectID](

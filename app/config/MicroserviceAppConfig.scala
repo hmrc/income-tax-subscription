@@ -17,16 +17,21 @@
 package config
 
 import config.featureswitch.FeatureSwitching
+import play.api.Configuration
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
 import javax.inject.{Inject, Singleton}
 
 
 trait AppConfig {
+  val configuration: Configuration
   val authURL: String
   val ggURL: String
   val ggAdminURL: String
   val ggAuthenticationURL: String
+
+  val timeToLiveSeconds: Int
+  val timeToLiveSecondsSaveAndRetrieve: Int
 
   def desURL: String
 
@@ -38,7 +43,7 @@ trait AppConfig {
 }
 
 @Singleton
-class MicroserviceAppConfig @Inject()(servicesConfig: ServicesConfig) extends AppConfig with FeatureSwitching {
+class MicroserviceAppConfig @Inject()(servicesConfig: ServicesConfig, val configuration: Configuration) extends AppConfig {
 
   private def loadConfig(key: String) = servicesConfig.getString(key)
 
@@ -48,7 +53,7 @@ class MicroserviceAppConfig @Inject()(servicesConfig: ServicesConfig) extends Ap
   override lazy val ggAdminURL = servicesConfig.baseUrl("gg-admin")
 
   private def desBase =
-    if (isEnabled(featureswitch.StubDESFeature)) "microservice.services.stub-des"
+    if (FeatureSwitching.isEnabled(featureswitch.StubDESFeature, configuration)) "microservice.services.stub-des"
     else "microservice.services.des"
 
   override def desURL: String = loadConfig(s"$desBase.url")

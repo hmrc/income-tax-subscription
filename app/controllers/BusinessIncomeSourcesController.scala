@@ -16,6 +16,7 @@
 
 package controllers
 
+import config.AppConfig
 import config.featureswitch.{FeatureSwitching, SaveAndRetrieve}
 import connectors.CreateIncomeSourcesConnector
 import models.subscription.{BusinessSubscriptionDetailsModel, CreateIncomeSourcesModel}
@@ -34,7 +35,9 @@ import scala.concurrent.ExecutionContext
 @Singleton
 class BusinessIncomeSourcesController @Inject()(authService: AuthService,
                                                 createIncomeSourcesConnector: CreateIncomeSourcesConnector,
-                                                cc: ControllerComponents)
+                                                cc: ControllerComponents,
+                                                val appConfig: AppConfig
+                                               )
                                                (implicit ec: ExecutionContext) extends BackendController(cc) with FeatureSwitching {
 
   val logger: Logger = Logger(this.getClass)

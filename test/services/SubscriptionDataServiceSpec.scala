@@ -17,22 +17,29 @@
 package services
 
 import common.CommonSpec
+import config.MicroserviceAppConfig
 import config.featureswitch.{FeatureSwitching, SaveAndRetrieve}
 import org.mockito.ArgumentMatchers
 import org.mockito.Mockito._
 import org.scalatest.BeforeAndAfterEach
 import org.scalatestplus.mockito.MockitoSugar
+import play.api.Configuration
 import play.api.http.Status.OK
 import play.api.libs.json.{JsObject, Json}
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
 import reactivemongo.api.commands.UpdateWriteResult
 import repositories.SubscriptionDataRepository
 import uk.gov.hmrc.http.{HeaderCarrier, InternalServerException, SessionId}
+import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 class SubscriptionDataServiceSpec extends CommonSpec with MockitoSugar with FeatureSwitching with BeforeAndAfterEach {
+
+  val mockServicesConfig: ServicesConfig = mock[ServicesConfig]
+  val mockConfiguration: Configuration = mock[Configuration]
+  val appConfig = new MicroserviceAppConfig(mockServicesConfig, mockConfiguration)
 
   override def beforeEach(): Unit = {
     super.beforeEach()
@@ -41,7 +48,7 @@ class SubscriptionDataServiceSpec extends CommonSpec with MockitoSugar with Feat
 
   trait Setup {
     val mockSubscriptionDataRepository: SubscriptionDataRepository = mock[SubscriptionDataRepository]
-    val service = new SubscriptionDataService(mockSubscriptionDataRepository)
+    val service = new SubscriptionDataService(mockSubscriptionDataRepository, appConfig)
   }
 
   val testJson: JsObject = Json.obj(

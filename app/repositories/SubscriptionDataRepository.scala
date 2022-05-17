@@ -16,7 +16,7 @@
 
 package repositories
 
-import config.MicroserviceAppConfig
+import config.AppConfig
 import config.featureswitch.{FeatureSwitching, SaveAndRetrieve}
 import play.api.libs.json.{Format, JsObject, JsValue, Json}
 import play.modules.reactivemongo.ReactiveMongoComponent
@@ -35,7 +35,7 @@ import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class SubscriptionDataRepository @Inject()(mongo: ReactiveMongoComponent,
-                                           appConfig: MicroserviceAppConfig)(implicit ec: ExecutionContext)
+                                           val appConfig: AppConfig)(implicit ec: ExecutionContext)
   extends ReactiveRepository[JsObject, BSONObjectID](
     "selfEmploymentsData",
     mongo.mongoConnector.db,

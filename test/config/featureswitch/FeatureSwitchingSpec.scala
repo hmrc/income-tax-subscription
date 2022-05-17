@@ -17,27 +17,87 @@
 package config.featureswitch
 
 import common.CommonSpec
+import config.MicroserviceAppConfig
+import config.featureswitch.FeatureSwitching.{FEATURE_SWITCH_OFF, FEATURE_SWITCH_ON}
+import org.mockito.Mockito.{reset, when}
+import org.scalatest.BeforeAndAfterEach
+import org.scalatestplus.mockito.MockitoSugar
+import play.api.Configuration
+import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
-class FeatureSwitchingSpec extends CommonSpec with FeatureSwitching {
+class FeatureSwitchingSpec extends CommonSpec with FeatureSwitching with MockitoSugar with BeforeAndAfterEach {
 
-  val testFeatureSwitch = StubDESFeature
+  val mockServicesConfig: ServicesConfig = mock[ServicesConfig]
+  val mockConfig: Configuration = mock[Configuration]
+  override val appConfig = new MicroserviceAppConfig(mockServicesConfig, mockConfig)
 
-  "isEnabled" should {
-    "return true when a feature switch is set" in {
-      enable(testFeatureSwitch)
-      isEnabled(testFeatureSwitch) shouldBe true
-    }
-
-    "return false when a feature switch is set to false" in {
-      disable(testFeatureSwitch)
-      isEnabled(testFeatureSwitch) shouldBe false
-    }
-
-    "return false when a feature switch has not been set" in {
-      sys.props -= testFeatureSwitch.name
-      sys.props.get(testFeatureSwitch.name) shouldBe empty
-      isEnabled(testFeatureSwitch) shouldBe false
+  override def beforeEach(): Unit = {
+    super.beforeEach()
+    reset(mockConfig)
+    FeatureSwitch.switches foreach { switch =>
+      sys.props -= switch.name
     }
   }
 
+  "FeatureSwitching constants" should {
+    "be true" in {
+      FEATURE_SWITCH_ON shouldBe "true"
+    }
+
+    "be false" in {
+      FEATURE_SWITCH_OFF shouldBe "false"
+    }
+  }
+
+  "StubDESFeature" should {
+    "return true if StubDESFeature feature switch is enabled in sys.props" in {
+      enable(StubDESFeature)
+      isEnabled(StubDESFeature) shouldBe true
+    }
+    "return false if StubDESFeature feature switch is disabled in sys.props" in {
+      disable(StubDESFeature)
+      isEnabled(StubDESFeature) shouldBe false
+    }
+
+    "return false if StubDESFeature feature switch does not exist" in {
+      when(mockConfig.getOptional[String]("feature-switch.stub-des")).thenReturn(None)
+      isEnabled(StubDESFeature) shouldBe false
+    }
+
+    "return false if StubDESFeature feature switch is not in sys.props but is set to 'off' in config" in {
+      when(mockConfig.getOptional[String]("feature-switch.stub-des")).thenReturn(Some(FEATURE_SWITCH_OFF))
+      isEnabled(StubDESFeature) shouldBe false
+    }
+
+    "return true if StubDESFeature feature switch is not in sys.props but is set to 'on' in config" in {
+      when(mockConfig.getOptional[String]("feature-switch.stub-des")).thenReturn(Some(FEATURE_SWITCH_ON))
+      isEnabled(StubDESFeature) shouldBe true
+    }
+  }
+
+  "SaveAndRetrieve" should {
+    "return true if SaveAndRetrieve feature switch is enabled in sys.props" in {
+      enable(SaveAndRetrieve)
+      isEnabled(SaveAndRetrieve) shouldBe true
+    }
+    "return false if SaveAndRetrieve feature switch is disabled in sys.props" in {
+      disable(SaveAndRetrieve)
+      isEnabled(SaveAndRetrieve) shouldBe false
+    }
+
+    "return false if SaveAndRetrieve feature switch does not exist" in {
+      when(mockConfig.getOptional[String]("feature-switch.enable-save-and-retrieve")).thenReturn(None)
+      isEnabled(SaveAndRetrieve) shouldBe false
+    }
+
+    "return false if SaveAndRetrieve feature switch is not in sys.props but is set to 'off' in config" in {
+      when(mockConfig.getOptional[String]("feature-switch.enable-save-and-retrieve")).thenReturn(Some(FEATURE_SWITCH_OFF))
+      isEnabled(SaveAndRetrieve) shouldBe false
+    }
+
+    "return true if SaveAndRetrieve feature switch is not in sys.props but is set to 'on' in config" in {
+      when(mockConfig.getOptional[String]("feature-switch.enable-save-and-retrieve")).thenReturn(Some(FEATURE_SWITCH_ON))
+      isEnabled(SaveAndRetrieve) shouldBe true
+    }
+  }
 }
