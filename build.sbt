@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import MicroServiceBuild._
 import uk.gov.hmrc.DefaultBuildSettings.{addTestReportOption, defaultSettings, scalaSettings}
 import uk.gov.hmrc.sbtdistributables.SbtDistributablesPlugin.publishingSettings
 import uk.gov.hmrc.versioning.SbtGitVersioning.autoImport.majorVersion
@@ -32,7 +31,7 @@ lazy val scoverageSettings = {
   )
 }
 
-lazy val microservice = Project(appName, file("."))
+lazy val microservice = Project(AppDependencies.appName, file("."))
   .enablePlugins(play.sbt.PlayScala, SbtDistributablesPlugin, SbtArtifactory)
   .settings(scoverageSettings: _*)
   .settings(scalaSettings: _*)
@@ -48,7 +47,7 @@ lazy val microservice = Project(appName, file("."))
   .settings(
     resolvers += Resolver.bintrayRepo("hmrc", "releases"),
     resolvers += Resolver.jcenterRepo,
-    libraryDependencies ++= appDependencies,
+    libraryDependencies ++= AppDependencies.appDependencies,
     retrieveManaged := true,
     update / evictionWarningOptions := EvictionWarningOptions.default.withWarnScalaVersionEviction(false)
   )
