@@ -65,7 +65,7 @@ class SubscriptionDataControllerISpec extends ComponentSpecBase with FeatureSwit
   }
 
   def saveAndRetrieve(enableFeature: Boolean): Unit = {
-    if(enableFeature) enable(SaveAndRetrieve) else disable(SaveAndRetrieve)
+    if (enableFeature) enable(SaveAndRetrieve) else disable(SaveAndRetrieve)
   }
 
   s"POST ${controllers.routes.SubscriptionDataController.retrieveReference.url}" should {
@@ -85,11 +85,13 @@ class SubscriptionDataControllerISpec extends ComponentSpecBase with FeatureSwit
           ))
         )
       }
-      "it is not already in the database" in {
+    }
+    "return CREATED with a reference" when {
+      "it is not already exists in the database" in {
         AuthStub.stubAuthSuccess()
 
         IncomeTaxSubscription.postRetrieveReference(utr) should have(
-          httpStatus(OK),
+          httpStatus(CREATED),
           jsonBodyContainsField("reference")
         )
       }
@@ -252,10 +254,10 @@ class SubscriptionDataControllerISpec extends ComponentSpecBase with FeatureSwit
             saveAndRetrieve(flag)
             AuthStub.stubAuthSuccess()
             await(repository.insert(testDocumentAll))
-            IncomeTaxSubscription.deleteSubscriptionData(reference,id = "testDataId") should have(httpStatus(OK))
-            }
+            IncomeTaxSubscription.deleteSubscriptionData(reference, id = "testDataId") should have(httpStatus(OK))
           }
         }
+      }
 
 
       s"DELETE ${controllers.routes.SubscriptionDataController.deleteAllSubscriptionData(reference).url}" should {
@@ -283,5 +285,4 @@ class SubscriptionDataControllerISpec extends ComponentSpecBase with FeatureSwit
       }
     }
   }
-
 }

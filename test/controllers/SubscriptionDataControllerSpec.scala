@@ -22,6 +22,7 @@ import play.api.mvc.{AnyContentAsEmpty, Result}
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import reactivemongo.api.commands.UpdateWriteResult
+import services.SubscriptionDataService.{Created, Existing}
 import services.mocks.{MockAuthService, MockSubscriptionDataService}
 import uk.gov.hmrc.auth.core.retrieve.Credentials
 
@@ -56,13 +57,25 @@ class SubscriptionDataControllerSpec extends CommonSpec with MockSubscriptionDat
         status(result) shouldBe INTERNAL_SERVER_ERROR
       }
     }
-    "return Ok with a reference" in {
+    "return Ok with a reference" when {
+      "SubscriptionDataService returns an Existing reference" in {
       mockRetrievalSuccess[Option[Credentials]](Some(Credentials("test-cred-id", "ggProvider")))
-      mockRetrieveReference("1234567890", "test-cred-id")(reference)
+      mockRetrieveReference("1234567890", Existing, "test-cred-id")(reference)
 
       val result = TestController.retrieveReference()(request.withBody(Json.obj("utr" -> "1234567890")))
 
       status(result) shouldBe OK
+    }
+  }
+    "return Created with a reference" when {
+      "SubscriptionDataService returns an Created reference" in {
+        mockRetrievalSuccess[Option[Credentials]](Some(Credentials("test-cred-id", "ggProvider")))
+        mockRetrieveReference("1234567890", Created, "test-cred-id")(reference)
+
+        val result = TestController.retrieveReference()(request.withBody(Json.obj("utr" -> "1234567890")))
+
+        status(result) shouldBe CREATED
+      }
     }
   }
 

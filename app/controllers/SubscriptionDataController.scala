@@ -37,8 +37,10 @@ class SubscriptionDataController @Inject()(authService: AuthService,
       case Some(credentials) =>
         (request.body \ "utr").validate[String] match {
           case JsSuccess(utr, _) =>
-            subscriptionDataService.retrieveReference(utr, credentials.providerId)
-              .map(reference => Ok(Json.obj("reference" -> reference)))
+            subscriptionDataService.retrieveReference(utr, credentials.providerId) map{
+              case SubscriptionDataService.Existing(reference) => Ok(Json.obj("reference" -> reference))
+              case SubscriptionDataService.Created(reference) => Created(Json.obj("reference" -> reference))
+            }
           case JsError(_) =>
             logger.error("[SubscriptionDataController][retrieveReference] - Could not parse json request.")
             Future.successful(InternalServerError(
