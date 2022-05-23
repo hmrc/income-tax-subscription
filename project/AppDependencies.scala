@@ -16,12 +16,9 @@
 
 import sbt._
 
-private object MicroServiceBuild {
-  val appName = "income-tax-subscription"
-  lazy val appDependencies: Seq[ModuleID] = AppDependencies()
-}
 
-private object AppDependencies {
+object AppDependencies {
+  val appName = "income-tax-subscription"
 
   import play.core.PlayVersion
   import play.sbt.PlayImport._
@@ -37,7 +34,7 @@ private object AppDependencies {
 
   private val wiremockVersion = "2.32.0"
 
-  private val bootstrapBackendVersion = "5.21.0"
+  private val bootstrapBackendVersion = "5.24.0"
 
   private val playVersion = "2.8.14"
 
@@ -94,6 +91,6 @@ private object AppDependencies {
       Seq("org.reactivemongo" % "reactivemongo-shaded-native" % "1.0.1-osx-x86-64" % "runtime,test,it")
     else Seq()
 
-  def apply(): Seq[ModuleID] = compile ++ Test() ++ IntegrationTest() ++ tmpMacWorkaround()
+  val appDependencies: Seq[ModuleID] = compile ++ Test() ++ IntegrationTest() ++ tmpMacWorkaround()
 
 }
