@@ -29,6 +29,7 @@ import play.api.libs.json.{JsObject, Json}
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
 import reactivemongo.api.commands.UpdateWriteResult
 import repositories.SubscriptionDataRepository
+import services.SubscriptionDataService.{Created, Existence, Existing}
 import uk.gov.hmrc.http.{HeaderCarrier, InternalServerException, SessionId}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
@@ -88,9 +89,9 @@ class SubscriptionDataServiceSpec extends CommonSpec with MockitoSugar with Feat
         when(mockSubscriptionDataRepository.retrieveReference(ArgumentMatchers.eq(utr), ArgumentMatchers.eq(credId)))
           .thenReturn(Future.successful(Some(reference)))
 
-        val result: String = await(service.retrieveReference(utr, credId))
+        val result: Existence = await(service.retrieveReference(utr, credId))
 
-        result shouldBe reference
+        result shouldBe Existing(reference)
       }
     }
     "create a reference in the database" when {
@@ -102,9 +103,9 @@ class SubscriptionDataServiceSpec extends CommonSpec with MockitoSugar with Feat
         when(mockSubscriptionDataRepository.createReference(ArgumentMatchers.eq(utr), ArgumentMatchers.eq(credId), ArgumentMatchers.eq(testSessionId)))
           .thenReturn(Future.successful(reference))
 
-        val result: String = await(service.retrieveReference(utr, credId))
+        val result: Existence = await(service.retrieveReference(utr, credId))
 
-        result shouldBe reference
+        result shouldBe Created(reference)
       }
     }
   }

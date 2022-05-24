@@ -21,6 +21,7 @@ import config.featureswitch.{FeatureSwitching, SaveAndRetrieve}
 import play.api.libs.json.JsValue
 import reactivemongo.api.commands.WriteResult
 import repositories.SubscriptionDataRepository
+import services.SubscriptionDataService.{Created, Existence, Existing}
 import uk.gov.hmrc.http.{HeaderCarrier, InternalServerException}
 
 import javax.inject.{Inject, Singleton}
@@ -37,10 +38,10 @@ class SubscriptionDataService @Inject()(subscriptionDataRepository: Subscription
     )(_.value)
   }
 
-  def retrieveReference(utr: String, credId: String)(implicit hc: HeaderCarrier): Future[String] = {
+  def retrieveReference(utr: String, credId: String)(implicit hc: HeaderCarrier): Future[Existence] = {
     subscriptionDataRepository.retrieveReference(utr, credId) flatMap {
-      case Some(value) => Future.successful(value)
-      case None => subscriptionDataRepository.createReference(utr, credId, sessionIdFromHC)
+      case Some(value) => Future.successful(Existing(value))
+      case None => subscriptionDataRepository.createReference(utr, credId, sessionIdFromHC) map(reference => Created(reference))
     }
   }
 
@@ -107,4 +108,11 @@ class SubscriptionDataService @Inject()(subscriptionDataRepository: Subscription
     }
   }
 
+}
+
+object SubscriptionDataService {
+  sealed trait Existence
+
+  case class Existing(reference:String) extends Existence
+  case class Created(reference:String) extends Existence
 }
