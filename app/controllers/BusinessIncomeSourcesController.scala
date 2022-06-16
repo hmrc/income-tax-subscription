@@ -16,6 +16,7 @@
 
 package controllers
 
+import common.Extractors
 import config.AppConfig
 import config.featureswitch.{FeatureSwitching, SaveAndRetrieve}
 import connectors.CreateIncomeSourcesConnector
@@ -25,11 +26,9 @@ import play.api.libs.json.JsValue
 import play.api.mvc._
 import services.AuthService
 import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals
-import uk.gov.hmrc.auth.core.{Enrolment, EnrolmentIdentifier, Enrolments}
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
 import javax.inject.{Inject, Singleton}
-import scala.collection.immutable.::
 import scala.concurrent.ExecutionContext
 
 @Singleton
@@ -38,7 +37,7 @@ class BusinessIncomeSourcesController @Inject()(authService: AuthService,
                                                 cc: ControllerComponents,
                                                 val appConfig: AppConfig
                                                )
-                                               (implicit ec: ExecutionContext) extends BackendController(cc) with FeatureSwitching {
+                                               (implicit ec: ExecutionContext) extends BackendController(cc) with FeatureSwitching with Extractors {
 
   val logger: Logger = Logger(this.getClass)
 
@@ -64,9 +63,4 @@ class BusinessIncomeSourcesController @Inject()(authService: AuthService,
       }
     }
   }
-
-  private def getArnFromEnrolments(enrolments: Enrolments): Option[String] = enrolments.enrolments.collectFirst {
-    case Enrolment("HMRC-AS-AGENT", EnrolmentIdentifier(_, value) :: _, _, _) => value
-  }
-
 }

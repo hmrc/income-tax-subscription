@@ -17,6 +17,7 @@
 package controllers
 
 import common.CommonSpec
+import utils.TestConstants.hmrcAsAgent
 import models.{ErrorModel, SignUpResponse}
 import play.api.http.Status.{INTERNAL_SERVER_ERROR, OK}
 import play.api.libs.json.Json
@@ -43,7 +44,7 @@ class SignUpControllerSpec extends CommonSpec with MockAuthService with MockSign
       "return a 200 response" in {
         val fakeRequest = FakeRequest().withJsonBody(Json.toJson(testSignUpSubmission(testNino)))
 
-        mockRetrievalSuccess(Enrolments(Set(Enrolment("HMRC-AS-AGENT", Seq(EnrolmentIdentifier("AgentReferenceNumber", "123456789")), "Activated"))))
+        mockRetrievalSuccess(Enrolments(Set(Enrolment(hmrcAsAgent, Seq(EnrolmentIdentifier("AgentReferenceNumber", "123456789")), "Activated"))))
         signUp(testNino)(Future.successful(Right(SignUpResponse("XAIT000000"))))
 
 
@@ -60,7 +61,7 @@ class SignUpControllerSpec extends CommonSpec with MockAuthService with MockSign
       "return a Json parse failure when invalid json is found" in {
         val fakeRequest = FakeRequest().withJsonBody(Json.toJson(testSignUpSubmission(testNino)))
 
-        mockRetrievalSuccess(Enrolments(Set(Enrolment("HMRC-AS-AGENT", Seq(EnrolmentIdentifier("AgentReferenceNumber", "123456789")), "Activated"))))
+        mockRetrievalSuccess(Enrolments(Set(Enrolment(hmrcAsAgent, Seq(EnrolmentIdentifier("AgentReferenceNumber", "123456789")), "Activated"))))
 
         signUp(testNino)(Future.successful(Left(ErrorModel(200,  "Failed to read Json for MTD Sign Up Response"))))
 
@@ -76,7 +77,7 @@ class SignUpControllerSpec extends CommonSpec with MockAuthService with MockSign
       "return an error" in {
         val fakeRequest = FakeRequest().withJsonBody(Json.toJson(testSignUpSubmission(testNino)))
 
-        mockRetrievalSuccess(Enrolments(Set(Enrolment("HMRC-AS-AGENT", Seq(EnrolmentIdentifier("AgentReferenceNumber", "123456789")), "Activated"))))
+        mockRetrievalSuccess(Enrolments(Set(Enrolment(hmrcAsAgent, Seq(EnrolmentIdentifier("AgentReferenceNumber", "123456789")), "Activated"))))
         signUp(testNino)(Future.successful(Left(ErrorModel(INTERNAL_SERVER_ERROR, "Failure"))))
 
         val result = TestController.signUp(testNino)(fakeRequest)
