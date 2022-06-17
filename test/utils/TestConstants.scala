@@ -17,7 +17,6 @@
 package utils
 
 import models.ErrorModel
-import models.digitalcontact.PaperlessPreferenceKey
 import models.frontend._
 import models.lockout.LockoutRequest
 import models.matching.LockoutResponse
@@ -261,8 +260,6 @@ object TestConstants extends JsonUtils {
   val propertySubscriptionSuccess = PropertySubscriptionResponseModel(testSafeId, testMtditId, IncomeSourceModel(testSourceId))
 
   val feSuccessResponse = FESuccessResponse(Some(testMtditId))
-
-  val testPaperlessPreferenceKey = PaperlessPreferenceKey(testPreferencesToken, testNino)
 
   val testStartDate = LocalDate.now()
 

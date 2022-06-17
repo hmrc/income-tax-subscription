@@ -3,8 +3,6 @@ GET         /subscription/:nino                         controllers.subscription
 GET         /client-matching/lock/:arn                  controllers.matching.LockoutStatusController.checkLockoutStatus(arn:String)
 POST        /client-matching/lock/:arn                  controllers.matching.LockoutStatusController.lockoutAgent(arn:String)
 
-GET         /identifier-mapping/:token                  controllers.digitalcontact.PaperlessPreferenceController.getNino(token:String)
-POST        /identifier-mapping/:token                  controllers.digitalcontact.PaperlessPreferenceController.storeNino(token:String)
 
 GET         /subscription-data/:reference/all           controllers.SubscriptionDataController.getAllSubscriptionData(reference: String)
 GET         /subscription-data/:reference/id/:id        controllers.SubscriptionDataController.retrieveSubscriptionData(reference: String, id: String)

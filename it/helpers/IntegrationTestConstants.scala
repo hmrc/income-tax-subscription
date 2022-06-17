@@ -16,7 +16,6 @@
 
 package helpers
 
-import models.digitalcontact.PaperlessPreferenceKey
 import models.lockout.LockoutRequest
 import models.subscription._
 import models.subscription.business.Cash
@@ -132,8 +131,6 @@ object IntegrationTestConstants extends JsonUtils {
        |  "reason":"$reason"
        |}
     """.stripMargin
-
-  val testPaperlessPreferenceKey = PaperlessPreferenceKey(testPreferencesToken, testNino)
 
   def testSignUpSubmission(nino: String): JsValue = Json.parse(
     s"""
