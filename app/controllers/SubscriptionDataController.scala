@@ -95,11 +95,11 @@ class SubscriptionDataController @Inject()(authService: AuthService,
   def deleteAllSubscriptionData(reference: String): Action[AnyContent] = Action.async { implicit request =>
     authService.authorised() {
       subscriptionDataService.deleteAllSubscriptionData(reference).map { result =>
-        if (result.ok) {
+        if (result.wasAcknowledged()) {
           Ok
         } else {
           throw new RuntimeException(
-            "[SubscriptionDataController][deleteAllSessionData] - delete session data failed with code " + result.code.getOrElse("")
+            "[SubscriptionDataController][deleteAllSessionData] - delete session data failed"
           )
         }
       }

@@ -46,7 +46,7 @@ class InstantProvider @Inject()() {
 @Singleton
 class ThrottlingRepositoryConfig @Inject()(val appConfig: AppConfig) {
 
-  private val ttlLengthSeconds = appConfig.timeToLiveSecondsSaveAndRetrieve
+  private val ttlLengthSeconds = appConfig.throttleTimeToLiveSeconds
 
   def mongoComponent: MongoComponent = MongoComponent(appConfig.mongoUri)
 
@@ -86,10 +86,10 @@ class ThrottlingRepository @Inject()(config: ThrottlingRepositoryConfig, instant
     Json.obj(f"$$set" -> set, f"$$inc" -> inc)
   }
 
-    private def resultToThrottleCount: Option[JsValue] => Int = {
-      case Some(json) => (json \ countKey).as[Int]
-      case None => 0
-    }
+  private def resultToThrottleCount: Option[JsValue] => Int = {
+    case Some(json) => (json \ countKey).as[Int]
+    case None => 0
+  }
 
   def checkThrottle(id: String): Future[Int] = {
     val time: Long = instantProvider.getInstantNowMilli
@@ -136,13 +136,13 @@ object ThrottlingRepository {
                     dropDups: Boolean,
                     sparse: Boolean,
                     version: Option[Any],
-                    options:BSONDocument
+                    options: BSONDocument
                   )
 
   object IndexType {
-    def Ascending: Int = 1
+    def ascending: Int = 1
 
-    def Descending: Int = -1
+    def descending: Int = -1
   }
 
   implicit def asOption(o: JsObject): Option[JsValue] = o.result.toOption.flatMap(Option(_))
@@ -169,8 +169,8 @@ object ThrottlingRepository {
   val idTimecodeIndex: Index =
     Index(
       key = Seq(
-        throttleIdKey -> IndexType.Ascending,
-        timecodeKey -> IndexType.Ascending
+        throttleIdKey -> IndexType.ascending,
+        timecodeKey -> IndexType.ascending
       ),
       name = Some("idTimecodeIndex"),
       unique = true,
@@ -181,7 +181,7 @@ object ThrottlingRepository {
     )
 
   def ttlIndex(ttlLengthSeconds: Long): IndexModel = new IndexModel(
-    Json.obj(lastUpdatedTimestampKey -> IndexType.Ascending),
+    Json.obj(lastUpdatedTimestampKey -> IndexType.ascending),
     new IndexOptions()
       .name("selfEmploymentsDataExpires")
       .unique(false)

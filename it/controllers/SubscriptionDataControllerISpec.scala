@@ -25,8 +25,6 @@ import play.api.libs.json.{JsObject, Json}
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
 import repositories.SubscriptionDataRepository
 
-import scala.concurrent.ExecutionContext.Implicits.global
-
 class SubscriptionDataControllerISpec extends ComponentSpecBase with FeatureSwitching {
 
   val appConfig: AppConfig = app.injector.instanceOf[AppConfig]

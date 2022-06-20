@@ -20,7 +20,6 @@ import sbt._
 object AppDependencies {
   val appName = "income-tax-subscription"
 
-  import play.core.PlayVersion
   import play.sbt.PlayImport._
 
   private val domainVersion = "8.0.0-play-28"
@@ -40,7 +39,7 @@ object AppDependencies {
 
   private val playVersion = "2.8.14"
 
-  val compile = Seq(
+  val compile: Seq[ModuleID] = Seq(
     ws,
     "uk.gov.hmrc" %% "bootstrap-backend-play-28" % bootstrapBackendVersion,
     "uk.gov.hmrc" %% "domain" % domainVersion,
@@ -55,7 +54,7 @@ object AppDependencies {
 
   object Test {
     def apply(): Seq[ModuleID] = new TestDependencies {
-      override lazy val test = Seq(
+      override lazy val test: Seq[sbt.ModuleID] = Seq(
         "uk.gov.hmrc" %% "bootstrap-backend-play-28" % bootstrapBackendVersion % scope,
         "org.scalatest" %% "scalatest" % scalaTestVersion % scope,
         "org.scalatestplus" %% "mockito-3-12" % "3.2.10.0" % scope,
@@ -76,7 +75,7 @@ object AppDependencies {
 
       override lazy val scope: String = "it"
 
-      override lazy val test = Seq(
+      override lazy val test: Seq[sbt.ModuleID] = Seq(
         "org.scalatest" %% "scalatest" % scalaTestVersion % scope,
         "com.typesafe.play" %% "play-test" % playVersion % scope,
         "org.scalatestplus.play" %% "scalatestplus-play" % scalaTestPlusVersion % scope,

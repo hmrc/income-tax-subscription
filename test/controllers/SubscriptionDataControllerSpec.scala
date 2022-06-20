@@ -16,12 +16,12 @@
 
 package controllers
 
+import com.mongodb.client.result.DeleteResult
 import common.CommonSpec
 import play.api.libs.json.{JsObject, Json}
 import play.api.mvc.{AnyContentAsEmpty, Result}
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
-import reactivemongo.api.commands.UpdateWriteResult
 import services.SubscriptionDataService.{Created, Existing}
 import services.mocks.{MockAuthService, MockSubscriptionDataService}
 import uk.gov.hmrc.auth.core.retrieve.Credentials
@@ -59,14 +59,14 @@ class SubscriptionDataControllerSpec extends CommonSpec with MockSubscriptionDat
     }
     "return Ok with a reference" when {
       "SubscriptionDataService returns an Existing reference" in {
-      mockRetrievalSuccess[Option[Credentials]](Some(Credentials("test-cred-id", "ggProvider")))
-      mockRetrieveReference("1234567890", Existing, "test-cred-id")(reference)
+        mockRetrievalSuccess[Option[Credentials]](Some(Credentials("test-cred-id", "ggProvider")))
+        mockRetrieveReference("1234567890", Existing, "test-cred-id")(reference)
 
-      val result = TestController.retrieveReference()(request.withBody(Json.obj("utr" -> "1234567890")))
+        val result = TestController.retrieveReference()(request.withBody(Json.obj("utr" -> "1234567890")))
 
-      status(result) shouldBe OK
+        status(result) shouldBe OK
+      }
     }
-  }
     "return Created with a reference" when {
       "SubscriptionDataService returns an Created reference" in {
         mockRetrievalSuccess[Option[Credentials]](Some(Credentials("test-cred-id", "ggProvider")))
@@ -149,7 +149,7 @@ class SubscriptionDataControllerSpec extends CommonSpec with MockSubscriptionDat
     "return OK" when {
       "the result is returned from the service" in {
         mockAuthSuccess()
-        mockDeleteSubscriptionData(reference, testJson)(Some(testJson))
+        mockDeleteSubscriptionData(reference)(Some(testJson))
 
         val result: Future[Result] = TestController.deleteSubscriptionData(reference, mockDataId)(request)
 
@@ -162,7 +162,7 @@ class SubscriptionDataControllerSpec extends CommonSpec with MockSubscriptionDat
     "return OK" when {
       "the data related to the given sessionId have been deleted successfully and an OK status returned from the service" in {
         mockAuthSuccess()
-        mockDeleteSessionData(reference)(UpdateWriteResult(ok = true, 1, 1, Seq(), Seq(), None, None, None))
+        mockDeleteSessionData(reference)(DeleteResult.acknowledged(1))
 
         val result = TestController.deleteAllSubscriptionData(reference)(request)
 
@@ -173,10 +173,11 @@ class SubscriptionDataControllerSpec extends CommonSpec with MockSubscriptionDat
     "throw an exception" when {
       "delete session data fails" in {
         mockAuthSuccess()
-        mockDeleteSessionData(reference)(UpdateWriteResult(ok = false, 1, 1, Seq(), Seq(), None, Some(INTERNAL_SERVER_ERROR), None))
+        mockDeleteSessionData(reference)(DeleteResult.unacknowledged())
+        //ok = false, 1, 1, Seq(), Seq(), None, Some(INTERNAL_SERVER_ERROR), None))
 
         val ex = intercept[RuntimeException](await(TestController.deleteAllSubscriptionData(reference)(request)))
-        ex.getMessage shouldBe "[SubscriptionDataController][deleteAllSessionData] - delete session data failed with code 500"
+        ex.getMessage shouldBe "[SubscriptionDataController][deleteAllSessionData] - delete session data failed"
       }
     }
   }

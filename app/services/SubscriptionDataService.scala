@@ -16,10 +16,10 @@
 
 package services
 
+import com.mongodb.client.result.DeleteResult
 import config.AppConfig
 import config.featureswitch.FeatureSwitching
 import play.api.libs.json.JsValue
-import reactivemongo.api.commands.WriteResult
 import repositories.SubscriptionDataRepository
 import services.SubscriptionDataService.{Created, Existence, Existing}
 import uk.gov.hmrc.http.{HeaderCarrier, InternalServerException}
@@ -45,29 +45,29 @@ class SubscriptionDataService @Inject()(subscriptionDataRepository: Subscription
     }
   }
 
-  def retrieveSubscriptionData(reference: String, dataId: String)(implicit hc: HeaderCarrier): Future[Option[JsValue]] =
+  def retrieveSubscriptionData(reference: String, dataId: String): Future[Option[JsValue]] =
     subscriptionDataRepository.getDataFromReference(
       reference = reference,
       dataId = dataId
     )
 
-  def getAllSubscriptionData(reference: String)(implicit hc: HeaderCarrier): Future[Option[JsValue]] =
+  def getAllSubscriptionData(reference: String): Future[Option[JsValue]] =
     subscriptionDataRepository.getReferenceData(reference = reference)
 
-  def insertSubscriptionData(reference: String, dataId: String, data: JsValue)(implicit hc: HeaderCarrier): Future[Option[JsValue]] =
+  def insertSubscriptionData(reference: String, dataId: String, data: JsValue): Future[Option[JsValue]] =
     subscriptionDataRepository.insertDataWithReference(
       reference = reference,
       dataId = dataId,
       data = data
     )
 
-  def deleteSubscriptionData(reference: String, dataId: String)(implicit hc: HeaderCarrier): Future[Option[JsValue]] =
+  def deleteSubscriptionData(reference: String, dataId: String): Future[Option[JsValue]] =
     subscriptionDataRepository.deleteDataWithReference(
       reference = reference,
       dataId = dataId
     )
 
-  def deleteAllSubscriptionData(reference: String)(implicit hc: HeaderCarrier): Future[WriteResult] =
+  def deleteAllSubscriptionData(reference: String): Future[DeleteResult] =
     subscriptionDataRepository.deleteDataFromReference(reference)
 
 }
