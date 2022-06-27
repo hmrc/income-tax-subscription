@@ -16,6 +16,7 @@
 
 package utils
 
+import common.Constants
 import models.ErrorModel
 import models.frontend._
 import models.lockout.LockoutRequest
@@ -256,6 +257,8 @@ object TestConstants extends JsonUtils {
     val ggServiceName = "HMRC-MTD-IT"
     val ggFriendlyName = "Making Tax Digital Income Tax Self-Assessment enrolment"
   }
+
+  val hmrcAsAgent = Constants.hmrcAsAgent
 
   val propertySubscriptionSuccess = PropertySubscriptionResponseModel(testSafeId, testMtditId, IncomeSourceModel(testSourceId))
 

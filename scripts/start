@@ -12,14 +12,10 @@ which nc &>/dev/null && nc -vz localhost $MONGO_PORT 2>/dev/null || die "Can't f
 
 which sm &>/dev/null || die "Can't find Service Manager"
 
-sm --start ITSA_SUBSC_DEP
-sm --start AGENTS_TAX_ENROLMENTS
-sm --start INCOME_TAX_SUBSCRIPTION_SELF_EMPLOYED_FRONTEND
-sm --start INCOME_TAX_SUBSCRIPTION_STUBS
-sm --start INCOME_TAX_SUBSCRIPTION_ELIGIBILITY
-sm --start INCOME_TAX_SUBSCRIPTION_ELIGIBILITY_FRONTEND
-sm --start INCOME_TAX_SUBSCRIPTION_FRONTEND
-sm --start TAX_ENROLMENTS
+sm --start ITSA_SUBSC_MIN $@
+sleep 5
+
+sm --stop INCOME_TAX_SUBSCRIPTION
 
 sleep 5
 sbt "run 9560 -Dapplication.router=testOnlyDoNotUseInAppConf.Routes"

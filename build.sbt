@@ -17,6 +17,7 @@
 import uk.gov.hmrc.DefaultBuildSettings.{addTestReportOption, defaultSettings, scalaSettings}
 import uk.gov.hmrc.sbtdistributables.SbtDistributablesPlugin.publishingSettings
 import uk.gov.hmrc.versioning.SbtGitVersioning.autoImport.majorVersion
+import scala.sys.process._
 
 lazy val plugins: Seq[Plugins] = Seq(PlayScala)
 
@@ -60,3 +61,11 @@ lazy val microservice = Project(AppDependencies.appName, file("."))
     addTestReportOption(IntegrationTest, "int-test-reports"),
     IntegrationTest / parallelExecution := false)
   .settings( majorVersion := 1 )
+
+lazy val results = taskKey[Unit]("Opens test results'")
+results := { "open target/test-reports/html-report/index.html" ! }
+Test / results := (results).value
+
+lazy val itResults = taskKey[Unit]("Opens it test results'")
+itResults := { "open target/int-test-reports/html-report/index.html" ! }
+IntegrationTest / results := (itResults).value

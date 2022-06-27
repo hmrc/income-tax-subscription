@@ -16,17 +16,12 @@
 
 package common
 
-object Constants {
+import common.Constants.hmrcAsAgent
+import uk.gov.hmrc.auth.core.Enrolments
 
-  object GovernmentGateway {
-    val MTDITID = "MTDITID"
-    val NINO = "NINO"
-    val ggPortalId = "Default"
-    val ggServiceName = "HMRC-MTD-IT"
-    val ggFriendlyName = "Making Tax Digital Income Tax Self-Assessment enrolment"
-  }
+trait Extractors {
 
-  val hmrcAsAgent = "HMRC-AS-AGENT"
+  def getArnFromEnrolments(enrolments: Enrolments, key: String = hmrcAsAgent): Option[String] = enrolments.getEnrolment(key).flatMap
+    { enrolment => enrolment.identifiers.headOption map { identifier => identifier.value } }
 
-  val ninoJsonKey = "nino"
 }

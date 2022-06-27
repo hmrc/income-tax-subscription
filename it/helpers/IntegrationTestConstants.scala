@@ -16,6 +16,7 @@
 
 package helpers
 
+import common.Constants.hmrcAsAgent
 import models.lockout.LockoutRequest
 import models.subscription._
 import models.subscription.business.Cash
@@ -49,7 +50,7 @@ object IntegrationTestConstants extends JsonUtils {
     val testTransactionName = "testTransactionName"
     val testDetail = Map("foo" -> "bar")
     val agentServiceIdentifierKey = "AgentReferenceNumber"
-    val agentServiceEnrolmentName = "HMRC-AS-AGENT"
+    val agentServiceEnrolmentName = hmrcAsAgent
   }
 
   val INVALID_NINO_MODEL = ErrorModel(BAD_REQUEST, "INVALID_NINO", "Submission has not passed validation. Invalid parameter NINO.")

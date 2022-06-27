@@ -16,6 +16,7 @@
 
 package services.mocks
 
+import utils.TestConstants.hmrcAsAgent
 import org.mockito.Mockito._
 import org.scalatest.{BeforeAndAfterEach, Suite}
 import org.scalatestplus.mockito.MockitoSugar
@@ -41,7 +42,7 @@ trait MockAuthService extends BeforeAndAfterEach with MockitoSugar {
 
   def mockAgentAuthSuccess(): Unit = {
     mockRetrievalSuccess(
-      Enrolments(Set(Enrolment("HMRC-AS-AGENT", Seq(EnrolmentIdentifier("AgentReferenceNumber", testArn)), "Activated")))
+      Enrolments(Set(Enrolment(hmrcAsAgent, Seq(EnrolmentIdentifier("AgentReferenceNumber", testArn)), "Activated")))
     )
   }
 

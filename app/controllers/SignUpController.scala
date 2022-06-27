@@ -16,10 +16,9 @@
 
 package controllers
 
+import common.Extractors
 import config.AppConfig
 import connectors.SignUpConnector
-
-import javax.inject.{Inject, Singleton}
 import models.monitoring.{RegistrationFailureAudit, RegistrationSuccessAudit}
 import play.api.Logger
 import play.api.libs.json.Json
@@ -28,13 +27,13 @@ import services.AuthService
 import services.monitoring.AuditService
 import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
-import uk.gov.hmrc.auth.core.{Enrolment, EnrolmentIdentifier, Enrolments}
 
+import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext
 
 @Singleton
 class SignUpController @Inject()(authService: AuthService, auditService: AuditService, signUpConnector: SignUpConnector,
-                                 cc: ControllerComponents, appConfig: AppConfig)(implicit ec: ExecutionContext) extends BackendController(cc) {
+                                 cc: ControllerComponents, appConfig: AppConfig)(implicit ec: ExecutionContext) extends BackendController(cc) with Extractors {
 
   val logger: Logger = Logger(this.getClass)
 
@@ -43,7 +42,7 @@ class SignUpController @Inject()(authService: AuthService, auditService: AuditSe
       signUpConnector.signUp(nino).map {
         case Right(response) => {
           val path: Option[String] = request.headers.get(ITSASessionKeys.RequestURI)
-          auditService.audit(RegistrationSuccessAudit(getArnFromEnrolments(enrolments), nino, response.mtdbsa, appConfig.desAuthorisationToken,path))
+          auditService.audit(RegistrationSuccessAudit(getArnFromEnrolments(enrolments), nino, response.mtdbsa, appConfig.desAuthorisationToken, path))
           Ok(Json.toJson(response))
         }
         case Left(error) => logger.error(s"Error processing Sign up request with status ${error.status} and message ${error.reason}")
@@ -53,9 +52,4 @@ class SignUpController @Inject()(authService: AuthService, auditService: AuditSe
 
     }
   }
-
-  private def getArnFromEnrolments(enrolments: Enrolments): Option[String] = enrolments.enrolments.collectFirst {
-    case Enrolment("HMRC-AS-AGENT", EnrolmentIdentifier(_, value) :: _, _, _) => value
-  }
-
 }
