@@ -19,6 +19,14 @@ class ThrottlingControllerISpec extends ComponentSpecBase {
       )
     }
 
+    "succeed when configured with a limit of one" in {
+      val res = IncomeTaxSubscription.throttled("oneTestThrottle")
+
+      res should have(
+        httpStatus(OK)
+      )
+    }
+
     "fail with an invalid unconfigured throttle" in {
       val res = IncomeTaxSubscription.throttled("notATestThrottle")
 
@@ -34,6 +42,6 @@ class ThrottlingControllerISpec extends ComponentSpecBase {
         httpStatus(SERVICE_UNAVAILABLE)
       )
     }
-
+    
   }
 }
