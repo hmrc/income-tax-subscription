@@ -61,7 +61,8 @@ trait ComponentSpecBase extends AnyWordSpecLike
     "microservice.services.gg-authentication.port" -> mockPort,
     "microservice.services.throttle-threshold" -> "2",
     "throttle.testThrottle.max"-> "10",
-    "throttle.zeroTestThrottle.max"-> "0"
+    "throttle.zeroTestThrottle.max"-> "0",
+    "throttle.oneTestThrottle.max" -> "1"
   )
 
   override def beforeAll(): Unit = {
