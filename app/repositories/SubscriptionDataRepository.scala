@@ -17,7 +17,7 @@
 package repositories
 
 import config.AppConfig
-import config.featureswitch.{FeatureSwitching, SaveAndRetrieve}
+import config.featureswitch.FeatureSwitching
 import play.api.libs.json.{Format, JsObject, JsValue, Json}
 import play.modules.reactivemongo.ReactiveMongoComponent
 import reactivemongo.api.Cursor.FailOnError
@@ -162,11 +162,7 @@ class SubscriptionDataRepository @Inject()(mongo: ReactiveMongoComponent,
       version = None,
       options = BSONDocument())
 
-  private val ttlLength = if (isEnabled(SaveAndRetrieve)) {
-    appConfig.timeToLiveSecondsSaveAndRetrieve
-  } else {
-    appConfig.timeToLiveSeconds
-  }
+  private val ttlLength = appConfig.timeToLiveSecondsSaveAndRetrieve
 
   val utrCredIndex: Index =
     Index(
@@ -215,9 +211,7 @@ class SubscriptionDataRepository @Inject()(mongo: ReactiveMongoComponent,
 
   collection.indexesManager.drop("referenceIndex")
 
-  if(isEnabled(SaveAndRetrieve)) {
-    collection.indexesManager.ensure(referenceIndex)
-  }
+  collection.indexesManager.ensure(referenceIndex)
 
 }
 

@@ -28,8 +28,7 @@ object FeatureSwitch {
   val prefix = "feature-switch"
 
   val switches: Set[FeatureSwitch] = Set(
-    StubDESFeature,
-    SaveAndRetrieve
+    StubDESFeature
   )
 
   def apply(str: String): FeatureSwitch =
@@ -48,9 +47,4 @@ object FeatureSwitch {
 object StubDESFeature extends FeatureSwitch {
   val displayName = s"Use stub for DES connection"
   val name = s"$prefix.stub-des"
-}
-
-object SaveAndRetrieve extends FeatureSwitch {
-  val displayName = s"Save & Retrieve"
-  val name = s"$prefix.enable-save-and-retrieve"
 }

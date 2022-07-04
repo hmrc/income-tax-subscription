@@ -17,7 +17,7 @@
 package controllers
 
 import common.CommonSpec
-import config.featureswitch.{FeatureSwitching, SaveAndRetrieve}
+import config.featureswitch.FeatureSwitching
 import models.subscription._
 import models.subscription.business.{Accruals, Cash, CreateIncomeSourceErrorModel, CreateIncomeSourceSuccessModel}
 import play.api.http.Status._
@@ -36,11 +36,6 @@ import scala.concurrent.Future
 
 class BusinessIncomeSourcesControllerSpec extends CommonSpec
   with MockAuthService with MockIncomeSourcesConnector with MaterializerSupport with FeatureSwitching {
-
-  override def beforeEach(): Unit = {
-    super.beforeEach()
-    disable(SaveAndRetrieve)
-  }
 
   lazy val mockCC: ControllerComponents = stubControllerComponents()
 
@@ -173,63 +168,32 @@ class BusinessIncomeSourcesControllerSpec extends CommonSpec
 
   val postSaveAndRetrieveRequest: Request[JsValue] = FakeRequest().withBody(testCreateIncomeSourcesJson)
 
-  "createIncomeSource" when {
-    "the save&retrieve feature switch is enabled" should {
-      s"return a $NO_CONTENT response" when {
-        "the income sources were successfully submitted" in {
-          enable(SaveAndRetrieve)
+  "createIncomeSource" should {
+    s"return a $NO_CONTENT response" when {
+      "the income sources were successfully submitted" in {
 
-          mockAgentAuthSuccess()
-          mockCreateBusinessIncomeSource(Some(testArn), mtditid, testCreateIncomeSources)(
-            Right(CreateIncomeSourceSuccessModel())
-          )
+        mockAgentAuthSuccess()
+        mockCreateBusinessIncomeSource(Some(testArn), mtditid, testCreateIncomeSources)(
+          Right(CreateIncomeSourceSuccessModel())
+        )
 
-          val result: Future[Result] = TestController.createIncomeSource(mtditid)(postSaveAndRetrieveRequest)
+        val result: Future[Result] = TestController.createIncomeSource(mtditid)(postSaveAndRetrieveRequest)
 
-          status(result) shouldBe NO_CONTENT
-        }
-      }
-      s"return a $INTERNAL_SERVER_ERROR response" when {
-        "there was an error submitting" in {
-          enable(SaveAndRetrieve)
-
-          mockAgentAuthSuccess()
-          mockCreateBusinessIncomeSource(Some(testArn), mtditid, testCreateIncomeSources)(
-            Left(CreateIncomeSourceErrorModel(INTERNAL_SERVER_ERROR, "error"))
-          )
-
-          val result: Future[Result] = TestController.createIncomeSource(mtditid)(postSaveAndRetrieveRequest)
-
-          status(result) shouldBe INTERNAL_SERVER_ERROR
-          contentAsString(result) shouldBe "Business Income Source Failure"
-        }
+        status(result) shouldBe NO_CONTENT
       }
     }
-    "the save&retrieve feature switch is disabled" should {
-      s"return a $NO_CONTENT response" when {
-        "the income sources were successfully submitted" in {
-          mockAgentAuthSuccess()
-          mockCreateBusinessIncome(Some(testArn), mtditid, testCreateIncomeSubmissionModel)(
-            Right(CreateIncomeSourceSuccessModel())
-          )
+    s"return a $INTERNAL_SERVER_ERROR response" when {
+      "there was an error submitting" in {
 
-          val result: Future[Result] = TestController.createIncomeSource(mtditid)(preSaveAndRetrieveRequest)
+        mockAgentAuthSuccess()
+        mockCreateBusinessIncomeSource(Some(testArn), mtditid, testCreateIncomeSources)(
+          Left(CreateIncomeSourceErrorModel(INTERNAL_SERVER_ERROR, "error"))
+        )
 
-          status(result) shouldBe NO_CONTENT
-        }
-      }
-      s"return a $INTERNAL_SERVER_ERROR response" when {
-        "there was an error submitting" in {
-          mockAgentAuthSuccess()
-          mockCreateBusinessIncome(Some(testArn), mtditid, testCreateIncomeSubmissionModel)(
-            Left(CreateIncomeSourceErrorModel(INTERNAL_SERVER_ERROR, "error"))
-          )
+        val result: Future[Result] = TestController.createIncomeSource(mtditid)(postSaveAndRetrieveRequest)
 
-          val result: Future[Result] = TestController.createIncomeSource(mtditid)(preSaveAndRetrieveRequest)
-
-          status(result) shouldBe INTERNAL_SERVER_ERROR
-          contentAsString(result) shouldBe "Business Income Source Failure"
-        }
+        status(result) shouldBe INTERNAL_SERVER_ERROR
+        contentAsString(result) shouldBe "Business Income Source Failure"
       }
     }
   }

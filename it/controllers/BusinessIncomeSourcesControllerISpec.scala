@@ -2,7 +2,7 @@
 package controllers
 
 import config.MicroserviceAppConfig
-import config.featureswitch.{FeatureSwitching, SaveAndRetrieve}
+import config.featureswitch.FeatureSwitching
 import helpers.ComponentSpecBase
 import helpers.IntegrationTestConstants._
 import helpers.servicemocks.AuditStub.{stubAuditing, verifyAudit}
@@ -17,11 +17,6 @@ import java.time.LocalDate
 
 
 class BusinessIncomeSourcesControllerISpec extends ComponentSpecBase with FeatureSwitching {
-
-  override def beforeEach(): Unit = {
-    super.beforeEach()
-    disable(SaveAndRetrieve)
-  }
 
   val appConfig: MicroserviceAppConfig = app.injector.instanceOf[MicroserviceAppConfig]
 
@@ -144,77 +139,38 @@ class BusinessIncomeSourcesControllerISpec extends ComponentSpecBase with Featur
     )
   )
 
-  "POST /mis/create/mtditid" when {
-    "the save and retrieve feature switch is disabled" should {
-      s"return a $NO_CONTENT response" when {
-        "income sources are successfully submitted" in {
-          AuthStub.stubAuth(OK, Json.obj())
-          stubAuditing()
-          CreateIncomeSourceStub.stub(testMtdbsaRef, Json.toJson(testCreateIncomeSubmissionModel), appConfig.desAuthorisationToken, appConfig.desEnvironment)(
-            OK, testCreateIncomeSuccessBody
-          )
+  "POST /mis/create/mtditid" should {
+    s"return a $NO_CONTENT response" when {
+      "income sources are successfully submitted" in {
+        AuthStub.stubAuth(OK, Json.obj())
+        stubAuditing()
+        CreateIncomeSourceStub.stub(testMtdbsaRef, Json.toJson(testCreateIncomeSources), appConfig.desAuthorisationToken, appConfig.desEnvironment)(
+          OK, testCreateIncomeSuccessBody
+        )
 
-          val result: WSResponse = IncomeTaxSubscription.businessIncomeSource(testMtdbsaRef, testCreateIncomeSubmissionJson)
+        val result: WSResponse = IncomeTaxSubscription.businessIncomeSource(testMtdbsaRef, testCreateIncomeSourcesJson)
 
-          result should have(
-            httpStatus(NO_CONTENT)
-          )
-          verifyAudit()
-        }
-      }
-      s"return a $INTERNAL_SERVER_ERROR" when {
-        "the submission of income sources failed" in {
-          AuthStub.stubAuth(OK, Json.obj())
-          stubAuditing()
-          CreateIncomeSourceStub.stub(testMtdbsaRef, Json.toJson(testCreateIncomeSubmissionModel), appConfig.desAuthorisationToken, appConfig.desEnvironment)(
-            INTERNAL_SERVER_ERROR, testCreateIncomeFailureBody
-          )
-
-          val result: WSResponse = IncomeTaxSubscription.businessIncomeSource(testMtdbsaRef, testCreateIncomeSubmissionJson)
-
-          result should have(
-            httpStatus(INTERNAL_SERVER_ERROR),
-            bodyOf("Business Income Source Failure")
-          )
-          verifyAudit()
-        }
+        result should have(
+          httpStatus(NO_CONTENT)
+        )
+        verifyAudit()
       }
     }
-    "the save and retrieve feature switch is enabled" should {
-      s"return a $NO_CONTENT response" when {
-        "income sources are successfully submitted" in {
-          enable(SaveAndRetrieve)
-          AuthStub.stubAuth(OK, Json.obj())
-          stubAuditing()
-          CreateIncomeSourceStub.stub(testMtdbsaRef, Json.toJson(testCreateIncomeSources), appConfig.desAuthorisationToken, appConfig.desEnvironment)(
-            OK, testCreateIncomeSuccessBody
-          )
+    s"return a $INTERNAL_SERVER_ERROR" when {
+      "the submission of income sources failed" in {
+        AuthStub.stubAuth(OK, Json.obj())
+        stubAuditing()
+        CreateIncomeSourceStub.stub(testMtdbsaRef, Json.toJson(testCreateIncomeSources), appConfig.desAuthorisationToken, appConfig.desEnvironment)(
+          INTERNAL_SERVER_ERROR, testCreateIncomeFailureBody
+        )
 
-          val result: WSResponse = IncomeTaxSubscription.businessIncomeSource(testMtdbsaRef, testCreateIncomeSourcesJson)
+        val result: WSResponse = IncomeTaxSubscription.businessIncomeSource(testMtdbsaRef, testCreateIncomeSourcesJson)
 
-          result should have(
-            httpStatus(NO_CONTENT)
-          )
-          verifyAudit()
-        }
-      }
-      s"return a $INTERNAL_SERVER_ERROR" when {
-        "the submission of income sources failed" in {
-          enable(SaveAndRetrieve)
-          AuthStub.stubAuth(OK, Json.obj())
-          stubAuditing()
-          CreateIncomeSourceStub.stub(testMtdbsaRef, Json.toJson(testCreateIncomeSources), appConfig.desAuthorisationToken, appConfig.desEnvironment)(
-            INTERNAL_SERVER_ERROR, testCreateIncomeFailureBody
-          )
-
-          val result: WSResponse = IncomeTaxSubscription.businessIncomeSource(testMtdbsaRef, testCreateIncomeSourcesJson)
-
-          result should have(
-            httpStatus(INTERNAL_SERVER_ERROR),
-            bodyOf("Business Income Source Failure")
-          )
-          verifyAudit()
-        }
+        result should have(
+          httpStatus(INTERNAL_SERVER_ERROR),
+          bodyOf("Business Income Source Failure")
+        )
+        verifyAudit()
       }
     }
   }
