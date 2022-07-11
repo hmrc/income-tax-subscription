@@ -18,9 +18,9 @@ package controllers
 
 import common.Extractors
 import config.AppConfig
-import config.featureswitch.{FeatureSwitching, SaveAndRetrieve}
+import config.featureswitch.FeatureSwitching
 import connectors.CreateIncomeSourcesConnector
-import models.subscription.{BusinessSubscriptionDetailsModel, CreateIncomeSourcesModel}
+import models.subscription.CreateIncomeSourcesModel
 import play.api.Logger
 import play.api.libs.json.JsValue
 import play.api.mvc._
@@ -44,21 +44,11 @@ class BusinessIncomeSourcesController @Inject()(authService: AuthService,
   def createIncomeSource(mtdbsaRef: String): Action[JsValue] = Action.async(parse.json) { implicit request =>
     authService.authorised().retrieve(Retrievals.allEnrolments) { enrolments =>
       val agentReferenceNumber: Option[String] = getArnFromEnrolments(enrolments)
-      if (isEnabled(SaveAndRetrieve)) {
-        withJsonBody[CreateIncomeSourcesModel] { incomeSources =>
-          createIncomeSourcesConnector.createBusinessIncomeSources(agentReferenceNumber, mtdbsaRef, incomeSources).map {
-            case Right(_) => NoContent
-            case Left(error) => logger.error(s"Error processing Business Income Source with status ${error.status} and message ${error.reason}")
-              InternalServerError("Business Income Source Failure")
-          }
-        }
-      } else {
-        withJsonBody[BusinessSubscriptionDetailsModel] { incomeSourceRequest =>
-          createIncomeSourcesConnector.createBusinessIncome(agentReferenceNumber, mtdbsaRef, incomeSourceRequest).map {
-            case Right(_) => NoContent
-            case Left(error) => logger.error(s"Error processing Business Income Source with status ${error.status} and message ${error.reason}")
-              InternalServerError("Business Income Source Failure")
-          }
+      withJsonBody[CreateIncomeSourcesModel] { incomeSources =>
+        createIncomeSourcesConnector.createBusinessIncomeSources(agentReferenceNumber, mtdbsaRef, incomeSources).map {
+          case Right(_) => NoContent
+          case Left(error) => logger.error(s"Error processing Business Income Source with status ${error.status} and message ${error.reason}")
+            InternalServerError("Business Income Source Failure")
         }
       }
     }

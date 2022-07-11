@@ -75,29 +75,4 @@ class FeatureSwitchingSpec extends CommonSpec with FeatureSwitching with Mockito
     }
   }
 
-  "SaveAndRetrieve" should {
-    "return true if SaveAndRetrieve feature switch is enabled in sys.props" in {
-      enable(SaveAndRetrieve)
-      isEnabled(SaveAndRetrieve) shouldBe true
-    }
-    "return false if SaveAndRetrieve feature switch is disabled in sys.props" in {
-      disable(SaveAndRetrieve)
-      isEnabled(SaveAndRetrieve) shouldBe false
-    }
-
-    "return false if SaveAndRetrieve feature switch does not exist" in {
-      when(mockConfig.getOptional[String]("feature-switch.enable-save-and-retrieve")).thenReturn(None)
-      isEnabled(SaveAndRetrieve) shouldBe false
-    }
-
-    "return false if SaveAndRetrieve feature switch is not in sys.props but is set to 'off' in config" in {
-      when(mockConfig.getOptional[String]("feature-switch.enable-save-and-retrieve")).thenReturn(Some(FEATURE_SWITCH_OFF))
-      isEnabled(SaveAndRetrieve) shouldBe false
-    }
-
-    "return true if SaveAndRetrieve feature switch is not in sys.props but is set to 'on' in config" in {
-      when(mockConfig.getOptional[String]("feature-switch.enable-save-and-retrieve")).thenReturn(Some(FEATURE_SWITCH_ON))
-      isEnabled(SaveAndRetrieve) shouldBe true
-    }
-  }
 }

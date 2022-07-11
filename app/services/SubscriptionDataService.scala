@@ -17,7 +17,7 @@
 package services
 
 import config.AppConfig
-import config.featureswitch.{FeatureSwitching, SaveAndRetrieve}
+import config.featureswitch.FeatureSwitching
 import play.api.libs.json.JsValue
 import reactivemongo.api.commands.WriteResult
 import repositories.SubscriptionDataRepository
@@ -41,78 +41,41 @@ class SubscriptionDataService @Inject()(subscriptionDataRepository: Subscription
   def retrieveReference(utr: String, credId: String)(implicit hc: HeaderCarrier): Future[Existence] = {
     subscriptionDataRepository.retrieveReference(utr, credId) flatMap {
       case Some(value) => Future.successful(Existing(value))
-      case None => subscriptionDataRepository.createReference(utr, credId, sessionIdFromHC) map(reference => Created(reference))
+      case None => subscriptionDataRepository.createReference(utr, credId, sessionIdFromHC) map (reference => Created(reference))
     }
   }
 
-  def retrieveSubscriptionData(reference: String, dataId: String)(implicit hc: HeaderCarrier): Future[Option[JsValue]] = {
-    if (isEnabled(SaveAndRetrieve)) {
-      subscriptionDataRepository.getDataFromReference(
-        reference = reference,
-        dataId = dataId
-      )
-    } else {
-      subscriptionDataRepository.getDataFromSession(
-        reference = reference,
-        sessionId = sessionIdFromHC,
-        dataId = dataId
-      )
-    }
-  }
+  def retrieveSubscriptionData(reference: String, dataId: String)(implicit hc: HeaderCarrier): Future[Option[JsValue]] =
+    subscriptionDataRepository.getDataFromReference(
+      reference = reference,
+      dataId = dataId
+    )
 
-  def getAllSubscriptionData(reference: String)(implicit hc: HeaderCarrier): Future[Option[JsValue]] = {
-    if (isEnabled(SaveAndRetrieve)) {
-      subscriptionDataRepository.getReferenceData(reference = reference)
-    } else {
-      subscriptionDataRepository.getSessionIdData(reference = reference, sessionId = sessionIdFromHC)
-    }
-  }
+  def getAllSubscriptionData(reference: String)(implicit hc: HeaderCarrier): Future[Option[JsValue]] =
+    subscriptionDataRepository.getReferenceData(reference = reference)
 
-  def insertSubscriptionData(reference: String, dataId: String, data: JsValue)(implicit hc: HeaderCarrier): Future[Option[JsValue]] = {
-    if (isEnabled(SaveAndRetrieve)) {
-      subscriptionDataRepository.insertDataWithReference(
-        reference = reference,
-        dataId = dataId,
-        data = data
-      )
-    } else {
-      subscriptionDataRepository.insertDataWithSession(
-        reference = reference,
-        sessionId = sessionIdFromHC,
-        dataId = dataId,
-        data = data
-      )
-    }
-  }
+  def insertSubscriptionData(reference: String, dataId: String, data: JsValue)(implicit hc: HeaderCarrier): Future[Option[JsValue]] =
+    subscriptionDataRepository.insertDataWithReference(
+      reference = reference,
+      dataId = dataId,
+      data = data
+    )
 
-  def deleteSubscriptionData(reference: String, dataId: String)(implicit hc: HeaderCarrier): Future[Option[JsValue]] = {
-    if (isEnabled(SaveAndRetrieve)) {
-      subscriptionDataRepository.deleteDataWithReference(
-        reference = reference,
-        dataId = dataId
-      )
-    } else {
-      subscriptionDataRepository.deleteDataWithReferenceAndSessionId(
-        reference = reference,
-        sessionId = sessionIdFromHC,
-        dataId = dataId
-      )
-    }
-  }
+  def deleteSubscriptionData(reference: String, dataId: String)(implicit hc: HeaderCarrier): Future[Option[JsValue]] =
+    subscriptionDataRepository.deleteDataWithReference(
+      reference = reference,
+      dataId = dataId
+    )
 
-  def deleteAllSubscriptionData(reference: String)(implicit hc: HeaderCarrier): Future[WriteResult] = {
-    if (isEnabled(SaveAndRetrieve)) {
-      subscriptionDataRepository.deleteDataFromReference(reference)
-    } else {
-      subscriptionDataRepository.deleteDataFromSessionId(reference, sessionIdFromHC)
-    }
-  }
+  def deleteAllSubscriptionData(reference: String)(implicit hc: HeaderCarrier): Future[WriteResult] =
+    subscriptionDataRepository.deleteDataFromReference(reference)
 
 }
 
 object SubscriptionDataService {
   sealed trait Existence
 
-  case class Existing(reference:String) extends Existence
-  case class Created(reference:String) extends Existence
+  case class Existing(reference: String) extends Existence
+
+  case class Created(reference: String) extends Existence
 }
