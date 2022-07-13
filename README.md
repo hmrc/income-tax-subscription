@@ -45,6 +45,20 @@ To connect to the mongo db provided by docker (recommended) please use
 docker exec -it mongo-db mongosh
 ```
 
+# Throttling
+
+Throttling is managed via a record per minute per throttle point, in Mongo.  The current value can be viewed at 
+
+``` 
+http://localhost:9560/income-tax-subscription/test-only/throttle?throttle=<throttleId>
+```
+
+and the limit can be set by using the 'copy as cUrl' facility, and use using POST to:
+
+``` 
+http://localhost:9560/income-tax-subscription/test-only/throttle?throttle=<throttleId>&value=<throttleMaxValue>
+```
+
 ### License
   
 This code is open source software licensed under the [Apache 2.0 License]("http://www.apache.org/licenses/LICENSE-2.0.html")

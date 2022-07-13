@@ -24,6 +24,7 @@ import play.api.inject
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.{JsObject, Json}
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
+import uk.gov.hmrc.mongo.MongoUtils
 
 import scala.concurrent.ExecutionContext.Implicits._
 import scala.concurrent.Future
@@ -49,24 +50,24 @@ class ThrottlingRepositorySpec extends AnyWordSpecLike with Matchers with Option
       .overrides(inject.bind[InstantProvider].to(testInstantProvider))
       .build().injector.instanceOf[ThrottlingRepository]
 
-    await(testThrottlingRepository.drop)
-
-    await(testThrottlingRepository.collection.indexesManager.ensure(testThrottlingRepository.idTimecodeIndex))
-    await(testThrottlingRepository.collection.indexesManager.ensure(testThrottlingRepository.ttlIndex))
+    await(testThrottlingRepository.drop())
+    await(MongoUtils.ensureIndexes(testThrottlingRepository.collection, testThrottlingRepository.indexes, replaceIndexes = true))
 
     await(Future.sequence(documents.map(item => testThrottlingRepository.insert(
       Json.obj(
-        testThrottlingRepository.throttleIdKey -> item.throttleId,
-        testThrottlingRepository.timecodeKey -> item.throttleTime,
-        testThrottlingRepository.countKey -> item.count
+        ThrottlingRepository.throttleIdKey -> item.throttleId,
+        ThrottlingRepository.timecodeKey -> item.throttleTime,
+        ThrottlingRepository.countKey -> item.count
       )
     ))))
 
     def findThrottleDocument(throttleId: String, timecode: Long): Option[JsObject] = {
       await(testThrottlingRepository.find(
-        testThrottlingRepository.throttleIdKey -> throttleId,
-        testThrottlingRepository.timecodeKey -> timecode
-      ) map (_.headOption))
+        Json.obj(
+          ThrottlingRepository.throttleIdKey -> throttleId,
+          ThrottlingRepository.timecodeKey -> timecode
+        ), None)
+      ).headOption
     }
   }
 
@@ -77,10 +78,10 @@ class ThrottlingRepositorySpec extends AnyWordSpecLike with Matchers with Option
         val optDocument: Option[JsObject] = findThrottleDocument(testThrottleIdOne, testThrottleTimecode)
         optDocument.isDefined shouldBe true
         optDocument map { document =>
-          (document \ testThrottlingRepository.throttleIdKey).asOpt[String] shouldBe Some(testThrottleIdOne)
-          (document \ testThrottlingRepository.timecodeKey).asOpt[Long] shouldBe Some(testThrottleTimecode)
-          (document \ testThrottlingRepository.countKey).asOpt[Int] shouldBe Some(1)
-          (document \ testThrottlingRepository.lastUpdatedTimestampKey).isDefined shouldBe true
+          (document \ ThrottlingRepository.throttleIdKey).asOpt[String] shouldBe Some(testThrottleIdOne)
+          (document \ ThrottlingRepository.timecodeKey).asOpt[Long] shouldBe Some(testThrottleTimecode)
+          (document \ ThrottlingRepository.countKey).asOpt[Int] shouldBe Some(1)
+          (document \ ThrottlingRepository.lastUpdatedTimestampKey).isDefined shouldBe true
         }
       }
       "return a count equal to the number of times called" in new Setup {
@@ -91,10 +92,10 @@ class ThrottlingRepositorySpec extends AnyWordSpecLike with Matchers with Option
         val optDocument: Option[JsObject] = findThrottleDocument(testThrottleIdOne, testThrottleTimecode)
         optDocument.isDefined shouldBe true
         optDocument map { document =>
-          (document \ testThrottlingRepository.throttleIdKey).asOpt[String] shouldBe Some(testThrottleIdOne)
-          (document \ testThrottlingRepository.timecodeKey).asOpt[Long] shouldBe Some(testThrottleTimecode)
-          (document \ testThrottlingRepository.countKey).asOpt[Int] shouldBe Some(3)
-          (document \ testThrottlingRepository.lastUpdatedTimestampKey).isDefined shouldBe true
+          (document \ ThrottlingRepository.throttleIdKey).asOpt[String] shouldBe Some(testThrottleIdOne)
+          (document \ ThrottlingRepository.timecodeKey).asOpt[Long] shouldBe Some(testThrottleTimecode)
+          (document \ ThrottlingRepository.countKey).asOpt[Int] shouldBe Some(3)
+          (document \ ThrottlingRepository.lastUpdatedTimestampKey).isDefined shouldBe true
         }
       }
     }
@@ -107,10 +108,10 @@ class ThrottlingRepositorySpec extends AnyWordSpecLike with Matchers with Option
         val optDocument: Option[JsObject] = findThrottleDocument(testThrottleIdOne, testThrottleTimecode)
         optDocument.isDefined shouldBe true
         optDocument map { document =>
-          (document \ testThrottlingRepository.throttleIdKey).asOpt[String] shouldBe Some(testThrottleIdOne)
-          (document \ testThrottlingRepository.timecodeKey).asOpt[Long] shouldBe Some(testThrottleTimecode)
-          (document \ testThrottlingRepository.countKey).asOpt[Int] shouldBe Some(2)
-          (document \ testThrottlingRepository.lastUpdatedTimestampKey).isDefined shouldBe true
+          (document \ ThrottlingRepository.throttleIdKey).asOpt[String] shouldBe Some(testThrottleIdOne)
+          (document \ ThrottlingRepository.timecodeKey).asOpt[Long] shouldBe Some(testThrottleTimecode)
+          (document \ ThrottlingRepository.countKey).asOpt[Int] shouldBe Some(2)
+          (document \ ThrottlingRepository.lastUpdatedTimestampKey).isDefined shouldBe true
         }
       }
     }
@@ -123,10 +124,10 @@ class ThrottlingRepositorySpec extends AnyWordSpecLike with Matchers with Option
         val optDocument: Option[JsObject] = findThrottleDocument(testThrottleIdOne, testThrottleTimecode)
         optDocument.isDefined shouldBe true
         optDocument map { document =>
-          (document \ testThrottlingRepository.throttleIdKey).asOpt[String] shouldBe Some(testThrottleIdOne)
-          (document \ testThrottlingRepository.timecodeKey).asOpt[Long] shouldBe Some(testThrottleTimecode)
-          (document \ testThrottlingRepository.countKey).asOpt[Int] shouldBe Some(1)
-          (document \ testThrottlingRepository.lastUpdatedTimestampKey).isDefined shouldBe true
+          (document \ ThrottlingRepository.throttleIdKey).asOpt[String] shouldBe Some(testThrottleIdOne)
+          (document \ ThrottlingRepository.timecodeKey).asOpt[Long] shouldBe Some(testThrottleTimecode)
+          (document \ ThrottlingRepository.countKey).asOpt[Int] shouldBe Some(1)
+          (document \ ThrottlingRepository.lastUpdatedTimestampKey).isDefined shouldBe true
         }
       }
     }
@@ -139,10 +140,10 @@ class ThrottlingRepositorySpec extends AnyWordSpecLike with Matchers with Option
         val optDocument: Option[JsObject] = findThrottleDocument(testThrottleIdOne, testThrottleTimecode)
         optDocument.isDefined shouldBe true
         optDocument map { document =>
-          (document \ testThrottlingRepository.throttleIdKey).asOpt[String] shouldBe Some(testThrottleIdOne)
-          (document \ testThrottlingRepository.timecodeKey).asOpt[Long] shouldBe Some(testThrottleTimecode)
-          (document \ testThrottlingRepository.countKey).asOpt[Int] shouldBe Some(1)
-          (document \ testThrottlingRepository.lastUpdatedTimestampKey).isDefined shouldBe true
+          (document \ ThrottlingRepository.throttleIdKey).asOpt[String] shouldBe Some(testThrottleIdOne)
+          (document \ ThrottlingRepository.timecodeKey).asOpt[Long] shouldBe Some(testThrottleTimecode)
+          (document \ ThrottlingRepository.countKey).asOpt[Int] shouldBe Some(1)
+          (document \ ThrottlingRepository.lastUpdatedTimestampKey).isDefined shouldBe true
         }
       }
     }

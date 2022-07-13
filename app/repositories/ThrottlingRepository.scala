@@ -16,19 +16,25 @@
 
 package repositories
 
-import config.MicroserviceAppConfig
-import config.featureswitch.FeatureSwitching
+import com.mongodb.client.model.{FindOneAndUpdateOptions, IndexOptions, ReturnDocument}
+import config.AppConfig
+import org.bson.Document
+import org.bson.conversions.Bson
+import org.mongodb.scala.model.IndexModel
+import org.mongodb.scala.result.InsertOneResult
+import org.mongodb.scala.{Observable, SingleObservable}
 import play.api.libs.json.{Format, JsObject, JsValue, Json}
-import play.modules.reactivemongo.ReactiveMongoComponent
-import reactivemongo.api.commands.FindAndModifyCommand
-import reactivemongo.api.indexes.{Index, IndexType}
-import reactivemongo.bson.{BSONDocument, BSONObjectID}
+import reactivemongo.bson.BSONDocument
 import reactivemongo.play.json.ImplicitBSONHandlers._
-import uk.gov.hmrc.mongo.ReactiveRepository
+import repositories.ThrottlingRepository._
+import uk.gov.hmrc.mongo.MongoComponent
+import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
 
 import java.time.Instant
+import java.util.concurrent.TimeUnit
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
+import scala.language.implicitConversions
 
 @Singleton
 class InstantProvider @Inject()() {
@@ -38,21 +44,27 @@ class InstantProvider @Inject()() {
 }
 
 @Singleton
-class ThrottlingRepository @Inject()(mongo: ReactiveMongoComponent,
-                                     val appConfig: MicroserviceAppConfig,
-                                     instantProvider: InstantProvider)(implicit ec: ExecutionContext)
+class ThrottlingRepositoryConfig @Inject()(val appConfig: AppConfig) {
 
-  extends ReactiveRepository[JsObject, BSONObjectID](
-    "throttling",
-    mongo.mongoConnector.db,
-    implicitly[Format[JsObject]],
-    implicitly[Format[BSONObjectID]]
-  ) with FeatureSwitching {
+  private val ttlLengthSeconds = appConfig.timeToLiveSecondsSaveAndRetrieve
 
-  val throttleIdKey = "throttleId"
-  val timecodeKey = "timecode"
-  val countKey = "count"
-  val lastUpdatedTimestampKey = "lastUpdatedTimestamp"
+  def mongoComponent: MongoComponent = MongoComponent(appConfig.mongoUri)
+
+  def indexes: Seq[IndexModel] =
+    Seq(ttlIndex(ttlLengthSeconds)) ++
+      Seq(idTimecodeIndex).map(toIndexModel)
+}
+
+@Singleton
+class ThrottlingRepository @Inject()(config: ThrottlingRepositoryConfig, instantProvider: InstantProvider)(implicit ec: ExecutionContext)
+
+  extends PlayMongoRepository[JsObject](
+    collectionName = "throttling",
+    mongoComponent = config.mongoComponent,
+    domainFormat = implicitly[Format[JsObject]],
+    indexes = config.indexes,
+    replaceIndexes = true
+  ) {
 
   private def timecode(time: Long) = time / 60000
 
@@ -74,23 +86,84 @@ class ThrottlingRepository @Inject()(mongo: ReactiveMongoComponent,
     Json.obj(f"$$set" -> set, f"$$inc" -> inc)
   }
 
-  private def resultToThrottleCount: FindAndModifyCommand.Result[collection.pack.type] => Int = {
-    _.result[JsObject] match {
+    private def resultToThrottleCount: Option[JsValue] => Int = {
       case Some(json) => (json \ countKey).as[Int]
       case None => 0
     }
-  }
 
   def checkThrottle(id: String): Future[Int] = {
     val time: Long = instantProvider.getInstantNowMilli
-
-    findAndUpdate(
-      query = query(id, time),
-      update = update(id, time),
-      fetchNewObject = true,
-      upsert = true
-    ) map resultToThrottleCount
+    val eventualMaybeValue = findAndUpdate(query(id, time), update(id, time))
+    eventualMaybeValue map resultToThrottleCount
   }
+
+  def stateOfThrottle(id: String): Future[(Int, Long)] = {
+    val time: Long = instantProvider.getInstantNowMilli
+    val eventualMaybeValue = find(query(id, time), None).map(l => l.headOption)
+    eventualMaybeValue map resultToThrottleCount map (c => (c, timecode(time)))
+  }
+
+  private def findAndUpdate(selector: JsObject, update: JsObject): Future[Option[JsValue]] =
+    collection.findOneAndUpdate(selector, update, findOneAndUpdateOptions).toFuture().map(asOption)
+
+  def insert(document: JsObject): Future[InsertOneResult] = collection.insertOne(document).toFuture
+
+  def drop(): Future[Void] = collection.drop().toFuture
+
+  private val findOneAndUpdateOptions: FindOneAndUpdateOptions = new FindOneAndUpdateOptions()
+    .upsert(true)
+    .returnDocument(ReturnDocument.AFTER)
+
+  def find(selector: JsObject, projection: Option[JsObject]): Future[List[JsObject]] = {
+    collection
+      .find(selector)
+      .projection(projection.map(toBson).getOrElse(removeIdProjection))
+      .toFuture()
+      .map(_.toList)
+  }
+
+  val _Id = "_id"
+  private val removeIdProjection = toBson(Json.obj(_Id -> 0))
+}
+
+
+object ThrottlingRepository {
+
+  case class Index(
+                    key: Seq[(String, Json.JsValueWrapper)],
+                    name: Option[String],
+                    unique: Boolean,
+                    dropDups: Boolean,
+                    sparse: Boolean,
+                    version: Option[Any],
+                    options:BSONDocument
+                  )
+
+  object IndexType {
+    def Ascending: Int = 1
+
+    def Descending: Int = -1
+  }
+
+  implicit def asOption(o: JsObject): Option[JsValue] = o.result.toOption.flatMap(Option(_))
+
+  implicit def toBson(doc: JsObject): Bson = Document.parse(doc.toString())
+
+  implicit def toFuture[T](observable: SingleObservable[T]): Future[T] = observable.toFuture()
+
+  implicit def toFuture[T](observable: Observable[T]): Future[Seq[T]] = observable.toFuture()
+
+  implicit def toIndexModel(index: Index): IndexModel = new IndexModel(
+    Json.obj(index.key: _*),
+    new IndexOptions()
+      .name(index.name.get)
+      .unique(index.unique)
+      .sparse(index.sparse))
+
+  val throttleIdKey = "throttleId"
+  val timecodeKey = "timecode"
+  val countKey = "count"
+  val lastUpdatedTimestampKey = "lastUpdatedTimestamp"
 
 
   val idTimecodeIndex: Index =
@@ -100,18 +173,20 @@ class ThrottlingRepository @Inject()(mongo: ReactiveMongoComponent,
         timecodeKey -> IndexType.Ascending
       ),
       name = Some("idTimecodeIndex"),
-      unique = true
+      unique = true,
+      dropDups = false,
+      sparse = true,
+      version = None,
+      options = BSONDocument()
     )
 
-  lazy val ttlIndex: Index = Index(
-    Seq((lastUpdatedTimestampKey, IndexType.Ascending)),
-    name = Some("throttleExpiryIndex"),
-    options = BSONDocument("expireAfterSeconds" -> appConfig.timeToLiveSeconds)
+  def ttlIndex(ttlLengthSeconds: Long): IndexModel = new IndexModel(
+    Json.obj(lastUpdatedTimestampKey -> IndexType.Ascending),
+    new IndexOptions()
+      .name("selfEmploymentsDataExpires")
+      .unique(false)
+      .sparse(false)
+      .expireAfter(ttlLengthSeconds, TimeUnit.SECONDS)
   )
 
-  collection.indexesManager.ensure(idTimecodeIndex)
-  collection.indexesManager.ensure(ttlIndex)
-
 }
-
-
