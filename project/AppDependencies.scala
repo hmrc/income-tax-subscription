@@ -38,11 +38,14 @@ object AppDependencies {
 
   private val playVersion = "2.8.14"
 
+  private val hmrcMongoVersion = "0.64.0"
+
   val compile = Seq(
     ws,
     "uk.gov.hmrc" %% "bootstrap-backend-play-28" % bootstrapBackendVersion,
     "uk.gov.hmrc" %% "domain" % domainVersion,
-    "uk.gov.hmrc" %% "simple-reactivemongo" % reactiveMongoVersion
+    "uk.gov.hmrc" %% "simple-reactivemongo" % reactiveMongoVersion,
+    "uk.gov.hmrc.mongo" %% "hmrc-mongo-play-28" % hmrcMongoVersion
   )
 
   trait TestDependencies {
@@ -62,7 +65,8 @@ object AppDependencies {
         "com.fasterxml.jackson.module" %% "jackson-module-scala" % "2.13.2" % scope,
         "org.scalaj" %% "scalaj-http" % scalaJVersion % scope,
         "org.mockito" % "mockito-core" % mockitoVersion % scope,
-        "com.github.fge" % "json-schema-validator" % "2.2.14" % scope
+        "com.github.fge" % "json-schema-validator" % "2.2.14" % scope,
+        "uk.gov.hmrc.mongo" %% "hmrc-mongo-test-play-28" % hmrcMongoVersion
       )
     }.test
   }

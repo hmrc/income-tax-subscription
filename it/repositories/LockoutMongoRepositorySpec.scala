@@ -16,45 +16,49 @@
 
 package repositories
 
+import helpers.ComponentSpecBase
 import helpers.IntegrationTestConstants._
 import models.matching.LockoutResponse
-import org.scalatest.concurrent.ScalaFutures.convertScalaFuture
-import org.scalatest.wordspec.AnyWordSpecLike
-import org.scalatest.{BeforeAndAfterEach, OptionValues}
+import org.scalatest.OptionValues
 import org.scalatest.matchers.should.Matchers
-import org.scalatestplus.play.guice.GuiceOneAppPerSuite
+import org.scalatest.wordspec.AnyWordSpecLike
+import play.api.libs.json.{JsObject, Json}
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
-import play.modules.reactivemongo.ReactiveMongoComponent
+import uk.gov.hmrc.mongo.test.DefaultPlayMongoRepositorySupport
 
 import scala.concurrent.ExecutionContext.Implicits._
 
-class LockoutMongoRepositorySpec extends AnyWordSpecLike with Matchers with OptionValues with GuiceOneAppPerSuite with BeforeAndAfterEach {
-  implicit lazy val mongo = app.injector.instanceOf[ReactiveMongoComponent]
+class LockoutMongoRepositorySpec extends ComponentSpecBase with AnyWordSpecLike
+  with Matchers with OptionValues with DefaultPlayMongoRepositorySupport[JsObject] {
+  lazy val testLockoutMongoRepository: LockoutMongoRepository = app.injector.instanceOf[LockoutMongoRepository]
 
-  object TestLockoutMongoRepository extends LockoutMongoRepository
+  def repository: LockoutMongoRepository = testLockoutMongoRepository
 
-  override def beforeEach(): Unit = {
-    await(TestLockoutMongoRepository.drop)
-  }
+  override def overriddenConfig(): Map[String, String] = Map("mongodb.uri" -> mongoUri)
 
+  val timeoutSeconds = 10
   "lockoutAgent" should {
     "return the model when there is no lock" in {
       val result = for {
-        insertRes <- TestLockoutMongoRepository.lockoutAgent(testArn, 10)
-        stored <- TestLockoutMongoRepository.find(LockoutResponse.arn -> testArn)
+        insertRes <- testLockoutMongoRepository.lockoutAgent(testArn, timeoutSeconds)
+        stored <- testLockoutMongoRepository.find(Json.obj(LockoutResponse.arn -> testArn), None)
       } yield (insertRes.get, stored)
 
       val r = await(result)
 
       val (insertRes, stored) = r
       stored.size shouldBe 1
-      insertRes shouldBe stored.head
+      val head1 = stored.head
+      val head = head1.as[LockoutResponse]
+      insertRes.expiryTimestamp shouldBe head.expiryTimestamp
+      insertRes.arn shouldBe head.arn
+      insertRes shouldBe head
     }
   }
 
   "getLockoutStatus" should {
     "return None when there is no lock" in {
-      val res = TestLockoutMongoRepository.getLockoutStatus(testArn).futureValue
+      val res = testLockoutMongoRepository.getLockoutStatus(testArn).futureValue
       res shouldBe empty
     }
 
@@ -62,8 +66,8 @@ class LockoutMongoRepositorySpec extends AnyWordSpecLike with Matchers with Opti
       val lockOutModel = LockoutResponse(testArn, offsetDateTime)
 
       val res = for {
-        _ <- TestLockoutMongoRepository.insert(lockOutModel)
-        res <- TestLockoutMongoRepository.getLockoutStatus(testArn)
+        _ <- testLockoutMongoRepository.insert(Json.toJson(lockOutModel).as[JsObject])
+        res <- testLockoutMongoRepository.getLockoutStatus(testArn)
       } yield res
 
       res.futureValue shouldBe Some(lockOutModel)
