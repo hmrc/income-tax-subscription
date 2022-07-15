@@ -31,13 +31,16 @@ import scala.util.Try
 class ThrottlingController @Inject()(throttlingRepository: ThrottlingRepository,
                                      servicesConfig: ServicesConfig,
                                      cc: ControllerComponents
-                                  ) extends BackendController(cc) with Logging {
+                                    ) extends BackendController(cc) with Logging {
 
   def throttled(throttleId: String): Action[AnyContent] = Action.async { _ =>
     val throttleKey = s"throttle.$throttleId.max"
-    Try {
+    val configValue: Option[Int] = Try {
       servicesConfig.getInt(throttleKey)
-    }.toOption match {
+    }.toOption
+    val configOrProperties: Option[Int] = sys.props.get(throttleKey).map(v => v.toInt) orElse configValue
+
+    configOrProperties match {
       case None =>
         logger.warn(s"No throttle max found for $throttleKey in config")
         Future.successful(BadRequest)

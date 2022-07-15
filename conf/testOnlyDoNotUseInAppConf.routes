@@ -12,5 +12,8 @@ GET         /income-tax-subscription/client-matching/test-only/reset-agent-locko
 GET         /income-tax-subscription/test-only/feature-switch                             testonly.controllers.featureswitch.FeatureSwitchController.get
 POST        /income-tax-subscription/test-only/feature-switch                             testonly.controllers.featureswitch.FeatureSwitchController.update
 
+GET         /income-tax-subscription/test-only/throttle                                   testonly.controllers.throttle.ThrottleController.get
+POST        /income-tax-subscription/test-only/throttle                                   testonly.controllers.throttle.ThrottleController.update
+
 # Add all the application routes to the prod.routes file
 ->          /                                                                             prod.Routes
