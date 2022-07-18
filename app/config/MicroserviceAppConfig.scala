@@ -42,7 +42,6 @@ trait AppConfig {
   val desAuthorisationToken: String
   val desEnvironmentHeader: (String, String)
 
-  val mongoUri: String
 }
 
 @Singleton
@@ -82,5 +81,4 @@ class MicroserviceAppConfig @Inject()(servicesConfig: ServicesConfig, val config
 
   def propertySubscribeUrl(nino: String): String = s"$desURL/income-tax-self-assessment/nino/$nino/properties"
 
-  lazy val mongoUri: String = loadConfig("mongodb.uri")
 }
