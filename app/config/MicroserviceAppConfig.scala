@@ -32,6 +32,7 @@ trait AppConfig {
 
   val timeToLiveSeconds: Int
   val timeToLiveSecondsSaveAndRetrieve: Int
+  val mongoUri: String
 
   def desURL: String
 
@@ -70,6 +71,8 @@ class MicroserviceAppConfig @Inject()(servicesConfig: ServicesConfig, val config
   override val paperlessPreferencesExpirySeconds: Int = {
     servicesConfig.getInt(s"paperless-preference.expiry-seconds")
   }
+
+  lazy val mongoUri: String = loadConfig("mongodb.uri")
 
   lazy val timeToLiveSeconds: Int = loadConfig("mongodb.timeToLiveSeconds").toInt
 

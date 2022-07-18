@@ -47,7 +47,7 @@ trait ComponentSpecBase extends AnyWordSpecLike
   val mockPort: String = WiremockHelper.wiremockPort.toString
   val mockUrl = s"http://$mockHost:$mockPort"
 
-  def config: Map[String, String] = Map(
+  def config(): Map[String, String] = Map(
     "auditing.consumer.baseUri.host" -> mockHost,
     "auditing.consumer.baseUri.port" -> mockPort,
     "microservice.services.auth.host" -> mockHost,
@@ -63,20 +63,22 @@ trait ComponentSpecBase extends AnyWordSpecLike
     "throttle.testThrottle.max"-> "10",
     "throttle.zeroTestThrottle.max"-> "0",
     "throttle.oneTestThrottle.max" -> "1"
-  )
+  ) ++ overriddenConfig()
 
-  override def beforeAll(): Unit = {
+  def overriddenConfig(): Map[String, String] = Map.empty
+
+  override protected def beforeAll(): Unit = {
     super.beforeAll()
     startWiremock()
   }
 
-  override def beforeEach(): Unit = {
+  override protected def beforeEach(): Unit = {
     super.beforeEach()
     resetWiremock()
     stubAuditing()
   }
 
-  override def afterAll(): Unit = {
+  override protected def afterAll(): Unit = {
     stopWiremock()
     super.afterAll()
   }

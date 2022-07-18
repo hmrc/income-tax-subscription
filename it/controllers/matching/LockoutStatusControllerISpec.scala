@@ -20,28 +20,26 @@ import helpers.ComponentSpecBase
 import helpers.IntegrationTestConstants._
 import helpers.servicemocks._
 import models.lockout.LockoutRequest
-import org.scalatest.BeforeAndAfterEach
+import play.api.Logging
 import play.api.http.Status._
-import play.modules.reactivemongo.ReactiveMongoComponent
+import play.api.libs.json.JsObject
 import repositories.LockoutMongoRepository
+import uk.gov.hmrc.mongo.test.DefaultPlayMongoRepositorySupport
 
-import scala.concurrent.ExecutionContext.Implicits.global
+class LockoutStatusControllerISpec extends ComponentSpecBase with DefaultPlayMongoRepositorySupport[JsObject] with Logging {
 
-class LockoutStatusControllerISpec extends ComponentSpecBase with BeforeAndAfterEach {
-  implicit lazy val mongo = app.injector.instanceOf[ReactiveMongoComponent]
+  override def overriddenConfig(): Map[String, String] = Map("mongodb.uri" -> mongoUri)
 
-  object TestLockoutMongoRepository extends LockoutMongoRepository
+  lazy val testLockoutMongoRepository: LockoutMongoRepository = app.injector.instanceOf[LockoutMongoRepository]
 
-  override def beforeEach(): Unit = {
-    TestLockoutMongoRepository.drop.futureValue
-  }
+  def repository: LockoutMongoRepository = testLockoutMongoRepository
 
   "checkLockoutStatus" should {
     "call the lockout status service successfully when lock exists" in {
       Given("I setup the wiremock stubs")
       AuthStub.stubAuthSuccess()
 
-      def insert = TestLockoutMongoRepository.lockoutAgent(testArn, 10)
+      def insert = testLockoutMongoRepository.lockoutAgent(testArn, 10)
 
       insert.futureValue.isDefined shouldBe true
 
@@ -94,6 +92,7 @@ class LockoutStatusControllerISpec extends ComponentSpecBase with BeforeAndAfter
       IncomeTaxSubscription.lockoutAgent(testArn, lockoutRequest)
 
       When("I call POST /client-matching/lock/:arn where arn is the test arn")
+
       def res = IncomeTaxSubscription.lockoutAgent(testArn, lockoutRequest)
 
       Then("The result should have a HTTP status of INTERNAL_SERVER_ERROR")
