@@ -16,7 +16,7 @@
 
 package repositories
 
-import com.mongodb.client.model.{DropIndexOptions, IndexModel, IndexOptions}
+import com.mongodb.client.model.{IndexModel, IndexOptions}
 import config.AppConfig
 import models.lockout.CheckLockout
 import models.matching.LockoutResponse
@@ -73,7 +73,8 @@ class LockoutMongoRepository @Inject()(val config: LockoutMongoRepositoryConfig)
 
   // If collection.drop() is executed without dropIndexes() first, a race condition appears to occur.
   def drop(implicit ec: ExecutionContext): Future[Any] = Future.sequence(Seq(collection.dropIndexes().toFuture(), collection.drop().toFuture()))
-  def recreate(implicit ec: ExecutionContext): Future[Any] = collection.createIndexes(config.indexes).toFuture()
+
+  def recreate: Future[Any] = collection.createIndexes(config.indexes).toFuture()
 
   implicit def toBson(doc: JsObject): Bson = Document.parse(doc.toString())
 
@@ -100,7 +101,7 @@ class LockoutMongoRepository @Inject()(val config: LockoutMongoRepositoryConfig)
 object LockoutMongoRepository {
 
   val lockIndex: Index = Index(
-    Seq((CheckLockout.expiry, IndexType.Ascending)),
+    Seq((CheckLockout.expiry, IndexType.ascending)),
     name = Some("lockExpires"),
     unique = false,
     //    background = false,
@@ -111,9 +112,9 @@ object LockoutMongoRepository {
   )
 
   object IndexType {
-    def Ascending: Int = 1
+    def ascending: Int = 1
 
-    def Descending: Int = -1
+    def descending: Int = -1
   }
 
   case class Index(

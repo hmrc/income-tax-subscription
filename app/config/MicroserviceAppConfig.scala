@@ -31,7 +31,8 @@ trait AppConfig {
   val ggAuthenticationURL: String
 
   val timeToLiveSeconds: Int
-  val timeToLiveSecondsSaveAndRetrieve: Int
+  val throttleTimeToLiveSeconds: Int
+
   val mongoUri: String
 
   def desURL: String
@@ -49,10 +50,10 @@ class MicroserviceAppConfig @Inject()(servicesConfig: ServicesConfig, val config
 
   private def loadConfig(key: String) = servicesConfig.getString(key)
 
-  override lazy val authURL = servicesConfig.baseUrl("auth")
-  override lazy val ggAuthenticationURL = servicesConfig.baseUrl("gg-authentication")
-  override lazy val ggURL = servicesConfig.baseUrl("government-gateway")
-  override lazy val ggAdminURL = servicesConfig.baseUrl("gg-admin")
+  override lazy val authURL: String = servicesConfig.baseUrl("auth")
+  override lazy val ggAuthenticationURL: String = servicesConfig.baseUrl("gg-authentication")
+  override lazy val ggURL: String = servicesConfig.baseUrl("government-gateway")
+  override lazy val ggAdminURL: String = servicesConfig.baseUrl("gg-admin")
 
   private def desBase =
     if (FeatureSwitching.isEnabled(featureswitch.StubDESFeature, configuration)) "microservice.services.stub-des"
@@ -65,8 +66,8 @@ class MicroserviceAppConfig @Inject()(servicesConfig: ServicesConfig, val config
   lazy val desEnvironmentHeader: (String, String) =
     "Environment" -> loadConfig(s"$desBase.environment")
 
-  override lazy val desEnvironment = loadConfig(s"$desBase.environment")
-  override lazy val desToken = loadConfig(s"$desBase.authorization-token")
+  override lazy val desEnvironment: String = loadConfig(s"$desBase.environment")
+  override lazy val desToken: String = loadConfig(s"$desBase.authorization-token")
   override val paperlessPreferencesExpirySeconds: Int = {
     servicesConfig.getInt(s"paperless-preference.expiry-seconds")
   }
@@ -74,11 +75,9 @@ class MicroserviceAppConfig @Inject()(servicesConfig: ServicesConfig, val config
   lazy val mongoUri: String = loadConfig("mongodb.uri")
 
   lazy val timeToLiveSeconds: Int = loadConfig("mongodb.timeToLiveSeconds").toInt
-
-  lazy val timeToLiveSecondsSaveAndRetrieve: Int = loadConfig("mongodb.timeToLiveSecondsSaveAndRetrieve").toInt
+  lazy val throttleTimeToLiveSeconds: Int = loadConfig("mongodb.throttleTimeToLiveSeconds").toInt
 
   def businessSubscribeUrl(nino: String): String = s"$desURL/income-tax-self-assessment/nino/$nino/business"
 
   def propertySubscribeUrl(nino: String): String = s"$desURL/income-tax-self-assessment/nino/$nino/properties"
-
 }

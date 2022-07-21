@@ -28,7 +28,7 @@ import play.api.test.Helpers.{contentAsString, defaultAwaitTimeout, status, stub
 import services.mocks.{MockAuthService, MockIncomeSourcesConnector}
 import uk.gov.hmrc.http.HeaderCarrier
 import utils.MaterializerSupport
-import utils.TestConstants.{testCreateIncomeSubmissionJson, testCreateIncomeSubmissionModel, testNino}
+import utils.TestConstants.{testCreateIncomeSubmissionJson, testNino}
 
 import java.time.LocalDate
 import scala.concurrent.ExecutionContext.Implicits.global

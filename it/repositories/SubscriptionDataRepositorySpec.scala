@@ -17,27 +17,24 @@
 package repositories
 
 import org.scalatest.concurrent.ScalaFutures.convertScalaFuture
+import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
 import org.scalatest.{BeforeAndAfterEach, OptionValues}
-import org.scalatest.matchers.should.Matchers
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.libs.json.{JsObject, JsValue, Json}
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
+import uk.gov.hmrc.mongo.MongoUtils
 
 import scala.concurrent.ExecutionContext.Implicits._
 import scala.concurrent.Future
 
-class SubscriptionDataRepositorySpec extends AnyWordSpecLike with Matchers with OptionValues  with GuiceOneAppPerSuite with BeforeAndAfterEach {
+class SubscriptionDataRepositorySpec extends AnyWordSpecLike with Matchers with OptionValues with GuiceOneAppPerSuite with BeforeAndAfterEach {
 
   val testSelfEmploymentsRepository: SubscriptionDataRepository = app.injector.instanceOf[SubscriptionDataRepository]
 
   override def beforeEach(): Unit = {
-    await(testSelfEmploymentsRepository.drop)
-
-    await(testSelfEmploymentsRepository.collection.indexesManager.ensure(testSelfEmploymentsRepository.sessionIdIndex))
-    await(testSelfEmploymentsRepository.collection.indexesManager.ensure(testSelfEmploymentsRepository.ttlIndex))
-    await(testSelfEmploymentsRepository.collection.indexesManager.ensure(testSelfEmploymentsRepository.utrCredIndex))
-    await(testSelfEmploymentsRepository.collection.indexesManager.ensure(testSelfEmploymentsRepository.referenceIndex))
+    await(testSelfEmploymentsRepository.drop())
+    await(MongoUtils.ensureIndexes(testSelfEmploymentsRepository.collection, testSelfEmploymentsRepository.indexes, replaceIndexes = true))
   }
 
   val testSessionId: String = "testSessionIdOne"
@@ -72,27 +69,6 @@ class SubscriptionDataRepositorySpec extends AnyWordSpecLike with Matchers with 
     await(Future.sequence(documents.map(testSelfEmploymentsRepository.insert)))
   }
 
-  "getDataFromSession" should {
-    "return the data relating to the dataId" when {
-      "a document with the sessionId, reference and the dataId is found" in new Setup(
-        testDocument(testSessionId),
-        testDocument("testSessionIdTwo", "test-reference-2")
-      ) {
-        testSelfEmploymentsRepository.getDataFromSession(reference, testSessionId, "testDataIdOne").futureValue.get shouldBe Json.obj(
-          "testDataIdOneKey" -> "testDataIdOneValue"
-        )
-      }
-    }
-    "return none" when {
-      "no document with the sessionId and reference was found" in new Setup(testDocument("testSessionIdTwo")) {
-        testSelfEmploymentsRepository.getDataFromSession(reference, testSessionId, "testDataIdOne").futureValue shouldBe None
-      }
-      "a document with the sessionId and reference was found but did not contain dataId" in new Setup(testDocument(testSessionId)) {
-        testSelfEmploymentsRepository.getDataFromSession(reference, testSessionId, "testDataIdThree").futureValue shouldBe None
-      }
-    }
-  }
-
   "getDataFromReference" should {
     "return the data relating to the dataId" when {
       "a document with the reference and dataId is found" in new Setup(testDocumentWithoutSession(), testDocumentWithoutSession("test-reference-2")) {
@@ -111,22 +87,6 @@ class SubscriptionDataRepositorySpec extends AnyWordSpecLike with Matchers with 
     }
   }
 
-  "getSessionIdData" should {
-    "return the data relating to the sessionId and reference" when {
-      "a document with the sessionId and reference is found" in new Setup(
-        testDocument(testSessionId),
-        testDocument("testSessionIdTwo", "test-reference-2")
-      ) {
-        testSelfEmploymentsRepository.getSessionIdData(reference, testSessionId).futureValue.get shouldBe testDocument(testSessionId)
-      }
-    }
-    "return none" when {
-      "no document with the sessionId and reference was found" in new Setup(testDocument("testSessionIdTwo")) {
-        testSelfEmploymentsRepository.getSessionIdData(reference, testSessionId).futureValue shouldBe None
-      }
-    }
-  }
-
   "getReferenceData" should {
     "return the data relating to the reference" when {
       "a document with the reference is found" in new Setup(testDocumentWithoutSession(), testDocumentWithoutSession("test-reference-2")) {
@@ -136,51 +96,6 @@ class SubscriptionDataRepositorySpec extends AnyWordSpecLike with Matchers with 
     "return None" when {
       "no document with the reference was found" in new Setup(testDocumentWithoutSession("test-reference-2")) {
         testSelfEmploymentsRepository.getReferenceData(reference).futureValue shouldBe None
-      }
-    }
-  }
-
-  "insertDataWithSession" should {
-    "upsert the data relating to the sessionId and reference" when {
-      "there is no document with the sessionId and reference" in new Setup(testDocument("testSessionIdTwo")) {
-        await(testSelfEmploymentsRepository.insertDataWithSession("test-reference-2", testSessionId, testDataId, testData))
-
-        val optionalData: Option[JsValue] =testSelfEmploymentsRepository.getSessionIdData("test-reference-2", testSessionId).futureValue
-        optionalData.isDefined shouldBe true
-        val data: JsValue = optionalData.get
-        (data \ "sessionId").asOpt[String] shouldBe Some(testSessionId)
-        (data \ "reference").asOpt[String] shouldBe Some("test-reference-2")
-        (data \ testDataId).asOpt[JsObject] shouldBe Some(testData)
-        (data \ "lastUpdatedTimestamp").isDefined shouldBe true
-      }
-
-
-      "there is a document with the sessionId and reference but does not contain with the dataId" in new Setup(testDocument(testSessionId)) {
-
-        await(testSelfEmploymentsRepository.insertDataWithSession(reference, testSessionId, testDataId, testData))
-
-        val optionalData: Option[JsValue] = testSelfEmploymentsRepository.getSessionIdData(reference, testSessionId).futureValue
-        optionalData.isDefined shouldBe true
-        val data: JsValue = optionalData.get
-        (data \ "sessionId").asOpt[String] shouldBe Some(testSessionId)
-        (data \ "reference").asOpt[String] shouldBe Some(reference)
-        (data \ testDataId).asOpt[JsObject] shouldBe Some(testData)
-        (data \ "lastUpdatedTimestamp").isDefined shouldBe true
-        (data \ "testDataIdOne" \ "testDataIdOneKey").asOpt[String] shouldBe Some("testDataIdOneValue")
-        (data \ "testDataIdTwo" \ "testDataIdTwoKey").asOpt[String] shouldBe Some("testDataIdTwoValue")
-      }
-
-      "there is a document with the sessionId, reference and the dataId" in new Setup(testDocument(testSessionId)) {
-        await(testSelfEmploymentsRepository.insertDataWithSession(reference, testSessionId, "testDataIdOne", testData))
-
-        val optionalData: Option[JsValue] = testSelfEmploymentsRepository.getSessionIdData(reference, testSessionId).futureValue
-        optionalData.isDefined shouldBe true
-        val data: JsValue = optionalData.get
-        (data \ "sessionId").asOpt[String] shouldBe Some(testSessionId)
-        (data \ "reference").asOpt[String] shouldBe Some(reference)
-        (data \ "lastUpdatedTimestamp").isDefined shouldBe true
-        (data \ "testDataIdOne").asOpt[JsObject] shouldBe Some(testData)
-        (data \ "testDataIdTwo" \ "testDataIdTwoKey").asOpt[String] shouldBe Some("testDataIdTwoValue")
       }
     }
   }
@@ -219,49 +134,6 @@ class SubscriptionDataRepositorySpec extends AnyWordSpecLike with Matchers with 
         (data \ "lastUpdatedTimestamp").isDefined shouldBe true
         (data \ "testDataIdOne").asOpt[JsObject] shouldBe Some(testData)
         (data \ "testDataIdTwo" \ "testDataIdTwoKey").asOpt[String] shouldBe Some("testDataIdTwoValue")
-      }
-    }
-  }
-
-  "deleteDataWithReferenceAndSessionId" when {
-    "the document was found" should {
-      "update the document so that it no longer contains the specified key" when {
-        "The document contains the requested key" in new Setup(testDocument(testSessionId)) {
-          testSelfEmploymentsRepository.deleteDataWithReferenceAndSessionId(reference, testSessionId ,"testDataIdOne").futureValue.isDefined shouldBe true
-
-          val optionalData: Option[JsValue] = testSelfEmploymentsRepository.getReferenceData(reference).futureValue
-          optionalData.isDefined shouldBe true
-          val data: JsValue = optionalData.get
-          (data \ "sessionId").asOpt[String] shouldBe Some(testSessionId)
-          (data \ "reference").asOpt[String] shouldBe Some(reference)
-          (data \ "testDataIdOne").isDefined shouldBe false
-          (data \ "testDataIdTwo").isDefined shouldBe true
-        }
-        "The document does not contain the requested key" in new Setup(testDocument(testSessionId)) {
-          testSelfEmploymentsRepository.deleteDataWithReferenceAndSessionId(reference, testSessionId, "testDataIdThree").futureValue.isDefined shouldBe true
-
-          val optionalData: Option[JsValue] = testSelfEmploymentsRepository.getReferenceData(reference).futureValue
-          optionalData.isDefined shouldBe true
-          val data: JsValue = optionalData.get
-          (data \ "sessionId").asOpt[String] shouldBe Some(testSessionId)
-          (data \ "reference").asOpt[String] shouldBe Some(reference)
-          (data \ "testDataIdOne").isDefined shouldBe true
-          (data \ "testDataIdTwo").isDefined shouldBe true
-          (data \ "testDataIdThree").isDefined shouldBe false
-        }
-      }
-    }
-    "the document is not found" should {
-      "return no document" in new Setup(testDocument(testSessionId)) {
-        testSelfEmploymentsRepository.deleteDataWithReferenceAndSessionId(reference, testSessionId + "-2", "testDataIdOne").futureValue shouldBe None
-
-        val optionalData: Option[JsValue] = testSelfEmploymentsRepository.getReferenceData(reference).futureValue
-        optionalData.isDefined shouldBe true
-        val data: JsValue = optionalData.get
-        (data \ "sessionId").asOpt[String] shouldBe Some(testSessionId)
-        (data \ "reference").asOpt[String] shouldBe Some(reference)
-        (data \ "testDataIdOne").isDefined shouldBe true
-        (data \ "testDataIdTwo").isDefined shouldBe true
       }
     }
   }
@@ -306,39 +178,18 @@ class SubscriptionDataRepositorySpec extends AnyWordSpecLike with Matchers with 
     }
   }
 
-
-
-
-
-  "deleteDataFromSessionId" should {
-    "remove a document which has the same reference and session id when one exists" in new Setup(testDocument(testSessionId)) {
-      testSelfEmploymentsRepository.getSessionIdData(reference, testSessionId).futureValue shouldBe Some(testDocument(testSessionId))
-
-      testSelfEmploymentsRepository.deleteDataFromSessionId(reference, testSessionId).futureValue.ok shouldBe true
-
-      testSelfEmploymentsRepository.getSessionIdData(reference, testSessionId).futureValue shouldBe None
-    }
-    "return success when there are no matching documents" in new Setup(testDocument("testSessionIdTwo")) {
-      testSelfEmploymentsRepository.getSessionIdData(reference, testSessionId).futureValue shouldBe None
-
-      testSelfEmploymentsRepository.deleteDataFromSessionId(reference, testSessionId).futureValue.ok shouldBe true
-
-      testSelfEmploymentsRepository.getSessionIdData(reference, testSessionId).futureValue shouldBe None
-    }
-  }
-
   "deleteDataFromReference" should {
     "remove a document which has the same reference when one exists" in new Setup(testDocumentWithoutSession()) {
       testSelfEmploymentsRepository.getReferenceData(reference).futureValue shouldBe Some(testDocumentWithoutSession())
 
-      testSelfEmploymentsRepository.deleteDataFromReference(reference).futureValue.ok shouldBe true
+      testSelfEmploymentsRepository.deleteDataFromReference(reference).futureValue.wasAcknowledged() shouldBe true
 
       testSelfEmploymentsRepository.getReferenceData(reference).futureValue shouldBe None
     }
     "return success when there are no matching documents" in new Setup(testDocumentWithoutSession("test-reference-2")) {
       testSelfEmploymentsRepository.getReferenceData(reference).futureValue shouldBe None
 
-      testSelfEmploymentsRepository.deleteDataFromReference(reference).futureValue.ok shouldBe true
+      testSelfEmploymentsRepository.deleteDataFromReference(reference).futureValue.wasAcknowledged() shouldBe true
 
       testSelfEmploymentsRepository.getReferenceData(reference).futureValue shouldBe None
     }

@@ -16,7 +16,6 @@
 
 package models.monitoring
 
-
 import models.subscription.{BusinessSubscriptionDetailsModel, CreateIncomeSourcesModel, SelfEmploymentData}
 import play.api.libs.json.{JsArray, JsObject, JsValue, Json}
 import services.monitoring.ExtendedAuditModel
@@ -89,7 +88,7 @@ case class CompletedSignUpAudit(agentReferenceNumber: Option[String],
 
   override val auditType: String = "mtdItsaSubscription"
   override val transactionName: String = "Customer-subscribed-to-send-quarterly-SA-income-tax-reports"
-  
+
   override val detail: JsValue = Json.obj(
     "nino" -> nino,
     "userType" -> userType,
