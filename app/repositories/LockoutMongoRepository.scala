@@ -16,34 +16,34 @@
 
 package repositories
 
-import com.mongodb.client.model.{IndexModel, IndexOptions}
+import com.mongodb.client.model.IndexOptions
 import config.AppConfig
 import models.lockout.CheckLockout
 import models.matching.LockoutResponse
 import org.bson.Document
 import org.mongodb.scala.bson.conversions.Bson
+import org.mongodb.scala.model.IndexModel
 import org.mongodb.scala.result.InsertOneResult
 import org.mongodb.scala.{Observable, SingleObservable}
 import play.api.libs.json.{Format, JsObject, JsValue, Json}
-import reactivemongo.bson.BSONDocument
-import repositories.LockoutMongoRepository.toIndexModel
 import uk.gov.hmrc.mongo.MongoComponent
 import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
 
 import java.time._
+import java.util.concurrent.TimeUnit
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 import scala.language.implicitConversions
 
 @Singleton
-class LockoutMongoRepositoryConfig @Inject()(
-                                              val appConfig: AppConfig) {
+class LockoutMongoRepositoryConfig @Inject()(val appConfig: AppConfig) {
 
   def mongoComponent: MongoComponent = MongoComponent(appConfig.mongoUri)
 
   import repositories.LockoutMongoRepository.lockIndex
 
-  def indexes: Seq[IndexModel] = Seq(toIndexModel(lockIndex))
+  def indexes: Seq[IndexModel] = Seq(lockIndex)
+
 }
 
 @Singleton
@@ -52,7 +52,8 @@ class LockoutMongoRepository @Inject()(val config: LockoutMongoRepositoryConfig)
     collectionName = "selfEmploymentsData",
     mongoComponent = config.mongoComponent,
     domainFormat = implicitly[Format[JsObject]],
-    indexes = config.indexes
+    indexes = config.indexes,
+    replaceIndexes = true
   ) {
 
   def insert(document: JsObject): Future[InsertOneResult] = collection.insertOne(document).toFuture
@@ -100,15 +101,13 @@ class LockoutMongoRepository @Inject()(val config: LockoutMongoRepositoryConfig)
 
 object LockoutMongoRepository {
 
-  val lockIndex: Index = Index(
-    Seq((CheckLockout.expiry, IndexType.ascending)),
-    name = Some("lockExpires"),
-    unique = false,
-    //    background = false,
-    dropDups = false,
-    sparse = false,
-    version = None,
-    options = BSONDocument("expireAfterSeconds" -> 0)
+  val lockIndex: IndexModel = IndexModel(
+    Json.obj(CheckLockout.expiry -> IndexType.ascending),
+    new IndexOptions()
+      .name("lockExpires")
+      .unique(false)
+      .sparse(false)
+      .expireAfter(0, TimeUnit.SECONDS)
   )
 
   object IndexType {
@@ -116,15 +115,6 @@ object LockoutMongoRepository {
 
     def descending: Int = -1
   }
-
-  case class Index(
-                    key: Seq[(String, Json.JsValueWrapper)],
-                    name: Option[String],
-                    unique: Boolean,
-                    dropDups: Boolean,
-                    sparse: Boolean,
-                    version: Option[Any],
-                    options: BSONDocument)
 
   implicit def asOption(o: JsObject): Option[JsValue] = o.result.toOption.flatMap(Option(_))
 
@@ -134,11 +124,5 @@ object LockoutMongoRepository {
 
   implicit def toFuture[T](observable: Observable[T]): Future[Seq[T]] = observable.toFuture()
 
-  implicit def toIndexModel(index: Index): IndexModel = new IndexModel(
-    Json.obj(index.key: _*),
-    new IndexOptions()
-      .name(index.name.get)
-      .unique(index.unique)
-      .sparse(index.sparse))
 
 }

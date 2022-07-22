@@ -24,8 +24,6 @@ import org.mongodb.scala.model.IndexModel
 import org.mongodb.scala.result.InsertOneResult
 import org.mongodb.scala.{Observable, SingleObservable}
 import play.api.libs.json.{Format, JsObject, JsValue, Json}
-import reactivemongo.bson.BSONDocument
-import reactivemongo.play.json.ImplicitBSONHandlers._
 import repositories.ThrottlingRepository._
 import uk.gov.hmrc.mongo.MongoComponent
 import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
@@ -50,9 +48,11 @@ class ThrottlingRepositoryConfig @Inject()(val appConfig: AppConfig) {
 
   def mongoComponent: MongoComponent = MongoComponent(appConfig.mongoUri)
 
-  def indexes: Seq[IndexModel] =
-    Seq(ttlIndex(ttlLengthSeconds)) ++
-      Seq(idTimecodeIndex).map(toIndexModel)
+  def indexes: Seq[IndexModel] = Seq(
+    ttlIndex(ttlLengthSeconds),
+    idTimecodeIndex
+  )
+  
 }
 
 @Singleton
@@ -129,16 +129,6 @@ class ThrottlingRepository @Inject()(config: ThrottlingRepositoryConfig, instant
 
 object ThrottlingRepository {
 
-  case class Index(
-                    key: Seq[(String, Json.JsValueWrapper)],
-                    name: Option[String],
-                    unique: Boolean,
-                    dropDups: Boolean,
-                    sparse: Boolean,
-                    version: Option[Any],
-                    options: BSONDocument
-                  )
-
   object IndexType {
     def ascending: Int = 1
 
@@ -153,32 +143,22 @@ object ThrottlingRepository {
 
   implicit def toFuture[T](observable: Observable[T]): Future[Seq[T]] = observable.toFuture()
 
-  implicit def toIndexModel(index: Index): IndexModel = new IndexModel(
-    Json.obj(index.key: _*),
-    new IndexOptions()
-      .name(index.name.get)
-      .unique(index.unique)
-      .sparse(index.sparse))
-
   val throttleIdKey = "throttleId"
   val timecodeKey = "timecode"
   val countKey = "count"
   val lastUpdatedTimestampKey = "lastUpdatedTimestamp"
 
 
-  val idTimecodeIndex: Index =
-    Index(
-      key = Seq(
-        throttleIdKey -> IndexType.ascending,
-        timecodeKey -> IndexType.ascending
-      ),
-      name = Some("idTimecodeIndex"),
-      unique = true,
-      dropDups = false,
-      sparse = true,
-      version = None,
-      options = BSONDocument()
-    )
+  val idTimecodeIndex: IndexModel = IndexModel(
+    Json.obj(
+      throttleIdKey -> IndexType.ascending,
+      timecodeKey -> IndexType.ascending
+    ),
+    new IndexOptions()
+      .name("idTimecodeIndex")
+      .unique(true)
+      .sparse(true)
+  )
 
   def ttlIndex(ttlLengthSeconds: Long): IndexModel = new IndexModel(
     Json.obj(lastUpdatedTimestampKey -> IndexType.ascending),
