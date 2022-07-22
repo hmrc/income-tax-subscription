@@ -29,8 +29,6 @@ object AppDependencies {
 
   private val scalaJVersion = "2.4.2"
 
-  private val reactiveMongoVersion = "8.0.0-play-28"
-
   private val hmrcMongoVersion = "0.64.0"
 
   private val wiremockVersion = "2.32.0"
@@ -43,7 +41,6 @@ object AppDependencies {
     ws,
     "uk.gov.hmrc" %% "bootstrap-backend-play-28" % bootstrapBackendVersion,
     "uk.gov.hmrc" %% "domain" % domainVersion,
-    "uk.gov.hmrc" %% "simple-reactivemongo" % reactiveMongoVersion,
     "uk.gov.hmrc.mongo" %% "hmrc-mongo-play-28" % hmrcMongoVersion
   )
 
