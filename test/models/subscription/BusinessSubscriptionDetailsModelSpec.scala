@@ -24,6 +24,15 @@ import play.api.libs.json.Json
 
 class BusinessSubscriptionDetailsModelSpec extends CommonSpec {
 
+  "AccountingPeriodModel.toShortTaxYear" should {
+    "correctly produce a short tax year" in {
+      AccountingPeriodModel(
+        startDate = DateModel("6", "4", "2022"),
+        endDate = DateModel("5", "4", "2023")
+      ).toShortTaxYear shouldBe "22/23"
+    }
+  }
+
   "Creating a model for a subscription request with all values" should {
     val businessDetailsModel = BusinessSubscriptionDetailsModel(
       nino = "AA111111A",
