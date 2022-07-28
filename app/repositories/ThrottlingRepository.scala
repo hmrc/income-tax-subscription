@@ -57,13 +57,12 @@ class ThrottlingRepositoryConfig @Inject()(val appConfig: AppConfig) {
 
 @Singleton
 class ThrottlingRepository @Inject()(config: ThrottlingRepositoryConfig, instantProvider: InstantProvider)(implicit ec: ExecutionContext)
-
   extends PlayMongoRepository[JsObject](
     collectionName = "throttling",
     mongoComponent = config.mongoComponent,
     domainFormat = implicitly[Format[JsObject]],
     indexes = config.indexes,
-    replaceIndexes = true
+    replaceIndexes = false
   ) {
 
   private def timecode(time: Long) = time / 60000

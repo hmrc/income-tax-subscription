@@ -53,7 +53,7 @@ class LockoutMongoRepository @Inject()(val config: LockoutMongoRepositoryConfig)
     mongoComponent = config.mongoComponent,
     domainFormat = implicitly[Format[JsObject]],
     indexes = config.indexes,
-    replaceIndexes = true
+    replaceIndexes = false
   ) {
 
   def insert(document: JsObject): Future[InsertOneResult] = collection.insertOne(document).toFuture

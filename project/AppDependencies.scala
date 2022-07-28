@@ -29,7 +29,7 @@ object AppDependencies {
 
   private val scalaJVersion = "2.4.2"
 
-  private val hmrcMongoVersion = "0.64.0"
+  private val hmrcMongoVersion = "0.68.0"
 
   private val wiremockVersion = "2.32.0"
 
