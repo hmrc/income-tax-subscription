@@ -62,7 +62,9 @@ trait ComponentSpecBase extends AnyWordSpecLike
     "microservice.services.throttle-threshold" -> "2",
     "throttle.testThrottle.max"-> "10",
     "throttle.zeroTestThrottle.max"-> "0",
-    "throttle.oneTestThrottle.max" -> "1"
+    "throttle.oneTestThrottle.max" -> "1",
+    "microservice.services.status-determination-service.host" -> mockHost,
+    "microservice.services.status-determination-service.port" -> mockPort,
   ) ++ overriddenConfig()
 
   def overriddenConfig(): Map[String, String] = Map.empty
