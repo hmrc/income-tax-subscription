@@ -96,6 +96,8 @@ trait ComponentSpecBase extends AnyWordSpecLike
 
     def throttled(throttleId: String): WSResponse = post(s"/throttled?throttleId=$throttleId", Json.parse("{}"))
 
+    def mandationStatus(body: JsValue): WSResponse = post("/itsa-status", body)
+
     def businessIncomeSource(mtdbsaRef: String, body: JsValue): WSResponse = post(s"/mis/create/$mtdbsaRef", body)
 
     def checkLockoutStatus(arn: String): WSResponse = authorisedClient(s"/client-matching/lock/$arn")
