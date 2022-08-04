@@ -18,3 +18,5 @@ POST        /mis/sign-up/:nino                          controllers.SignUpContro
 POST        /mis/create/:mtdbsaRef                      controllers.BusinessIncomeSourcesController.createIncomeSource(mtdbsaRef: String)
 
 POST        /throttled                                  controllers.throttle.ThrottlingController.throttled(throttleId: String)
+
+POST        /itsa-status                                 controllers.MandationStatusController.mandationStatus
