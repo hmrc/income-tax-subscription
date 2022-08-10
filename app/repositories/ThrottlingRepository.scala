@@ -62,7 +62,7 @@ class ThrottlingRepository @Inject()(config: ThrottlingRepositoryConfig, instant
     mongoComponent = config.mongoComponent,
     domainFormat = implicitly[Format[JsObject]],
     indexes = config.indexes,
-    replaceIndexes = false
+    replaceIndexes = true
   ) {
 
   private def timecode(time: Long) = time / 60000
@@ -162,7 +162,7 @@ object ThrottlingRepository {
   def ttlIndex(ttlLengthSeconds: Long): IndexModel = new IndexModel(
     Json.obj(lastUpdatedTimestampKey -> IndexType.ascending),
     new IndexOptions()
-      .name("selfEmploymentsDataExpires")
+      .name("throttleDataExpires")
       .unique(false)
       .sparse(false)
       .expireAfter(ttlLengthSeconds, TimeUnit.SECONDS)
