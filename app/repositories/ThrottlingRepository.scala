@@ -62,7 +62,7 @@ class ThrottlingRepository @Inject()(config: ThrottlingRepositoryConfig, instant
     mongoComponent = config.mongoComponent,
     domainFormat = implicitly[Format[JsObject]],
     indexes = config.indexes,
-    replaceIndexes = true
+    replaceIndexes = false
   ) {
 
   private def timecode(time: Long) = time / 60000
