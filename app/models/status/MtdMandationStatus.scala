@@ -18,29 +18,29 @@ package models.status
 
 import play.api.libs.json.{JsString, Reads, Writes, __}
 
-sealed trait MandationStatus {
+sealed trait MtdMandationStatus {
   def value: String
 }
 
-object MandationStatus {
+object MtdMandationStatus {
 
-  private val mandated: String = "mtd mandated"
-  private val voluntary: String = "mtd voluntary"
+  private val mandated: String = "MTD Mandated"
+  private val voluntary: String = "MTD Voluntary"
 
-  case object Mandated extends MandationStatus {
+  case object Mandated extends MtdMandationStatus {
     override val value: String = mandated
   }
 
-  case object Voluntary extends MandationStatus {
+  case object Voluntary extends MtdMandationStatus {
     override def value: String = voluntary
   }
 
-  implicit val reads: Reads[MandationStatus] = __.read[String].map {
+  implicit val reads: Reads[MtdMandationStatus] = __.read[String].map {
     case `mandated` => Mandated
     case `voluntary` => Voluntary
   }
 
-  implicit val writes: Writes[MandationStatus] = Writes[MandationStatus] { status =>
+  implicit val writes: Writes[MtdMandationStatus] = Writes[MtdMandationStatus] { status =>
     JsString(status.value)
   }
 

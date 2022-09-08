@@ -16,8 +16,9 @@
 
 package controllers
 
-import connectors.MandationStatusConnector
-import models.status.MandationStatusRequest
+import connectors.ItsaStatusConnector
+import models.status.{MandationStatusRequest, MandationStatusResponse}
+import models.subscription.AccountingPeriodUtil
 import play.api.Logger
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.{Action, ControllerComponents}
@@ -28,8 +29,8 @@ import scala.concurrent.ExecutionContext
 
 @Singleton
 class MandationStatusController @Inject()(
-                                 mandationStatusConnector: MandationStatusConnector,
-                                 cc: ControllerComponents
+                                           mandationStatusConnector: ItsaStatusConnector,
+                                           cc: ControllerComponents
                                )(implicit ec: ExecutionContext)
   extends BackendController(cc) {
 
@@ -37,8 +38,18 @@ class MandationStatusController @Inject()(
 
   def mandationStatus: Action[JsValue] = Action.async(parse.json) { implicit request  =>
     withJsonBody[MandationStatusRequest] { requestBody =>
-      mandationStatusConnector.getMandationStatus(requestBody.nino, requestBody.utr).map {
-        case Right(response) => Ok(Json.toJson(response))
+      mandationStatusConnector.getItsaStatus(requestBody.nino, requestBody.utr).map {
+        case Right(response) => {
+          val maybeCurrentTaxYearStatus = response.taxYearStatus.find(_.taxYear.equals(AccountingPeriodUtil.getCurrentTaxYear.toShortTaxYear))
+          val maybeNextTaxYearStatus = response.taxYearStatus.find(_.taxYear.equals(AccountingPeriodUtil.getNextTaxYear.toShortTaxYear))
+
+          (maybeCurrentTaxYearStatus, maybeNextTaxYearStatus) match {
+            case (Some(currentTaxYearStatus), Some(nextTaxYearStatus)) => {
+              Ok(Json.toJson(MandationStatusResponse(currentTaxYearStatus.status, nextTaxYearStatus.status)))
+            }
+            case _ => InternalServerError("Failed to retrieve the mandation status")
+          }
+        }
         case Left(error) => {
           logger.error(s"Error processing mandation status request with status ${error.status} and message ${error.reason}")
           InternalServerError("Failed to retrieve the mandation status")

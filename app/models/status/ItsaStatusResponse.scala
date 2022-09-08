@@ -16,16 +16,12 @@
 
 package models.status
 
-import play.api.libs.json.{Json, OWrites, Reads}
+import play.api.libs.json.{Json, OFormat}
 
-case class MandationStatusRequest(nino: String, utr: String)
+case class ItsaStatusResponse(taxYearStatus: List[TaxYearStatus])
 
-object MandationStatusRequest {
-  implicit val reads: Reads[MandationStatusRequest] = Json.reads[MandationStatusRequest]
-  implicit val writes: OWrites[MandationStatusRequest] = OWrites[MandationStatusRequest] { mandationStatus =>
-    Json.obj(
-      "nino" -> mandationStatus.nino,
-      "utr" -> mandationStatus.utr
-    )
-  }
+case class TaxYearStatus(taxYear: String, status: MtdMandationStatus)
+
+object TaxYearStatus {
+  implicit val format: OFormat[TaxYearStatus] = Json.format[TaxYearStatus]
 }

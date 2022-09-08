@@ -16,34 +16,30 @@
 
 package models.status
 
-import models.status.MtdMandationStatus.{Mandated, Voluntary}
+import models.status.MtdMandationStatus.Voluntary
 import org.scalatestplus.play.PlaySpec
-import play.api.libs.json._
+import play.api.libs.json.{JsError, JsSuccess, Json, __}
 
-class MandationStatusResponseSpec extends PlaySpec {
+class TaxYearStatusSpec extends PlaySpec {
+  private val fullModel = TaxYearStatus("2022-23", Voluntary)
 
-  val fullModel = MandationStatusResponse(
-    currentYearStatus = Voluntary,
-    nextYearStatus = Mandated
-  )
-
-  val fullJson: JsObject = Json.obj(
-    "currentYearStatus" -> "MTD Voluntary",
-    "nextYearStatus" -> "MTD Mandated"
+  val fullJson = Json.obj(
+    "taxYear" -> "2022-23",
+    "status" -> "MTD Voluntary"
   )
 
   "read" must {
     "successfully read from json" when {
       "the json has full details" in {
-        Json.fromJson[MandationStatusResponse](fullJson) mustBe JsSuccess(fullModel)
+        Json.fromJson[TaxYearStatus](fullJson) mustBe JsSuccess(fullModel)
       }
     }
     "fail to read" when {
-      "currentYearStatus is missing" in {
-        Json.fromJson[MandationStatusResponse](fullJson - "currentYearStatus") mustBe JsError(__ \ "currentYearStatus", "error.path.missing")
+      "taxYear is missing" in {
+        Json.fromJson[TaxYearStatus](fullJson - "taxYear") mustBe JsError(__ \ "taxYear", "error.path.missing")
       }
-      "nextYearStatus is missing" in {
-        Json.fromJson[MandationStatusResponse](fullJson - "nextYearStatus") mustBe JsError(__ \ "nextYearStatus", "error.path.missing")
+      "status is missing" in {
+        Json.fromJson[TaxYearStatus](fullJson - "status") mustBe JsError(__ \ "status", "error.path.missing")
       }
     }
   }
@@ -53,5 +49,4 @@ class MandationStatusResponseSpec extends PlaySpec {
       Json.toJson(fullModel) mustBe fullJson
     }
   }
-
 }
