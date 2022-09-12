@@ -16,7 +16,6 @@
 
 package models.status
 
-import models.subscription.AccountingPeriodUtil
 import org.scalatestplus.play.PlaySpec
 import play.api.libs.json._
 
@@ -24,8 +23,6 @@ class MandationStatusRequestSpec extends PlaySpec {
 
   val testNino: String = "AA111111A"
   val testUtr: String = "1234567890"
-  val testCurrentYear: String = AccountingPeriodUtil.getCurrentTaxYear.toShortTaxYear
-  val testNextYear: String = AccountingPeriodUtil.getNextTaxYear.toShortTaxYear
 
   val fullJsonRead: JsObject = Json.obj(
     "nino" -> testNino,
@@ -34,9 +31,7 @@ class MandationStatusRequestSpec extends PlaySpec {
 
   val fullJsonWrite: JsObject = Json.obj(
     "nino" -> testNino,
-    "utr" -> testUtr,
-    "currentYear" -> testCurrentYear,
-    "nextYear" -> testNextYear
+    "utr" -> testUtr
   )
 
   val fullModel: MandationStatusRequest = MandationStatusRequest(

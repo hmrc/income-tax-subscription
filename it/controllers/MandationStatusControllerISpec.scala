@@ -17,10 +17,10 @@
 package controllers
 
 import helpers.ComponentSpecBase
-import helpers.IntegrationTestConstants.failureResponse
-import helpers.servicemocks.GetMandationStatusStub
-import models.status.MandationStatus.Voluntary
-import models.status.{MandationStatusRequest, MandationStatusResponse}
+import helpers.servicemocks.GetItsaStatusStub
+import models.status.MtdMandationStatus.Voluntary
+import models.status.{MandationStatusRequest, MandationStatusResponse, TaxYearStatus}
+import models.subscription.AccountingPeriodUtil
 import play.api.http.Status.{BAD_REQUEST, INTERNAL_SERVER_ERROR, OK}
 import play.api.libs.json.Json
 
@@ -29,9 +29,14 @@ class MandationStatusControllerISpec extends ComponentSpecBase {
     "return OK"  when {
       "the status-determination-service returns OK status and valid JSON" in {
         Given("I setup the Wiremock stubs")
-        GetMandationStatusStub.stub(
-          Json.toJson(MandationStatusRequest("test-nino", "test-utr"))
-        )(OK, Json.toJson(MandationStatusResponse(currentYearStatus = Voluntary, nextYearStatus = Voluntary)))
+        val expectedResponse =
+          List(
+            TaxYearStatus("2022-23", Voluntary),
+            TaxYearStatus("2023-24", Voluntary)
+          )
+        GetItsaStatusStub.stub(
+          "test-nino", "test-utr", AccountingPeriodUtil.getCurrentTaxYear.toShortTaxYear
+        )(OK, Json.toJson(expectedResponse))
 
         When("POST /itsa-status is called")
         val response = IncomeTaxSubscription.mandationStatus(Json.toJson(MandationStatusRequest("test-nino", "test-utr")))
@@ -61,8 +66,8 @@ class MandationStatusControllerISpec extends ComponentSpecBase {
     "return INTERNAL_SERVER_ERROR"  when {
       "the status-determination-service returns OK status and invalid JSON" in {
         Given("I setup the Wiremock stubs")
-        GetMandationStatusStub.stubInvalidResponse(
-          Json.toJson(MandationStatusRequest("test-nino", "test-utr"))
+        GetItsaStatusStub.stubInvalidResponse(
+          "test-nino", "test-utr", AccountingPeriodUtil.getCurrentTaxYear.toShortTaxYear
         )(OK, "{ currentYearStatus")
 
         When("POST /itsa-status is called")
@@ -76,9 +81,17 @@ class MandationStatusControllerISpec extends ComponentSpecBase {
 
       "the status-determination-service returns INTERNAL_SERVER_ERROR" in {
         Given("I setup the Wiremock stubs")
-        GetMandationStatusStub.stub(
-          Json.toJson(MandationStatusRequest("test-nino", "test-utr"))
-        )(INTERNAL_SERVER_ERROR, failureResponse("code", "reason"))
+        val failedResponse = Json.obj(
+          "failures" -> Json.arr(
+            Json.obj(
+              "code" -> "INVALID_TAX_YEAR",
+              "reason" -> "Submission has not passed validation. Invalid parameter taxYear."
+            )
+          )
+        )
+        GetItsaStatusStub.stub(
+          "test-nino", "test-utr", AccountingPeriodUtil.getCurrentTaxYear.toShortTaxYear
+        )(INTERNAL_SERVER_ERROR, failedResponse)
 
         When("POST /itsa-status is called")
         val response = IncomeTaxSubscription.mandationStatus(Json.toJson(MandationStatusRequest("test-nino", "test-utr")))

@@ -44,6 +44,8 @@ trait AppConfig {
   val desEnvironmentHeader: (String, String)
 
   def statusDeterminationServiceURL: String
+  val statusDeterminationServiceAuthorisationToken: String
+  val statusDeterminationServiceEnvironment: String
 }
 
 @Singleton
@@ -56,7 +58,11 @@ class MicroserviceAppConfig @Inject()(servicesConfig: ServicesConfig, val config
   override lazy val ggURL: String = servicesConfig.baseUrl("government-gateway")
   override lazy val ggAdminURL: String = servicesConfig.baseUrl("gg-admin")
 
-  override lazy val statusDeterminationServiceURL = servicesConfig.baseUrl("status-determination-service")
+  override lazy val statusDeterminationServiceURL: String = servicesConfig.baseUrl("status-determination-service")
+
+  private val statusDeterminationServiceBase = "microservice.services.status-determination-service"
+  override lazy val statusDeterminationServiceAuthorisationToken: String = s"Bearer ${loadConfig(s"$statusDeterminationServiceBase.authorization-token")}"
+  override lazy val statusDeterminationServiceEnvironment: String= loadConfig(s"$statusDeterminationServiceBase.environment")
 
   private def desBase =
     if (FeatureSwitching.isEnabled(featureswitch.StubDESFeature, configuration)) "microservice.services.stub-des"

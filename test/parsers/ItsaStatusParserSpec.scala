@@ -18,23 +18,29 @@ package parsers
 
 import common.CommonSpec
 import models.ErrorModel
-import models.status.MandationStatus.Voluntary
-import models.status.MandationStatusResponse
+import models.status.MtdMandationStatus.Voluntary
+import models.status.{ItsaStatusResponse, TaxYearStatus}
 import play.api.http.Status.{INTERNAL_SERVER_ERROR, OK}
 import play.api.libs.json.Json
 import uk.gov.hmrc.http.HttpResponse
 
-class MandationStatusParserSpec extends CommonSpec {
-  "MandationStatusParser" should {
-    "return MandationStatusResponse" when {
+class ItsaStatusParserSpec extends CommonSpec {
+  private val expectedResponse =
+    List(
+      TaxYearStatus("2022-23", Voluntary),
+      TaxYearStatus("2023-24", Voluntary)
+    )
+
+  "ItsaStatusParser" should {
+    "return ItsaStatusResponse" when {
       "supplied with an OK response and valid JSON" in {
         val response = HttpResponse(
           OK,
-          body = Json.toJson(MandationStatusResponse(currentYearStatus = Voluntary, nextYearStatus = Voluntary)).toString()
+          body = Json.toJson(expectedResponse).toString()
         )
 
-        MandationStatusParser.mandationStatusResponseHttpReads.read("POST", "test-url", response) shouldBe
-          Right(MandationStatusResponse(currentYearStatus = Voluntary, nextYearStatus = Voluntary))
+        ItsaStatusParser.itsaStatusResponseHttpReads.read("POST", "test-url", response) shouldBe
+          Right(ItsaStatusResponse(expectedResponse))
       }
     }
 
@@ -42,25 +48,25 @@ class MandationStatusParserSpec extends CommonSpec {
       "supplied with an OK response and invalid JSON" in {
         val response = HttpResponse(OK, body =
           """
-            |{
-            | "invalid" : "json"
-            |}
+            |[
+            | { "invalid" : "json" }
+            |]
           """.stripMargin)
 
-        val expectedError = "Invalid Json for mandationStatusResponseHttpReads: " +
+        val expectedError = "Invalid Json for itsaStatusResponseHttpReads: " +
           "List(" +
-          "(/currentYearStatus,List(JsonValidationError(List(error.path.missing),WrappedArray()))), " +
-          "(/nextYearStatus,List(JsonValidationError(List(error.path.missing),WrappedArray())))" +
+          "((0)/taxYear,List(JsonValidationError(List(error.path.missing),WrappedArray()))), " +
+          "((0)/status,List(JsonValidationError(List(error.path.missing),WrappedArray())))" +
           ")"
 
-        MandationStatusParser.mandationStatusResponseHttpReads.read("POST", "test-url", response) shouldBe
+        ItsaStatusParser.itsaStatusResponseHttpReads.read("POST", "test-url", response) shouldBe
           Left(ErrorModel(OK, expectedError))
       }
 
       "supplied with a failed response" in {
         val response = HttpResponse(INTERNAL_SERVER_ERROR, body = "Error body")
 
-        MandationStatusParser.mandationStatusResponseHttpReads.read("POST", "test-url", response) shouldBe
+        ItsaStatusParser.itsaStatusResponseHttpReads.read("POST", "test-url", response) shouldBe
           Left(ErrorModel(INTERNAL_SERVER_ERROR, "Error body"))
       }
     }

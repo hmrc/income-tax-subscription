@@ -19,20 +19,18 @@ package helpers.servicemocks
 import com.github.tomakehurst.wiremock.stubbing.StubMapping
 import play.api.libs.json.JsValue
 
-object GetMandationStatusStub extends WireMockMethods {
-  def stub(expectedBody: JsValue)(status: Int, body: JsValue): StubMapping  = {
+object GetItsaStatusStub extends WireMockMethods {
+  def stub(nino: String, utr: String, taxYear: String)(status: Int, body: JsValue): StubMapping  = {
     when(
-      method = POST,
-      uri = "/itsa-status",
-      body = expectedBody
+      method = GET,
+      uri = s"/income-tax/itsa-status/$nino/$utr/$taxYear"
     ).thenReturn(status, body)
   }
 
-  def stubInvalidResponse(expectedBody: JsValue)(status: Int, body: String): StubMapping  = {
+  def stubInvalidResponse(nino: String, utr: String, taxYear: String)(status: Int, body: String): StubMapping  = {
     when(
-      method = POST,
-      uri = "/itsa-status",
-      body = expectedBody
+      method = GET,
+      uri = s"/income-tax/itsa-status/$nino/$utr/$taxYear"
     ).thenReturn(status, body)
   }
 }

@@ -17,21 +17,21 @@
 package parsers
 
 import models.ErrorModel
-import models.status.MandationStatusResponse
+import models.status.{ItsaStatusResponse, TaxYearStatus}
 import play.api.http.Status.OK
 import play.api.libs.json.{JsError, JsSuccess}
 import uk.gov.hmrc.http.{HttpReads, HttpResponse}
 
-object MandationStatusParser {
-  type PostMandationStatusResponse = Either[ErrorModel, MandationStatusResponse]
+object ItsaStatusParser {
+  type GetItsaStatusResponse = Either[ErrorModel, ItsaStatusResponse]
 
-  implicit val mandationStatusResponseHttpReads: HttpReads[PostMandationStatusResponse] =
+  implicit val itsaStatusResponseHttpReads: HttpReads[GetItsaStatusResponse] =
     (_: String, _: String, response: HttpResponse) => {
       response.status match {
-        case OK => response.json.validate[MandationStatusResponse] match {
-          case JsSuccess(value, _) => Right(value)
+        case OK => response.json.validate[List[TaxYearStatus]] match {
+          case JsSuccess(value, _) => Right(ItsaStatusResponse(value))
           case JsError(errors) =>
-            Left(ErrorModel(OK, s"Invalid Json for mandationStatusResponseHttpReads: $errors"))
+            Left(ErrorModel(OK, s"Invalid Json for itsaStatusResponseHttpReads: $errors"))
         }
         case status => Left(ErrorModel(status, response.body))
       }

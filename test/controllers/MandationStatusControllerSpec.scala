@@ -17,15 +17,15 @@
 package controllers
 
 import common.CommonSpec
-import connectors.MandationStatusConnector
+import connectors.ItsaStatusConnector
 import models.ErrorModel
-import models.status.MandationStatus.Voluntary
-import models.status.{MandationStatusRequest, MandationStatusResponse}
+import models.status.MtdMandationStatus.Voluntary
+import models.status.{ItsaStatusResponse, MandationStatusRequest, MandationStatusResponse, TaxYearStatus}
 import org.mockito.ArgumentMatchers
 import org.mockito.Mockito.when
 import org.scalatestplus.mockito.MockitoSugar.mock
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
-import parsers.MandationStatusParser.PostMandationStatusResponse
+import parsers.ItsaStatusParser.GetItsaStatusResponse
 import play.api.http.Status.{BAD_REQUEST, INTERNAL_SERVER_ERROR, OK}
 import play.api.libs.json.Json
 import play.api.test.FakeRequest
@@ -39,10 +39,17 @@ class MandationStatusControllerSpec extends CommonSpec with MaterializerSupport 
   private val request = FakeRequest().withBody(Json.toJson(MandationStatusRequest("test-nino", "test-utr")))
   private val invalidRequest = FakeRequest().withBody(Json.obj("invalid" -> "request"))
 
+  private val expectedResponse = ItsaStatusResponse(
+    List(
+      TaxYearStatus("2022-23", Voluntary),
+      TaxYearStatus("2023-24", Voluntary)
+    )
+  )
+
   "mandationStatus" should {
     "return 200 OK status" when {
       "the status-determination-service returns OK status and valid JSON" in withController(
-        Future.successful(Right(MandationStatusResponse(currentYearStatus = Voluntary, nextYearStatus = Voluntary)))
+        Future.successful(Right(expectedResponse))
       ) { controller =>
         val result = controller.mandationStatus(request)
         status(result) shouldBe OK
@@ -52,7 +59,7 @@ class MandationStatusControllerSpec extends CommonSpec with MaterializerSupport 
 
     "return 400 BAD_REQUEST status" when {
       "the status-determination-service returns OK status and valid JSON" in withController(
-        Future.successful(Right(MandationStatusResponse(currentYearStatus = Voluntary, nextYearStatus = Voluntary)))
+        Future.successful(Right(expectedResponse))
       ) { controller =>
         val result = controller.mandationStatus(invalidRequest)
         status(result) shouldBe BAD_REQUEST
@@ -75,10 +82,10 @@ class MandationStatusControllerSpec extends CommonSpec with MaterializerSupport 
     }
   }
 
-  private def withController(expectedResponse: Future[PostMandationStatusResponse])(testCode: MandationStatusController => Any): Unit = {
-    val mockConnector = mock[MandationStatusConnector]
+  private def withController(expectedResponse: Future[GetItsaStatusResponse])(testCode: MandationStatusController => Any): Unit = {
+    val mockConnector = mock[ItsaStatusConnector]
 
-    when(mockConnector.getMandationStatus(ArgumentMatchers.eq("test-nino"), ArgumentMatchers.eq("test-utr"))(ArgumentMatchers.any()))
+    when(mockConnector.getItsaStatus(ArgumentMatchers.eq("test-nino"), ArgumentMatchers.eq("test-utr"))(ArgumentMatchers.any()))
       .thenReturn(expectedResponse)
 
     val controller = new MandationStatusController(mockConnector, stubControllerComponents())
