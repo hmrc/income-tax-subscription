@@ -41,7 +41,7 @@ class ItsaStatusConnectorISpec extends ComponentSpecBase {
           )
 
         GetItsaStatusStub.stub(
-          "test-nino", "test-utr", AccountingPeriodUtil.getCurrentTaxYear.toShortTaxYear
+          "test-nino", "test-utr", AccountingPeriodUtil.getCurrentTaxYear.toItsaStatusShortTaxYear
         )(OK, Json.toJson(expectedResponse))
 
         val result = connector.getItsaStatus("test-nino", "test-utr")
@@ -53,7 +53,7 @@ class ItsaStatusConnectorISpec extends ComponentSpecBase {
     "return an exception" when {
       "the status determination service returns OK and an invalid JSON response body" in {
         GetItsaStatusStub.stubInvalidResponse(
-          "test-nino", "test-utr", AccountingPeriodUtil.getCurrentTaxYear.toShortTaxYear
+          "test-nino", "test-utr", AccountingPeriodUtil.getCurrentTaxYear.toItsaStatusShortTaxYear
         )(OK, "{}")
 
         val result = connector.getItsaStatus("test-nino", "test-utr")
@@ -74,7 +74,7 @@ class ItsaStatusConnectorISpec extends ComponentSpecBase {
         )
 
         GetItsaStatusStub.stub(
-          "test-nino", "test-utr", AccountingPeriodUtil.getCurrentTaxYear.toShortTaxYear
+          "test-nino", "test-utr", AccountingPeriodUtil.getCurrentTaxYear.toItsaStatusShortTaxYear
         )(INTERNAL_SERVER_ERROR, failedResponse)
 
         val result = connector.getItsaStatus("test-nino", "test-utr")

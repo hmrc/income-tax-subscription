@@ -42,7 +42,7 @@ class AuditServiceSpec extends CommonSpec with MockitoSugar with BeforeAndAfterE
 
   val testAuditModel = new AuditModel {
     override val auditType = "testAuditType"
-    override val transactionName = "testTransactionName"
+    override val transactionName = Some("testTransactionName")
     override val detail = Map[String, String]()
   }
 

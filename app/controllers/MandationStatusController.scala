@@ -16,12 +16,17 @@
 
 package controllers
 
+import common.Extractors
 import connectors.ItsaStatusConnector
+import models.monitoring.MandationStatusAuditModel
 import models.status.{MandationStatusRequest, MandationStatusResponse}
 import models.subscription.AccountingPeriodUtil
 import play.api.Logger
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.{Action, ControllerComponents}
+import services.AuthService
+import services.monitoring.AuditService
+import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
 import javax.inject.{Inject, Singleton}
@@ -29,30 +34,43 @@ import scala.concurrent.ExecutionContext
 
 @Singleton
 class MandationStatusController @Inject()(
+                                           authService: AuthService,
+                                           auditService: AuditService,
                                            mandationStatusConnector: ItsaStatusConnector,
                                            cc: ControllerComponents
                                )(implicit ec: ExecutionContext)
-  extends BackendController(cc) {
+  extends BackendController(cc) with Extractors {
 
   val logger: Logger = Logger(this.getClass)
 
   def mandationStatus: Action[JsValue] = Action.async(parse.json) { implicit request  =>
-    withJsonBody[MandationStatusRequest] { requestBody =>
-      mandationStatusConnector.getItsaStatus(requestBody.nino, requestBody.utr).map {
-        case Right(response) => {
-          val maybeCurrentTaxYearStatus = response.taxYearStatus.find(_.taxYear.equals(AccountingPeriodUtil.getCurrentTaxYear.toShortTaxYear))
-          val maybeNextTaxYearStatus = response.taxYearStatus.find(_.taxYear.equals(AccountingPeriodUtil.getNextTaxYear.toShortTaxYear))
+    authService.authorised().retrieve(Retrievals.allEnrolments) { enrolments =>
+      withJsonBody[MandationStatusRequest] { requestBody =>
+        mandationStatusConnector.getItsaStatus(requestBody.nino, requestBody.utr).map {
+          case Right(response) => {
+            val maybeCurrentTaxYearStatus = response.taxYearStatus.find(_.taxYear.equals(AccountingPeriodUtil.getCurrentTaxYear.toItsaStatusShortTaxYear))
+            val maybeNextTaxYearStatus = response.taxYearStatus.find(_.taxYear.equals(AccountingPeriodUtil.getNextTaxYear.toItsaStatusShortTaxYear))
 
-          (maybeCurrentTaxYearStatus, maybeNextTaxYearStatus) match {
-            case (Some(currentTaxYearStatus), Some(nextTaxYearStatus)) => {
-              Ok(Json.toJson(MandationStatusResponse(currentTaxYearStatus.status, nextTaxYearStatus.status)))
+            (maybeCurrentTaxYearStatus, maybeNextTaxYearStatus) match {
+              case (Some(currentTaxYearStatus), Some(nextTaxYearStatus)) => {
+                auditService.audit(MandationStatusAuditModel(
+                  getArnFromEnrolments(enrolments),
+                  requestBody.utr,
+                  requestBody.nino,
+                  AccountingPeriodUtil.getCurrentTaxYear.toShortTaxYear,
+                  currentTaxYearStatus.status.value,
+                  AccountingPeriodUtil.getNextTaxYear.toShortTaxYear,
+                  nextTaxYearStatus.status.value
+                ))
+                Ok(Json.toJson(MandationStatusResponse(currentTaxYearStatus.status, nextTaxYearStatus.status)))
+              }
+              case _ => InternalServerError("Failed to retrieve the mandation status")
             }
-            case _ => InternalServerError("Failed to retrieve the mandation status")
           }
-        }
-        case Left(error) => {
-          logger.error(s"Error processing mandation status request with status ${error.status} and message ${error.reason}")
-          InternalServerError("Failed to retrieve the mandation status")
+          case Left(error) => {
+            logger.error(s"Error processing mandation status request with status ${error.status} and message ${error.reason}")
+            InternalServerError("Failed to retrieve the mandation status")
+          }
         }
       }
     }

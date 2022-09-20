@@ -29,7 +29,7 @@ class BusinessSubscriptionDetailsModelSpec extends CommonSpec {
       AccountingPeriodModel(
         startDate = DateModel("6", "4", "2022"),
         endDate = DateModel("5", "4", "2023")
-      ).toShortTaxYear shouldBe "2022-23"
+      ).toItsaStatusShortTaxYear shouldBe "2022-23"
     }
   }
 

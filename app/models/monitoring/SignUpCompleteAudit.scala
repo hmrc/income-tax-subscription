@@ -87,7 +87,7 @@ case class CompletedSignUpAudit(agentReferenceNumber: Option[String],
   val income: JsArray = Json.arr() ++ soleTraderIncomeSources ++ ukPropertyIncomeSource ++ overseasPropertyIncomeSource
 
   override val auditType: String = "mtdItsaSubscription"
-  override val transactionName: String = "Customer-subscribed-to-send-quarterly-SA-income-tax-reports"
+  override val transactionName: Option[String] = Some("Customer-subscribed-to-send-quarterly-SA-income-tax-reports")
 
   override val detail: JsValue = Json.obj(
     "nino" -> nino,
@@ -161,7 +161,7 @@ case class SignUpCompleteAudit(agentReferenceNumber: Option[String],
   }
 
   override val auditType: String = "mtdItsaSubscription"
-  override val transactionName: String = "Customer-subscribed-to-send-quarterly-SA-income-tax-reports"
+  override val transactionName: Option[String] = Some("Customer-subscribed-to-send-quarterly-SA-income-tax-reports")
   override val detail: JsValue = Json.obj(
     "nino" -> nino,
     "userType" -> userType,

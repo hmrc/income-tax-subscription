@@ -26,7 +26,7 @@ case class PropertySubscribeFailureAudit(nino: String,
                                          responseBody: String) extends AuditModel {
 
   override val auditType: String = s"${PropertySubscribeFailureAudit.transactionName}-${Logging.eventTypeUnexpectedError}"
-  override val transactionName: String = PropertySubscribeFailureAudit.transactionName
+  override val transactionName: Option[String] = Some(PropertySubscribeFailureAudit.transactionName)
   override val detail: Map[String, String] = Map(
     "nino" -> nino,
     "arn" -> arn.getOrElse("-"),

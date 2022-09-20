@@ -26,7 +26,7 @@ object getBusinessDetails {
                                      suffix: String,
                                      responseBody: String
                                     ) extends AuditModel {
-    override val transactionName: String = controlListTransactionName
+    override val transactionName: Option[String] = Some(controlListTransactionName)
     override val detail: Map[String, String] = Map(
       "nino" -> nino,
       "response" -> responseBody

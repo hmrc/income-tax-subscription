@@ -23,19 +23,24 @@ import models.status.MtdMandationStatus.Voluntary
 import models.status.{ItsaStatusResponse, MandationStatusRequest, MandationStatusResponse, TaxYearStatus}
 import org.mockito.ArgumentMatchers
 import org.mockito.Mockito.when
-import org.scalatestplus.mockito.MockitoSugar.mock
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import parsers.ItsaStatusParser.GetItsaStatusResponse
 import play.api.http.Status.{BAD_REQUEST, INTERNAL_SERVER_ERROR, OK}
 import play.api.libs.json.Json
 import play.api.test.FakeRequest
 import play.api.test.Helpers.{contentAsJson, contentAsString, defaultAwaitTimeout, status, stubControllerComponents}
+import services.mocks.MockAuthService
+import services.monitoring.AuditService
+import uk.gov.hmrc.auth.core.{Enrolment, EnrolmentIdentifier, Enrolments}
 import utils.MaterializerSupport
+import utils.TestConstants.hmrcAsAgent
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class MandationStatusControllerSpec extends CommonSpec with MaterializerSupport with GuiceOneAppPerSuite {
+class MandationStatusControllerSpec extends CommonSpec with MockAuthService with MaterializerSupport with GuiceOneAppPerSuite {
+  private val mockAuditService: AuditService = app.injector.instanceOf[AuditService]
+
   private val request = FakeRequest().withBody(Json.toJson(MandationStatusRequest("test-nino", "test-utr")))
   private val invalidRequest = FakeRequest().withBody(Json.obj("invalid" -> "request"))
 
@@ -51,6 +56,8 @@ class MandationStatusControllerSpec extends CommonSpec with MaterializerSupport 
       "the status-determination-service returns OK status and valid JSON" in withController(
         Future.successful(Right(expectedResponse))
       ) { controller =>
+        mockRetrievalSuccess(Enrolments(Set(Enrolment(hmrcAsAgent, Seq(EnrolmentIdentifier("AgentReferenceNumber", "123456789")), "Activated"))))
+
         val result = controller.mandationStatus(request)
         status(result) shouldBe OK
         contentAsJson(result).as[MandationStatusResponse] shouldBe MandationStatusResponse(currentYearStatus = Voluntary, nextYearStatus = Voluntary)
@@ -61,6 +68,8 @@ class MandationStatusControllerSpec extends CommonSpec with MaterializerSupport 
       "the status-determination-service returns OK status and valid JSON" in withController(
         Future.successful(Right(expectedResponse))
       ) { controller =>
+        mockRetrievalSuccess(Enrolments(Set(Enrolment(hmrcAsAgent, Seq(EnrolmentIdentifier("AgentReferenceNumber", "123456789")), "Activated"))))
+
         val result = controller.mandationStatus(invalidRequest)
         status(result) shouldBe BAD_REQUEST
         contentAsString(result) shouldBe "Invalid MandationStatusRequest payload: " +
@@ -75,6 +84,8 @@ class MandationStatusControllerSpec extends CommonSpec with MaterializerSupport 
       "the status-determination-service returns a failure" in withController(
         Future.successful(Left(ErrorModel(INTERNAL_SERVER_ERROR, "Error body")))
       ) { controller =>
+        mockRetrievalSuccess(Enrolments(Set(Enrolment(hmrcAsAgent, Seq(EnrolmentIdentifier("AgentReferenceNumber", "123456789")), "Activated"))))
+
         val result = controller.mandationStatus(request)
         status(result) shouldBe INTERNAL_SERVER_ERROR
         contentAsString(result) shouldBe "Failed to retrieve the mandation status"
@@ -88,7 +99,7 @@ class MandationStatusControllerSpec extends CommonSpec with MaterializerSupport 
     when(mockConnector.getItsaStatus(ArgumentMatchers.eq("test-nino"), ArgumentMatchers.eq("test-utr"))(ArgumentMatchers.any()))
       .thenReturn(expectedResponse)
 
-    val controller = new MandationStatusController(mockConnector, stubControllerComponents())
+    val controller = new MandationStatusController(mockAuthService, mockAuditService, mockConnector, stubControllerComponents())
 
     testCode(controller)
   }
