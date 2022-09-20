@@ -17,7 +17,7 @@
 package controllers
 
 import helpers.ComponentSpecBase
-import helpers.servicemocks.GetItsaStatusStub
+import helpers.servicemocks.{AuthStub, GetItsaStatusStub}
 import models.status.MtdMandationStatus.Voluntary
 import models.status.{MandationStatusRequest, MandationStatusResponse, TaxYearStatus}
 import models.subscription.AccountingPeriodUtil
@@ -34,8 +34,9 @@ class MandationStatusControllerISpec extends ComponentSpecBase {
             TaxYearStatus("2022-23", Voluntary),
             TaxYearStatus("2023-24", Voluntary)
           )
+        AuthStub.stubAuth(OK, Json.obj())
         GetItsaStatusStub.stub(
-          "test-nino", "test-utr", AccountingPeriodUtil.getCurrentTaxYear.toShortTaxYear
+          "test-nino", "test-utr", AccountingPeriodUtil.getCurrentTaxYear.toItsaStatusShortTaxYear
         )(OK, Json.toJson(expectedResponse))
 
         When("POST /itsa-status is called")
@@ -53,6 +54,9 @@ class MandationStatusControllerISpec extends ComponentSpecBase {
 
     "return BAD_REQUEST" when {
       "the request body is invalid" in {
+        Given("I setup the Wiremock stubs")
+        AuthStub.stubAuth(OK, Json.obj())
+
         When("POST /itsa-status is called")
         val response = IncomeTaxSubscription.mandationStatus(Json.obj("invalid" -> "request"))
 
@@ -66,8 +70,9 @@ class MandationStatusControllerISpec extends ComponentSpecBase {
     "return INTERNAL_SERVER_ERROR"  when {
       "the status-determination-service returns OK status and invalid JSON" in {
         Given("I setup the Wiremock stubs")
+        AuthStub.stubAuth(OK, Json.obj())
         GetItsaStatusStub.stubInvalidResponse(
-          "test-nino", "test-utr", AccountingPeriodUtil.getCurrentTaxYear.toShortTaxYear
+          "test-nino", "test-utr", AccountingPeriodUtil.getCurrentTaxYear.toItsaStatusShortTaxYear
         )(OK, "{ currentYearStatus")
 
         When("POST /itsa-status is called")
@@ -81,6 +86,7 @@ class MandationStatusControllerISpec extends ComponentSpecBase {
 
       "the status-determination-service returns INTERNAL_SERVER_ERROR" in {
         Given("I setup the Wiremock stubs")
+        AuthStub.stubAuth(OK, Json.obj())
         val failedResponse = Json.obj(
           "failures" -> Json.arr(
             Json.obj(
@@ -90,7 +96,7 @@ class MandationStatusControllerISpec extends ComponentSpecBase {
           )
         )
         GetItsaStatusStub.stub(
-          "test-nino", "test-utr", AccountingPeriodUtil.getCurrentTaxYear.toShortTaxYear
+          "test-nino", "test-utr", AccountingPeriodUtil.getCurrentTaxYear.toItsaStatusShortTaxYear
         )(INTERNAL_SERVER_ERROR, failedResponse)
 
         When("POST /itsa-status is called")

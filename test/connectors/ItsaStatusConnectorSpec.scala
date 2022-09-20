@@ -77,7 +77,7 @@ class ItsaStatusConnectorSpec extends CommonSpec with MockHttp with GuiceOneAppP
   }
 
   private def mockItsaStatusResponse(expectedResponse: Future[GetItsaStatusResponse]) = {
-    val url = s"${appConfig.statusDeterminationServiceURL}/income-tax/itsa-status/test-nino/test-utr/${AccountingPeriodUtil.getCurrentTaxYear.toShortTaxYear}"
+    val url = s"${appConfig.statusDeterminationServiceURL}/income-tax/itsa-status/test-nino/test-utr/${AccountingPeriodUtil.getCurrentTaxYear.toItsaStatusShortTaxYear}"
 
     when(mockHttpClient.GET[GetItsaStatusResponse](
       ArgumentMatchers.eq(url),

@@ -24,7 +24,7 @@ case class RegistrationSuccessAudit(agentReferenceNumber: Option[String], nino: 
   val userType = if (agentReferenceNumber.isDefined) "agent" else "individual"
 
   override val auditType: String = RegistrationSuccessAudit.auditType
-  override val transactionName: String = RegistrationSuccessAudit.transactionName
+  override val transactionName: Option[String] = Some(RegistrationSuccessAudit.transactionName)
   override val detail: Map[String, String] = Map(
     "userType" -> userType,
     "nino" -> nino,

@@ -47,5 +47,5 @@ class ItsaStatusConnector @Inject()(httpClient: HttpClient,
   }
 
   private def getItsaStatusUrl(nino: String, utr: String) =
-    s"${appConfig.statusDeterminationServiceURL}/income-tax/itsa-status/$nino/$utr/${AccountingPeriodUtil.getCurrentTaxYear.toShortTaxYear}"
+    s"${appConfig.statusDeterminationServiceURL}/income-tax/itsa-status/$nino/$utr/${AccountingPeriodUtil.getCurrentTaxYear.toItsaStatusShortTaxYear}"
 }

@@ -41,28 +41,34 @@ class AuditService @Inject()(configuration: Configuration,
 
   def toDataEvent(appName: String, auditModel: AuditModel, path: String)(implicit hc: HeaderCarrier): DataEvent = {
     val auditType: String = auditModel.auditType
-    val transactionName: String = auditModel.transactionName
+    val transactionName: Option[String] = auditModel.transactionName
     val detail: Map[String, String] = auditModel.detail
     val tags: Map[String, String] = Map.empty[String, String]
 
     DataEvent(
       auditSource = appName,
       auditType = auditType,
-      tags = AuditExtensions.auditHeaderCarrier(hc).toAuditTags(transactionName, path) ++ tags,
+      tags = transactionName match {
+        case Some(transaction) => AuditExtensions.auditHeaderCarrier (hc).toAuditTags (transaction, path) ++ tags
+        case None => AuditExtensions.auditHeaderCarrier (hc).toAuditTags (path) ++ tags
+      },
       detail = AuditExtensions.auditHeaderCarrier(hc).toAuditDetails(detail.toSeq: _*)
     )
   }
 
   def toExtendedDataEvent(appName: String, extendedAuditModel: ExtendedAuditModel, path: String)(implicit hc: HeaderCarrier): ExtendedDataEvent = {
     val auditType: String = extendedAuditModel.auditType
-    val transactionName: String = extendedAuditModel.transactionName
+    val transactionName: Option[String] = extendedAuditModel.transactionName
     val detail: JsValue = extendedAuditModel.detail
     val tags: Map[String, String] = Map.empty[String, String]
 
     ExtendedDataEvent(
       auditSource = appName,
       auditType = auditType,
-      tags = AuditExtensions.auditHeaderCarrier(hc).toAuditTags(transactionName, path) ++ tags,
+      tags = transactionName match {
+        case Some(transaction) => AuditExtensions.auditHeaderCarrier(hc).toAuditTags(transaction, path) ++ tags
+        case None => AuditExtensions.auditHeaderCarrier(hc).toAuditTags(path) ++ tags
+      },
       detail = detail
     )
   }
@@ -70,12 +76,12 @@ class AuditService @Inject()(configuration: Configuration,
 
 trait AuditModel {
   val auditType: String
-  val transactionName: String
+  val transactionName: Option[String]
   val detail: Map[String, String]
 }
 
 trait ExtendedAuditModel {
   val auditType: String
-  val transactionName: String
+  val transactionName: Option[String]
   val detail: JsValue
 }
