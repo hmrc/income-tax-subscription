@@ -41,13 +41,13 @@ trait ComponentSpecBase extends AnyWordSpecLike
   override implicit lazy val app: Application = new GuiceApplicationBuilder()
     .in(Environment.simple(mode = Mode.Dev))
     .configure(config)
-    .build
+    .build()
 
   val mockHost: String = WiremockHelper.wiremockHost
   val mockPort: String = WiremockHelper.wiremockPort.toString
   val mockUrl = s"http://$mockHost:$mockPort"
 
-  def config(): Map[String, String] = Map(
+  def config: Map[String, String] = Map(
     "auditing.consumer.baseUri.host" -> mockHost,
     "auditing.consumer.baseUri.port" -> mockPort,
     "microservice.services.auth.host" -> mockHost,

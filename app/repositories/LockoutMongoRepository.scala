@@ -56,7 +56,7 @@ class LockoutMongoRepository @Inject()(val config: LockoutMongoRepositoryConfig)
     replaceIndexes = false
   ) {
 
-  def insert(document: JsObject): Future[InsertOneResult] = collection.insertOne(document).toFuture
+  def insert(document: JsObject): Future[InsertOneResult] = collection.insertOne(document).toFuture()
 
   def lockoutAgent(arn: String, timeoutSeconds: Int): Future[Option[LockoutResponse]] = {
     val ttl: Duration = Duration.ofSeconds(timeoutSeconds)

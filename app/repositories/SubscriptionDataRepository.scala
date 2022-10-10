@@ -147,9 +147,9 @@ class SubscriptionDataRepository @Inject()(config: SubscriptionDataRepositoryCon
   private def remove(tuples: (String, JsValueWrapper)*) =
     collection.deleteOne(Json.obj(tuples: _*))
 
-  def insert(document: JsObject): Future[InsertOneResult] = collection.insertOne(document).toFuture
+  def insert(document: JsObject): Future[InsertOneResult] = collection.insertOne(document).toFuture()
 
-  def drop(): Future[Void] = collection.drop().toFuture
+  def drop(): Future[Void] = collection.drop().toFuture()
 
 }
 

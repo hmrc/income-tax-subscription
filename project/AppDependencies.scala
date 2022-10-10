@@ -22,20 +22,20 @@ object AppDependencies {
 
   import play.sbt.PlayImport._
 
-  private val domainVersion = "8.0.0-play-28"
-  private val scalaTestVersion = "3.2.11"
+  private val domainVersion = "8.1.0-play-28"
+  private val scalaTestVersion = "3.2.14"
   private val scalaTestPlusVersion = "5.1.0"
-  private val mockitoVersion = "4.4.0"
+  private val mockitoVersion = "4.8.0"
 
   private val scalaJVersion = "2.4.2"
 
-  private val hmrcMongoVersion = "0.68.0"
+  private val hmrcMongoVersion = "0.73.0"
 
-  private val wiremockVersion = "2.32.0"
+  private val wiremockVersion = "2.33.2"
 
-  private val bootstrapBackendVersion = "5.24.0"
+  private val bootstrapBackendVersion = "5.25.0"
 
-  private val playVersion = "2.8.14"
+  private val playVersion = "2.8.17"
 
   val compile: Seq[ModuleID] = Seq(
     ws,
@@ -58,7 +58,7 @@ object AppDependencies {
         "com.typesafe.play" %% "play-test" % playVersion % scope,
         "org.scalatestplus.play" %% "scalatestplus-play" % scalaTestPlusVersion % scope,
         "com.vladsch.flexmark" % "flexmark-all" % "0.62.2" % scope,
-        "com.fasterxml.jackson.module" %% "jackson-module-scala" % "2.13.2" % scope,
+        "com.fasterxml.jackson.module" %% "jackson-module-scala" % "2.13.4" % scope,
         "org.scalaj" %% "scalaj-http" % scalaJVersion % scope,
         "org.mockito" % "mockito-core" % mockitoVersion % scope,
         "com.github.fge" % "json-schema-validator" % "2.2.14" % scope,
@@ -77,7 +77,7 @@ object AppDependencies {
         "com.typesafe.play" %% "play-test" % playVersion % scope,
         "org.scalatestplus.play" %% "scalatestplus-play" % scalaTestPlusVersion % scope,
         "com.vladsch.flexmark" % "flexmark-all" % "0.62.2" % scope,
-        "com.fasterxml.jackson.module" %% "jackson-module-scala" % "2.13.2" % scope,
+        "com.fasterxml.jackson.module" %% "jackson-module-scala" % "2.13.4" % scope,
         "org.scalaj" %% "scalaj-http" % scalaJVersion % scope,
         "org.mockito" % "mockito-core" % mockitoVersion % scope,
         "com.github.fge" % "json-schema-validator" % "2.2.14" % scope,
@@ -88,7 +88,7 @@ object AppDependencies {
 
   def tmpMacWorkaround(): Seq[ModuleID] =
     if (sys.props.get("os.name").exists(_.toLowerCase.contains("mac")))
-      Seq("org.reactivemongo" % "reactivemongo-shaded-native" % "1.0.1-osx-x86-64" % "runtime,test,it")
+      Seq("org.reactivemongo" % "reactivemongo-shaded-native" % "1.0.10-osx-x86-64" % "runtime,test,it")
     else Seq()
 
   val appDependencies: Seq[ModuleID] = compile ++ Test() ++ IntegrationTest() ++ tmpMacWorkaround()

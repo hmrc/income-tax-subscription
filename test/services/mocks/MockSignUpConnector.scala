@@ -21,20 +21,21 @@ import connectors.SignUpConnector
 import connectors.mocks.MockHttp
 import org.mockito.ArgumentMatchers
 import org.mockito.Mockito.{reset, when}
-import org.scalatest.{BeforeAndAfterEach, Suite}
+import org.scalatest.Suite
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import parsers.SignUpParser.PostSignUpResponse
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-trait MockSignUpConnector extends BeforeAndAfterEach with MockHttp with GuiceOneAppPerSuite {
+trait MockSignUpConnector extends MockHttp with GuiceOneAppPerSuite {
   this: Suite =>
 
   override def beforeEach(): Unit = {
     super.beforeEach()
     reset(mockSignUpConnector)
   }
+
   val mockSignUpConnector: SignUpConnector = mock[SignUpConnector]
   val appConfig: AppConfig = app.injector.instanceOf[AppConfig]
   val connector = new SignUpConnector(mockHttpClient, appConfig)
@@ -42,6 +43,5 @@ trait MockSignUpConnector extends BeforeAndAfterEach with MockHttp with GuiceOne
 
   def signUp(nino: String)(response: Future[PostSignUpResponse])(): Unit = {
     when(mockSignUpConnector.signUp(ArgumentMatchers.eq(nino))(ArgumentMatchers.any())).thenReturn(response)
-
   }
 }

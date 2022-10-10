@@ -65,7 +65,7 @@ class MandationStatusControllerSpec extends CommonSpec with MockAuthService with
     }
 
     "return 400 BAD_REQUEST status" when {
-      "the status-determination-service returns OK status and valid JSON" in withController(
+      "the status-determination-service returns OK status and invalid JSON" in withController(
         Future.successful(Right(expectedResponse))
       ) { controller =>
         mockRetrievalSuccess(Enrolments(Set(Enrolment(hmrcAsAgent, Seq(EnrolmentIdentifier("AgentReferenceNumber", "123456789")), "Activated"))))
@@ -74,8 +74,8 @@ class MandationStatusControllerSpec extends CommonSpec with MockAuthService with
         status(result) shouldBe BAD_REQUEST
         contentAsString(result) shouldBe "Invalid MandationStatusRequest payload: " +
           "List(" +
-          "(/nino,List(JsonValidationError(List(error.path.missing),WrappedArray()))), " +
-          "(/utr,List(JsonValidationError(List(error.path.missing),WrappedArray())))" +
+          "(/utr,List(JsonValidationError(List(error.path.missing),ArraySeq()))), " +
+          "(/nino,List(JsonValidationError(List(error.path.missing),ArraySeq())))" +
           ")"
       }
     }
