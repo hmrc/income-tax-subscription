@@ -38,6 +38,7 @@ object MtdMandationStatus {
   implicit val reads: Reads[MtdMandationStatus] = __.read[String].map {
     case `mandated` => Mandated
     case `voluntary` => Voluntary
+    case other => throw new Exception(s"Unknown MtdMandationStatus string: $other")
   }
 
   implicit val writes: Writes[MtdMandationStatus] = Writes[MtdMandationStatus] { status =>

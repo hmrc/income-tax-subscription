@@ -19,6 +19,7 @@ package common
 import org.scalatest.OptionValues
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
+import scala.language.postfixOps
 
 trait CommonSpec extends AnyWordSpecLike with Matchers with OptionValues {
   import scala.concurrent.duration._

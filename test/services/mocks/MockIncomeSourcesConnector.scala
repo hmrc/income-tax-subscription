@@ -22,7 +22,7 @@ import connectors.mocks.MockHttp
 import models.subscription.{BusinessSubscriptionDetailsModel, CreateIncomeSourcesModel}
 import org.mockito.ArgumentMatchers
 import org.mockito.Mockito.{reset, when}
-import org.scalatest.{BeforeAndAfterEach, Suite}
+import org.scalatest.Suite
 import org.scalatestplus.mockito.MockitoSugar
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import parsers.CreateIncomeSourceParser.PostIncomeSourceResponse
@@ -33,7 +33,7 @@ import uk.gov.hmrc.http.HeaderCarrier
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-trait MockIncomeSourcesConnector extends MockitoSugar with BeforeAndAfterEach with MockHttp with GuiceOneAppPerSuite {
+trait MockIncomeSourcesConnector extends MockitoSugar with MockHttp with GuiceOneAppPerSuite {
   this: Suite =>
 
   override def beforeEach(): Unit = {

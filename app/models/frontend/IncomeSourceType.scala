@@ -33,11 +33,7 @@ object IncomeSourceType {
   val property = "Property"
   val both = "Both"
 
-  private val reader: Reads[IncomeSourceType] = __.read[String].map {
-    case `business` => Business
-    case `property` => Property
-    case `both` => Both
-  }
+  private val reader: Reads[IncomeSourceType] = __.read[String].map(convert)
 
   private val writer: Writes[IncomeSourceType] = Writes[IncomeSourceType](incomeSourceType =>
     JsString(incomeSourceType match {
@@ -48,4 +44,11 @@ object IncomeSourceType {
   )
 
   implicit val format: Format[IncomeSourceType] = Format(reader, writer)
+
+  implicit def convert(str: String): IncomeSourceType = str match {
+    case `business` => Business
+    case `property` => Property
+    case `both` => Both
+    case other => throw new Exception(s"Unknown IncomeSourceType string: $other")
+  }
 }

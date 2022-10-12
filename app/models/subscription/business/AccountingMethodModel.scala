@@ -35,10 +35,7 @@ object AccountingMethod {
   val feCash = "Cash"
   val feAccruals = "Accruals"
 
-  private val reader: Reads[AccountingMethod] = __.read[String].map {
-    case `feCash` | Cash.stringValue => Cash
-    case `feAccruals` | Accruals.stringValue => Accruals
-  }
+  private val reader: Reads[AccountingMethod] = __.read[String].map (convert)
 
   private val writer: Writes[AccountingMethod] = Writes[AccountingMethod](cashOrAccruals =>
     JsString(cashOrAccruals.stringValue)
@@ -49,5 +46,6 @@ object AccountingMethod {
   implicit def convert(str: String): AccountingMethod = str match {
     case `feCash` | Cash.stringValue => Cash
     case `feAccruals` | Accruals.stringValue => Accruals
+    case other => throw new Exception(s"Unknown AccountingMethod string: $other")
   }
 }

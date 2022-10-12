@@ -57,7 +57,7 @@ class SubscriptionDataControllerISpec extends ComponentSpecBase with FeatureSwit
   )
 
   override def beforeEach(): Unit = {
-    await(repository.drop)
+    await(repository.drop())
     super.beforeEach()
   }
 

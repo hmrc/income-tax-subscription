@@ -22,6 +22,7 @@ import org.mockito.Mockito._
 import org.scalatest.BeforeAndAfterEach
 import org.scalatestplus.mockito.MockitoSugar
 import play.api.Configuration
+import play.api.mvc.AnyContentAsEmpty
 import play.api.test.FakeRequest
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
@@ -30,20 +31,19 @@ import scala.concurrent.ExecutionContext
 import scala.concurrent.ExecutionContext.Implicits.global
 
 class AuditServiceSpec extends CommonSpec with MockitoSugar with BeforeAndAfterEach {
-  val mockAuditConnector = mock[AuditConnector]
-  val mockConfiguration = mock[Configuration]
-  val testAppName = "app"
-  val testUrl = "testUrl"
+  private val mockAuditConnector = mock[AuditConnector]
+  private val mockConfiguration = mock[Configuration]
+  private val testAppName = "app"
 
   val testAuditService = new AuditService(mockConfiguration, mockAuditConnector)
 
   private implicit val hc: HeaderCarrier = HeaderCarrier()
-  implicit val request = FakeRequest("POST", "testUrl")
+  implicit private val request: FakeRequest[AnyContentAsEmpty.type] = FakeRequest("POST", "testUrl")
 
-  val testAuditModel = new AuditModel {
+  private val testAuditModel: AuditModel = new AuditModel {
     override val auditType = "testAuditType"
-    override val transactionName = Some("testTransactionName")
-    override val detail = Map[String, String]()
+    override val transactionName: Option[String] = Some("testTransactionName")
+    override val detail: Map[String, String] = Map[String, String]()
   }
 
   override def beforeEach(): Unit = {

@@ -45,7 +45,7 @@ class SignUpControllerSpec extends CommonSpec with MockAuthService with MockSign
         val fakeRequest = FakeRequest().withJsonBody(Json.toJson(testSignUpSubmission(testNino)))
 
         mockRetrievalSuccess(Enrolments(Set(Enrolment(hmrcAsAgent, Seq(EnrolmentIdentifier("AgentReferenceNumber", "123456789")), "Activated"))))
-        signUp(testNino)(Future.successful(Right(SignUpResponse("XAIT000000"))))
+        signUp(testNino)(Future.successful(Right(SignUpResponse("XAIT000000"))))()
 
 
         val result = TestController.signUp(testNino)(fakeRequest)
@@ -63,7 +63,7 @@ class SignUpControllerSpec extends CommonSpec with MockAuthService with MockSign
 
         mockRetrievalSuccess(Enrolments(Set(Enrolment(hmrcAsAgent, Seq(EnrolmentIdentifier("AgentReferenceNumber", "123456789")), "Activated"))))
 
-        signUp(testNino)(Future.successful(Left(ErrorModel(200,  "Failed to read Json for MTD Sign Up Response"))))
+        signUp(testNino)(Future.successful(Left(ErrorModel(200,  "Failed to read Json for MTD Sign Up Response"))))()
 
         val result = TestController.signUp(testNino)(fakeRequest)
         status(result) shouldBe INTERNAL_SERVER_ERROR
@@ -78,7 +78,7 @@ class SignUpControllerSpec extends CommonSpec with MockAuthService with MockSign
         val fakeRequest = FakeRequest().withJsonBody(Json.toJson(testSignUpSubmission(testNino)))
 
         mockRetrievalSuccess(Enrolments(Set(Enrolment(hmrcAsAgent, Seq(EnrolmentIdentifier("AgentReferenceNumber", "123456789")), "Activated"))))
-        signUp(testNino)(Future.successful(Left(ErrorModel(INTERNAL_SERVER_ERROR, "Failure"))))
+        signUp(testNino)(Future.successful(Left(ErrorModel(INTERNAL_SERVER_ERROR, "Failure"))))()
 
         val result = TestController.signUp(testNino)(fakeRequest)
 
