@@ -31,11 +31,11 @@ object AppDependencies {
 
   private val hmrcMongoVersion = "0.73.0"
 
-  private val wiremockVersion = "2.33.2"
+  private val wiremockVersion = "2.32.0"
 
   private val bootstrapBackendVersion = "5.25.0"
 
-  private val playVersion = "2.8.17"
+  private val playVersion = "2.8.18"
 
   val compile: Seq[ModuleID] = Seq(
     ws,
@@ -61,7 +61,7 @@ object AppDependencies {
         "com.fasterxml.jackson.module" %% "jackson-module-scala" % "2.13.4" % scope,
         "org.scalaj" %% "scalaj-http" % scalaJVersion % scope,
         "org.mockito" % "mockito-core" % mockitoVersion % scope,
-        "com.github.fge" % "json-schema-validator" % "2.2.14" % scope,
+        "com.github.fge" % "json-schema-validator" % "2.2.6" % scope,
         "uk.gov.hmrc.mongo" %% "hmrc-mongo-test-play-28" % hmrcMongoVersion
       )
     }.test
@@ -80,8 +80,8 @@ object AppDependencies {
         "com.fasterxml.jackson.module" %% "jackson-module-scala" % "2.13.4" % scope,
         "org.scalaj" %% "scalaj-http" % scalaJVersion % scope,
         "org.mockito" % "mockito-core" % mockitoVersion % scope,
-        "com.github.fge" % "json-schema-validator" % "2.2.14" % scope,
-        "com.github.tomakehurst" % "wiremock" % wiremockVersion % scope
+        "com.github.fge" % "json-schema-validator" % "2.2.6" % scope,
+        "com.github.tomakehurst" % "wiremock-jre8-standalone" % wiremockVersion % scope
       )
     }.test
   }

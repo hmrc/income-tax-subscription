@@ -19,7 +19,7 @@ package connectors
 import config.AppConfig
 import connectors.utilities.ConnectorUtils
 import models.ErrorModel
-import models.monitoring.getBusinessDetails.getBusinessDetailsModel
+import models.monitoring.getBusinessDetails.BusinessDetailsAuditModel
 import models.registration.{GetBusinessDetailsFailureResponseModel, GetBusinessDetailsSuccessResponseModel}
 import play.api.Logger
 import play.api.http.Status._
@@ -29,7 +29,6 @@ import uk.gov.hmrc.http.{HeaderCarrier, HeaderNames, HttpClient, HttpReads, Http
 import utils.Logging._
 
 import javax.inject.Inject
-import scala.annotation.switch
 import scala.concurrent.{ExecutionContext, Future}
 
 class BusinessDetailsConnector @Inject()(appConfig: AppConfig,
@@ -61,15 +60,6 @@ class BusinessDetailsConnector @Inject()(appConfig: AppConfig,
             logger.info("BusinessDetailsConnector.getBusinessDetails - Get Business Details responded with OK")
             parseSuccess(response.body)
           case status =>
-            @switch
-            val suffix = status match {
-              case BAD_REQUEST => eventTypeBadRequest
-              case NOT_FOUND => eventTypeNotFound
-              case SERVICE_UNAVAILABLE => eventTypeServerUnavailable
-              case INTERNAL_SERVER_ERROR => eventTypeInternalServerError
-              case _ => eventTypeUnexpectedError
-            }
-
             val parseResponse@Left(ErrorModel(_, optCode, message)) = parseFailure(status, response.body)
             val code: String = optCode.getOrElse("N/A")
             (status, code) match {
@@ -77,7 +67,14 @@ class BusinessDetailsConnector @Inject()(appConfig: AppConfig,
                 // expected case, do not audit
                 logger.info(s"BusinessDetailsConnector.getBusinessDetails - Get Business Details responded with nino not found")
               case _ =>
-                auditService.audit(getBusinessDetailsModel(nino, suffix, response.body))(hc, ec, request)
+                val suffix = status match {
+                  case BAD_REQUEST => eventTypeBadRequest
+                  case NOT_FOUND => eventTypeNotFound
+                  case SERVICE_UNAVAILABLE => eventTypeServerUnavailable
+                  case INTERNAL_SERVER_ERROR => eventTypeInternalServerError
+                  case _ => eventTypeUnexpectedError
+                }
+                auditService.audit(BusinessDetailsAuditModel(nino, suffix, response.body))(hc, ec, request)
                 logger.warn(s"BusinessDetailsConnector.getBusinessDetails - Get Business Details responded with an error," +
                   s" status=$status code=$code message=$message")
             }

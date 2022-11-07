@@ -19,63 +19,93 @@ package connectors
 import _root_.utils.TestConstants._
 import connectors.mocks.TestBusinessDetailsConnector
 import models.ErrorModel
+import models.monitoring.getBusinessDetails.BusinessDetailsAuditModel
 import models.registration._
-import org.scalatest.concurrent.ScalaFutures.convertScalaFuture
+import org.scalatest.BeforeAndAfterEach
 import play.api.http.Status._
-import play.api.libs.json.JsValue
 import play.api.mvc.Request
 import play.api.test.FakeRequest
+import play.api.test.Helpers.{await, defaultAwaitTimeout}
+import services.mocks.monitoring.MockAuditService
 import uk.gov.hmrc.http.HeaderCarrier
+import utils.Logging.{eventTypeBadRequest, eventTypeInternalServerError, eventTypeServerUnavailable, eventTypeUnexpectedError}
 
-class BusinessDetailsConnectorSpec extends TestBusinessDetailsConnector {
+import scala.concurrent.ExecutionContext.Implicits.global
+
+class BusinessDetailsConnectorSpec extends TestBusinessDetailsConnector with MockAuditService with BeforeAndAfterEach {
 
   implicit val hc = HeaderCarrier()
   implicit val request: Request[_] = FakeRequest()
 
-  "BusinessDetailsConnector.getBusinessDetails" should {
-
+  "BusinessDetailsConnector.getBusinessDetailsUrl" should {
     "GET to the correct url" in {
       TestBusinessDetailsConnector.getBusinessDetailsUrl(testNino) should endWith(s"/registration/business-details/nino/$testNino")
     }
+  }
 
-    def result = TestBusinessDetailsConnector.getBusinessDetails(testNino).futureValue
+  "BusinessDetailsConnector.getBusinessDetails" should {
+    def result(f: GetBusinessDetailsUtil.Response => Any): Any = await(TestBusinessDetailsConnector.getBusinessDetails(testNino).map(v => f(v)))
 
     "parse and return the success response correctly" in {
       mockBusinessDetails(getBusinessDetailsSuccess)
-      result shouldBe Right(GetBusinessDetailsSuccessResponseModel(testMtditId))
+      result { r =>
+        r shouldBe Right(GetBusinessDetailsSuccessResponseModel(testMtditId))
+        verifyNoAuditOfAnyKind()
+      }
     }
 
     "parse and return the Bad request response correctly" in {
       mockBusinessDetails(INVALID_NINO)
-      result shouldBe Left(INVALID_NINO_MODEL)
+      result { r =>
+        r shouldBe Left(INVALID_NINO_MODEL)
+        verifyAudit(eventTypeBadRequest, INVALID_NINO)
+      }
     }
 
     "parse and return the Resource not found response correctly" in {
       mockBusinessDetails(NOT_FOUND_NINO)
-      result shouldBe Left(NOT_FOUND_NINO_MODEL)
+      result { r =>
+        r shouldBe Left(NOT_FOUND_NINO_MODEL)
+        verifyNoAuditOfAnyKind()
+      }
     }
 
     "parse and return the Conflict error response correctly" in {
       mockBusinessDetails(CONFLICT_ERROR)
-      result shouldBe Left(CONFLICT_ERROR_MODEL)
+      result { r =>
+        r shouldBe Left(CONFLICT_ERROR_MODEL)
+        verifyAudit(eventTypeUnexpectedError, CONFLICT_ERROR)
+      }
     }
 
     "parse and return the Server error response correctly" in {
       mockBusinessDetails(SERVER_ERROR)
-      result shouldBe Left(SERVER_ERROR_MODEL)
+      verifyNoAuditOfAnyKind()
+      result { r =>
+        r shouldBe Left(SERVER_ERROR_MODEL)
+        verifyAudit(eventTypeInternalServerError, SERVER_ERROR)
+      }
     }
 
     "parse and return the Service unavailable response correctly" in {
       mockBusinessDetails(UNAVAILABLE)
-      result shouldBe Left(UNAVAILABLE_MODEL)
+      result { r =>
+        r shouldBe Left(UNAVAILABLE_MODEL)
+        verifyAudit(eventTypeServerUnavailable, UNAVAILABLE)
+      }
     }
 
     "return parse error for corrupt response" in {
-      val corruptResponse: JsValue = """{"a": "not valid"}"""
-      mockBusinessDetails((BAD_REQUEST, corruptResponse))
-      result shouldBe Left(ErrorModel(INTERNAL_SERVER_ERROR, ErrorModel.parseFailure(corruptResponse)))
+      mockBusinessDetails(CORRUPT)
+      result { r =>
+        r shouldBe Left(ErrorModel(INTERNAL_SERVER_ERROR, ErrorModel.parseFailure(corruptResponse)))
+        verifyAudit(eventTypeBadRequest, CORRUPT)
+      }
     }
 
   }
+
+  private def verifyAudit(suffix: String, testHttpResponse: TestHttpResponse): Unit =
+    verifyAudit(BusinessDetailsAuditModel(testNino, suffix, testHttpResponse._2.toString()))
 
 }
