@@ -26,35 +26,34 @@ import org.scalatestplus.mockito.MockitoSugar
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.http.Status._
 import play.api.libs.json.JsValue
-import services.monitoring.AuditService
+import services.mocks.monitoring.MockAuditService
 import uk.gov.hmrc.http.{HeaderNames, HttpClient}
 import utils.TestConstants._
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-trait TestBusinessDetailsConnector extends MockHttp with GuiceOneAppPerSuite {
+trait TestBusinessDetailsConnector extends MockHttp with GuiceOneAppPerSuite with MockAuditService {
 
   lazy val appConfig: AppConfig = app.injector.instanceOf[AppConfig]
   lazy val httpClient: HttpClient = mockHttpClient
-  lazy val auditService: AuditService = app.injector.instanceOf[AuditService]
 
-  val mockBusinessDetails = (setupMockBusinessDetails(testNino) _).tupled
+  object TestBusinessDetailsConnector extends BusinessDetailsConnector(appConfig, httpClient, mockAuditService)
 
-  object TestBusinessDetailsConnector extends BusinessDetailsConnector(appConfig, httpClient, auditService)
+  type TestHttpResponse = (Int, JsValue)
 
-  val getBusinessDetailsSuccess = (OK, GetBusinessDetailsResponse.successResponse(testNino, testSafeId, testMtditId))
-  val getBusinessDetailsNotFound = (NOT_FOUND, GetBusinessDetailsResponse.failureResponse("NOT_FOUND_NINO", "The remote endpoint has indicated that no data can be found"))
-  val getBusinessDetailsBadRequest = (BAD_REQUEST, GetBusinessDetailsResponse.failureResponse("INVALID_NINO", "Submission has not passed validation. Invalid parameter NINO."))
-  val getBusinessDetailsServerError = (INTERNAL_SERVER_ERROR, GetBusinessDetailsResponse.failureResponse("SERVER_ERROR", "DES is currently experiencing problems that require live service intervention"))
-  val getBusinessDetailsServiceUnavailable = (SERVICE_UNAVAILABLE, GetBusinessDetailsResponse.failureResponse("SERVICE_UNAVAILABLE", "Dependent systems are currently not responding"))
+  val getBusinessDetailsSuccess: TestHttpResponse = (OK, GetBusinessDetailsResponse.successResponse(testNino, testSafeId, testMtditId))
+  val getBusinessDetailsNotFound: TestHttpResponse = (NOT_FOUND, GetBusinessDetailsResponse.failureResponse("NOT_FOUND_NINO", "The remote endpoint has indicated that no data can be found"))
+  val getBusinessDetailsBadRequest: TestHttpResponse = (BAD_REQUEST, GetBusinessDetailsResponse.failureResponse("INVALID_NINO", "Submission has not passed validation. Invalid parameter NINO."))
+  val getBusinessDetailsServerError: TestHttpResponse = (INTERNAL_SERVER_ERROR, GetBusinessDetailsResponse.failureResponse("SERVER_ERROR", "DES is currently experiencing problems that require live service intervention"))
+  val getBusinessDetailsServiceUnavailable: TestHttpResponse = (SERVICE_UNAVAILABLE, GetBusinessDetailsResponse.failureResponse("SERVICE_UNAVAILABLE", "Dependent systems are currently not responding"))
 
-  def setupMockBusinessDetails(nino: String)(status: Int, response: JsValue): Unit = {
+  def mockBusinessDetails(testHttpResponse: TestHttpResponse): Unit = {
     val headers = Seq(
       HeaderNames.authorisation -> appConfig.desAuthorisationToken,
       appConfig.desEnvironmentHeader
     )
-    setupMockHttpGet(url = Some(TestBusinessDetailsConnector.getBusinessDetailsUrl(nino)), headers = Some(headers))(status, response)
+    setupMockHttpGet(url = Some(TestBusinessDetailsConnector.getBusinessDetailsUrl(testNino)), headers = Some(headers))(testHttpResponse._1, testHttpResponse._2)
   }
 }
 

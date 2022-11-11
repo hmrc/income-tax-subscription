@@ -22,9 +22,9 @@ import services.monitoring.AuditModel
 object getBusinessDetails {
   val controlListTransactionName = "getBusinessDetails api-5"
 
-  case class getBusinessDetailsModel(nino: String,
-                                     suffix: String,
-                                     responseBody: String
+  case class BusinessDetailsAuditModel(nino: String,
+                                       suffix: String,
+                                       responseBody: String
                                     ) extends AuditModel {
     override val transactionName: Option[String] = Some(controlListTransactionName)
     override val detail: Map[String, String] = Map(

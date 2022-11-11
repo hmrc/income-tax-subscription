@@ -60,6 +60,15 @@ trait MockAuditService extends MockitoSugar with BeforeAndAfterEach {
       ArgumentMatchers.any[Request[_]]
     )
 
+  def verifyNoAuditOfAnyKind(): Unit =
+    verify(mockAuditService, never()).audit(
+      ArgumentMatchers.any()
+    )(
+      ArgumentMatchers.any[HeaderCarrier],
+      ArgumentMatchers.any[ExecutionContext],
+      ArgumentMatchers.any[Request[_]]
+    )
+
   def verifyExtendedAudit(model: ExtendedAuditModel): Unit =
     verify(mockAuditService).extendedAudit(
       ArgumentMatchers.eq(model)
