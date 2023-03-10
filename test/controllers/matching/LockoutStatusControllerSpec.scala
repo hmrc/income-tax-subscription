@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 HM Revenue & Customs
+ * Copyright 2023 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,18 +19,20 @@ package controllers.matching
 import common.CommonSpec
 import models.matching.LockoutResponse
 import play.api.libs.json.Json
-import play.api.mvc.Result
+import play.api.mvc.{ControllerComponents, Result}
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import services.mocks.{MockAuthService, MockLockoutStatusService}
 import utils.MaterializerSupport
 import utils.TestConstants.{testLockoutRequest, testLockoutResponse}
 
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-
 class LockoutStatusControllerSpec extends CommonSpec with MockLockoutStatusService with MaterializerSupport with MockAuthService {
-  lazy val mockCC = stubControllerComponents()
+
+  lazy val mockCC: ControllerComponents = stubControllerComponents()
+
   object TestController extends LockoutStatusController(mockAuthService, mockLockoutStatusService, mockCC)
 
   "LockoutStatusController.checkLockoutStatus" should {

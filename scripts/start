@@ -18,4 +18,4 @@ sleep 5
 sm --stop INCOME_TAX_SUBSCRIPTION
 
 sleep 5
-sbt "run 9560 -Dapplication.router=testOnlyDoNotUseInAppConf.Routes"
+sbt "run 9560 -Dplay.http.router=testOnlyDoNotUseInAppConf.Routes"

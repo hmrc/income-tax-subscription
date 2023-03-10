@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 HM Revenue & Customs
+ * Copyright 2023 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,14 +24,13 @@ import services.{AuthService, LockoutStatusService}
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
 import javax.inject.{Inject, Singleton}
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class LockoutStatusController @Inject()(authService: AuthService,
                                         lockoutStatusService: LockoutStatusService,
-                                        cc: ControllerComponents) extends BackendController(cc) {
-
+                                        cc: ControllerComponents)
+                                       (implicit ec: ExecutionContext) extends BackendController(cc) {
 
 
   def checkLockoutStatus(arn: String): Action[AnyContent] = Action.async { implicit request =>

@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 HM Revenue & Customs
+ * Copyright 2023 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,6 +17,8 @@
 package services
 
 import common.CommonSpec
+import models.ErrorModel
+import models.matching.LockoutResponse
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
 import services.mocks.TestLockoutStatusService
 import uk.gov.hmrc.http.HeaderCarrier
@@ -26,10 +28,10 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 class LockoutStatusServiceSpec extends CommonSpec with TestLockoutStatusService {
 
-  implicit val hc = HeaderCarrier()
+  implicit val hc: HeaderCarrier = HeaderCarrier()
 
   "LockoutStatusService.lockoutAgent" should {
-    def call = await(TestLockoutStatusService.lockoutAgent(testArn, testLockoutRequest))
+    def call: Either[ErrorModel, Option[LockoutResponse]] = await(TestLockoutStatusService.lockoutAgent(testArn, testLockoutRequest))
 
     "return a testLockoutSuccess if the lock is created" in {
       mockLockCreated(testArn)
@@ -44,7 +46,7 @@ class LockoutStatusServiceSpec extends CommonSpec with TestLockoutStatusService 
   }
 
   "LockoutStatusService.checkLockoutStatus" should {
-    def call = await(TestLockoutStatusService.checkLockoutStatus(testArn))
+    def call: Either[ErrorModel, Option[LockoutResponse]] = await(TestLockoutStatusService.checkLockoutStatus(testArn))
 
     "return a testLockoutSuccess if they are locked out" in {
       mockLockedOut(testArn)

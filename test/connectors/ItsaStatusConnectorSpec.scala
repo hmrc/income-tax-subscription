@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 HM Revenue & Customs
+ * Copyright 2023 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -37,13 +37,11 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{ExecutionContext, Future}
 
 class ItsaStatusConnectorSpec extends CommonSpec with MockHttp with GuiceOneAppPerSuite {
-  implicit val hc = HeaderCarrier()
+  implicit val hc: HeaderCarrier = HeaderCarrier()
   implicit val request: Request[_] = FakeRequest()
 
   val appConfig: AppConfig = app.injector.instanceOf[AppConfig]
   val connector = new ItsaStatusConnector(mockHttpClient, appConfig)
-
-  val headers = Seq()
 
   "getItsaStatus" should {
     "retrieve the user ITSA status" when {
@@ -77,7 +75,8 @@ class ItsaStatusConnectorSpec extends CommonSpec with MockHttp with GuiceOneAppP
   }
 
   private def mockItsaStatusResponse(expectedResponse: Future[GetItsaStatusResponse]) = {
-    val url = s"${appConfig.statusDeterminationServiceURL}/income-tax/itsa-status/test-nino/test-utr/${AccountingPeriodUtil.getCurrentTaxYear.toItsaStatusShortTaxYear}"
+    val years: String = AccountingPeriodUtil.getCurrentTaxYear.toItsaStatusShortTaxYear
+    val url = s"${appConfig.statusDeterminationServiceURL}/income-tax/itsa-status/test-nino/test-utr/$years"
 
     when(mockHttpClient.GET[GetItsaStatusResponse](
       ArgumentMatchers.eq(url),

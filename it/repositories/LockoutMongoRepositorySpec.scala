@@ -32,7 +32,7 @@ class LockoutMongoRepositorySpec extends ComponentSpecBase with AnyWordSpecLike
   with Matchers with OptionValues with DefaultPlayMongoRepositorySupport[JsObject] {
   lazy val testLockoutMongoRepository: LockoutMongoRepository = app.injector.instanceOf[LockoutMongoRepository]
 
-  def repository: LockoutMongoRepository = testLockoutMongoRepository
+  val repository: LockoutMongoRepository = testLockoutMongoRepository
 
   override def overriddenConfig(): Map[String, String] = Map("mongodb.uri" -> mongoUri)
 

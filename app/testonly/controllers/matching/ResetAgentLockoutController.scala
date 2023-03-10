@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 HM Revenue & Customs
+ * Copyright 2023 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,11 +21,12 @@ import repositories.LockoutMongoRepository
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
 import javax.inject.{Inject, Singleton}
-import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.ExecutionContext
 
 @Singleton
 class ResetAgentLockoutController @Inject()(mongoRepository: LockoutMongoRepository,
-                                            cc: ControllerComponents) extends BackendController(cc) {
+                                            cc: ControllerComponents)
+                                           (implicit ec: ExecutionContext) extends BackendController(cc) {
 
   def resetAgentLockout: Action[AnyContent] = Action.async { _ =>
     mongoRepository.dropDb map (_ => Ok)

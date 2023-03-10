@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 HM Revenue & Customs
+ * Copyright 2023 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,6 @@
 
 package services.mocks
 
-import utils.TestConstants.hmrcAsAgent
 import org.mockito.Mockito._
 import org.scalatest.{BeforeAndAfterEach, Suite}
 import org.scalatestplus.mockito.MockitoSugar
@@ -25,6 +24,7 @@ import uk.gov.hmrc.auth.core.authorise.EmptyPredicate
 import uk.gov.hmrc.auth.core.retrieve.Retrieval
 import uk.gov.hmrc.auth.core.{Enrolment, EnrolmentIdentifier, Enrolments}
 import uk.gov.hmrc.http.HeaderCarrier
+import utils.TestConstants.hmrcAsAgent
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -57,8 +57,12 @@ trait MockAuthService extends BeforeAndAfterEach with MockitoSugar {
     when(mockAuthService.authorised())
       .thenReturn(
         new mockAuthService.AuthorisedFunction(EmptyPredicate) {
-          override def retrieve[A](retrieval: Retrieval[A]) = new mockAuthService.AuthorisedFunctionWithResult[A](EmptyPredicate, retrieval) {
-            override def apply[B](body: A => Future[B])(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[B] = body.apply(retrievalValue.asInstanceOf[A])
+          override def retrieve[A](retrieval: Retrieval[A]): mockAuthService.AuthorisedFunctionWithResult[A] = {
+            new mockAuthService.AuthorisedFunctionWithResult[A](EmptyPredicate, retrieval) {
+              override def apply[B](body: A => Future[B])(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[B] = {
+                body.apply(retrievalValue.asInstanceOf[A])
+              }
+            }
           }
         })
   }
