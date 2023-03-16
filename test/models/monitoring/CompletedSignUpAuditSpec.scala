@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 HM Revenue & Customs
+ * Copyright 2023 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -116,7 +116,7 @@ class CompletedSignUpAuditSpec extends CommonSpec with Matchers {
               "businessName" -> "testBusinessName",
               "businessAddress" -> Json.obj(
                 "lines" -> Json.arr("line 1", "line 2"),
-                "postcode" -> "testPostcode",
+                "postcode" -> "testPostcode"
               )
             )
           ),
@@ -140,7 +140,7 @@ class CompletedSignUpAuditSpec extends CommonSpec with Matchers {
                   "businessName" -> "testBusinessName",
                   "businessAddress" -> Json.obj(
                     "lines" -> Json.arr("line 1", "line 2"),
-                    "postcode" -> "testPostcode",
+                    "postcode" -> "testPostcode"
                   )
                 )
               ),
@@ -226,7 +226,7 @@ class CompletedSignUpAuditSpec extends CommonSpec with Matchers {
         nino = testNino,
         accountingPeriod = AccountingPeriodModel(now, now),
         accountingMethod = Some(Cash),
-        incomeSource = FeIncomeSourceModel(false, false, false),
+        incomeSource = FeIncomeSourceModel(selfEmployment = false, ukProperty = false, foreignProperty = false),
         selfEmploymentsData = None
       )
 
@@ -238,7 +238,7 @@ class CompletedSignUpAuditSpec extends CommonSpec with Matchers {
         nino = testNino,
         accountingPeriod = AccountingPeriodModel(now, now),
         accountingMethod = Some(Cash),
-        incomeSource = FeIncomeSourceModel(true, true, true),
+        incomeSource = FeIncomeSourceModel(selfEmployment = true, ukProperty = true, foreignProperty = true),
         selfEmploymentsData = Some(Seq(testSelfEmploymentData)),
         propertyStartDate = Some(PropertyStartDateModel(now)),
         propertyAccountingMethod = Some(AccountingMethodPropertyModel(Cash)),

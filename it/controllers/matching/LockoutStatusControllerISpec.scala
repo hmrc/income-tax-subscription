@@ -32,7 +32,7 @@ class LockoutStatusControllerISpec extends ComponentSpecBase with DefaultPlayMon
 
   lazy val testLockoutMongoRepository: LockoutMongoRepository = app.injector.instanceOf[LockoutMongoRepository]
 
-  def repository: LockoutMongoRepository = testLockoutMongoRepository
+  val repository: LockoutMongoRepository = testLockoutMongoRepository
 
   "checkLockoutStatus" should {
     "call the lockout status service successfully when lock exists" in {

@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 HM Revenue & Customs
+ * Copyright 2023 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,7 +20,7 @@ import common.CommonSpec
 import models.DateModel
 import models.subscription.business.{AccountingMethod, Cash}
 import models.subscription.incomesource.{AccountingPeriod, BusinessIncomeModel, PropertyIncomeModel}
-import play.api.libs.json.Json
+import play.api.libs.json.{JsObject, Json}
 
 class SignUpRequestSpec extends CommonSpec {
 
@@ -40,7 +40,7 @@ class SignUpRequestSpec extends CommonSpec {
 
     val propertyIncome = PropertyIncomeModel(Cash)
 
-    def businessIncomeJson(testArn: Option[String] = None) = Json.obj(
+    def businessIncomeJson(testArn: Option[String] = None): JsObject = Json.obj(
       "businessDetails" -> Seq(Json.obj(
         "accountingPeriodStartDate" -> "2018-06-06",
         "accountingPeriodEndDate" -> "2019-06-05",
@@ -49,7 +49,7 @@ class SignUpRequestSpec extends CommonSpec {
       ))
     )
 
-    def propertyIncomeJson() = Json.obj("cashAccrualsFlag" -> "C")
+    def propertyIncomeJson(): JsObject = Json.obj("cashAccrualsFlag" -> "C")
 
     "send the correct json to DES for business income source" in {
       BusinessIncomeModel.writeToDes(businessIncome) shouldBe businessIncomeJson()

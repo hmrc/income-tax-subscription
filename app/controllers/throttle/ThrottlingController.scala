@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 HM Revenue & Customs
+ * Copyright 2023 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,14 +24,13 @@ import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
 import javax.inject.Inject
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Try
 
 class ThrottlingController @Inject()(throttlingRepository: ThrottlingRepository,
                                      servicesConfig: ServicesConfig,
-                                     cc: ControllerComponents
-                                    ) extends BackendController(cc) with Logging {
+                                     cc: ControllerComponents)
+                                    (implicit ec: ExecutionContext) extends BackendController(cc) with Logging {
 
   def throttled(throttleId: String): Action[AnyContent] = Action.async { _ =>
     val throttleKey = s"throttle.$throttleId.max"

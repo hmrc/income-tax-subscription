@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 HM Revenue & Customs
+ * Copyright 2023 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -35,11 +35,12 @@ trait TestSubscriptionStatusService extends MockBusinessDetailsConnector {
 
 trait MockSubscriptionStatusService extends MockitoSugar {
 
-  val mockSubscriptionStatusService = mock[SubscriptionStatusService]
+  val mockSubscriptionStatusService: SubscriptionStatusService = mock[SubscriptionStatusService]
 
   private def mockCheckMtditsaSubscription(nino: String)(response: Future[Either[ErrorModel, Option[FESuccessResponse]]]): Unit =
-    when(mockSubscriptionStatusService.checkMtditsaSubscription(ArgumentMatchers.eq(nino))(ArgumentMatchers.any(), ArgumentMatchers.any(), ArgumentMatchers.any()))
-      .thenReturn(response)
+    when(mockSubscriptionStatusService.checkMtditsaSubscription(ArgumentMatchers.eq(nino))(
+      ArgumentMatchers.any(), ArgumentMatchers.any(), ArgumentMatchers.any())
+    ).thenReturn(response)
 
   def mockCheckMtditsaFound(nino: String): Unit =
     mockCheckMtditsaSubscription(nino)(Future.successful(Right(Some(FESuccessResponse(Some(testMtditId))))))

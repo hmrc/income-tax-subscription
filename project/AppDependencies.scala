@@ -33,7 +33,7 @@ object AppDependencies {
 
   private val wiremockVersion = "2.32.0"
 
-  private val bootstrapBackendVersion = "5.25.0"
+  private val bootstrapBackendVersion = "7.14.0"
 
   private val playVersion = "2.8.18"
 
@@ -53,6 +53,7 @@ object AppDependencies {
     def apply(): Seq[ModuleID] = new TestDependencies {
       override lazy val test: Seq[sbt.ModuleID] = Seq(
         "uk.gov.hmrc" %% "bootstrap-backend-play-28" % bootstrapBackendVersion % scope,
+        "uk.gov.hmrc" %% "bootstrap-test-play-28" % bootstrapBackendVersion % scope,
         "org.scalatest" %% "scalatest" % scalaTestVersion % scope,
         "org.scalatestplus" %% "mockito-3-12" % "3.2.10.0" % scope,
         "com.typesafe.play" %% "play-test" % playVersion % scope,
@@ -62,7 +63,7 @@ object AppDependencies {
         "org.scalaj" %% "scalaj-http" % scalaJVersion % scope,
         "org.mockito" % "mockito-core" % mockitoVersion % scope,
         "com.github.fge" % "json-schema-validator" % "2.2.6" % scope,
-        "uk.gov.hmrc.mongo" %% "hmrc-mongo-test-play-28" % hmrcMongoVersion
+        "uk.gov.hmrc.mongo" %% "hmrc-mongo-test-play-28" % hmrcMongoVersion % scope
       )
     }.test
   }
@@ -81,7 +82,8 @@ object AppDependencies {
         "org.scalaj" %% "scalaj-http" % scalaJVersion % scope,
         "org.mockito" % "mockito-core" % mockitoVersion % scope,
         "com.github.fge" % "json-schema-validator" % "2.2.6" % scope,
-        "com.github.tomakehurst" % "wiremock-jre8-standalone" % wiremockVersion % scope
+        "com.github.tomakehurst" % "wiremock-jre8-standalone" % wiremockVersion % scope,
+        "uk.gov.hmrc.mongo" %% "hmrc-mongo-test-play-28" % hmrcMongoVersion % scope
       )
     }.test
   }
