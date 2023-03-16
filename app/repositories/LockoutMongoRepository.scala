@@ -49,7 +49,7 @@ class LockoutMongoRepositoryConfig @Inject()(val appConfig: AppConfig) {
 @Singleton
 class LockoutMongoRepository @Inject()(val config: LockoutMongoRepositoryConfig)(implicit ec: ExecutionContext)
   extends PlayMongoRepository[JsObject](
-    collectionName = "selfEmploymentsData",
+    collectionName = "lockout",
     mongoComponent = config.mongoComponent,
     domainFormat = implicitly[Format[JsObject]],
     indexes = config.indexes,
