@@ -60,10 +60,8 @@ object TestConstants extends JsonUtils {
   val CORRUPT = (BAD_REQUEST, corruptResponse)
   val CONFLICT_ERROR = (CONFLICT, failureResponse(CONFLICT_ERROR_MODEL.code.get, CONFLICT_ERROR_MODEL.reason))
 
-  def offsetDateTime: OffsetDateTime = OffsetDateTime.ofInstant(Instant.now, ZoneId.systemDefault())
-
   lazy val testLockoutRequest = LockoutRequest(timeoutSeconds = 10)
-  lazy val testLockoutResponse = LockoutResponse(testArn, offsetDateTime)
+  lazy val testLockoutResponse = LockoutResponse(testArn, Instant.now)
 
   lazy val testLockoutSuccess = Right(Some(testLockoutResponse))
   lazy val testLockoutFailure = Left(ErrorModel(BAD_REQUEST, ""))
