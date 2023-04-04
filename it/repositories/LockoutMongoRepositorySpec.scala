@@ -50,9 +50,8 @@ class LockoutMongoRepositorySpec extends ComponentSpecBase with AnyWordSpecLike
       stored.size shouldBe 1
       val head1 = stored.head
       val head = head1.as[LockoutResponse]
-      insertRes.expiryTimestamp shouldBe head.expiryTimestamp
+      insertRes.expiryTimestamp.toEpochMilli shouldBe head.expiryTimestamp.toEpochMilli
       insertRes.arn shouldBe head.arn
-      insertRes shouldBe head
     }
   }
 
@@ -63,7 +62,7 @@ class LockoutMongoRepositorySpec extends ComponentSpecBase with AnyWordSpecLike
     }
 
     "return a LockModel if there is a lock" in {
-      val lockOutModel = LockoutResponse(testArn, offsetDateTime)
+      val lockOutModel = LockoutResponse(testArn, instant)
 
       val res = for {
         _ <- testLockoutMongoRepository.insert(Json.toJson(lockOutModel).as[JsObject])

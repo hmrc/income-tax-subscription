@@ -20,21 +20,7 @@ import play.api.libs.json._
 
 import java.time._
 
-case class TimestampModel(dateTime: OffsetDateTime)
-
-object TimestampModel {
-  private val reads: Reads[TimestampModel] = {
-    val value1 = (JsPath \ "$date").read[Long]
-    val value2 = (JsPath \ "$date" \ "$numberLong").read[String].map(_.toLong)
-    (value1 orElse value2)
-      .map[TimestampModel](timestamp => TimestampModel(OffsetDateTime.ofInstant(Instant.ofEpochMilli(timestamp), ZoneId.of("Z"))))
-  }
-
-  private val writes: Writes[TimestampModel] = (model: TimestampModel) => JsString(model.dateTime.toString)
-  implicit val format: Format[TimestampModel] = Format[TimestampModel](reads, writes)
-}
-
-case class LockoutResponse(arn: String, expiryTimestamp: OffsetDateTime)
+case class LockoutResponse(arn: String, expiryTimestamp: Instant)
 
 object LockoutResponse {
   val arn = "_id"
@@ -42,10 +28,17 @@ object LockoutResponse {
 
   val reader: Reads[LockoutResponse] = (json: JsValue) => for {
     arn <- (json \ arn).validate[String]
-    exp <- (json \ expiry).validate[OffsetDateTime]
-  } yield LockoutResponse(arn, exp)
+    exp <- (json \ expiry \ "$date" \ "$numberLong").validate[String].map(_.toLong)
+  } yield {
+    LockoutResponse(arn, Instant.ofEpochMilli(exp))
+  }
 
-  val writer: OWrites[LockoutResponse] = (o: LockoutResponse) => Json.obj(arn -> o.arn, expiry -> Json.toJson(o.expiryTimestamp))
+  val writer: OWrites[LockoutResponse] = (o: LockoutResponse) => Json.obj(
+    arn -> o.arn,
+    expiry -> Json.obj(
+      "$date" -> o.expiryTimestamp.toEpochMilli
+    )
+  )
 
   implicit val format: OFormat[LockoutResponse] = OFormat[LockoutResponse](reader, writer)
 

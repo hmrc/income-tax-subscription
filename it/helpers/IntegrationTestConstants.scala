@@ -71,7 +71,6 @@ object IntegrationTestConstants extends JsonUtils {
 
   // mongo uses millis, so we need to get an instant with millis
   val instant = Instant.ofEpochMilli(Instant.now().toEpochMilli)
-  val offsetDateTime = OffsetDateTime.ofInstant(instant, ZoneId.systemDefault())
 
   val testPropertyIncomeCash = Json.obj("cashAccrualsFlag" -> "C")
   val testPropertyIncomeAccruals = Json.obj("cashAccrualsFlag" -> "A")

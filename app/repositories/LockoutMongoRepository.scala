@@ -62,8 +62,7 @@ class LockoutMongoRepository @Inject()(val config: LockoutMongoRepositoryConfig)
     val ttl: Duration = Duration.ofSeconds(timeoutSeconds)
 
     // mongo uses millis, so we need to get an instant with millis
-    val instant = Instant.ofEpochMilli(Instant.now.plusSeconds(ttl.getSeconds).toEpochMilli)
-    val expiryTimestamp = OffsetDateTime.ofInstant(instant, ZoneId.systemDefault())
+    val expiryTimestamp = Instant.now.plusSeconds(ttl.getSeconds)
 
     val model = LockoutResponse(arn, expiryTimestamp)
     insert(Json.toJson(model).as[JsObject]).map {
