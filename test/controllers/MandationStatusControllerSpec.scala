@@ -53,8 +53,8 @@ class MandationStatusControllerSpec extends CommonSpec
 
   private val expectedResponse = ItsaStatusResponse(
     List(
-      TaxYearStatus("2022-23", Voluntary),
-      TaxYearStatus("2023-24", Voluntary)
+      TaxYearStatus(AccountingPeriodUtil.getCurrentTaxYear.toItsaStatusShortTaxYear, Voluntary),
+      TaxYearStatus(AccountingPeriodUtil.getNextTaxYear.toItsaStatusShortTaxYear, Voluntary)
     )
   )
 

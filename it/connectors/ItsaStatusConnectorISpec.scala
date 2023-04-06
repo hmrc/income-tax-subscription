@@ -36,8 +36,8 @@ class ItsaStatusConnectorISpec extends ComponentSpecBase {
       "the status determination service returns OK and a valid JSON response body" in {
         val expectedResponse =
           List(
-            TaxYearStatus("2022-23", Voluntary),
-            TaxYearStatus("2023-24", Voluntary)
+            TaxYearStatus(AccountingPeriodUtil.getCurrentTaxYear.toItsaStatusShortTaxYear, Voluntary),
+            TaxYearStatus(AccountingPeriodUtil.getNextTaxYear.toItsaStatusShortTaxYear, Voluntary)
           )
 
         GetItsaStatusStub.stub(

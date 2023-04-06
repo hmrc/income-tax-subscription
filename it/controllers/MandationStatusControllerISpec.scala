@@ -31,8 +31,8 @@ class MandationStatusControllerISpec extends ComponentSpecBase {
         Given("I setup the Wiremock stubs")
         val expectedResponse =
           List(
-            TaxYearStatus("2022-23", Voluntary),
-            TaxYearStatus("2023-24", Voluntary)
+            TaxYearStatus(AccountingPeriodUtil.getCurrentTaxYear.toItsaStatusShortTaxYear, Voluntary),
+            TaxYearStatus(AccountingPeriodUtil.getNextTaxYear.toItsaStatusShortTaxYear, Voluntary)
           )
         AuthStub.stubAuth(OK, Json.obj())
         GetItsaStatusStub.stub(
