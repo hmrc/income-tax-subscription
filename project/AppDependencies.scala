@@ -22,18 +22,18 @@ object AppDependencies {
 
   import play.sbt.PlayImport._
 
-  private val domainVersion = "8.1.0-play-28"
+  private val domainVersion = "8.3.0-play-28"
   private val scalaTestVersion = "3.2.14"
   private val scalaTestPlusVersion = "5.1.0"
   private val mockitoVersion = "4.8.0"
 
   private val scalaJVersion = "2.4.2"
 
-  private val hmrcMongoVersion = "0.73.0"
+  private val hmrcMongoVersion = "1.3.0"
 
   private val wiremockVersion = "2.32.0"
 
-  private val bootstrapBackendVersion = "7.14.0"
+  private val bootstrapBackendVersion = "7.21.0"
 
   private val playVersion = "2.8.18"
 
