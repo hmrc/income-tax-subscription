@@ -42,7 +42,7 @@ class BusinessSubscriptionDetailsModelSpec extends CommonSpec {
         businessStartDate = Some(BusinessStartDate(DateModel("1", "1", "2017"))),
         businessName = Some(BusinessNameModel("ABC Limited")),
         businessTradeName = Some(BusinessTradeNameModel("Plumbing")),
-        businessAddress = Some(BusinessAddressModel("12345", Address(Seq("line1", "line2", "line3", "line4"), Some("TF3 4NT"))))
+        businessAddress = Some(BusinessAddressModel(Address(Seq("line1", "line2", "line3", "line4"), Some("TF3 4NT"))))
       ))),
       accountingMethod = Some(Cash),
       incomeSource = FeIncomeSourceModel(true, true, true),
@@ -76,7 +76,7 @@ class BusinessSubscriptionDetailsModelSpec extends CommonSpec {
         businessStartDate = Some(BusinessStartDate(DateModel("1", "1", "2017"))),
         businessName = Some(BusinessNameModel("ABC Limited")),
         businessTradeName = Some(BusinessTradeNameModel("Plumbing")),
-        businessAddress = Some(BusinessAddressModel("12345", Address(Seq("line1", "line2", "line3"), Some("TF3 4NT"))))
+        businessAddress = Some(BusinessAddressModel(Address(Seq("line1", "line2", "line3"), Some("TF3 4NT"))))
       ))),
       nino = "AA111111A",
       accountingMethod = Some(Cash),
@@ -107,7 +107,7 @@ class BusinessSubscriptionDetailsModelSpec extends CommonSpec {
         businessStartDate = Some(BusinessStartDate(DateModel("1", "1", "2017"))),
         businessName = Some(BusinessNameModel("ABC Limited")),
         businessTradeName = Some(BusinessTradeNameModel("Plumbing")),
-        businessAddress = Some(BusinessAddressModel("12345", Address(Seq("line1", "line2", "line3"), None)))
+        businessAddress = Some(BusinessAddressModel(Address(Seq("line1", "line2", "line3"), None)))
       ))),
       nino = "AA111111A",
       accountingMethod = Some(Cash),
@@ -138,7 +138,7 @@ class BusinessSubscriptionDetailsModelSpec extends CommonSpec {
         businessStartDate = None,
         businessName = Some(BusinessNameModel("ABC Limited")),
         businessTradeName = Some(BusinessTradeNameModel("Plumbing")),
-        businessAddress = Some(BusinessAddressModel("12345", Address(Seq("line1", "line2", "line3"), Some("TF3 4NT"))))
+        businessAddress = Some(BusinessAddressModel(Address(Seq("line1", "line2", "line3"), Some("TF3 4NT"))))
       ))),
       nino = "AA111111A",
       accountingMethod = Some(Cash),
