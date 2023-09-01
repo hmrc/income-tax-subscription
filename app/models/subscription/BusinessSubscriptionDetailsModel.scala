@@ -60,8 +60,7 @@ case class Address(lines: Seq[String], postcode: Option[String]) {
   override def toString: String = s"${lines.mkString(", ")}, $postcode"
 }
 
-case class BusinessAddressModel(auditRef: String,
-                                address: Address)
+case class BusinessAddressModel(address: Address)
 
 object Address {
   implicit val format: OFormat[Address] = Json.format[Address]

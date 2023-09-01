@@ -34,7 +34,6 @@ class BusinessIncomeSourcesControllerISpec extends ComponentSpecBase with Featur
           businessName = Some(BusinessNameModel("testBusinessName")),
           businessTradeName = Some(BusinessTradeNameModel("testBusinessTrade")),
           businessAddress = Some(BusinessAddressModel(
-            auditRef = "testAuditRef",
             address = Address(lines = Seq("line 1", "line 2"), postcode = Some("testPostcode"))
           ))
         )
@@ -85,7 +84,6 @@ class BusinessIncomeSourcesControllerISpec extends ComponentSpecBase with Featur
             "businessTradeName" -> "testBusinessTrade"
           ),
           "businessAddress" -> Json.obj(
-            "auditRef" -> "testAuditRef",
             "address" -> Json.obj(
               "lines" -> Json.arr(
                 "line 1",
