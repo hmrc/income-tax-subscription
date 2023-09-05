@@ -13,10 +13,10 @@ POST        /subscription-data                          controllers.Subscription
 
 DELETE      /subscription-data/:reference/id/:id        controllers.SubscriptionDataController.deleteSubscriptionData(reference: String, id: String)
 
-POST        /mis/sign-up/:nino                          controllers.SignUpController.signUp(nino: String)
+POST        /mis/sign-up/:nino/:taxYear                 controllers.SignUpController.signUp(nino: String, taxYear: String)
 
 POST        /mis/create/:mtdbsaRef                      controllers.BusinessIncomeSourcesController.createIncomeSource(mtdbsaRef: String)
 
 POST        /throttled                                  controllers.throttle.ThrottlingController.throttled(throttleId: String)
 
-POST        /itsa-status                                 controllers.MandationStatusController.mandationStatus
+POST        /itsa-status                                controllers.MandationStatusController.mandationStatus

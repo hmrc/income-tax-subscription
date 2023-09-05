@@ -25,29 +25,29 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class SignUpConnector @Inject()(http: HttpClient,
-                                appConfig: AppConfig)(implicit ec: ExecutionContext) {
+class SignUpTaxYearConnector @Inject()(http: HttpClient,
+                                       appConfig: AppConfig)(implicit ec: ExecutionContext) {
 
-  def signUpUrl(nino: String): String = s"${appConfig.desURL}/income-tax/sign-up/ITSA"
+  def signUpUrl(nino: String): String = s"${appConfig.statusDeterminationServiceURL}/income-tax/sign-up/ITSA"
 
-  def requestBody(nino: String): JsObject = Json.obj(
-         "idType" -> "NINO",
-         "idValue" -> nino
+  def requestBody(nino: String, taxYear: String): JsObject = Json.obj(
+         "nino" -> nino,
+         "taxYear" -> taxYear
     )
 
 
-  def signUp(nino: String)(implicit hc: HeaderCarrier): Future[PostSignUpResponse] = {
+  def signUp(nino: String, taxYear: String)(implicit hc: HeaderCarrier): Future[PostSignUpResponse] = {
 
     val headerCarrier: HeaderCarrier = hc
-      .copy(authorization = Some(Authorization(appConfig.desAuthorisationToken)))
-      .withExtraHeaders(appConfig.desEnvironmentHeader)
+      .copy(authorization = Some(Authorization(appConfig.statusDeterminationServiceAuthorisationToken)))
+      .withExtraHeaders("Environment" -> appConfig.statusDeterminationServiceEnvironment)
 
-    val desHeaders: Seq[(String, String)] = Seq(
-      HeaderNames.authorisation -> appConfig.desAuthorisationToken,
-      appConfig.desEnvironmentHeader
+    val headers: Seq[(String, String)] = Seq(
+      HeaderNames.authorisation -> appConfig.statusDeterminationServiceAuthorisationToken,
+      "Environment" -> appConfig.statusDeterminationServiceEnvironment
     )
 
-    http.POST[JsValue, PostSignUpResponse](signUpUrl(nino), requestBody(nino), headers = desHeaders)(
+    http.POST[JsValue, PostSignUpResponse](signUpUrl(nino), requestBody(nino, taxYear), headers = headers)(
       implicitly, implicitly[HttpReads[PostSignUpResponse]], headerCarrier, implicitly)
   }
 }
