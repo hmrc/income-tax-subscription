@@ -34,6 +34,7 @@ import java.util.UUID
 object TestConstants extends JsonUtils {
 
   lazy val testNino: String = new Generator().nextNino.nino
+  lazy val testTaxYear: String = "2023-24"
   // for the purpose of unit tests we only need a random string for the ARN
   lazy val testArn: String = new Generator().nextNino.nino
   lazy val testSafeId = "XE0001234567890"
@@ -276,6 +277,13 @@ object TestConstants extends JsonUtils {
        | "idValue" : "$nino"
        |}
       """.stripMargin)
+
+
+  def testTaxYearSignUpSubmission(nino: String, taxYear: String): JsValue = Json.obj(
+    "nino" -> nino,
+    "taxYear" -> taxYear
+  )
+
 
   val testSignUpSuccessBody: JsValue = Json.parse(
     """

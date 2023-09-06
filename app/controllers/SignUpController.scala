@@ -16,15 +16,21 @@
 
 package controllers
 
+
 import common.Extractors
-import config.AppConfig
+import config.{AppConfig, featureswitch}
+import config.featureswitch.TaxYearSignup
+import config.featureswitch.FeatureSwitching
+import config.featureswitch.FeatureSwitching.isEnabled
 import connectors.SignUpConnector
+import connectors.SignUpTaxYearConnector
 import models.monitoring.{RegistrationFailureAudit, RegistrationSuccessAudit}
-import play.api.Logger
+import play.api.{Configuration, Logger}
 import play.api.libs.json.Json
 import play.api.mvc._
 import services.AuthService
 import services.monitoring.AuditService
+import uk.gov.hmrc.auth.core.Enrolments
 import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
@@ -32,24 +38,58 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext
 
 @Singleton
-class SignUpController @Inject()(authService: AuthService, auditService: AuditService, signUpConnector: SignUpConnector,
+class SignUpController @Inject()(authService: AuthService,
+                                 auditService: AuditService,
+                                 configuration: Configuration,
+                                 signUpConnector: SignUpConnector,
+                                 signUpTaxYearConnector: SignUpTaxYearConnector,
                                  cc: ControllerComponents, appConfig: AppConfig)(implicit ec: ExecutionContext) extends BackendController(cc) with Extractors {
 
   val logger: Logger = Logger(this.getClass)
 
-  def signUp(nino: String): Action[AnyContent] = Action.async { implicit request =>
+
+  def signUp(nino: String, taxYear:String): Action[AnyContent]= Action.async { implicit request =>
     authService.authorised().retrieve(Retrievals.allEnrolments) { enrolments =>
+      if (isEnabled(TaxYearSignup, configuration))
+        taxYearSignUp(nino, taxYear, enrolments)
+      else
+        desSignUp(nino, enrolments)
+    }
+  }
+
+  private def desSignUp(nino: String, enrolments: Enrolments)(implicit request: Request[AnyContent]) =
+
       signUpConnector.signUp(nino).map {
         case Right(response) => {
           val path: Option[String] = request.headers.get(ITSASessionKeys.RequestURI)
-          auditService.audit(RegistrationSuccessAudit(getArnFromEnrolments(enrolments), nino, response.mtdbsa, appConfig.desAuthorisationToken, path))
+          auditService.audit(RegistrationSuccessAudit(
+            getArnFromEnrolments(enrolments), nino, response.mtdbsa, appConfig.desAuthorisationToken, path
+          ))
           Ok(Json.toJson(response))
         }
-        case Left(error) => logger.error(s"Error processing Sign up request with status ${error.status} and message ${error.reason}")
+        case Left(error) =>
+          logger.error(s"Error processing Sign up request with status ${error.status} and message ${error.reason}")
           auditService.audit(RegistrationFailureAudit(nino, error.status, error.reason))
           InternalServerError("Failed Sign up")
       }
 
+
+
+
+private def taxYearSignUp(nino: String, taxYear:String, enrolments: Enrolments)(implicit request: Request[AnyContent]) =
+    signUpTaxYearConnector.signUp(nino, taxYear).map {
+      case Right(response) => {
+        val path: Option[String] = request.headers.get(ITSASessionKeys.RequestURI)
+        auditService.audit(RegistrationSuccessAudit(
+          getArnFromEnrolments(enrolments), nino, response.mtdbsa, appConfig.signUpServiceAuthorisationToken, path
+        ))
+        Ok(Json.toJson(response))
+      }
+      case Left(error) =>
+        logger.error(s"Error processing Sign up request with status ${error.status} and message ${error.reason}")
+        auditService.audit(RegistrationFailureAudit(nino, error.status, error.reason))
+        InternalServerError("Failed Sign up")
     }
-  }
+
+
 }

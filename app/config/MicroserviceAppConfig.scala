@@ -45,7 +45,13 @@ trait AppConfig {
   def statusDeterminationServiceURL: String
   val statusDeterminationServiceAuthorisationToken: String
   val statusDeterminationServiceEnvironment: String
+
+  def signUpServiceURL: String
+  val signUpServiceAuthorisationToken: String
+  val signUpServiceEnvironment: String
 }
+
+
 
 @Singleton
 class MicroserviceAppConfig @Inject()(servicesConfig: ServicesConfig, val configuration: Configuration) extends AppConfig {
@@ -62,6 +68,13 @@ class MicroserviceAppConfig @Inject()(servicesConfig: ServicesConfig, val config
   private val statusDeterminationServiceBase = "microservice.services.status-determination-service"
   override lazy val statusDeterminationServiceAuthorisationToken: String = s"Bearer ${loadConfig(s"$statusDeterminationServiceBase.authorization-token")}"
   override lazy val statusDeterminationServiceEnvironment: String= loadConfig(s"$statusDeterminationServiceBase.environment")
+
+
+  override lazy val signUpServiceURL: String = servicesConfig.baseUrl("signup-taxyear-service")
+
+  private val signUpServiceBase = "microservice.services.status-determination-service"
+  override lazy val signUpServiceAuthorisationToken: String = s"Bearer ${loadConfig(s"$signUpServiceBase.authorization-token")}"
+  override lazy val signUpServiceEnvironment: String = loadConfig(s"$signUpServiceBase.environment")
 
   private def desBase =
     if (FeatureSwitching.isEnabled(featureswitch.StubDESFeature, configuration)) "microservice.services.stub-des"
