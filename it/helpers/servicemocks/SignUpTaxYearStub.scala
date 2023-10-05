@@ -21,13 +21,13 @@ import play.api.libs.json.JsValue
 
 object SignUpTaxYearStub extends WireMockMethods {
 
-  private def signUpUri(nino: String): String = s"/income-tax/sign-up/ITSA"
+  private def signUpUri: String = s"/income-tax/sign-up/ITSA"
 
-  def stubSignUp(nino: String, expectedBody: JsValue, authorizationHeader: String, environmentHeader: String)
+  def stubSignUp(expectedBody: JsValue, authorizationHeader: String, environmentHeader: String)
                 (status: Int, body: JsValue): StubMapping = {
     when(
       method = POST,
-      uri = signUpUri(nino),
+      uri = signUpUri,
       body = expectedBody,
       headers = Map[String, String](
         "Authorization" -> authorizationHeader,

@@ -3,7 +3,6 @@ package controllers
 
 import config.MicroserviceAppConfig
 import config.featureswitch.{FeatureSwitching, TaxYearSignup}
-import config.featureswitch.FeatureSwitching._
 import helpers.ComponentSpecBase
 import helpers.IntegrationTestConstants._
 import helpers.servicemocks.{AuthStub, SignUpStub, SignUpTaxYearStub}
@@ -12,7 +11,7 @@ import play.api.Configuration
 import play.api.http.Status._
 import play.api.libs.json.Json
 
-class SignUpControllerISpec extends ComponentSpecBase with FeatureSwitching{
+class SignUpControllerISpec extends ComponentSpecBase with FeatureSwitching {
 
   val appConfig: MicroserviceAppConfig = app.injector.instanceOf[MicroserviceAppConfig]
   val signUpController: SignUpController = app.injector.instanceOf[SignUpController]
@@ -43,9 +42,11 @@ class SignUpControllerISpec extends ComponentSpecBase with FeatureSwitching{
     "feature switch is enabled call sign up connector successfully when auth succeeds for a sign up submission 200" in {
       enable(TaxYearSignup)
       AuthStub.stubAuth(OK, Json.obj())
-      SignUpTaxYearStub.stubSignUp(testNino, testTaxYearSignUpSubmission(testNino, testTaxYear), appConfig.signUpServiceAuthorisationToken, appConfig.signUpServiceEnvironment)(
-        OK, testSignUpSuccessBody
-      )
+      SignUpTaxYearStub.stubSignUp(
+        testTaxYearSignUpSubmission(testNino, testTaxYear),
+        appConfig.signUpServiceAuthorisationToken,
+        appConfig.signUpServiceEnvironment
+      )(OK, testSignUpSuccessBody)
 
       val res = IncomeTaxSubscription.signUp(testNino, testTaxYear)
 

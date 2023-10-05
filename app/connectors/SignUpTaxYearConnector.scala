@@ -28,26 +28,25 @@ import scala.concurrent.{ExecutionContext, Future}
 class SignUpTaxYearConnector @Inject()(http: HttpClient,
                                        appConfig: AppConfig)(implicit ec: ExecutionContext) {
 
-  def signUpUrl(nino: String): String = s"${appConfig.statusDeterminationServiceURL}/income-tax/sign-up/ITSA"
+  def signUpUrl: String = s"${appConfig.signUpServiceURL}/income-tax/sign-up/ITSA"
 
   def requestBody(nino: String, taxYear: String): JsObject = Json.obj(
-         "nino" -> nino,
-         "taxYear" -> taxYear
-    )
-
+    "nino" -> nino,
+    "signupTaxYear" -> taxYear
+  )
 
   def signUp(nino: String, taxYear: String)(implicit hc: HeaderCarrier): Future[PostSignUpResponse] = {
 
     val headerCarrier: HeaderCarrier = hc
-      .copy(authorization = Some(Authorization(appConfig.statusDeterminationServiceAuthorisationToken)))
-      .withExtraHeaders("Environment" -> appConfig.statusDeterminationServiceEnvironment)
+      .copy(authorization = Some(Authorization(appConfig.signUpServiceAuthorisationToken)))
+      .withExtraHeaders("Environment" -> appConfig.signUpServiceEnvironment)
 
     val headers: Seq[(String, String)] = Seq(
-      HeaderNames.authorisation -> appConfig.statusDeterminationServiceAuthorisationToken,
-      "Environment" -> appConfig.statusDeterminationServiceEnvironment
+      HeaderNames.authorisation -> appConfig.signUpServiceAuthorisationToken,
+      "Environment" -> appConfig.signUpServiceEnvironment
     )
 
-    http.POST[JsValue, PostSignUpResponse](signUpUrl(nino), requestBody(nino, taxYear), headers = headers)(
+    http.POST[JsValue, PostSignUpResponse](signUpUrl, requestBody(nino, taxYear), headers = headers)(
       implicitly, implicitly[HttpReads[PostSignUpResponse]], headerCarrier, implicitly)
   }
 }
