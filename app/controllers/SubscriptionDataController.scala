@@ -16,6 +16,7 @@
 
 package controllers
 
+import common.Extractors
 import play.api.Logging
 import play.api.libs.json.{JsError, JsSuccess, JsValue, Json}
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
@@ -30,30 +31,25 @@ import scala.concurrent.{ExecutionContext, Future}
 class SubscriptionDataController @Inject()(authService: AuthService,
                                            subscriptionDataService: SubscriptionDataService,
                                            cc: ControllerComponents)
-                                          (implicit ec: ExecutionContext) extends BackendController(cc) with Logging {
+                                          (implicit ec: ExecutionContext) extends BackendController(cc) with Logging with Extractors {
 
   def retrieveReference: Action[JsValue] = Action.async(parse.json) { implicit request =>
-    authService.authorised().retrieve(Retrievals.credentials) {
-      case Some(credentials) =>
-        (request.body \ "utr").validate[String] match {
-          case JsSuccess(utr, _) =>
-            subscriptionDataService.retrieveReference(utr, credentials.providerId) map{
-              case SubscriptionDataService.Existing(reference) => Ok(Json.obj("reference" -> reference))
-              case SubscriptionDataService.Created(reference) => Created(Json.obj("reference" -> reference))
-            }
-          case JsError(_) =>
-            logger.error("[SubscriptionDataController][retrieveReference] - Could not parse json request.")
-            Future.successful(InternalServerError(
-              s"[SubscriptionDataController][retrieveReference] - Could not parse json request."
-            ))
-        }
-      case None =>
-        logger.error("[SubscriptionDataController][retrieveReference] - Could not retrieve users credentials.")
-        Future.successful(InternalServerError(
-          "[SubscriptionDataController][retrieveReference] - Could not retrieve users credentials."
-        ))
+    authService.authorised().retrieve(Retrievals.allEnrolments) { enrolments =>
+      (request.body \ "utr").validate[String] match {
+        case JsSuccess(utr, _) =>
+          subscriptionDataService.retrieveReference(utr, getArnFromEnrolments(enrolments)) map {
+            case SubscriptionDataService.Existing(reference) => Ok(Json.obj("reference" -> reference))
+            case SubscriptionDataService.Created(reference) => Created(Json.obj("reference" -> reference))
+          }
+        case JsError(_) =>
+          logger.error("[SubscriptionDataController][retrieveReference] - Could not parse json request.")
+          Future.successful(InternalServerError(
+            s"[SubscriptionDataController][retrieveReference] - Could not parse json request."
+          ))
+      }
     }
   }
+
 
   def getAllSubscriptionData(reference: String): Action[AnyContent] = Action.async { implicit request =>
     authService.authorised() {

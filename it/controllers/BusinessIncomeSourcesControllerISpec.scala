@@ -140,7 +140,7 @@ class BusinessIncomeSourcesControllerISpec extends ComponentSpecBase with Featur
   "POST /mis/create/mtditid" should {
     s"return a $NO_CONTENT response" when {
       "income sources are successfully submitted" in {
-        AuthStub.stubAuth(OK, Json.obj())
+        AuthStub.stubAuth(OK)
         stubAuditing()
         CreateIncomeSourceStub.stub(testMtdbsaRef, Json.toJson(testCreateIncomeSources), appConfig.desAuthorisationToken, appConfig.desEnvironment)(
           OK, testCreateIncomeSuccessBody
@@ -156,7 +156,7 @@ class BusinessIncomeSourcesControllerISpec extends ComponentSpecBase with Featur
     }
     s"return a $INTERNAL_SERVER_ERROR" when {
       "the submission of income sources failed" in {
-        AuthStub.stubAuth(OK, Json.obj())
+        AuthStub.stubAuth(OK)
         stubAuditing()
         CreateIncomeSourceStub.stub(testMtdbsaRef, Json.toJson(testCreateIncomeSources), appConfig.desAuthorisationToken, appConfig.desEnvironment)(
           INTERNAL_SERVER_ERROR, testCreateIncomeFailureBody

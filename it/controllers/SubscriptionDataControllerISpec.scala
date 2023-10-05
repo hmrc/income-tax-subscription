@@ -19,6 +19,7 @@ package controllers
 import config.AppConfig
 import config.featureswitch.FeatureSwitching
 import helpers.ComponentSpecBase
+import helpers.IntegrationTestConstants.testArn
 import helpers.servicemocks.AuthStub
 import play.api.http.Status._
 import play.api.libs.json.{JsObject, Json}
@@ -61,41 +62,71 @@ class SubscriptionDataControllerISpec extends ComponentSpecBase with FeatureSwit
     super.beforeEach()
   }
 
-  s"POST ${controllers.routes.SubscriptionDataController.retrieveReference.url}" should {
-    "return OK with a reference" when {
-      "it already exists in the database" in {
-        AuthStub.stubAuthSuccess()
-        await(repository.insert(Json.obj(
-          "reference" -> reference,
-          "utr" -> utr,
-          "credId" -> "test-cred-id"
-        )))
+  s"POST ${controllers.routes.SubscriptionDataController.retrieveReference.url}" when {
+    "used by an individual without an arn" should {
+      "return OK with a reference" when {
+        "it already exists in the database" in {
+          AuthStub.stubAuthSuccess()
+          await(repository.insert(Json.obj(
+            "reference" -> reference,
+            "utr" -> utr
+          )))
 
-        IncomeTaxSubscription.postRetrieveReference(utr) should have(
-          httpStatus(OK),
-          jsonBodyOf(Json.obj(
-            "reference" -> reference
-          ))
-        )
+          IncomeTaxSubscription.postRetrieveReference(utr) should have(
+            httpStatus(OK),
+            jsonBodyOf(Json.obj(
+              "reference" -> reference
+            ))
+          )
+        }
+      }
+      "return Created with a reference" when {
+        "it doesn't already exist in the database" in {
+          AuthStub.stubAuthSuccess()
+
+          IncomeTaxSubscription.postRetrieveReference(utr) should have(
+            httpStatus(CREATED),
+            jsonBodyContainsField("reference")
+          )
+        }
       }
     }
-    "return CREATED with a reference" when {
-      "it is not already exists in the database" in {
-        AuthStub.stubAuthSuccess()
+    "used by an agent with an arn" should {
+      "return OK with a reference" when {
+        "it already exists in the database" in {
+          AuthStub.stubAgentAuthSuccess()
+          await(repository.insert(Json.obj(
+            "reference" -> reference,
+            "utr" -> utr,
+            "arn" -> testArn
+          )))
 
-        IncomeTaxSubscription.postRetrieveReference(utr) should have(
-          httpStatus(CREATED),
-          jsonBodyContainsField("reference")
-        )
+          IncomeTaxSubscription.postRetrieveReference(utr) should have(
+            httpStatus(OK),
+            jsonBodyOf(Json.obj(
+              "reference" -> reference
+            ))
+          )
+        }
       }
-    }
-    "return UNAUTHORISED" when {
-      "the user is not authorised" in {
-        AuthStub.stubAuthFailure()
+      "return CREATED with a reference" when {
+        "it doesn't already exist in the database" in {
+          AuthStub.stubAgentAuthSuccess()
 
-        IncomeTaxSubscription.postUnauthorisedRetrieveReference(utr) should have(
-          httpStatus(UNAUTHORIZED)
-        )
+          IncomeTaxSubscription.postRetrieveReference(utr) should have(
+            httpStatus(CREATED),
+            jsonBodyContainsField("reference")
+          )
+        }
+      }
+      "return UNAUTHORISED" when {
+        "the user is not authorised" in {
+          AuthStub.stubAuthFailure()
+
+          IncomeTaxSubscription.postUnauthorisedRetrieveReference(utr) should have(
+            httpStatus(UNAUTHORIZED)
+          )
+        }
       }
     }
   }

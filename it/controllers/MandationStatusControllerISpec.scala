@@ -34,7 +34,7 @@ class MandationStatusControllerISpec extends ComponentSpecBase {
             TaxYearStatus(AccountingPeriodUtil.getCurrentTaxYear.toItsaStatusShortTaxYear, Voluntary),
             TaxYearStatus(AccountingPeriodUtil.getNextTaxYear.toItsaStatusShortTaxYear, Voluntary)
           )
-        AuthStub.stubAuth(OK, Json.obj())
+        AuthStub.stubAuth(OK)
         GetItsaStatusStub.stub(
           "test-nino", "test-utr", AccountingPeriodUtil.getCurrentTaxYear.toItsaStatusShortTaxYear
         )(OK, Json.toJson(expectedResponse))
@@ -55,7 +55,7 @@ class MandationStatusControllerISpec extends ComponentSpecBase {
     "return BAD_REQUEST" when {
       "the request body is invalid" in {
         Given("I setup the Wiremock stubs")
-        AuthStub.stubAuth(OK, Json.obj())
+        AuthStub.stubAuth(OK)
 
         When("POST /itsa-status is called")
         val response = IncomeTaxSubscription.mandationStatus(Json.obj("invalid" -> "request"))
@@ -70,7 +70,7 @@ class MandationStatusControllerISpec extends ComponentSpecBase {
     "return INTERNAL_SERVER_ERROR"  when {
       "the status-determination-service returns OK status and invalid JSON" in {
         Given("I setup the Wiremock stubs")
-        AuthStub.stubAuth(OK, Json.obj())
+        AuthStub.stubAuth(OK)
         GetItsaStatusStub.stubInvalidResponse(
           "test-nino", "test-utr", AccountingPeriodUtil.getCurrentTaxYear.toItsaStatusShortTaxYear
         )(OK, "{ currentYearStatus")
@@ -86,7 +86,7 @@ class MandationStatusControllerISpec extends ComponentSpecBase {
 
       "the status-determination-service returns INTERNAL_SERVER_ERROR" in {
         Given("I setup the Wiremock stubs")
-        AuthStub.stubAuth(OK, Json.obj())
+        AuthStub.stubAuth(OK)
         val failedResponse = Json.obj(
           "failures" -> Json.arr(
             Json.obj(

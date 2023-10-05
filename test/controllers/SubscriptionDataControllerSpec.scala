@@ -24,7 +24,7 @@ import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import services.SubscriptionDataService.{Created, Existing}
 import services.mocks.{MockAuthService, MockSubscriptionDataService}
-import uk.gov.hmrc.auth.core.retrieve.Credentials
+import uk.gov.hmrc.auth.core.{Enrolment, EnrolmentIdentifier, Enrolments}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -40,41 +40,47 @@ class SubscriptionDataControllerSpec extends CommonSpec with MockSubscriptionDat
 
   val request: FakeRequest[AnyContentAsEmpty.type] = FakeRequest()
 
-  "retrieveReference" should {
-    "return an InternalServerError" when {
-      "the user has no credentials" in {
-        mockRetrievalSuccess[Option[Credentials]](None)
+  "retrieveReference" when {
+    "the user has an arn enrolment" should {
+      "return Ok with a reference" when {
+        "SubscriptionDataService returns an Existing reference" in {
+          mockRetrievalSuccess[Enrolments](Enrolments(Set(Enrolment("HMRC-AS-AGENT", Seq(EnrolmentIdentifier("AgentReferenceNumber", testArn)), "Activated"))))
+          mockRetrieveReference("1234567890", Some(testArn), Existing)(reference)
 
-        val result = TestController.retrieveReference()(request.withBody(Json.obj()))
+          val result = TestController.retrieveReference()(request.withBody(Json.obj("utr" -> "1234567890")))
 
-        status(result) shouldBe INTERNAL_SERVER_ERROR
+          status(result) shouldBe OK
+        }
       }
-      "an invalid payload is received" in {
-        mockRetrievalSuccess[Option[Credentials]](Some(Credentials("test-cred-id", "ggProvider")))
+      "return Created with a reference" when {
+        "SubscriptionDataService returns an Created reference" in {
+          mockRetrievalSuccess[Enrolments](Enrolments(Set(Enrolment("HMRC-AS-AGENT", Seq(EnrolmentIdentifier("AgentReferenceNumber", testArn)), "Activated"))))
+          mockRetrieveReference("1234567890", Some(testArn), Created)(reference)
 
-        val result = TestController.retrieveReference()(request.withBody(Json.obj()))
+          val result = TestController.retrieveReference()(request.withBody(Json.obj("utr" -> "1234567890")))
 
-        status(result) shouldBe INTERNAL_SERVER_ERROR
-      }
-    }
-    "return Ok with a reference" when {
-      "SubscriptionDataService returns an Existing reference" in {
-        mockRetrievalSuccess[Option[Credentials]](Some(Credentials("test-cred-id", "ggProvider")))
-        mockRetrieveReference("1234567890", Existing, "test-cred-id")(reference)
-
-        val result = TestController.retrieveReference()(request.withBody(Json.obj("utr" -> "1234567890")))
-
-        status(result) shouldBe OK
+          status(result) shouldBe CREATED
+        }
       }
     }
-    "return Created with a reference" when {
-      "SubscriptionDataService returns an Created reference" in {
-        mockRetrievalSuccess[Option[Credentials]](Some(Credentials("test-cred-id", "ggProvider")))
-        mockRetrieveReference("1234567890", Created, "test-cred-id")(reference)
+    "the user does not have an arn enrolment" should {
+      "return Ok with a reference" when {
+        "SubscriptionDataService returns an Existing reference" in {
+          mockRetrievalSuccess[Enrolments](Enrolments(Set()))
+          mockRetrieveReference("1234567890", None, Existing)(reference)
 
-        val result = TestController.retrieveReference()(request.withBody(Json.obj("utr" -> "1234567890")))
+          val result = TestController.retrieveReference()(request.withBody(Json.obj("utr" -> "1234567890")))
 
-        status(result) shouldBe CREATED
+          status(result) shouldBe OK
+        }
+        "SubscriptionDataService returns an Created reference" in {
+          mockRetrievalSuccess[Enrolments](Enrolments(Set()))
+          mockRetrieveReference("1234567890", None, Created)(reference)
+
+          val result = TestController.retrieveReference()(request.withBody(Json.obj("utr" -> "1234567890")))
+
+          status(result) shouldBe CREATED
+        }
       }
     }
   }

@@ -16,11 +16,15 @@
 
 import com.google.inject.AbstractModule
 import config.AppConfig
+import repositories.{LockoutMongoRepository, SubscriptionDataRepository, ThrottlingRepository}
 
 class Module extends AbstractModule {
 
   override def configure(): Unit = {
     bind(classOf[AppConfig]).to(classOf[config.MicroserviceAppConfig]).asEagerSingleton()
+    bind(classOf[SubscriptionDataRepository]).asEagerSingleton()
+    bind(classOf[LockoutMongoRepository]).asEagerSingleton()
+    bind(classOf[ThrottlingRepository]).asEagerSingleton()
   }
 
 }

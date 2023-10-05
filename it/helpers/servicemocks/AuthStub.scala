@@ -38,9 +38,14 @@ object AuthStub extends WireMockMethods {
       .thenReturn(status = OK, body = successfulAuthResponse)
   }
 
-  def stubAuth[T](status: Int, body: T): StubMapping = {
+  def stubAuth(status: Int): StubMapping = {
     when(method = POST, uri = authority)
       .thenReturn(status = status, body = successfulAuthResponse(arnEnrolment))
+  }
+
+  def stubAgentAuthSuccess(): StubMapping = {
+    when(method = POST, uri = authority)
+      .thenReturn(status = OK, body = successfulAuthResponse(arnEnrolment))
   }
 
   private val arnEnrolment = Json.obj(
@@ -58,7 +63,7 @@ object AuthStub extends WireMockMethods {
     Json.obj(
       "allEnrolments" -> enrolments
     )
-  
+
   private def exceptionHeaders(value: String) = Map(HeaderNames.WWW_AUTHENTICATE -> s"""MDTP detail="$value"""")
 
   def stubAuthFailure(): StubMapping = {
@@ -70,11 +75,7 @@ object AuthStub extends WireMockMethods {
 
   val successfulAuthResponse: JsObject = {
     Json.obj(
-      "internalId" -> userIDs.internalId,
-      "optionalCredentials" -> Json.obj(
-        "providerId" -> testCredId,
-        "providerType" -> "GovernmentGateway"
-      )
+      "allEnrolments" -> Json.arr()
     )
   }
 

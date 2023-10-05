@@ -23,12 +23,12 @@ import org.bson.Document
 import org.bson.conversions.Bson
 import org.mongodb.scala.model.IndexModel
 import org.mongodb.scala.result.InsertOneResult
-import org.mongodb.scala.{Observable, SingleObservable}
 import play.api.libs.json.Json.JsValueWrapper
-import play.api.libs.json.{Format, JsObject, JsValue, Json}
+import play.api.libs.json._
 import uk.gov.hmrc.http.InternalServerException
 import uk.gov.hmrc.mongo.MongoComponent
 import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
+import utils.JsonUtils.JsObjectUtil
 
 import java.time.Instant
 import java.util.UUID
@@ -36,6 +36,7 @@ import java.util.concurrent.TimeUnit
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 import scala.language.implicitConversions
+
 
 @Singleton
 class SubscriptionDataRepositoryConfig @Inject()(val appConfig: AppConfig) {
@@ -47,7 +48,7 @@ class SubscriptionDataRepositoryConfig @Inject()(val appConfig: AppConfig) {
   def mongoComponent: MongoComponent = MongoComponent(appConfig.mongoUri)
 
   def indexes: Seq[IndexModel] =
-    Seq(ttlIndex(ttlLengthSeconds), utrCredIndex, referenceIndex)
+    Seq(ttlIndex(ttlLengthSeconds), utrArnIndex, referenceIndex)
 
 }
 
@@ -58,7 +59,7 @@ class SubscriptionDataRepository @Inject()(config: SubscriptionDataRepositoryCon
     mongoComponent = config.mongoComponent,
     domainFormat = implicitly[Format[JsObject]],
     indexes = config.indexes,
-    replaceIndexes = false
+    replaceIndexes = true
   ) {
 
   private val findOneAndUpdateOptions: FindOneAndUpdateOptions = new FindOneAndUpdateOptions().upsert(true)
@@ -67,10 +68,11 @@ class SubscriptionDataRepository @Inject()(config: SubscriptionDataRepositoryCon
 
   private val removeIdProjection = toBson(Json.obj(_Id -> 0))
 
-  private def find(selector: JsObject, projection: Option[JsObject]): Future[Seq[JsValue]] = {
+  def find(selector: JsObject, projection: Option[JsObject]): Future[Seq[JsValue]] = {
     collection
       .find(selector)
       .projection(projection.map(toBson).getOrElse(removeIdProjection))
+      .toFuture()
   }
 
   def getReferenceData(reference: String): Future[Option[JsValue]] = {
@@ -109,8 +111,15 @@ class SubscriptionDataRepository @Inject()(config: SubscriptionDataRepositoryCon
     remove("reference" -> Json.toJson(reference))
   }
 
-  def retrieveReference(utr: String, credId: String): Future[Option[String]] = {
-    val selector: JsObject = Json.obj("utr" -> utr, "credId" -> credId)
+  def retrieveReference(utr: String, maybeARN: Option[String]): Future[Option[String]] = {
+    val arnSelector: JsValue = maybeARN match {
+      case Some(value) => JsString(value)
+      case None => Json.obj("$exists" -> false)
+    }
+    val selector: JsObject = Json.obj(
+      "utr" -> utr,
+      "arn" -> arnSelector
+    )
     val projection = Json.obj(_Id -> 0)
     find(selector, Some(projection)).map {
       _.headOption map { json =>
@@ -124,32 +133,46 @@ class SubscriptionDataRepository @Inject()(config: SubscriptionDataRepositoryCon
     }
   }
 
-  def createReference(utr: String, credId: String, sessionId: String): Future[String] = {
+  def createReference(utr: String, maybeARN: Option[String]): Future[String] = {
+    val arn: Option[JsObject] = maybeARN map { value => Json.obj("arn" -> value) }
     val reference: String = UUID.randomUUID().toString
     val document: JsObject = Json.obj(
       "utr" -> utr,
-      "credId" -> credId,
       "reference" -> reference,
-      "sessionId" -> sessionId,
       "lastUpdatedTimestamp" -> Json.obj(
         "$date" -> Instant.now.toEpochMilli
       ).as[JsValue]
-    )
+    ) ++ arn
     insert(document).map { result =>
       if (result.wasAcknowledged()) reference
       else throw new InternalServerException("[SubscriptionDataRepository][createReference] - Unable to create document reference")
     }
   }
 
-  private def findAndUpdate(selector: JsObject, update: JsObject, fetchNewObject: Boolean = false, upsert: Boolean = false) =
-    collection.findOneAndUpdate(selector, update, findOneAndUpdateOptions).toFuture().map(asOption)
+  private def findAndUpdate(selector: JsObject, update: JsObject, fetchNewObject: Boolean = false, upsert: Boolean = false) = {
+    collection
+      .findOneAndUpdate(selector, update, findOneAndUpdateOptions)
+      .toFuture()
+      .map(asOption)
+  }
 
-  private def remove(tuples: (String, JsValueWrapper)*) =
-    collection.deleteOne(Json.obj(tuples: _*))
+  private def remove(tuples: (String, JsValueWrapper)*) = {
+    collection
+      .deleteOne(Json.obj(tuples: _*))
+      .toFuture()
+  }
 
-  def insert(document: JsObject): Future[InsertOneResult] = collection.insertOne(document).toFuture()
+  def insert(document: JsObject): Future[InsertOneResult] = {
+    collection
+      .insertOne(document)
+      .toFuture()
+  }
 
-  def drop(): Future[Void] = collection.drop().toFuture()
+  def drop(): Future[Void] = {
+    collection
+      .drop()
+      .toFuture()
+  }
 
 }
 
@@ -162,20 +185,16 @@ object SubscriptionDataRepository {
     def descending: Int = -1
   }
 
-  implicit def asOption(o: JsObject): Option[JsValue] = o.result.toOption.flatMap(Option(_))
+  def asOption(o: JsObject): Option[JsValue] = o.result.toOption.flatMap(Option(_))
 
   implicit def toBson(doc: JsObject): Bson = Document.parse(doc.toString())
 
-  implicit def toFuture[T](observable: SingleObservable[T]): Future[T] = observable.toFuture()
-
-  implicit def toFuture[T](observable: Observable[T]): Future[Seq[T]] = observable.toFuture()
-
   val lastUpdatedTimestampKey = "lastUpdatedTimestamp"
 
-  val utrCredIndex: IndexModel = new IndexModel(
-    Json.obj("utr" -> IndexType.ascending, "credId" -> IndexType.ascending),
+  val utrArnIndex: IndexModel = new IndexModel(
+    Json.obj("utr" -> IndexType.ascending, "arn" -> IndexType.ascending),
     new IndexOptions()
-      .name("utrCredIndex")
+      .name("utrArnIndex")
       .unique(true)
       .sparse(true)
   )

@@ -24,7 +24,7 @@ class SignUpControllerISpec extends ComponentSpecBase with FeatureSwitching {
 
   "signUp" should {
     "call sign up connector successfully when auth succeeds for a sign up submission 200" in {
-      AuthStub.stubAuth(OK, Json.obj())
+      AuthStub.stubAuth(OK)
       SignUpStub.stubSignUp(testNino, testSignUpSubmission(testNino), appConfig.desAuthorisationToken, appConfig.desEnvironment)(
         OK, testSignUpSuccessBody
       )
@@ -41,7 +41,7 @@ class SignUpControllerISpec extends ComponentSpecBase with FeatureSwitching {
 
     "feature switch is enabled call sign up connector successfully when auth succeeds for a sign up submission 200" in {
       enable(TaxYearSignup)
-      AuthStub.stubAuth(OK, Json.obj())
+      AuthStub.stubAuth(OK)
       SignUpTaxYearStub.stubSignUp(
         testTaxYearSignUpSubmission(testNino, testTaxYear),
         appConfig.signUpServiceAuthorisationToken,
