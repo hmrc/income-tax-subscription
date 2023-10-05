@@ -70,9 +70,9 @@ class MicroserviceAppConfig @Inject()(servicesConfig: ServicesConfig, val config
   override lazy val statusDeterminationServiceEnvironment: String= loadConfig(s"$statusDeterminationServiceBase.environment")
 
 
-  override lazy val signUpServiceURL: String = servicesConfig.baseUrl("signup-taxyear-service")
+  override lazy val signUpServiceURL: String = servicesConfig.baseUrl("signup-tax-year-service")
 
-  private val signUpServiceBase = "microservice.services.status-determination-service"
+  private val signUpServiceBase = "microservice.services.signup-tax-year-service"
   override lazy val signUpServiceAuthorisationToken: String = s"Bearer ${loadConfig(s"$signUpServiceBase.authorization-token")}"
   override lazy val signUpServiceEnvironment: String = loadConfig(s"$signUpServiceBase.environment")
 

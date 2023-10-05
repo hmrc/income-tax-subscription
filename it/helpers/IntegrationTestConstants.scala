@@ -143,7 +143,7 @@ object IntegrationTestConstants extends JsonUtils {
 
   def testTaxYearSignUpSubmission(nino: String, taxYear:String): JsValue = Json.obj(
     "nino" -> nino,
-    "taxYear" -> taxYear
+    "signupTaxYear" -> taxYear
   )
 
   val testSignUpSuccessBody: JsValue = Json.parse(

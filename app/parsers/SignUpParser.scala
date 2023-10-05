@@ -25,16 +25,14 @@ object SignUpParser {
   type PostSignUpResponse = Either[ErrorModel, SignUpResponse]
 
   implicit val signUpResponseHttpReads: HttpReads[PostSignUpResponse] = {
-    new HttpReads[PostSignUpResponse] {
-      override def read(method: String, url: String, response: HttpResponse): PostSignUpResponse =
-        response.status match {
-          case OK => response.json.asOpt[SignUpResponse] match {
-            case Some(successResponse) => Right(successResponse)
-            case None => Left(ErrorModel(OK, "Failed to read Json for MTD Sign Up Response"))
-          }
-          case status => Left(ErrorModel(status, response.body))
+    (_: String, _: String, response: HttpResponse) =>
+      response.status match {
+        case OK => response.json.asOpt[SignUpResponse] match {
+          case Some(successResponse) => Right(successResponse)
+          case None => Left(ErrorModel(OK, "Failed to read Json for MTD Sign Up Response"))
         }
-    }
+        case status => Left(ErrorModel(status, response.body))
+      }
   }
 
 }

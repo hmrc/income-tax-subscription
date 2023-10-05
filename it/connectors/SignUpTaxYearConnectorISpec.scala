@@ -17,32 +17,25 @@
 package connectors
 
 import config.MicroserviceAppConfig
-import config.featureswitch.FeatureSwitching.isEnabled
-import config.featureswitch.TaxYearSignup
 import helpers.ComponentSpecBase
 import helpers.IntegrationTestConstants._
-import helpers.servicemocks.{SignUpStub, SignUpTaxYearStub}
+import helpers.servicemocks.SignUpTaxYearStub
 import models.{ErrorModel, SignUpResponse}
-
-import play.api.Configuration
 import play.api.http.Status._
 import play.api.mvc.Request
 import play.api.test.FakeRequest
 
-class SignUpTaxYearISpec extends ComponentSpecBase {
+class SignUpTaxYearConnectorISpec extends ComponentSpecBase {
 
 
   private lazy val signUpConnector: SignUpTaxYearConnector = app.injector.instanceOf[SignUpTaxYearConnector]
   private lazy val appConfig: MicroserviceAppConfig = app.injector.instanceOf[MicroserviceAppConfig]
   implicit val request: Request[_] = FakeRequest()
 
-
   "The sign up tax year connector" when {
-
     "receiving a 200 response" should {
-
       "return a valid MTDBSA number when valid json is found" in {
-        SignUpTaxYearStub.stubSignUp(testNino, testTaxYearSignUpSubmission(testNino, testTaxYear), appConfig.signUpServiceAuthorisationToken, appConfig.signUpServiceEnvironment)(
+        SignUpTaxYearStub.stubSignUp(testTaxYearSignUpSubmission(testNino, testTaxYear), appConfig.signUpServiceAuthorisationToken, appConfig.signUpServiceEnvironment)(
           OK, testSignUpSuccessBody
         )
 
@@ -52,20 +45,19 @@ class SignUpTaxYearISpec extends ComponentSpecBase {
       }
 
       "return a Json parse failure when invalid json is found" in {
-        SignUpTaxYearStub.stubSignUp(testNino, testTaxYearSignUpSubmission(testNino, testTaxYear), appConfig.signUpServiceAuthorisationToken, appConfig.signUpServiceEnvironment)(
+        SignUpTaxYearStub.stubSignUp(testTaxYearSignUpSubmission(testNino, testTaxYear), appConfig.signUpServiceAuthorisationToken, appConfig.signUpServiceEnvironment)(
           OK, testSignUpInvalidBody
         )
 
         val result = signUpConnector.signUp(testNino, testTaxYear)
 
-        result.futureValue shouldBe Left(ErrorModel(status = 200,  "Failed to read Json for MTD Sign Up Response"))
+        result.futureValue shouldBe Left(ErrorModel(status = 200, "Failed to read Json for MTD Sign Up Response"))
       }
     }
 
     "receiving a non-200 response" should {
-
       "return the status and error received" in {
-        SignUpTaxYearStub.stubSignUp(testNino, testTaxYearSignUpSubmission(testNino, testTaxYear), appConfig.signUpServiceAuthorisationToken, appConfig.signUpServiceEnvironment)(
+        SignUpTaxYearStub.stubSignUp(testTaxYearSignUpSubmission(testNino, testTaxYear), appConfig.signUpServiceAuthorisationToken, appConfig.signUpServiceEnvironment)(
           INTERNAL_SERVER_ERROR, failureResponse("code", "reason")
         )
 
