@@ -17,7 +17,7 @@
 package connectors
 
 import _root_.utils.TestConstants._
-import connectors.mocks.TestBusinessDetailsConnector
+import connectors.mocks.TestOldBusinessDetailsConnector
 import models.ErrorModel
 import models.monitoring.getBusinessDetails.BusinessDetailsAuditModel
 import models.registration._
@@ -32,9 +32,9 @@ import utils.Logging.{eventTypeBadRequest, eventTypeInternalServerError, eventTy
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
-class BusinessDetailsConnectorSpec extends TestBusinessDetailsConnector with MockAuditService with BeforeAndAfterEach {
+class OldBusinessDetailsConnectorSpec extends TestOldBusinessDetailsConnector with MockAuditService with BeforeAndAfterEach {
 
-  implicit val hc = HeaderCarrier()
+  implicit val hc: HeaderCarrier = HeaderCarrier()
   implicit val request: Request[_] = FakeRequest()
 
   "BusinessDetailsConnector.getBusinessDetailsUrl" should {
@@ -44,7 +44,7 @@ class BusinessDetailsConnectorSpec extends TestBusinessDetailsConnector with Moc
   }
 
   "BusinessDetailsConnector.getBusinessDetails" should {
-    def result(f: GetBusinessDetailsUtil.Response => Any): Any = await(TestBusinessDetailsConnector.getBusinessDetails(testNino).map(v => f(v)))
+    def result(f: OldGetBusinessDetailsUtil.Response => Any): Any = await(TestBusinessDetailsConnector.getBusinessDetails(testNino).map(v => f(v)))
 
     "parse and return the success response correctly" in {
       mockBusinessDetails(getBusinessDetailsSuccess)

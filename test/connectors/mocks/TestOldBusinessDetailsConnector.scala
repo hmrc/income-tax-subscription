@@ -17,7 +17,7 @@
 package connectors.mocks
 
 import config.AppConfig
-import connectors.{BusinessDetailsConnector, GetBusinessDetailsUtil}
+import connectors.{OldBusinessDetailsConnector, OldGetBusinessDetailsUtil}
 import models.ErrorModel
 import models.registration.GetBusinessDetailsSuccessResponseModel
 import org.mockito.ArgumentMatchers
@@ -33,12 +33,12 @@ import utils.TestConstants._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-trait TestBusinessDetailsConnector extends MockHttp with GuiceOneAppPerSuite with MockAuditService {
+trait TestOldBusinessDetailsConnector extends MockHttp with GuiceOneAppPerSuite with MockAuditService {
 
   lazy val appConfig: AppConfig = app.injector.instanceOf[AppConfig]
   lazy val httpClient: HttpClient = mockHttpClient
 
-  object TestBusinessDetailsConnector extends BusinessDetailsConnector(appConfig, httpClient, mockAuditService)
+  object TestBusinessDetailsConnector extends OldBusinessDetailsConnector(appConfig, httpClient, mockAuditService)
 
   type TestHttpResponse = (Int, JsValue)
 
@@ -67,12 +67,12 @@ trait TestBusinessDetailsConnector extends MockHttp with GuiceOneAppPerSuite wit
   }
 }
 
-trait MockBusinessDetailsConnector extends MockitoSugar {
+trait MockOldBusinessDetailsConnector extends MockitoSugar {
 
-  val mockBusinessDetailsConnector: BusinessDetailsConnector = mock[BusinessDetailsConnector]
+  val mockOldBusinessDetailsConnector: OldBusinessDetailsConnector = mock[OldBusinessDetailsConnector]
 
-  private def setupMockBusinessDetails(nino: String)(response: Future[GetBusinessDetailsUtil.Response]): Unit =
-    when(mockBusinessDetailsConnector.getBusinessDetails(ArgumentMatchers.eq(nino))(ArgumentMatchers.any(), ArgumentMatchers.any())).thenReturn(response)
+  private def setupMockBusinessDetails(nino: String)(response: Future[OldGetBusinessDetailsUtil.Response]): Unit =
+    when(mockOldBusinessDetailsConnector.getBusinessDetails(ArgumentMatchers.eq(nino))(ArgumentMatchers.any(), ArgumentMatchers.any())).thenReturn(response)
 
   def mockGetBusinessDetailsSuccess(nino: String): Unit =
     setupMockBusinessDetails(nino)(Future.successful(Right(GetBusinessDetailsSuccessResponseModel(testMtditId))))

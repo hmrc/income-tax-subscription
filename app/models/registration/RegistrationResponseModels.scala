@@ -24,9 +24,9 @@ case class GetBusinessDetailsSuccessResponseModel(mtdbsa: String)
 case class GetBusinessDetailsFailureResponseModel(code: Option[String], reason: String) extends ErrorResponsesModel
 
 object GetBusinessDetailsSuccessResponseModel {
-  implicit val format = Json.format[GetBusinessDetailsSuccessResponseModel]
+  implicit val format: OFormat[GetBusinessDetailsSuccessResponseModel] = Json.format[GetBusinessDetailsSuccessResponseModel]
 }
 
 object GetBusinessDetailsFailureResponseModel {
-  implicit val format = Json.format[GetBusinessDetailsFailureResponseModel]
+  implicit val format: OFormat[GetBusinessDetailsFailureResponseModel] = Json.format[GetBusinessDetailsFailureResponseModel]
 }

@@ -16,20 +16,31 @@
 
 package services.mocks
 
-import connectors.mocks.MockBusinessDetailsConnector
+import config.MicroserviceAppConfig
+import connectors.mocks.{MockBusinessDetailsConnector, MockOldBusinessDetailsConnector}
 import models.ErrorModel
 import models.frontend.FESuccessResponse
 import org.mockito.Mockito._
 import org.mockito._
 import org.scalatestplus.mockito.MockitoSugar
+import play.api.Configuration
 import services.SubscriptionStatusService
+import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import utils.TestConstants._
 
 import scala.concurrent.Future
 
-trait TestSubscriptionStatusService extends MockBusinessDetailsConnector {
+trait TestSubscriptionStatusService extends MockOldBusinessDetailsConnector with MockBusinessDetailsConnector {
 
-  object TestSubscriptionStatusService extends SubscriptionStatusService(mockBusinessDetailsConnector)
+  val mockServicesConfig: ServicesConfig = mock[ServicesConfig]
+  val mockConfiguration: Configuration = mock[Configuration]
+  val mockConfig: MicroserviceAppConfig = new MicroserviceAppConfig(mockServicesConfig, mockConfiguration)
+
+  object TestSubscriptionStatusService extends SubscriptionStatusService(
+    mockConfig,
+    mockOldBusinessDetailsConnector,
+    mockBusinessDetailsConnector
+  )
 
 }
 

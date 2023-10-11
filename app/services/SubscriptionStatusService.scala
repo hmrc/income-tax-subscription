@@ -16,7 +16,9 @@
 
 package services
 
-import connectors.BusinessDetailsConnector
+import config.AppConfig
+import config.featureswitch.{FeatureSwitching, NewGetBusinessDetails}
+import connectors.{BusinessDetailsConnector, OldBusinessDetailsConnector}
 import models.ErrorModel
 import models.frontend.FESuccessResponse
 import play.api.Logging
@@ -28,7 +30,11 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class SubscriptionStatusService @Inject()(businessDetailsConnector: BusinessDetailsConnector) extends Logging {
+class SubscriptionStatusService @Inject()(val appConfig: AppConfig,
+                                          oldBusinessDetailsConnector: OldBusinessDetailsConnector,
+                                          businessDetailsConnector: BusinessDetailsConnector)
+  extends Logging with FeatureSwitching {
+
   /*
   * This method will check to see if a user with the supplied nino has an MTD IT SA subscription
   * if will return OK with the reference if it is found, or OK with {} if it is not found
@@ -37,15 +43,29 @@ class SubscriptionStatusService @Inject()(businessDetailsConnector: BusinessDeta
 
   def checkMtditsaSubscription(nino: String)
                               (implicit hc: HeaderCarrier, ec: ExecutionContext, request: Request[_]): Future[Either[ErrorModel, Option[FESuccessResponse]]] = {
-    businessDetailsConnector.getBusinessDetails(nino).map {
-      // if the subscription is not found, convert it to OK with {}
-      case Left(error: ErrorModel) if error.status == NOT_FOUND =>
-        logger.debug(s"SubscriptionStatusService.checkMtditsaEnrolment - No mtditsa enrolment for nino=$nino")
-        Right(None)
-      case Right(x) =>
-        logger.debug(s"SubscriptionStatusService.checkMtditsaEnrolment - Client is already enrolled with mtditsa, ref=${x.mtdbsa}")
-        Right(Some(FESuccessResponse(Some(x.mtdbsa))))
-      case Left(x) => Left(x)
+
+    if (isEnabled(NewGetBusinessDetails)) {
+      businessDetailsConnector.getBusinessDetails(nino) map {
+        case Right(response) =>
+          Right(Some(FESuccessResponse(Some(response.mtdbsa))))
+        case Left(error: ErrorModel ) =>
+          if (error.status == NOT_FOUND) {
+            Right(None)
+          } else {
+            Left(error)
+          }
+      }
+    } else {
+      oldBusinessDetailsConnector.getBusinessDetails(nino).map {
+        // if the subscription is not found, convert it to OK with {}
+        case Left(error: ErrorModel) if error.status == NOT_FOUND =>
+          logger.debug(s"SubscriptionStatusService.checkMtditsaEnrolment - No mtditsa enrolment for nino=$nino")
+          Right(None)
+        case Right(x) =>
+          logger.debug(s"SubscriptionStatusService.checkMtditsaEnrolment - Client is already enrolled with mtditsa, ref=${x.mtdbsa}")
+          Right(Some(FESuccessResponse(Some(x.mtdbsa))))
+        case Left(x) => Left(x)
+      }
     }
   }
 }

@@ -16,62 +16,127 @@
 
 package controllers.subscription
 
+import config.AppConfig
+import config.featureswitch.{FeatureSwitching, NewGetBusinessDetails}
 import helpers.ComponentSpecBase
 import helpers.IntegrationTestConstants._
-import helpers.servicemocks.{AuthStub, BusinessDetailsStub}
+import helpers.servicemocks.{AuthStub, BusinessDetailsStub, OldBusinessDetailsStub}
 import models.frontend.FESuccessResponse
 import play.api.http.Status._
-import play.api.libs.json.Json
 
-class SubscriptionStatusControllerISpec extends ComponentSpecBase {
-  "subscribe" should {
-    "call the subscription service successfully when auth succeeds" in {
-      Given("I setup the wiremock stubs")
-      AuthStub.stubAuthSuccess()
-      BusinessDetailsStub.stubGetBusinessDetailsSuccess()
+class SubscriptionStatusControllerISpec extends ComponentSpecBase with FeatureSwitching {
 
-      When("I call GET /subscription/:nino where nino is the test nino")
-      val res = IncomeTaxSubscription.getSubscriptionStatus(testNino)
+  val appConfig: AppConfig = app.injector.instanceOf[AppConfig]
 
-      Then("The result should have a HTTP status of OK and a body containing the MTDID")
-      res should have(
-        httpStatus(OK),
-        jsonBodyAs[FESuccessResponse](FESuccessResponse(Some(testMtditId)))
-      )
+  override def beforeEach(): Unit = {
+    super.beforeEach()
+    disable(NewGetBusinessDetails)
+  }
 
-      Then("Get business details should have been called")
-      BusinessDetailsStub.verifyGetBusinessDetails()
+  "subscribe" when {
+    "the new business details feature switch is enabled" should {
+      "call the subscription service successfully when auth succeeds" in {
+        enable(NewGetBusinessDetails)
+
+        Given("I setup the wiremock stubs")
+        AuthStub.stubAuthSuccess()
+        BusinessDetailsStub.stubGetBusinessDetailsSuccess()
+
+        When("I call GET /subscription/:nino where nino is the test nino")
+        val res = IncomeTaxSubscription.getSubscriptionStatus(testNino)
+
+        Then("The result should have a HTTP status of OK and a body containing the MTDID")
+        res should have(
+          httpStatus(OK),
+          jsonBodyAs[FESuccessResponse](FESuccessResponse(Some(testMtditId)))
+        )
+
+        Then("Get business details should have been called")
+        BusinessDetailsStub.verifyGetBusinessDetails()
+      }
+
+      "return UNAUTHORIZED when auth fails" in {
+        enable(NewGetBusinessDetails)
+
+        Given("I setup the wiremock stubs")
+        AuthStub.stubAuthFailure()
+
+        When("I call GET /subscription/:nino where nino is the test nino")
+        val res = IncomeTaxSubscription.getSubscriptionStatus(testNino)
+
+        Then("The result should have a HTTP status of OK and a body containing the MTDID")
+        res should have(
+          httpStatus(UNAUTHORIZED)
+        )
+      }
+
+      "return BAD_REQUEST when getBusinessDetails returns BAD_REQUEST" in {
+        enable(NewGetBusinessDetails)
+
+        Given("I setup the wiremock stubs")
+        AuthStub.stubAuthSuccess()
+        BusinessDetailsStub.stubGetBusinessDetailsFailure()
+
+        When("I call GET /subscription/:nino where nino is the test nino")
+        val res = IncomeTaxSubscription.getSubscriptionStatus(testNino)
+
+        Then("The result should have a HTTP status of OK and a body containing the MTDID")
+        res should have(
+          httpStatus(BAD_REQUEST)
+        )
+
+        Then("Get business details should have been called")
+        BusinessDetailsStub.verifyGetBusinessDetails()
+      }
     }
+    "the new business details feature switch is disabled" should {
+      "call the subscription service successfully when auth succeeds" in {
+        Given("I setup the wiremock stubs")
+        AuthStub.stubAuthSuccess()
+        OldBusinessDetailsStub.stubGetBusinessDetailsSuccess()
 
-    "return UNAUTHORIZED when auth fails" in {
-      Given("I setup the wiremock stubs")
-      AuthStub.stubAuthFailure()
+        When("I call GET /subscription/:nino where nino is the test nino")
+        val res = IncomeTaxSubscription.getSubscriptionStatus(testNino)
 
-      When("I call GET /subscription/:nino where nino is the test nino")
-      val res = IncomeTaxSubscription.getSubscriptionStatus(testNino)
+        Then("The result should have a HTTP status of OK and a body containing the MTDID")
+        res should have(
+          httpStatus(OK),
+          jsonBodyAs[FESuccessResponse](FESuccessResponse(Some(testMtditId)))
+        )
 
-      Then("The result should have a HTTP status of OK and a body containing the MTDID")
-      res should have(
-        httpStatus(UNAUTHORIZED)
-      )
-    }
+        Then("Get business details should have been called")
+        OldBusinessDetailsStub.verifyGetBusinessDetails()
+      }
 
-    "return BAD_REQUEST when getBusinessDetails returns BAD_REQUEST" in {
-      Given("I setup the wiremock stubs")
-      AuthStub.stubAuthSuccess()
-      BusinessDetailsStub.stubGetBusinessDetailsFailure()
+      "return UNAUTHORIZED when auth fails" in {
+        Given("I setup the wiremock stubs")
+        AuthStub.stubAuthFailure()
 
-      When("I call GET /subscription/:nino where nino is the test nino")
-      val res = IncomeTaxSubscription.getSubscriptionStatus(testNino)
+        When("I call GET /subscription/:nino where nino is the test nino")
+        val res = IncomeTaxSubscription.getSubscriptionStatus(testNino)
 
-      Then("The result should have a HTTP status of OK and a body containing the MTDID")
-      res should have(
-        httpStatus(BAD_REQUEST),
-        jsonBodyAs(Json.obj("reason" -> BusinessDetailsStub.errorReason))
-      )
+        Then("The result should have a HTTP status of OK and a body containing the MTDID")
+        res should have(
+          httpStatus(UNAUTHORIZED)
+        )
+      }
 
-      Then("Get business details should have been called")
-      BusinessDetailsStub.verifyGetBusinessDetails()
+      "return BAD_REQUEST when getBusinessDetails returns BAD_REQUEST" in {
+        Given("I setup the wiremock stubs")
+        AuthStub.stubAuthSuccess()
+        OldBusinessDetailsStub.stubGetBusinessDetailsFailure()
+
+        When("I call GET /subscription/:nino where nino is the test nino")
+        val res = IncomeTaxSubscription.getSubscriptionStatus(testNino)
+        
+        Then("The result should have a HTTP status of OK and a body containing the MTDID")
+        res should have(
+          httpStatus(BAD_REQUEST)
+        )
+
+        Then("Get business details should have been called")
+        OldBusinessDetailsStub.verifyGetBusinessDetails()
+      }
     }
   }
 }
