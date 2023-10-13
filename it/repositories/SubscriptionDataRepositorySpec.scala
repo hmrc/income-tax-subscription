@@ -16,6 +16,7 @@
 
 package repositories
 
+import helpers.IntegrationTestConstants.testArn
 import org.scalatest.concurrent.ScalaFutures.convertScalaFuture
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
@@ -195,38 +196,90 @@ class SubscriptionDataRepositorySpec extends AnyWordSpecLike with Matchers with 
     }
   }
 
-  "createReference" should {
-    "create a document in the database with the details required for its use" in {
-      val createdReference: String = await(testSelfEmploymentsRepository.createReference(utr, credId, testSessionId))
+  "createReference" when {
+    "provided with both a utr and arn" should {
+      "create a document in the database with the details required for its use" in {
+        val createdReference: String = await(testSelfEmploymentsRepository.createReference(utr, Some(testArn)))
 
-      val optionalData: Option[JsValue] = testSelfEmploymentsRepository.getReferenceData(createdReference).futureValue
-      optionalData.isDefined shouldBe true
-      val data: JsValue = optionalData.get
+        val optionalData: Option[JsValue] = testSelfEmploymentsRepository.getReferenceData(createdReference).futureValue
+        optionalData.isDefined shouldBe true
 
-      (data \ "utr").asOpt[String] shouldBe Some(utr)
-      (data \ "credId").asOpt[String] shouldBe Some(credId)
-      (data \ "sessionId").asOpt[String] shouldBe Some(testSessionId)
-      (data \ "reference").asOpt[String] shouldBe Some(createdReference)
-      (data \ "lastUpdatedTimestamp").isDefined shouldBe true
+        val data: JsValue = optionalData.get
+
+        (data \ "utr").asOpt[String] shouldBe Some(utr)
+        (data \ "arn").asOpt[String] shouldBe Some(testArn)
+        (data \ "reference").asOpt[String] shouldBe Some(createdReference)
+        (data \ "lastUpdatedTimestamp").isDefined shouldBe true
+      }
+      "return an error if a document with the same utr, arn combo is already in the database" in {
+        await(testSelfEmploymentsRepository.createReference(utr, Some(testArn)))
+
+        intercept[Exception](await(testSelfEmploymentsRepository.createReference(utr, Some(testArn))))
+      }
     }
-    "return an error if a document with the same utr, cred id combo is already in the database" in {
-      await(testSelfEmploymentsRepository.createReference(utr, credId, testSessionId))
+    "provided with only a utr and no arn" should {
+      "create a document in the database with the details required for its use" in {
+        val createdReference: String = await(testSelfEmploymentsRepository.createReference(utr, None))
 
-      intercept[Exception](await(testSelfEmploymentsRepository.createReference(utr, credId, "test-session-id-2")))
+        val optionalData: Option[JsValue] = testSelfEmploymentsRepository.getReferenceData(createdReference).futureValue
+        optionalData.isDefined shouldBe true
+
+        val data: JsValue = optionalData.get
+
+        (data \ "utr").asOpt[String] shouldBe Some(utr)
+        (data \ "arn").asOpt[String] shouldBe None
+        (data \ "reference").asOpt[String] shouldBe Some(createdReference)
+        (data \ "lastUpdatedTimestamp").isDefined shouldBe true
+      }
+      "return an error if a document with the same utr only is already in the database" in {
+        await(testSelfEmploymentsRepository.createReference(utr, None))
+
+        intercept[Exception](await(testSelfEmploymentsRepository.createReference(utr, None)))
+      }
     }
   }
 
-  "retrieveReference" should {
-    "return a reference" when {
-      "the related utr + cred id exists in the database" in {
-        val createdReference: String = await(testSelfEmploymentsRepository.createReference(utr, credId, testSessionId))
+  "retrieveReference" when {
+    "provided with only a utr" should {
+      "return a reference" when {
+        "the related document with only a utr exists in the database" in {
+          val createdReference: String = await(testSelfEmploymentsRepository.createReference(utr, None))
 
-        testSelfEmploymentsRepository.retrieveReference(utr, credId).futureValue shouldBe Some(createdReference)
+          testSelfEmploymentsRepository.retrieveReference(utr, None).futureValue shouldBe Some(createdReference)
+        }
+      }
+      "return no reference" when {
+        "the related utr without arn does not exist in the database" when {
+          "no documents exist in the database" in {
+            testSelfEmploymentsRepository.retrieveReference(utr, None).futureValue shouldBe None
+          }
+          "a document with the utr specified, but also an arn exists in the database" in {
+            await(testSelfEmploymentsRepository.createReference(utr, Some(testArn)))
+
+            testSelfEmploymentsRepository.retrieveReference(utr, None).futureValue shouldBe None
+          }
+        }
       }
     }
-    "return no reference" when {
-      "the related utr + cred id does not exist in the database" in {
-        testSelfEmploymentsRepository.retrieveReference(utr, credId).futureValue shouldBe None
+    "provided with a utr and arn" should {
+      "return a reference" when {
+        "the related utr + arn exists in the database" in {
+          val createdReference: String = await(testSelfEmploymentsRepository.createReference(utr, Some(testArn)))
+
+          testSelfEmploymentsRepository.retrieveReference(utr, Some(testArn)).futureValue shouldBe Some(createdReference)
+        }
+      }
+      "return no reference" when {
+        "the related utr + arn does not exist in the database" when {
+          "no documents exist in the database" in {
+            testSelfEmploymentsRepository.retrieveReference(utr, Some(testArn)).futureValue shouldBe None
+          }
+          "a document with only the utr exists in the database" in {
+            await(testSelfEmploymentsRepository.createReference(utr, None))
+
+            testSelfEmploymentsRepository.retrieveReference(utr, Some(testArn)).futureValue shouldBe None
+          }
+        }
       }
     }
   }

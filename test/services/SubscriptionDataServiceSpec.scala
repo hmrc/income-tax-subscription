@@ -29,7 +29,6 @@ import play.api.libs.json.{JsObject, Json}
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
 import repositories.SubscriptionDataRepository
 import services.SubscriptionDataService.{Created, Existence, Existing}
-import uk.gov.hmrc.http.{HeaderCarrier, InternalServerException, SessionId}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -53,54 +52,56 @@ class SubscriptionDataServiceSpec extends CommonSpec with MockitoSugar with Feat
   val testDataId: String = "dataId"
   val reference: String = "test-reference"
   val utr: String = "1234567890"
-  val credId: String = "test-cred-id"
+  val arn: String = "1"
 
-  "sessionIdFromHC" should {
-    "return the sessionId" when {
-      "there is one sessionId value" in new Setup {
-        implicit val hc: HeaderCarrier = HeaderCarrier(sessionId = Some(SessionId(testSessionId)))
-        val result: String = service.sessionIdFromHC(hc)
-        result shouldBe testSessionId
-      }
-    }
-
-    "throw internal server exception" when {
-      "the sessionId is not in the headerCarrier" in new Setup {
-        implicit val hc: HeaderCarrier = HeaderCarrier()
-
-        val result: InternalServerException = intercept[InternalServerException](service.sessionIdFromHC(hc))
-        result.message shouldBe "[SubscriptionDataService][retrieveSelfEmployments] - No session id in header carrier"
-      }
-    }
-
-  }
-
-  "retrieveReference" should {
-    "return the reference from the database" when {
-      "it exists in the database" in new Setup {
-        implicit val hc: HeaderCarrier = HeaderCarrier(sessionId = Some(SessionId(testSessionId)))
-
-        when(mockSubscriptionDataRepository.retrieveReference(ArgumentMatchers.eq(utr), ArgumentMatchers.eq(credId)))
-          .thenReturn(Future.successful(Some(reference)))
-
-        val result: Existence = await(service.retrieveReference(utr, credId))
-
-        result shouldBe Existing(reference)
-      }
-    }
-    "createReference" should {
+  "retrieveReference" when {
+    "arn is not provided" should {
       "create a reference in the database" when {
         "it doesn't exist in the database" in new Setup {
-          implicit val hc: HeaderCarrier = HeaderCarrier(sessionId = Some(SessionId(testSessionId)))
-
-          when(mockSubscriptionDataRepository.retrieveReference(ArgumentMatchers.eq(utr), ArgumentMatchers.eq(credId)))
+          when(mockSubscriptionDataRepository.retrieveReference(ArgumentMatchers.eq(utr), ArgumentMatchers.eq(None)))
             .thenReturn(Future.successful(None))
-          when(mockSubscriptionDataRepository.createReference(ArgumentMatchers.eq(utr), ArgumentMatchers.eq(credId), ArgumentMatchers.eq(testSessionId)))
+          when(mockSubscriptionDataRepository.createReference(ArgumentMatchers.eq(utr), ArgumentMatchers.eq(None)))
             .thenReturn(Future.successful(reference))
 
-          val result: Existence = await(service.retrieveReference(utr, credId))
+          val result: Existence = await(service.retrieveReference(utr, None))
 
           result shouldBe Created(reference)
+        }
+      }
+
+      "return the reference from the database" when {
+        "it exists in the database" in new Setup {
+          when(mockSubscriptionDataRepository.retrieveReference(ArgumentMatchers.eq(utr), ArgumentMatchers.eq(None)))
+            .thenReturn(Future.successful(Some(reference)))
+
+          val result: Existence = await(service.retrieveReference(utr, None))
+
+          result shouldBe Existing(reference)
+        }
+      }
+    }
+    "arn is provided" should {
+      "create a reference in the database" when {
+        "it doesn't exist in the database" in new Setup {
+          when(mockSubscriptionDataRepository.retrieveReference(ArgumentMatchers.eq(utr), ArgumentMatchers.eq(Some(arn))))
+            .thenReturn(Future.successful(None))
+          when(mockSubscriptionDataRepository.createReference(ArgumentMatchers.eq(utr), ArgumentMatchers.eq(Some(arn))))
+            .thenReturn(Future.successful(reference))
+
+          val result: Existence = await(service.retrieveReference(utr, Some(arn)))
+
+          result shouldBe Created(reference)
+        }
+      }
+
+      "return the reference from the database" when {
+        "it exists in the database" in new Setup {
+          when(mockSubscriptionDataRepository.retrieveReference(ArgumentMatchers.eq(utr), ArgumentMatchers.eq(Some(arn))))
+            .thenReturn(Future.successful(Some(reference)))
+
+          val result: Existence = await(service.retrieveReference(utr, Some(arn)))
+
+          result shouldBe Existing(reference)
         }
       }
     }

@@ -38,8 +38,8 @@ trait MockSubscriptionDataService extends BeforeAndAfterEach with MockitoSugar {
     reset(mockSubscriptionDataService)
   }
 
-  def mockRetrieveReference(utr: String, existence: String => SubscriptionDataService.Existence, credId: String)(result: String): Unit = {
-    when(mockSubscriptionDataService.retrieveReference(ArgumentMatchers.eq(utr), ArgumentMatchers.eq(credId))(ArgumentMatchers.any()))
+  def mockRetrieveReference(utr: String, arn: Option[String], existence: String => SubscriptionDataService.Existence)(result: String): Unit = {
+    when(mockSubscriptionDataService.retrieveReference(ArgumentMatchers.eq(utr), ArgumentMatchers.eq(arn)))
       .thenReturn(Future.successful(existence(result)))
   }
 

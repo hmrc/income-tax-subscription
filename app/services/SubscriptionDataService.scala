@@ -22,7 +22,6 @@ import config.featureswitch.FeatureSwitching
 import play.api.libs.json.JsValue
 import repositories.SubscriptionDataRepository
 import services.SubscriptionDataService.{Created, Existence, Existing}
-import uk.gov.hmrc.http.{HeaderCarrier, InternalServerException}
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
@@ -31,17 +30,10 @@ import scala.concurrent.{ExecutionContext, Future}
 class SubscriptionDataService @Inject()(subscriptionDataRepository: SubscriptionDataRepository, val appConfig: AppConfig)
                                        (implicit ec: ExecutionContext) extends FeatureSwitching {
 
-
-  private[services] def sessionIdFromHC(implicit hc: HeaderCarrier): String = {
-    hc.sessionId.fold(
-      throw new InternalServerException("[SubscriptionDataService][retrieveSelfEmployments] - No session id in header carrier")
-    )(_.value)
-  }
-
-  def retrieveReference(utr: String, credId: String)(implicit hc: HeaderCarrier): Future[Existence] = {
-    subscriptionDataRepository.retrieveReference(utr, credId) flatMap {
+  def retrieveReference(utr: String, arn: Option[String]): Future[Existence] = {
+    subscriptionDataRepository.retrieveReference(utr, arn) flatMap {
       case Some(value) => Future.successful(Existing(value))
-      case None => subscriptionDataRepository.createReference(utr, credId, sessionIdFromHC) map (reference => Created(reference))
+      case None => subscriptionDataRepository.createReference(utr, arn) map (reference => Created(reference))
     }
   }
 
