@@ -59,7 +59,7 @@ class SubscriptionDataRepository @Inject()(config: SubscriptionDataRepositoryCon
     mongoComponent = config.mongoComponent,
     domainFormat = implicitly[Format[JsObject]],
     indexes = config.indexes,
-    replaceIndexes = true
+    replaceIndexes = false
   ) {
 
   private val findOneAndUpdateOptions: FindOneAndUpdateOptions = new FindOneAndUpdateOptions().upsert(true)
