@@ -84,6 +84,16 @@ object IntegrationTestConstants extends JsonUtils {
   object GetBusinessDetailsResponse {
     val successResponse: (String, String, String) => JsValue = (nino: String, safeId: String, mtdbsa: String) =>
       s"""{
+         |   "taxPayerDisplayResponse": {
+         |      "safeId": "$safeId",
+         |      "nino": "$nino",
+         |      "mtdId": "$mtdbsa"
+         |  }
+         |}
+      """.stripMargin
+
+    val oldSuccessResponse: (String, String, String) => JsValue = (nino: String, safeId: String, mtdbsa: String) =>
+      s"""{
          |   "safeId": "$safeId",
          |   "nino": "$nino",
          |   "mtdbsa": "$mtdbsa",

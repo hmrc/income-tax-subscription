@@ -19,7 +19,7 @@ package connectors.mocks
 import config.AppConfig
 import connectors.{OldBusinessDetailsConnector, OldGetBusinessDetailsUtil}
 import models.ErrorModel
-import models.registration.GetBusinessDetailsSuccessResponseModel
+import models.registration.OldGetBusinessDetailsSuccessResponseModel
 import org.mockito.ArgumentMatchers
 import org.mockito.Mockito._
 import org.scalatestplus.mockito.MockitoSugar
@@ -75,7 +75,7 @@ trait MockOldBusinessDetailsConnector extends MockitoSugar {
     when(mockOldBusinessDetailsConnector.getBusinessDetails(ArgumentMatchers.eq(nino))(ArgumentMatchers.any(), ArgumentMatchers.any())).thenReturn(response)
 
   def mockGetBusinessDetailsSuccess(nino: String): Unit =
-    setupMockBusinessDetails(nino)(Future.successful(Right(GetBusinessDetailsSuccessResponseModel(testMtditId))))
+    setupMockBusinessDetails(nino)(Future.successful(Right(OldGetBusinessDetailsSuccessResponseModel(testMtditId))))
 
   def mockGetBusinessDetailsNotFound(nino: String): Unit =
     setupMockBusinessDetails(nino)(

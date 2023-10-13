@@ -19,12 +19,20 @@ package models.registration
 import models.ErrorResponsesModel
 import play.api.libs.json._
 
-case class GetBusinessDetailsSuccessResponseModel(mtdbsa: String)
+case class OldGetBusinessDetailsSuccessResponseModel(mtdbsa: String)
+
+case class GetBusinessDetailsSuccessResponseModel(mtdId: String)
 
 case class GetBusinessDetailsFailureResponseModel(code: Option[String], reason: String) extends ErrorResponsesModel
 
+object OldGetBusinessDetailsSuccessResponseModel {
+  implicit val format: OFormat[OldGetBusinessDetailsSuccessResponseModel] = Json.format[OldGetBusinessDetailsSuccessResponseModel]
+}
+
 object GetBusinessDetailsSuccessResponseModel {
-  implicit val format: OFormat[GetBusinessDetailsSuccessResponseModel] = Json.format[GetBusinessDetailsSuccessResponseModel]
+  implicit val reads: Reads[GetBusinessDetailsSuccessResponseModel] = Reads[GetBusinessDetailsSuccessResponseModel](json =>
+    (json \ "taxPayerDisplayResponse" \ "mtdId").validate[String].map(GetBusinessDetailsSuccessResponseModel.apply)
+  )
 }
 
 object GetBusinessDetailsFailureResponseModel {

@@ -21,16 +21,31 @@ import play.api.libs.json.{JsObject, JsSuccess, Json}
 
 class RegistrationResponseModelSpec extends CommonSpec {
 
-  "GetBusinessDetailsSuccessResponseModel" should {
+  "OldGetBusinessDetailsSuccessResponseModel" should {
 
     val json: JsObject = Json.obj("mtdbsa" -> "testId")
+    val model: OldGetBusinessDetailsSuccessResponseModel = OldGetBusinessDetailsSuccessResponseModel("testId")
+
+    "read from json" in {
+      Json.fromJson[OldGetBusinessDetailsSuccessResponseModel](json) shouldBe JsSuccess(model)
+    }
+    "write to json" in {
+      Json.toJson(model) shouldBe json
+    }
+  }
+
+  "GetBusinessDetailsSuccessResponseModel" should {
+
+    val json: JsObject = Json.obj(
+      "taxPayerDisplayResponse" -> Json.obj(
+        "mtdId" -> "testId"
+      )
+    )
+
     val model: GetBusinessDetailsSuccessResponseModel = GetBusinessDetailsSuccessResponseModel("testId")
 
     "read from json" in {
       Json.fromJson[GetBusinessDetailsSuccessResponseModel](json) shouldBe JsSuccess(model)
-    }
-    "write to json" in {
-      Json.toJson(model) shouldBe json
     }
   }
 

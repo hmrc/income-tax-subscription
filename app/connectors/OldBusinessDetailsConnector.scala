@@ -20,7 +20,7 @@ import config.AppConfig
 import connectors.utilities.ConnectorUtils
 import models.ErrorModel
 import models.monitoring.getBusinessDetails.BusinessDetailsAuditModel
-import models.registration.{GetBusinessDetailsFailureResponseModel, GetBusinessDetailsSuccessResponseModel}
+import models.registration.{GetBusinessDetailsFailureResponseModel, OldGetBusinessDetailsSuccessResponseModel}
 import play.api.Logger
 import play.api.http.Status._
 import play.api.mvc.Request
@@ -85,8 +85,7 @@ class OldBusinessDetailsConnector @Inject()(appConfig: AppConfig,
 }
 
 object OldBusinessDetailsConnector {
-
   def getBusinessDetailsUri(nino: String): String = s"/registration/business-details/nino/$nino"
 }
 
-object OldGetBusinessDetailsUtil extends ConnectorUtils[GetBusinessDetailsFailureResponseModel, GetBusinessDetailsSuccessResponseModel]
+object OldGetBusinessDetailsUtil extends ConnectorUtils[GetBusinessDetailsFailureResponseModel, OldGetBusinessDetailsSuccessResponseModel]

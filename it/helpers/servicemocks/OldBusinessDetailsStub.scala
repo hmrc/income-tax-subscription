@@ -25,7 +25,7 @@ import play.api.http.Status._
 import play.api.libs.json.JsValue
 
 object OldBusinessDetailsStub extends WireMockMethods {
-  val registrationResponse: JsValue = IntegrationTestConstants.GetBusinessDetailsResponse.successResponse(testNino, testSafeId, testMtditId)
+  val registrationResponse: JsValue = IntegrationTestConstants.GetBusinessDetailsResponse.oldSuccessResponse(testNino, testSafeId, testMtditId)
 
   val errorReason = "Submission has not passed validation. Invalid parameter NINO."
 
