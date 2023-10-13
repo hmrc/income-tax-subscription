@@ -47,8 +47,8 @@ class SubscriptionStatusService @Inject()(val appConfig: AppConfig,
     if (isEnabled(NewGetBusinessDetails)) {
       businessDetailsConnector.getBusinessDetails(nino) map {
         case Right(response) =>
-          Right(Some(FESuccessResponse(Some(response.mtdbsa))))
-        case Left(error: ErrorModel ) =>
+          Right(Some(FESuccessResponse(Some(response.mtdId))))
+        case Left(error: ErrorModel) =>
           if (error.status == NOT_FOUND) {
             Right(None)
           } else {

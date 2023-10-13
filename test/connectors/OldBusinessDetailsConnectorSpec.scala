@@ -49,7 +49,7 @@ class OldBusinessDetailsConnectorSpec extends TestOldBusinessDetailsConnector wi
     "parse and return the success response correctly" in {
       mockBusinessDetails(getBusinessDetailsSuccess)
       result { r =>
-        r shouldBe Right(GetBusinessDetailsSuccessResponseModel(testMtditId))
+        r shouldBe Right(OldGetBusinessDetailsSuccessResponseModel(testMtditId))
         verifyNoAuditOfAnyKind()
       }
     }
