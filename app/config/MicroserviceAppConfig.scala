@@ -42,6 +42,10 @@ trait AppConfig {
   val desAuthorisationToken: String
   val desEnvironmentHeader: (String, String)
 
+  def getBusinessDetailsURL: String
+  val getBusinessDetailsAuthorisationToken: String
+  val getBusinessDetailsEnvironment: String
+
   def statusDeterminationServiceURL: String
   val statusDeterminationServiceAuthorisationToken: String
   val statusDeterminationServiceEnvironment: String
@@ -62,6 +66,12 @@ class MicroserviceAppConfig @Inject()(servicesConfig: ServicesConfig, val config
   override lazy val ggAuthenticationURL: String = servicesConfig.baseUrl("gg-authentication")
   override lazy val ggURL: String = servicesConfig.baseUrl("government-gateway")
   override lazy val ggAdminURL: String = servicesConfig.baseUrl("gg-admin")
+
+  override lazy val getBusinessDetailsURL: String = servicesConfig.baseUrl("get-business-details")
+
+  private val getBusinessDetailsBase = "microservice.services.get-business-details"
+  override lazy val getBusinessDetailsAuthorisationToken: String = s"Bearer ${loadConfig(s"$getBusinessDetailsBase.authorization-token")}"
+  override lazy val getBusinessDetailsEnvironment: String = loadConfig(s"$getBusinessDetailsBase.environment")
 
   override lazy val statusDeterminationServiceURL: String = servicesConfig.baseUrl("status-determination-service")
 

@@ -14,17 +14,13 @@
  * limitations under the License.
  */
 
-package common
+package connectors.mocks
 
-import org.scalatest.matchers.should.Matchers
-import org.scalatest.wordspec.AnyWordSpecLike
-import org.scalatest.{BeforeAndAfterEach, OptionValues}
+import connectors.BusinessDetailsConnector
+import org.scalatestplus.mockito.MockitoSugar
 
-import scala.language.postfixOps
+trait MockBusinessDetailsConnector extends MockitoSugar {
 
-trait CommonSpec extends AnyWordSpecLike with Matchers with OptionValues with BeforeAndAfterEach {
+  val mockBusinessDetailsConnector: BusinessDetailsConnector = mock[BusinessDetailsConnector]
 
-  import scala.concurrent.duration._
-
-  implicit val defaultTimeout: FiniteDuration = 5 seconds
 }

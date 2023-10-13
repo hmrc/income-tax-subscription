@@ -17,15 +17,13 @@
 package connectors
 
 import config.AppConfig
-import connectors.utilities.ConnectorUtils
-import models.ErrorModel
 import models.monitoring.getBusinessDetails.BusinessDetailsAuditModel
-import models.registration.{GetBusinessDetailsFailureResponseModel, GetBusinessDetailsSuccessResponseModel}
-import play.api.Logger
-import play.api.http.Status._
+import parsers.GetBusinessDetailsParser.{GetBusinessDetailsResponse, getBusinessDetailsResponseHttpReads}
+import play.api.Logging
+import play.api.http.Status.{BAD_REQUEST, INTERNAL_SERVER_ERROR, NOT_FOUND, SERVICE_UNAVAILABLE}
 import play.api.mvc.Request
 import services.monitoring.AuditService
-import uk.gov.hmrc.http.{HeaderCarrier, HeaderNames, HttpClient, HttpReads, HttpResponse}
+import uk.gov.hmrc.http.{Authorization, HeaderCarrier, HeaderNames, HttpClient, HttpReads}
 import utils.Logging._
 
 import javax.inject.Inject
@@ -34,59 +32,41 @@ import scala.concurrent.{ExecutionContext, Future}
 class BusinessDetailsConnector @Inject()(appConfig: AppConfig,
                                          httpClient: HttpClient,
                                          auditService: AuditService
-                                        )(implicit ec: ExecutionContext) extends RawResponseReads {
+                                        )(implicit ec: ExecutionContext) extends RawResponseReads with Logging {
 
-  val logger: Logger = Logger(this.getClass)
+  def getBusinessDetails(nino: String)(implicit hc: HeaderCarrier, request: Request[_]): Future[GetBusinessDetailsResponse] = {
 
-  lazy val urlHeaderAuthorization: String = s"Bearer ${appConfig.desToken}"
+    val headerCarrier: HeaderCarrier = hc
+      .copy(authorization = Some(Authorization(appConfig.getBusinessDetailsAuthorisationToken)))
+      .withExtraHeaders("Environment" -> appConfig.getBusinessDetailsEnvironment)
 
-  // API 5
-  def getBusinessDetailsUrl(nino: String): String = s"${appConfig.desURL}${BusinessDetailsConnector.getBusinessDetailsUri(nino)}"
+    val headers: Seq[(String, String)] = Seq(
+      HeaderNames.authorisation -> appConfig.getBusinessDetailsAuthorisationToken,
+      "Environment" -> appConfig.getBusinessDetailsEnvironment
+    )
 
-  val desHeaders: Seq[(String, String)] = Seq(
-    HeaderNames.authorisation -> appConfig.desAuthorisationToken,
-    appConfig.desEnvironmentHeader
-  )
-
-  def getBusinessDetails(nino: String)(implicit hc: HeaderCarrier, request: Request[_]): Future[GetBusinessDetailsUtil.Response] = {
-    import GetBusinessDetailsUtil._
-    lazy val requestDetails: Map[String, String] = Map("nino" -> nino)
-    logger.debug(s"BusinessDetailsConnector.getBusinessDetails - Request:\n$requestDetails\n\nRequest Headers:\n$hc")
-
-    httpClient.GET[HttpResponse](getBusinessDetailsUrl(nino), headers = desHeaders)(implicitly[HttpReads[HttpResponse]], hc, ec)
-      .map { response =>
-        response.status match {
-          case OK =>
-            logger.info("BusinessDetailsConnector.getBusinessDetails - Get Business Details responded with OK")
-            parseSuccess(response.body)
-          case status =>
-            val parseResponse@Left(ErrorModel(_, optCode, message)) = parseFailure(status, response.body)
-            val code: String = optCode.getOrElse("N/A")
-            (status, code) match {
-              case (NOT_FOUND, "NOT_FOUND_NINO") =>
-                // expected case, do not audit
-                logger.info(s"BusinessDetailsConnector.getBusinessDetails - Get Business Details responded with nino not found")
-              case _ =>
-                val suffix = status match {
-                  case BAD_REQUEST => eventTypeBadRequest
-                  case NOT_FOUND => eventTypeNotFound
-                  case SERVICE_UNAVAILABLE => eventTypeServerUnavailable
-                  case INTERNAL_SERVER_ERROR => eventTypeInternalServerError
-                  case _ => eventTypeUnexpectedError
-                }
-                auditService.audit(BusinessDetailsAuditModel(nino, suffix, response.body))(hc, ec, request)
-                logger.warn(s"BusinessDetailsConnector.getBusinessDetails - Get Business Details responded with an error," +
-                  s" status=$status code=$code message=$message")
-            }
-            parseResponse
+    httpClient.GET[GetBusinessDetailsResponse](url = getBusinessDetailsUrl(nino), headers = headers)(
+      implicitly[HttpReads[GetBusinessDetailsResponse]],
+      headerCarrier,
+      implicitly
+    ) map {
+      case Left(value) if value.status != NOT_FOUND || value.code.exists(_ != "NOT_FOUND_NINO") =>
+        val suffix = value.status match {
+          case BAD_REQUEST => eventTypeBadRequest
+          case NOT_FOUND => eventTypeNotFound
+          case SERVICE_UNAVAILABLE => eventTypeServerUnavailable
+          case INTERNAL_SERVER_ERROR => eventTypeInternalServerError
+          case _ => eventTypeUnexpectedError
         }
-      }
+        auditService.audit(BusinessDetailsAuditModel(nino, suffix, value.reason))(hc, ec, request)
+        logger.warn(s"BusinessDetailsConnector.getBusinessDetails - Get Business Details responded with an error," +
+          s" status=${value.status} code=${value.code} message=${value.reason}")
+        Left(value)
+      case response => response
+    }
   }
+
+  private def getBusinessDetailsUrl(nino: String) =
+    s"${appConfig.getBusinessDetailsURL}/registration/business-details/nino/$nino"
+
 }
-
-object BusinessDetailsConnector {
-
-  def getBusinessDetailsUri(nino: String): String = s"/registration/business-details/nino/$nino"
-}
-
-object GetBusinessDetailsUtil extends ConnectorUtils[GetBusinessDetailsFailureResponseModel, GetBusinessDetailsSuccessResponseModel]

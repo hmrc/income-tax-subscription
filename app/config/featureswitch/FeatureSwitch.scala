@@ -29,7 +29,8 @@ object FeatureSwitch {
 
   val switches: Set[FeatureSwitch] = Set(
     StubDESFeature,
-    TaxYearSignup
+    TaxYearSignup,
+    NewGetBusinessDetails
   )
 
   def apply(str: String): FeatureSwitch =
@@ -53,5 +54,10 @@ object StubDESFeature extends FeatureSwitch {
 object TaxYearSignup extends FeatureSwitch {
   val displayName = s"Provide API with tax year"
   val name = s"$prefix.taxyear-signup"
+}
+
+object NewGetBusinessDetails extends FeatureSwitch {
+  val displayName = s"Use the new get business details API"
+  val name = s"$prefix.new-get-business-details"
 }
 
