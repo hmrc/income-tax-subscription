@@ -16,10 +16,7 @@
 
 import com.google.inject.AbstractModule
 import config.AppConfig
-import repositories.{LockoutMongoRepository, OldThrottleRepository, SubscriptionDataRepository, ThrottlingRepository}
-
-import javax.inject.{Inject, Singleton}
-import scala.concurrent.ExecutionContext
+import repositories.{LockoutMongoRepository, SubscriptionDataRepository, ThrottlingRepository}
 
 class Module extends AbstractModule {
 
@@ -28,13 +25,6 @@ class Module extends AbstractModule {
     bind(classOf[SubscriptionDataRepository]).asEagerSingleton()
     bind(classOf[LockoutMongoRepository]).asEagerSingleton()
     bind(classOf[ThrottlingRepository]).asEagerSingleton()
-    bind(classOf[OldThrottleRepository]).asEagerSingleton()
-    bind(classOf[AppStart]).asEagerSingleton()
   }
 
-}
-
-@Singleton
-class AppStart @Inject()(oldThrottleRepository: OldThrottleRepository)(implicit ec: ExecutionContext) {
-  oldThrottleRepository.drop()
 }
