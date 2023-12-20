@@ -16,19 +16,20 @@
 
 package models
 
+import play.api.libs.json.{Json, OFormat}
+
 import java.time.LocalDate
 import java.time.format.{DateTimeFormatter, ResolverStyle}
 
-import play.api.libs.json.Json
-
 case class DateModel(day: String, month: String, year: String) {
 
-  val outputFormat = DateTimeFormatter.ofPattern("d MMMM uuuu").withResolverStyle(ResolverStyle.STRICT)
-  val desFormat = DateTimeFormatter.ofPattern("uuuu-MM-dd").withResolverStyle(ResolverStyle.STRICT)
+  val outputFormat: DateTimeFormatter = DateTimeFormatter.ofPattern("d MMMM uuuu").withResolverStyle(ResolverStyle.STRICT)
+  val desFormat: DateTimeFormatter = DateTimeFormatter.ofPattern("uuuu-MM-dd").withResolverStyle(ResolverStyle.STRICT)
 
   def toLocalDate: LocalDate = LocalDate.of(year.toInt, month.toInt, day.toInt)
 
   def toOutputDateFormat: String = toLocalDate.format(outputFormat)
+
   def toDesDateFormat: String = toLocalDate.format(desFormat)
 
   def diffInMonth(that: DateModel): Int = {
@@ -42,5 +43,5 @@ object DateModel {
 
   implicit def dateConvert(date: LocalDate): DateModel = DateModel(date.getDayOfMonth.toString, date.getMonthValue.toString, date.getYear.toString)
 
-  implicit val format = Json.format[DateModel]
+  implicit val format: OFormat[DateModel] = Json.format[DateModel]
 }

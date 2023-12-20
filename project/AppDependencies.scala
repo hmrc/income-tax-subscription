@@ -15,84 +15,29 @@
  */
 
 import sbt._
-
+import play.sbt.PlayImport._
 
 object AppDependencies {
-  val appName = "income-tax-subscription"
 
-  import play.sbt.PlayImport._
-
-  private val domainVersion = "8.3.0-play-28"
-  private val scalaTestVersion = "3.2.14"
-  private val scalaTestPlusVersion = "5.1.0"
-  private val mockitoVersion = "4.8.0"
-
-  private val scalaJVersion = "2.4.2"
-
-  private val hmrcMongoVersion = "1.3.0"
-
-  private val wiremockVersion = "2.32.0"
-
-  private val bootstrapBackendVersion = "7.21.0"
+  private val domainVersion = "9.0.0"
+  private val hmrcMongoVersion = "1.6.0"
+  private val bootstrapBackendVersion = "8.3.0"
 
   private val playVersion = "2.8.18"
 
   val compile: Seq[ModuleID] = Seq(
     ws,
-    "uk.gov.hmrc" %% "bootstrap-backend-play-28" % bootstrapBackendVersion,
-    "uk.gov.hmrc" %% "domain" % domainVersion,
-    "uk.gov.hmrc.mongo" %% "hmrc-mongo-play-28" % hmrcMongoVersion
+    "uk.gov.hmrc" %% "bootstrap-backend-play-30" % bootstrapBackendVersion,
+    "uk.gov.hmrc" %% "domain-play-30" % domainVersion,
+    "uk.gov.hmrc.mongo" %% "hmrc-mongo-play-30" % hmrcMongoVersion
   )
 
-  trait TestDependencies {
-    lazy val scope: String = "test"
-    lazy val test: Seq[ModuleID] = Seq()
-  }
+  val test: Seq[ModuleID] = Seq(
+    "uk.gov.hmrc" %% "bootstrap-test-play-30" % bootstrapBackendVersion % "test",
+    "com.github.fge" % "json-schema-validator" % "2.2.6" % "test",
+    "uk.gov.hmrc.mongo" %% "hmrc-mongo-test-play-30" % hmrcMongoVersion % "test"
+  )
 
-  object Test {
-    def apply(): Seq[ModuleID] = new TestDependencies {
-      override lazy val test: Seq[sbt.ModuleID] = Seq(
-        "uk.gov.hmrc" %% "bootstrap-backend-play-28" % bootstrapBackendVersion % scope,
-        "uk.gov.hmrc" %% "bootstrap-test-play-28" % bootstrapBackendVersion % scope,
-        "org.scalatest" %% "scalatest" % scalaTestVersion % scope,
-        "org.scalatestplus" %% "mockito-3-12" % "3.2.10.0" % scope,
-        "com.typesafe.play" %% "play-test" % playVersion % scope,
-        "org.scalatestplus.play" %% "scalatestplus-play" % scalaTestPlusVersion % scope,
-        "com.vladsch.flexmark" % "flexmark-all" % "0.62.2" % scope,
-        "com.fasterxml.jackson.module" %% "jackson-module-scala" % "2.13.4" % scope,
-        "org.scalaj" %% "scalaj-http" % scalaJVersion % scope,
-        "org.mockito" % "mockito-core" % mockitoVersion % scope,
-        "com.github.fge" % "json-schema-validator" % "2.2.6" % scope,
-        "uk.gov.hmrc.mongo" %% "hmrc-mongo-test-play-28" % hmrcMongoVersion % scope
-      )
-    }.test
-  }
-
-  object IntegrationTest {
-    def apply(): Seq[ModuleID] = new TestDependencies {
-
-      override lazy val scope: String = "it"
-
-      override lazy val test: Seq[sbt.ModuleID] = Seq(
-        "org.scalatest" %% "scalatest" % scalaTestVersion % scope,
-        "com.typesafe.play" %% "play-test" % playVersion % scope,
-        "org.scalatestplus.play" %% "scalatestplus-play" % scalaTestPlusVersion % scope,
-        "com.vladsch.flexmark" % "flexmark-all" % "0.62.2" % scope,
-        "com.fasterxml.jackson.module" %% "jackson-module-scala" % "2.13.4" % scope,
-        "org.scalaj" %% "scalaj-http" % scalaJVersion % scope,
-        "org.mockito" % "mockito-core" % mockitoVersion % scope,
-        "com.github.fge" % "json-schema-validator" % "2.2.6" % scope,
-        "com.github.tomakehurst" % "wiremock-jre8-standalone" % wiremockVersion % scope,
-        "uk.gov.hmrc.mongo" %% "hmrc-mongo-test-play-28" % hmrcMongoVersion % scope
-      )
-    }.test
-  }
-
-  def tmpMacWorkaround(): Seq[ModuleID] =
-    if (sys.props.get("os.name").exists(_.toLowerCase.contains("mac")))
-      Seq("org.reactivemongo" % "reactivemongo-shaded-native" % "1.0.10-osx-x86-64" % "runtime,test,it")
-    else Seq()
-
-  val appDependencies: Seq[ModuleID] = compile ++ Test() ++ IntegrationTest() ++ tmpMacWorkaround()
+  val itTest: Seq[ModuleID] = Seq()
 
 }

@@ -39,7 +39,7 @@ class SignUpConnectorSpec extends CommonSpec with MockHttp with GuiceOneAppPerSu
   class Test(nino: String, response: PostSignUpResponse) {
     val appConfig: AppConfig = app.injector.instanceOf[AppConfig]
     val connector = new SignUpConnector(mockHttpClient, appConfig)
-    val headers = Seq(
+    val headers: Seq[(String, String)] = Seq(
       HeaderNames.authorisation -> appConfig.desAuthorisationToken,
       appConfig.desEnvironmentHeader
     )
@@ -52,7 +52,7 @@ class SignUpConnectorSpec extends CommonSpec with MockHttp with GuiceOneAppPerSu
       .thenReturn(Future.successful(response))
   }
 
-  implicit val hc = HeaderCarrier()
+  implicit val hc: HeaderCarrier = HeaderCarrier()
   implicit val request: Request[_] = FakeRequest()
 
   "Calling sign up" when {

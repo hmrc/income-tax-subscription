@@ -16,12 +16,12 @@
 
 package models.lockout
 
-import play.api.libs.json.Json
+import play.api.libs.json.{Json, OFormat}
 
 case class LockoutRequest(timeoutSeconds: Int)
 
 object LockoutRequest {
 
-  implicit val format = Json.format[LockoutRequest]
+  implicit val format: OFormat[LockoutRequest] = Json.format[LockoutRequest]
 
 }

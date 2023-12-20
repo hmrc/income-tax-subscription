@@ -58,7 +58,7 @@ class ItsaStatusConnectorISpec extends ComponentSpecBase {
 
         val result = connector.getItsaStatus("test-nino", "test-utr")
 
-        result.futureValue shouldBe Left(ErrorModel(OK, "Invalid Json for itsaStatusResponseHttpReads: List((,List(JsonValidationError(List(error.expected.jsarray),ArraySeq()))))"))
+        result.futureValue shouldBe Left(ErrorModel(OK, "Invalid Json for itsaStatusResponseHttpReads: List((,List(JsonValidationError(List(error.expected.jsarray),List()))))"))
       }
     }
 
