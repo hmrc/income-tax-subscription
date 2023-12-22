@@ -16,7 +16,7 @@
 
 package controllers
 
-import common.{CommonSpec, Extractors}
+import common.CommonSpec
 import connectors.ItsaStatusConnector
 import models.ErrorModel
 import models.monitoring.MandationStatusAuditModel
@@ -25,7 +25,6 @@ import models.status._
 import models.subscription.AccountingPeriodUtil
 import org.mockito.ArgumentMatchers
 import org.mockito.Mockito.when
-import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import parsers.ItsaStatusParser.GetItsaStatusResponse
 import play.api.http.Status.{BAD_REQUEST, INTERNAL_SERVER_ERROR, OK}
 import play.api.libs.json.Json
@@ -34,14 +33,12 @@ import play.api.test.Helpers.{contentAsJson, contentAsString, defaultAwaitTimeou
 import services.mocks.MockAuthService
 import services.mocks.monitoring.MockAuditService
 import uk.gov.hmrc.auth.core.{Enrolment, EnrolmentIdentifier, Enrolments}
-import utils.MaterializerSupport
 import utils.TestConstants.hmrcAsAgent
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class MandationStatusControllerSpec extends CommonSpec
-  with MockAuthService with MockAuditService with Extractors with MaterializerSupport with GuiceOneAppPerSuite {
+class MandationStatusControllerSpec extends CommonSpec with MockAuthService with MockAuditService {
 
   private val testNino = "test-nino"
   private val testUtr = "test-utr"
@@ -90,8 +87,8 @@ class MandationStatusControllerSpec extends CommonSpec
         status(result) shouldBe BAD_REQUEST
         contentAsString(result) shouldBe "Invalid MandationStatusRequest payload: " +
           "List(" +
-          "(/utr,List(JsonValidationError(List(error.path.missing),ArraySeq()))), " +
-          "(/nino,List(JsonValidationError(List(error.path.missing),ArraySeq())))" +
+          "(/utr,List(JsonValidationError(List(error.path.missing),List()))), " +
+          "(/nino,List(JsonValidationError(List(error.path.missing),List())))" +
           ")"
         verifyNoAuditOfAnyKind()
       }

@@ -16,7 +16,7 @@
 
 package models.frontend
 
-import play.api.libs.json.Json
+import play.api.libs.json.{Json, OFormat}
 
 
 sealed trait FEResponse
@@ -26,9 +26,9 @@ case class FESuccessResponse(mtditId: Option[String]) extends FEResponse
 case class FEFailureResponse(reason: String) extends FEResponse
 
 object FESuccessResponse{
-  implicit val format = Json.format[FESuccessResponse]
+  implicit val format: OFormat[FESuccessResponse] = Json.format[FESuccessResponse]
 }
 
 object FEFailureResponse {
-  implicit val format = Json.format[FEFailureResponse]
+  implicit val format: OFormat[FEFailureResponse] = Json.format[FEFailureResponse]
 }

@@ -55,8 +55,8 @@ class ItsaStatusParserSpec extends CommonSpec {
 
         val expectedError = "Invalid Json for itsaStatusResponseHttpReads: " +
           "List(" +
-          "((0)/taxYear,List(JsonValidationError(List(error.path.missing),ArraySeq()))), " +
-          "((0)/status,List(JsonValidationError(List(error.path.missing),ArraySeq())))" +
+          "((0)/taxYear,List(JsonValidationError(List(error.path.missing),List()))), " +
+          "((0)/status,List(JsonValidationError(List(error.path.missing),List())))" +
           ")"
 
         ItsaStatusParser.itsaStatusResponseHttpReads.read("POST", "test-url", response) shouldBe

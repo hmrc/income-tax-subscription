@@ -17,16 +17,16 @@
 package models.subscription.property
 
 import models.ErrorResponsesModel
-import play.api.libs.json.Json
+import play.api.libs.json.{Json, OFormat}
 import models.subscription.IncomeSourceModel
 
 case class PropertySubscriptionResponseModel(safeId: String, mtditId: String, incomeSource: IncomeSourceModel)
 case class PropertySubscriptionFailureModel(code: Option[String], reason: String) extends ErrorResponsesModel
 
 object PropertySubscriptionResponseModel {
-  implicit val formats = Json.format[PropertySubscriptionResponseModel]
+  implicit val formats: OFormat[PropertySubscriptionResponseModel] = Json.format[PropertySubscriptionResponseModel]
 }
 object PropertySubscriptionFailureModel {
-  implicit val formats = Json.format[PropertySubscriptionFailureModel]
+  implicit val formats: OFormat[PropertySubscriptionFailureModel] = Json.format[PropertySubscriptionFailureModel]
 }
 
