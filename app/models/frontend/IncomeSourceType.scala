@@ -16,6 +16,8 @@
 
 package models.frontend
 
+import scala.language.implicitConversions
+
 sealed trait IncomeSourceType
 
 case object Business extends IncomeSourceType

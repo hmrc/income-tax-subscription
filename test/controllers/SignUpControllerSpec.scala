@@ -19,121 +19,83 @@ package controllers
 
 import common.CommonSpec
 import config.MicroserviceAppConfig
-import config.featureswitch.{FeatureSwitching, TaxYearSignup}
+import config.featureswitch.FeatureSwitching
 import models.monitoring.{RegistrationFailureAudit, RegistrationSuccessAudit}
 import models.{ErrorModel, SignUpResponse}
 import play.api.Configuration
 import play.api.http.Status.{INTERNAL_SERVER_ERROR, OK}
 import play.api.libs.json.Json
+import play.api.mvc.{ControllerComponents, Result}
 import play.api.test.FakeRequest
 import play.api.test.Helpers.{contentAsJson, contentAsString, defaultAwaitTimeout, status, stubControllerComponents}
 import services.mocks.monitoring.MockAuditService
-import services.mocks.{MockAuthService, MockSignUpConnector, MockSignUpTaxYearConnector}
+import services.mocks.{MockAuthService, MockSignUpTaxYearConnector}
 import uk.gov.hmrc.auth.core.{Enrolment, EnrolmentIdentifier, Enrolments}
 import utils.MaterializerSupport
-import utils.TestConstants.{hmrcAsAgent, testNino, testSignUpSubmission, testTaxYear, testTaxYearSignUpSubmission}
+import utils.TestConstants.{hmrcAsAgent, testNino, testTaxYear, testTaxYearSignUpSubmission}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class SignUpControllerSpec extends CommonSpec with MockAuthService with MockSignUpConnector with MockSignUpTaxYearConnector with MaterializerSupport with MockAuditService with FeatureSwitching {
-  lazy val mockCC = stubControllerComponents()
-  private lazy val configuration: Configuration = app.injector.instanceOf[Configuration]
-  lazy val mockappConfig: MicroserviceAppConfig = app.injector.instanceOf[MicroserviceAppConfig]
+class SignUpControllerSpec extends CommonSpec
+  with MockAuthService
+  with MockSignUpTaxYearConnector
+  with MaterializerSupport
+  with MockAuditService
+  with FeatureSwitching {
 
-  object TestController extends SignUpController (
+  lazy val mockCC: ControllerComponents = stubControllerComponents()
+  private lazy val configuration: Configuration = app.injector.instanceOf[Configuration]
+  lazy val mockAppConfig: MicroserviceAppConfig = app.injector.instanceOf[MicroserviceAppConfig]
+
+  object TestController extends SignUpController(
     mockAuthService,
     mockAuditService,
     configuration,
-    mockSignUpConnector,
     mockSignUpTaxYearConnector,
     mockCC,
-    mockappConfig
+    mockAppConfig
   )
 
-  override def beforeEach(): Unit = {
-    disable(TaxYearSignup)
-    super.beforeEach()
-  }
+  "SignUpController" should {
+    "return OK with the sign up successful response" when {
+      "sign up was successful" when {
+        "an individual signs themselves up" in {
+          val fakeRequest = FakeRequest().withJsonBody(Json.toJson(testTaxYearSignUpSubmission(testNino, testTaxYear)))
 
+          mockRetrievalSuccess(Enrolments(Set()))
+          signUpTaxYear(testNino, testTaxYear)(Future.successful(Right(SignUpResponse("XAIT000000"))))
 
-  "Sign Up Controller" when {
-    "signup is submitted" should {
-      "return a 200 response" in {
-        val fakeRequest = FakeRequest().withJsonBody(Json.toJson(testSignUpSubmission(testNino)))
+          val result: Future[Result] = TestController.signUp(testNino, testTaxYear)(fakeRequest)
 
-        mockRetrievalSuccess(Enrolments(Set(Enrolment(hmrcAsAgent, Seq(EnrolmentIdentifier("AgentReferenceNumber", "123456789")), "Activated"))))
-        signUp(testNino)(Future.successful(Right(SignUpResponse("XAIT000000"))))()
-
-
-        val result = TestController.signUp(testNino, testTaxYear)(fakeRequest)
-        status(result) shouldBe OK
-        contentAsJson(result).as[SignUpResponse].mtdbsa shouldBe {
-          "XAIT000000"
+          status(result) shouldBe OK
+          contentAsJson(result) shouldBe Json.obj(
+            "mtdbsa" -> "XAIT000000"
+          )
+          verifyAudit(RegistrationSuccessAudit(None, testNino, "XAIT000000", "Bearer dev", None))
         }
-        verifyAudit(RegistrationSuccessAudit(Some("123456789"), testNino, "XAIT000000", "Bearer dev", None))
-      }
+        "an agent signs up their client" in {
+          val fakeRequest = FakeRequest().withJsonBody(Json.toJson(testTaxYearSignUpSubmission(testNino, testTaxYear)))
 
+          mockRetrievalSuccess(Enrolments(Set(Enrolment(hmrcAsAgent, Seq(EnrolmentIdentifier("AgentReferenceNumber", "123456789")), "Activated"))))
+          signUpTaxYear(testNino, testTaxYear)(Future.successful(Right(SignUpResponse("XAIT000000"))))
+
+          val result: Future[Result] = TestController.signUp(testNino, testTaxYear)(fakeRequest)
+
+          status(result) shouldBe OK
+          contentAsJson(result) shouldBe Json.obj(
+            "mtdbsa" -> "XAIT000000"
+          )
+          verifyAudit(RegistrationSuccessAudit(Some("123456789"), testNino, "XAIT000000", "Bearer dev", None))
+        }
+      }
     }
-    "feature switch TaxYearSignup is enabled" should {
-      "return a 200 response" in {
-        enable(TaxYearSignup)
+    "return InternalServerError" when {
+      "sign up was unsuccessful and an error was returned" in {
         val fakeRequest = FakeRequest().withJsonBody(Json.toJson(testTaxYearSignUpSubmission(testNino, testTaxYear)))
 
         mockRetrievalSuccess(Enrolments(Set(Enrolment(hmrcAsAgent, Seq(EnrolmentIdentifier("AgentReferenceNumber", "123456789")), "Activated"))))
-        signUpTaxYear(testNino, testTaxYear)(Future.successful(Right(SignUpResponse("XAIT000000"))))()
-
-
-        val result = TestController.signUp(testNino, testTaxYear)(fakeRequest)
-        status(result) shouldBe OK
-        contentAsJson(result).as[SignUpResponse].mtdbsa shouldBe {
-          "XAIT000000"
-        }
-        verifyAudit(RegistrationSuccessAudit(Some("123456789"), testNino, "XAIT000000", "Bearer dev", None))
-      }
-
-    }
-  }
-
-  "Sign Up Controller" when {
-    "signup is submitted" should {
-      "return a Json parse failure when invalid json is found" in {
-        val fakeRequest = FakeRequest().withJsonBody(Json.toJson(testSignUpSubmission(testNino)))
-
-        mockRetrievalSuccess(Enrolments(Set(Enrolment(hmrcAsAgent, Seq(EnrolmentIdentifier("AgentReferenceNumber", "123456789")), "Activated"))))
-
-        signUp(testNino)(Future.successful(Left(ErrorModel(OK, "Failed to read Json for MTD Sign Up Response"))))()
-
-        val result = TestController.signUp(testNino, testTaxYear)(fakeRequest)
-        status(result) shouldBe INTERNAL_SERVER_ERROR
-        contentAsString(result) shouldBe "Failed Sign up"
-        verifyAudit(RegistrationFailureAudit(testNino, OK, "Failed to read Json for MTD Sign Up Response"))
-      }
-    }
-  }
-
-  "return InternalServerError" when {
-    "signup is submitted" should {
-      "return an error" in {
-        val fakeRequest = FakeRequest().withJsonBody(Json.toJson(testSignUpSubmission(testNino)))
-
-        mockRetrievalSuccess(Enrolments(Set(Enrolment(hmrcAsAgent, Seq(EnrolmentIdentifier("AgentReferenceNumber", "123456789")), "Activated"))))
-        signUp(testNino)(Future.successful(Left(ErrorModel(INTERNAL_SERVER_ERROR, "Failure"))))()
-
-        val result = TestController.signUp(testNino, testTaxYear)(fakeRequest)
-
-        status(result) shouldBe INTERNAL_SERVER_ERROR
-        contentAsString(result) shouldBe "Failed Sign up"
-        verifyAudit(RegistrationFailureAudit(testNino, INTERNAL_SERVER_ERROR, "Failure"))
-      }
-    }
-    "feature switch TaxYearSignup is enabled and signup is submitted" should {
-      "return an error" in {
-        enable(TaxYearSignup)
-        val fakeRequest = FakeRequest().withJsonBody(Json.toJson(testTaxYearSignUpSubmission(testNino, testTaxYear)))
-
-        mockRetrievalSuccess(Enrolments(Set(Enrolment(hmrcAsAgent, Seq(EnrolmentIdentifier("AgentReferenceNumber", "123456789")), "Activated"))))
-        signUpTaxYear(testNino, testTaxYear)(Future.successful(Left(ErrorModel(INTERNAL_SERVER_ERROR, "Failure"))))()
+        signUpTaxYear(testNino, testTaxYear)(Future.successful(Left(ErrorModel(INTERNAL_SERVER_ERROR, "Failure"))))
 
         val result = TestController.signUp(testNino, testTaxYear)(fakeRequest)
 

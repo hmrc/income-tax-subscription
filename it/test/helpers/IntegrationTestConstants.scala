@@ -143,14 +143,6 @@ object IntegrationTestConstants extends JsonUtils {
        |}
     """.stripMargin
 
-  def testSignUpSubmission(nino: String): JsValue = Json.parse(
-    s"""
-       |{
-       | "idType" : "NINO",
-       | "idValue" : "$nino"
-       |}
-      """.stripMargin)
-
   def testTaxYearSignUpSubmission(nino: String, taxYear:String): JsValue = Json.obj(
     "nino" -> nino,
     "signupTaxYear" -> taxYear

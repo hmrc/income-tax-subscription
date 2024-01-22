@@ -37,11 +37,11 @@ trait MockSignUpTaxYearConnector extends MockHttp with GuiceOneAppPerSuite {
   }
 
   val mockSignUpTaxYearConnector: SignUpTaxYearConnector = mock[SignUpTaxYearConnector]
-  val appConfigTaxYear: AppConfig = app.injector.instanceOf[AppConfig]
-  val connectorTaxYear = new SignUpTaxYearConnector(mockHttpClient, appConfigTaxYear)
+  val appConfig: AppConfig = app.injector.instanceOf[AppConfig]
+  val connectorTaxYear = new SignUpTaxYearConnector(mockHttpClient, appConfig)
 
 
-  def signUpTaxYear(nino: String, taxYear: String)(response: Future[PostSignUpResponse])(): Unit = {
-    when(mockSignUpTaxYearConnector.signUp(ArgumentMatchers.eq(nino ),ArgumentMatchers.eq(taxYear))(ArgumentMatchers.any())).thenReturn(response)
+  def signUpTaxYear(nino: String, taxYear: String)(response: Future[PostSignUpResponse]): Unit = {
+    when(mockSignUpTaxYearConnector.signUp(ArgumentMatchers.eq(nino), ArgumentMatchers.eq(taxYear))(ArgumentMatchers.any())).thenReturn(response)
   }
 }

@@ -29,7 +29,6 @@ object FeatureSwitch {
 
   val switches: Set[FeatureSwitch] = Set(
     StubDESFeature,
-    TaxYearSignup,
     NewGetBusinessDetails
   )
 
@@ -49,11 +48,6 @@ object FeatureSwitch {
 object StubDESFeature extends FeatureSwitch {
   val displayName = s"Use stub for DES connection"
   val name = s"$prefix.stub-des"
-}
-
-object TaxYearSignup extends FeatureSwitch {
-  val displayName = s"Provide API with tax year"
-  val name = s"$prefix.taxyear-signup"
 }
 
 object NewGetBusinessDetails extends FeatureSwitch {
