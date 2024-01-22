@@ -19,6 +19,8 @@ package utils
 import play.api.libs.json._
 import uk.gov.hmrc.http.HttpResponse
 
+import scala.language.implicitConversions
+
 trait JsonUtils {
 
   implicit def toJsValue[T](data: T)(implicit writer: Writes[T]): JsValue = Json.toJson(data)

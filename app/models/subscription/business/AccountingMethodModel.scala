@@ -18,6 +18,8 @@ package models.subscription.business
 
 import play.api.libs.json._
 
+import scala.language.implicitConversions
+
 
 sealed trait AccountingMethod {
   val stringValue: String
@@ -35,7 +37,7 @@ object AccountingMethod {
   val feCash = "Cash"
   val feAccruals = "Accruals"
 
-  private val reader: Reads[AccountingMethod] = __.read[String].map (convert)
+  private val reader: Reads[AccountingMethod] = __.read[String].map(convert)
 
   private val writer: Writes[AccountingMethod] = Writes[AccountingMethod](cashOrAccruals =>
     JsString(cashOrAccruals.stringValue)

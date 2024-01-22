@@ -20,11 +20,12 @@ import play.api.libs.json.{Json, OFormat}
 
 import java.time.LocalDate
 import java.time.format.{DateTimeFormatter, ResolverStyle}
+import scala.language.implicitConversions
 
 case class DateModel(day: String, month: String, year: String) {
 
-  val outputFormat: DateTimeFormatter = DateTimeFormatter.ofPattern("d MMMM uuuu").withResolverStyle(ResolverStyle.STRICT)
-  val desFormat: DateTimeFormatter = DateTimeFormatter.ofPattern("uuuu-MM-dd").withResolverStyle(ResolverStyle.STRICT)
+  private val outputFormat: DateTimeFormatter = DateTimeFormatter.ofPattern("d MMMM uuuu").withResolverStyle(ResolverStyle.STRICT)
+  private val desFormat: DateTimeFormatter = DateTimeFormatter.ofPattern("uuuu-MM-dd").withResolverStyle(ResolverStyle.STRICT)
 
   def toLocalDate: LocalDate = LocalDate.of(year.toInt, month.toInt, day.toInt)
 
