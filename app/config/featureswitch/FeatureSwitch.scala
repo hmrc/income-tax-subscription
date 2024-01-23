@@ -28,8 +28,7 @@ object FeatureSwitch {
   val prefix = "feature-switch"
 
   val switches: Set[FeatureSwitch] = Set(
-    StubDESFeature,
-    NewGetBusinessDetails
+    StubDESFeature
   )
 
   def apply(str: String): FeatureSwitch =
@@ -49,9 +48,3 @@ object StubDESFeature extends FeatureSwitch {
   val displayName = s"Use stub for DES connection"
   val name = s"$prefix.stub-des"
 }
-
-object NewGetBusinessDetails extends FeatureSwitch {
-  val displayName = s"Use the new get business details API"
-  val name = s"$prefix.new-get-business-details"
-}
-

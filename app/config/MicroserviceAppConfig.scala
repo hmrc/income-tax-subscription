@@ -24,10 +24,6 @@ import javax.inject.{Inject, Singleton}
 
 trait AppConfig {
   val configuration: Configuration
-  val authURL: String
-  val ggURL: String
-  val ggAdminURL: String
-  val ggAuthenticationURL: String
 
   val timeToLiveSeconds: Int
   val throttleTimeToLiveSeconds: Int
@@ -38,34 +34,30 @@ trait AppConfig {
 
   val desEnvironment: String
   val desToken: String
-  val paperlessPreferencesExpirySeconds: Int
   val desAuthorisationToken: String
   val desEnvironmentHeader: (String, String)
 
   def getBusinessDetailsURL: String
+
   val getBusinessDetailsAuthorisationToken: String
   val getBusinessDetailsEnvironment: String
 
   def statusDeterminationServiceURL: String
+
   val statusDeterminationServiceAuthorisationToken: String
   val statusDeterminationServiceEnvironment: String
 
   def signUpServiceURL: String
+
   val signUpServiceAuthorisationToken: String
   val signUpServiceEnvironment: String
 }
-
 
 
 @Singleton
 class MicroserviceAppConfig @Inject()(servicesConfig: ServicesConfig, val configuration: Configuration) extends AppConfig {
 
   private def loadConfig(key: String) = servicesConfig.getString(key)
-
-  override lazy val authURL: String = servicesConfig.baseUrl("auth")
-  override lazy val ggAuthenticationURL: String = servicesConfig.baseUrl("gg-authentication")
-  override lazy val ggURL: String = servicesConfig.baseUrl("government-gateway")
-  override lazy val ggAdminURL: String = servicesConfig.baseUrl("gg-admin")
 
   override lazy val getBusinessDetailsURL: String = servicesConfig.baseUrl("get-business-details")
 
@@ -77,7 +69,7 @@ class MicroserviceAppConfig @Inject()(servicesConfig: ServicesConfig, val config
 
   private val statusDeterminationServiceBase = "microservice.services.status-determination-service"
   override lazy val statusDeterminationServiceAuthorisationToken: String = s"Bearer ${loadConfig(s"$statusDeterminationServiceBase.authorization-token")}"
-  override lazy val statusDeterminationServiceEnvironment: String= loadConfig(s"$statusDeterminationServiceBase.environment")
+  override lazy val statusDeterminationServiceEnvironment: String = loadConfig(s"$statusDeterminationServiceBase.environment")
 
 
   override lazy val signUpServiceURL: String = servicesConfig.baseUrl("signup-tax-year-service")
@@ -99,16 +91,10 @@ class MicroserviceAppConfig @Inject()(servicesConfig: ServicesConfig, val config
 
   override lazy val desEnvironment: String = loadConfig(s"$desBase.environment")
   override lazy val desToken: String = loadConfig(s"$desBase.authorization-token")
-  override val paperlessPreferencesExpirySeconds: Int = {
-    servicesConfig.getInt(s"paperless-preference.expiry-seconds")
-  }
 
   lazy val mongoUri: String = loadConfig("mongodb.uri")
 
   lazy val timeToLiveSeconds: Int = loadConfig("mongodb.timeToLiveSeconds").toInt
   lazy val throttleTimeToLiveSeconds: Int = loadConfig("mongodb.throttleTimeToLiveSeconds").toInt
 
-  def businessSubscribeUrl(nino: String): String = s"$desURL/income-tax-self-assessment/nino/$nino/business"
-
-  def propertySubscribeUrl(nino: String): String = s"$desURL/income-tax-self-assessment/nino/$nino/properties"
 }

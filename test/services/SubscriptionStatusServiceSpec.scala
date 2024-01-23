@@ -17,7 +17,6 @@
 package services
 
 import common.CommonSpec
-import config.featureswitch.{FeatureSwitching, NewGetBusinessDetails}
 import models.ErrorModel
 import models.frontend.FESuccessResponse
 import models.registration.GetBusinessDetailsSuccessResponseModel
@@ -27,7 +26,6 @@ import org.scalatest.concurrent.ScalaFutures.convertScalaFuture
 import play.api.http.Status._
 import play.api.mvc.Request
 import play.api.test.FakeRequest
-import play.api.test.Helpers.{await, defaultAwaitTimeout}
 import services.mocks.TestSubscriptionStatusService
 import uk.gov.hmrc.http.HeaderCarrier
 import utils.TestConstants._
@@ -41,81 +39,37 @@ class SubscriptionStatusServiceSpec extends CommonSpec with TestSubscriptionStat
   implicit val request: Request[_] = FakeRequest()
 
   "SubscriptionStatusService.checkMtditsaSubscription" when {
-    "the new business details feature switch is enabled" should {
-      "return some mtditsa id" when {
-        "the connector returns a successful response" in {
-          when(mockConfiguration.getOptional[String](ArgumentMatchers.eq(NewGetBusinessDetails.name))(ArgumentMatchers.any()))
-            .thenReturn(Some(FeatureSwitching.FEATURE_SWITCH_ON))
+    "return some mtditsa id" when {
+      "the connector returns a successful response" in {
+        when(mockBusinessDetailsConnector.getBusinessDetails(ArgumentMatchers.eq(testNino))(ArgumentMatchers.any(), ArgumentMatchers.any()))
+          .thenReturn(Future.successful(Right(GetBusinessDetailsSuccessResponseModel(testMtditId))))
 
-          when(mockBusinessDetailsConnector.getBusinessDetails(ArgumentMatchers.eq(testNino))(ArgumentMatchers.any(), ArgumentMatchers.any()))
-            .thenReturn(Future.successful(Right(GetBusinessDetailsSuccessResponseModel(testMtditId))))
-
-          TestSubscriptionStatusService
-            .checkMtditsaSubscription(testNino)
-            .futureValue shouldBe Right(Some(FESuccessResponse(Some(testMtditId))))
-        }
-      }
-      "return no identifier" when {
-        "the connector indicates that no subscription was found" in {
-          when(mockConfiguration.getOptional[String](ArgumentMatchers.eq(NewGetBusinessDetails.name))(ArgumentMatchers.any()))
-            .thenReturn(Some(FeatureSwitching.FEATURE_SWITCH_ON))
-
-          when(mockBusinessDetailsConnector.getBusinessDetails(ArgumentMatchers.eq(testNino))(ArgumentMatchers.any(), ArgumentMatchers.any()))
-            .thenReturn(Future.successful(Left(ErrorModel(NOT_FOUND, "NOT_FOUND"))))
-
-          TestSubscriptionStatusService
-            .checkMtditsaSubscription(testNino)
-            .futureValue shouldBe Right(None)
-        }
-      }
-      "return an error" when {
-        "a internal server error was returned" in {
-          when(mockConfiguration.getOptional[String](ArgumentMatchers.eq(NewGetBusinessDetails.name))(ArgumentMatchers.any()))
-            .thenReturn(Some(FeatureSwitching.FEATURE_SWITCH_ON))
-
-          val error: ErrorModel = ErrorModel(INTERNAL_SERVER_ERROR, "INTERNAL_SERVER_ERROR")
-
-          when(mockBusinessDetailsConnector.getBusinessDetails(ArgumentMatchers.eq(testNino))(ArgumentMatchers.any(), ArgumentMatchers.any()))
-            .thenReturn(Future.successful(Left(error)))
-
-          TestSubscriptionStatusService
-            .checkMtditsaSubscription(testNino)
-            .futureValue shouldBe Left(error)
-        }
+        TestSubscriptionStatusService
+          .checkMtditsaSubscription(testNino)
+          .futureValue shouldBe Right(Some(FESuccessResponse(Some(testMtditId))))
       }
     }
-    "the new business details feature switch is disabled" should {
+    "return no identifier" when {
+      "the connector indicates that no subscription was found" in {
+        when(mockBusinessDetailsConnector.getBusinessDetails(ArgumentMatchers.eq(testNino))(ArgumentMatchers.any(), ArgumentMatchers.any()))
+          .thenReturn(Future.successful(Left(ErrorModel(NOT_FOUND, "NOT_FOUND"))))
 
-      def call: Either[ErrorModel, Option[FESuccessResponse]] = {
-        await(TestSubscriptionStatusService.checkMtditsaSubscription(testNino))
+        TestSubscriptionStatusService
+          .checkMtditsaSubscription(testNino)
+          .futureValue shouldBe Right(None)
       }
+    }
+    "return an error" when {
+      "a internal server error was returned" in {
+        val error: ErrorModel = ErrorModel(INTERNAL_SERVER_ERROR, "INTERNAL_SERVER_ERROR")
 
-      "return the Right(NONE) when the person does not have a mtditsa subscription" in {
-        when(mockConfiguration.getOptional[String](ArgumentMatchers.eq(NewGetBusinessDetails.name))(ArgumentMatchers.any()))
-          .thenReturn(None)
+        when(mockBusinessDetailsConnector.getBusinessDetails(ArgumentMatchers.eq(testNino))(ArgumentMatchers.any(), ArgumentMatchers.any()))
+          .thenReturn(Future.successful(Left(error)))
 
-        mockGetBusinessDetailsNotFound(testNino)
-
-        call.toOption.get shouldBe None
+        TestSubscriptionStatusService
+          .checkMtditsaSubscription(testNino)
+          .futureValue shouldBe Left(error)
       }
-
-      "return the Right(Some(FESuccessResponse)) when the person already have a mtditsa subscription" in {
-        when(mockConfiguration.getOptional[String](ArgumentMatchers.eq(NewGetBusinessDetails.name))(ArgumentMatchers.any()))
-          .thenReturn(None)
-
-        mockGetBusinessDetailsSuccess(testNino)
-        // testMtditId must be the same value defined in getBusinessDetailsSuccess
-        call.toOption.get shouldBe Some(FESuccessResponse(Some(testMtditId)))
-      }
-
-      "return the error for other error type" in {
-        when(mockConfiguration.getOptional[String](ArgumentMatchers.eq(NewGetBusinessDetails.name))(ArgumentMatchers.any()))
-          .thenReturn(None)
-
-        mockGetBusinessDetailsFailure(testNino)
-        call.swap.toOption.get.status shouldBe INTERNAL_SERVER_ERROR
-      }
-
     }
   }
 }

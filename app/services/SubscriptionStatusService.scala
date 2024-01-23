@@ -17,8 +17,8 @@
 package services
 
 import config.AppConfig
-import config.featureswitch.{FeatureSwitching, NewGetBusinessDetails}
-import connectors.{BusinessDetailsConnector, OldBusinessDetailsConnector}
+import config.featureswitch.FeatureSwitching
+import connectors.BusinessDetailsConnector
 import models.ErrorModel
 import models.frontend.FESuccessResponse
 import play.api.Logging
@@ -31,7 +31,6 @@ import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class SubscriptionStatusService @Inject()(val appConfig: AppConfig,
-                                          oldBusinessDetailsConnector: OldBusinessDetailsConnector,
                                           businessDetailsConnector: BusinessDetailsConnector)
   extends Logging with FeatureSwitching {
 
@@ -43,29 +42,15 @@ class SubscriptionStatusService @Inject()(val appConfig: AppConfig,
 
   def checkMtditsaSubscription(nino: String)
                               (implicit hc: HeaderCarrier, ec: ExecutionContext, request: Request[_]): Future[Either[ErrorModel, Option[FESuccessResponse]]] = {
-
-    if (isEnabled(NewGetBusinessDetails)) {
-      businessDetailsConnector.getBusinessDetails(nino) map {
-        case Right(response) =>
-          Right(Some(FESuccessResponse(Some(response.mtdId))))
-        case Left(error: ErrorModel) =>
-          if (error.status == NOT_FOUND) {
-            Right(None)
-          } else {
-            Left(error)
-          }
-      }
-    } else {
-      oldBusinessDetailsConnector.getBusinessDetails(nino).map {
-        // if the subscription is not found, convert it to OK with {}
-        case Left(error: ErrorModel) if error.status == NOT_FOUND =>
-          logger.debug(s"SubscriptionStatusService.checkMtditsaEnrolment - No mtditsa enrolment for nino=$nino")
+    businessDetailsConnector.getBusinessDetails(nino) map {
+      case Right(response) =>
+        Right(Some(FESuccessResponse(Some(response.mtdId))))
+      case Left(error: ErrorModel) =>
+        if (error.status == NOT_FOUND) {
           Right(None)
-        case Right(x) =>
-          logger.debug(s"SubscriptionStatusService.checkMtditsaEnrolment - Client is already enrolled with mtditsa, ref=${x.mtdbsa}")
-          Right(Some(FESuccessResponse(Some(x.mtdbsa))))
-        case Left(x) => Left(x)
-      }
+        } else {
+          Left(error)
+        }
     }
   }
 }
