@@ -17,7 +17,7 @@
 package services.mocks
 
 import config.MicroserviceAppConfig
-import connectors.mocks.{MockBusinessDetailsConnector, MockOldBusinessDetailsConnector}
+import connectors.mocks.MockBusinessDetailsConnector
 import models.ErrorModel
 import models.frontend.FESuccessResponse
 import org.mockito.Mockito._
@@ -30,7 +30,7 @@ import utils.TestConstants._
 
 import scala.concurrent.Future
 
-trait TestSubscriptionStatusService extends MockOldBusinessDetailsConnector with MockBusinessDetailsConnector {
+trait TestSubscriptionStatusService extends MockBusinessDetailsConnector {
 
   val mockServicesConfig: ServicesConfig = mock[ServicesConfig]
   val mockConfiguration: Configuration = mock[Configuration]
@@ -38,7 +38,6 @@ trait TestSubscriptionStatusService extends MockOldBusinessDetailsConnector with
 
   object TestSubscriptionStatusService extends SubscriptionStatusService(
     mockConfig,
-    mockOldBusinessDetailsConnector,
     mockBusinessDetailsConnector
   )
 
