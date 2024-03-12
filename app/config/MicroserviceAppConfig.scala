@@ -26,6 +26,7 @@ trait AppConfig {
   val configuration: Configuration
 
   val timeToLiveSeconds: Int
+  val sessionTimeToLiveSeconds: Int
   val throttleTimeToLiveSeconds: Int
 
   val mongoUri: String
@@ -95,6 +96,7 @@ class MicroserviceAppConfig @Inject()(servicesConfig: ServicesConfig, val config
   lazy val mongoUri: String = loadConfig("mongodb.uri")
 
   lazy val timeToLiveSeconds: Int = loadConfig("mongodb.timeToLiveSeconds").toInt
+  lazy val sessionTimeToLiveSeconds: Int = loadConfig("mongodb.sessionTimeToLiveSeconds").toInt
   lazy val throttleTimeToLiveSeconds: Int = loadConfig("mongodb.throttleTimeToLiveSeconds").toInt
 
 }
