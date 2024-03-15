@@ -13,6 +13,12 @@ POST        /subscription-data                          controllers.Subscription
 
 DELETE      /subscription-data/:reference/id/:id        controllers.SubscriptionDataController.deleteSubscriptionData(reference: String, id: String)
 
+#Session Data
+GET         /session-data/all                        controllers.SessionDataController.getAllSessionData
+GET         /session-data/id/:id                     controllers.SessionDataController.retrieveSessionData(id: String)
+POST        /session-data/id/:id                     controllers.SessionDataController.insertSessionData(id: String)
+DELETE      /session-data/id/:id                     controllers.SessionDataController.deleteSessionData(id: String)
+
 POST        /mis/sign-up/:nino/:taxYear                 controllers.SignUpController.signUp(nino: String, taxYear: String)
 
 POST        /mis/create/:mtdbsaRef                      controllers.BusinessIncomeSourcesController.createIncomeSource(mtdbsaRef: String)
