@@ -26,7 +26,7 @@ import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
 import org.scalatestplus.play.guice.GuiceOneServerPerSuite
 import play.api.inject.guice.GuiceApplicationBuilder
-import play.api.libs.json.{JsValue, Json, Writes}
+import play.api.libs.json.{JsObject, JsValue, Json, Writes}
 import play.api.libs.ws.WSResponse
 import play.api.{Application, Environment, Mode}
 import uk.gov.hmrc.http.HeaderCarrier
@@ -148,6 +148,19 @@ trait ComponentSpecBase extends AnyWordSpecLike
       authorisedClient(s"/subscription-data/$reference/all")
         .get()
         .futureValue
+
+
+    def getAllSessionData: WSResponse =
+      authorisedClient(s"/session-data/all").get().futureValue
+
+    def retrieveSessionData(id:String): WSResponse =
+      authorisedClient(s"/session-data/id/$id").get().futureValue
+
+    def deleteSessionData(id:String): WSResponse =
+      authorisedClient(s"/session-data/id/$id").delete().futureValue
+
+    def insertSessionData(id:String, body: JsObject): WSResponse =
+      authorisedClient(s"/session-data/id/$id", "Content-Type" -> "application/json").post(body.toString()).futureValue
 
     def post[T](uri: String, body: T)(implicit writes: Writes[T]): WSResponse =
       buildClient(uri)
