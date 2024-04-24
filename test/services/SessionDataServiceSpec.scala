@@ -16,7 +16,6 @@
 
 package services
 
-import com.mongodb.client.result.DeleteResult
 import common.CommonSpec
 import config.MicroserviceAppConfig
 import config.featureswitch.FeatureSwitching
@@ -28,11 +27,9 @@ import play.api.Configuration
 import play.api.libs.json.{JsObject, Json}
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
 import repositories.SessionDataRepository
-import services.SubscriptionDataService.{Created, Existence, Existing}
 import uk.gov.hmrc.http.{HeaderCarrier, InternalServerException, SessionId}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
-import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 class SessionDataServiceSpec extends CommonSpec with MockitoSugar with FeatureSwitching with BeforeAndAfterEach {
