@@ -17,21 +17,16 @@
 package repositories
 
 import com.mongodb.client.model.{FindOneAndUpdateOptions, IndexOptions}
-import com.mongodb.client.result.DeleteResult
 import config.AppConfig
 import org.bson.Document
 import org.bson.conversions.Bson
 import org.mongodb.scala.model.IndexModel
 import org.mongodb.scala.result.InsertOneResult
-import play.api.libs.json.Json.JsValueWrapper
 import play.api.libs.json._
-import uk.gov.hmrc.http.InternalServerException
 import uk.gov.hmrc.mongo.MongoComponent
 import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
-import utils.JsonUtils.JsObjectUtil
 
 import java.time.Instant
-import java.util.UUID
 import java.util.concurrent.TimeUnit
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}

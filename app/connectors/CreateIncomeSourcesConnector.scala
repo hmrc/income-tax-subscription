@@ -33,14 +33,14 @@ class CreateIncomeSourcesConnector @Inject()(http: HttpClient,
                                              appConfig: AppConfig,
                                              auditService: AuditService)(implicit ec: ExecutionContext) {
 
-  def businessIncomeUrl(mtdbsaRef: String): String = s"${appConfig.desURL}/income-tax/income-sources/mtdbsa/$mtdbsaRef/ITSA/business"
+  private def businessIncomeUrl(mtdbsaRef: String): String = {
+    s"${appConfig.desURL}/income-tax/income-sources/mtdbsa/$mtdbsaRef/ITSA/business"
+  }
 
   def createBusinessIncomeSources(agentReferenceNumber: Option[String],
                                   mtdbsaRef: String,
                                   createIncomeSources: CreateIncomeSourcesModel)
                                  (implicit hc: HeaderCarrier, request: Request[_]): Future[PostIncomeSourceResponse] = {
-
-    auditService.extendedAudit(CompletedSignUpAudit(agentReferenceNumber, createIncomeSources, appConfig.desAuthorisationToken))
 
     val headerCarrier: HeaderCarrier = hc
       .copy(authorization = Some(Authorization(appConfig.desAuthorisationToken)))
@@ -56,7 +56,13 @@ class CreateIncomeSourcesConnector @Inject()(http: HttpClient,
       implicitly[HttpReads[PostIncomeSourceResponse]],
       headerCarrier,
       implicitly
-    )
+    ) map {
+      case Left(error) =>
+        Left(error)
+      case Right(value) =>
+        auditService.extendedAudit(CompletedSignUpAudit(agentReferenceNumber, createIncomeSources, appConfig.desAuthorisationToken))
+        Right(value)
+    }
 
   }
 

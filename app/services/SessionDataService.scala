@@ -23,27 +23,26 @@ import repositories.SessionDataRepository
 import uk.gov.hmrc.http.{HeaderCarrier, InternalServerException}
 
 import javax.inject.{Inject, Singleton}
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.Future
 
 @Singleton
-class SessionDataService @Inject()(sessionDataRepository: SessionDataRepository, val appConfig: AppConfig)
-                                  (implicit ec: ExecutionContext) extends FeatureSwitching {
+class SessionDataService @Inject()(sessionDataRepository: SessionDataRepository, val appConfig: AppConfig) extends FeatureSwitching {
 
 
-  def getAllSessionData(implicit hc:HeaderCarrier): Future[Option[JsValue]] =
+  def getAllSessionData(implicit hc: HeaderCarrier): Future[Option[JsValue]] =
     sessionDataRepository.getSessionData(sessionId = sessionIdFromHC)
 
-  def getSessionData(dataId: String)(implicit hc:HeaderCarrier): Future[Option[JsValue]] =
+  def getSessionData(dataId: String)(implicit hc: HeaderCarrier): Future[Option[JsValue]] =
     sessionDataRepository.getDataFromSession(sessionId = sessionIdFromHC, dataId = dataId)
 
-  def insertSessionData(dataId: String, data: JsValue)(implicit hc:HeaderCarrier): Future[Option[JsValue]] =
+  def insertSessionData(dataId: String, data: JsValue)(implicit hc: HeaderCarrier): Future[Option[JsValue]] =
     sessionDataRepository.insertDataWithSession(
       sessionId = sessionIdFromHC,
       dataId = dataId,
       data = data
     )
 
-  def deleteSessionData(dataId: String)(implicit hc:HeaderCarrier): Future[Option[JsValue]] =
+  def deleteSessionData(dataId: String)(implicit hc: HeaderCarrier): Future[Option[JsValue]] =
     sessionDataRepository.deleteDataWithSession(
       sessionId = sessionIdFromHC,
       dataId = dataId
