@@ -138,8 +138,12 @@ object IntegrationTestConstants extends JsonUtils {
   def failureResponse(code: String, reason: String): JsValue =
     s"""
        |{
-       |  "code":"$code",
-       |  "reason":"$reason"
+       |  "failures":[
+       |    {
+       |      "code":"$code",
+       |      "reason":"$reason"
+       |    }
+       |  ]
        |}
     """.stripMargin
 

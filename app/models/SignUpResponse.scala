@@ -18,8 +18,14 @@ package models
 
 import play.api.libs.json.{Json, OFormat}
 
-case class SignUpResponse(mtdbsa: String)
+sealed trait SignUpResponse
 
 object SignUpResponse {
-  implicit val format: OFormat[SignUpResponse] = Json.format[SignUpResponse]
+
+  case class SignUpSuccess(mtdbsa: String) extends SignUpResponse
+
+  case object AlreadySignedUp extends SignUpResponse
+
+  implicit val format: OFormat[SignUpSuccess] = Json.format[SignUpSuccess]
+
 }
