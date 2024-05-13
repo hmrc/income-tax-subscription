@@ -21,7 +21,7 @@ import config.featureswitch.FeatureSwitching
 import helpers.ComponentSpecBase
 import helpers.IntegrationTestConstants._
 import helpers.servicemocks.{AuthStub, SignUpTaxYearStub}
-import models.SignUpResponse
+import models.SignUpResponse.SignUpSuccess
 import play.api.Configuration
 import play.api.http.Status._
 
@@ -47,7 +47,7 @@ class SignUpControllerISpec extends ComponentSpecBase with FeatureSwitching {
         httpStatus(OK)
       )
       res should have(
-        jsonBodyAs[SignUpResponse](SignUpResponse("XQIT00000000001"))
+        jsonBodyAs[SignUpSuccess](SignUpSuccess("XQIT00000000001"))
       )
     }
 

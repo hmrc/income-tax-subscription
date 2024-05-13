@@ -20,6 +20,7 @@ package controllers
 import common.Extractors
 import config.AppConfig
 import connectors.SignUpTaxYearConnector
+import models.SignUpResponse.{AlreadySignedUp, SignUpSuccess}
 import models.monitoring.{RegistrationFailureAudit, RegistrationSuccessAudit}
 import play.api.libs.json.Json
 import play.api.mvc._
@@ -53,12 +54,15 @@ class SignUpController @Inject()(authService: AuthService,
 
   private def signUp(nino: String, taxYear: String, agentReferenceNumber: Option[String])(implicit request: Request[AnyContent]) =
     signUpTaxYearConnector.signUp(nino, taxYear).map {
-      case Right(response) =>
+      case Right(response: SignUpSuccess) =>
         val path: Option[String] = request.headers.get(ITSASessionKeys.RequestURI)
         auditService.audit(RegistrationSuccessAudit(
           agentReferenceNumber, nino, response.mtdbsa, appConfig.signUpServiceAuthorisationToken, path
         ))
         Ok(Json.toJson(response))
+      case Right(AlreadySignedUp) =>
+        logger.warn(s"[SignUpController][signUp] - sign up returned customer already signed up")
+        UnprocessableEntity("Customer already signed up")
       case Left(error) =>
         logger.error(s"Error processing Sign up request with status ${error.status} and message ${error.reason}")
         auditService.audit(RegistrationFailureAudit(nino, error.status, error.reason))
