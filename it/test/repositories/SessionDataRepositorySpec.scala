@@ -154,6 +154,26 @@ class SessionDataRepositorySpec extends AnyWordSpecLike with Matchers with Optio
       }
     }
 
+    "deleteDataBySessionId" when {
+      "the document was found" should {
+        "delete the entire document" in new Setup(testDocument()) {
+          testSessionDataRepository.deleteDataBySessionId(testSessionId).futureValue.isDefined shouldBe true
+
+          val optionalData: Option[JsValue] = testSessionDataRepository.getSessionData(testSessionId).futureValue
+          optionalData shouldBe None
+        }
+      }
+
+      "the document is not found" should {
+        "return no document" in new Setup(testDocument("testSessionIdTwo")) {
+          testSessionDataRepository.deleteDataBySessionId(testSessionId).futureValue shouldBe None
+
+          val optionalData: Option[JsValue] = testSessionDataRepository.getSessionData(testSessionId).futureValue
+          optionalData shouldBe None
+        }
+      }
+    }
+
     "the document is not found" should {
       "return no document" in new Setup(testDocument()) {
         testSessionDataRepository.deleteDataWithSession(testSessionId + "-2", "testDataIdOne").futureValue shouldBe None

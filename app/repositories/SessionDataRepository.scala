@@ -16,7 +16,7 @@
 
 package repositories
 
-import com.mongodb.client.model.{FindOneAndUpdateOptions, IndexOptions}
+import com.mongodb.client.model.{FindOneAndDeleteOptions, FindOneAndUpdateOptions, IndexOptions}
 import config.AppConfig
 import org.bson.Document
 import org.bson.conversions.Bson
@@ -25,6 +25,7 @@ import org.mongodb.scala.result.InsertOneResult
 import play.api.libs.json._
 import uk.gov.hmrc.mongo.MongoComponent
 import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
+import views.html.helper.options
 
 import java.time.Instant
 import java.util.concurrent.TimeUnit
@@ -101,12 +102,20 @@ class SessionDataRepository @Inject()(config: SessionDataRepositoryConfig)(impli
     findAndUpdate(selector, update)
   }
 
-
   private def findAndUpdate(selector: JsObject, update: JsObject, fetchNewObject: Boolean = false, upsert: Boolean = false) = {
     collection
       .findOneAndUpdate(selector, update, findOneAndUpdateOptions(upsert))
       .toFuture()
       .map(asOption)
+  }
+
+  def deleteDataBySessionId(sessionId: String): Future[Option[JsValue]] = {
+    val selector: JsObject = Json.obj("session-id" -> sessionId)
+    findAndDelete(selector)
+  }
+  private def findAndDelete(selector: JsObject): Future[Option[JsValue]] = {
+    collection.findOneAndDelete(selector)
+      .toFutureOption()
   }
 
   def insert(document: JsObject): Future[InsertOneResult] = {

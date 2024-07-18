@@ -177,4 +177,14 @@ class SessionDataControllerISpec extends ComponentSpecBase with FeatureSwitching
       }
     }
   }
+
+  s"DELETE ${controllers.routes.SessionDataController.deleteAllSessionData("testSessionId").url}" should {
+    "return OK and remove the entire document related to the user in mongo" when {
+      "the sessionId exists in mongo for the user" in {
+        AuthStub.stubAuthSuccess()
+        await(repository.insert(testDocumentAll))
+        IncomeTaxSubscription.deleteAllSessionData(sessionId = "testSessionId") should have(httpStatus(OK))
+      }
+    }
+  }
 }

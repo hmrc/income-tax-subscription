@@ -48,6 +48,10 @@ class SessionDataService @Inject()(sessionDataRepository: SessionDataRepository,
       dataId = dataId
     )
 
+  def deleteAllSessionData(sessionId: String): Future[Option[JsValue]] =
+    sessionDataRepository.deleteDataBySessionId(sessionId)
+
+
   private[services] def sessionIdFromHC(implicit hc: HeaderCarrier): String = {
     hc.sessionId.fold(
       throw new InternalServerException("[SessionDataService][sessionIdFromHC] - No session id in header carrier")

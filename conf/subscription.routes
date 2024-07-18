@@ -18,6 +18,7 @@ GET         /session-data/all                        controllers.SessionDataCont
 GET         /session-data/id/:id                     controllers.SessionDataController.retrieveSessionData(id: String)
 POST        /session-data/id/:id                     controllers.SessionDataController.insertSessionData(id: String)
 DELETE      /session-data/id/:id                     controllers.SessionDataController.deleteSessionData(id: String)
+DELETE      /session-data/id/:sessionId              controllers.SessionDataController.deleteAllSessionData(sessionId: String)
 
 POST        /mis/sign-up/:nino/:taxYear                 controllers.SignUpController.signUp(nino: String, taxYear: String)
 
