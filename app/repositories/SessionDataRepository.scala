@@ -16,7 +16,7 @@
 
 package repositories
 
-import com.mongodb.client.model.{FindOneAndDeleteOptions, FindOneAndUpdateOptions, IndexOptions}
+import com.mongodb.client.model.{FindOneAndUpdateOptions, IndexOptions}
 import config.AppConfig
 import org.bson.Document
 import org.bson.conversions.Bson
@@ -25,7 +25,6 @@ import org.mongodb.scala.result.InsertOneResult
 import play.api.libs.json._
 import uk.gov.hmrc.mongo.MongoComponent
 import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
-import views.html.helper.options
 
 import java.time.Instant
 import java.util.concurrent.TimeUnit

@@ -18,6 +18,7 @@ package repositories
 
 import helpers.IntegrationTestConstants.testArn
 import org.scalatest.concurrent.ScalaFutures.convertScalaFuture
+import org.scalatest.matchers.must.Matchers.convertToAnyMustWrapper
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
 import org.scalatest.{BeforeAndAfterEach, OptionValues}
@@ -157,7 +158,7 @@ class SessionDataRepositorySpec extends AnyWordSpecLike with Matchers with Optio
     "deleteDataBySessionId" when {
       "the document was found" should {
         "delete the entire document" in new Setup(testDocument()) {
-          testSessionDataRepository.deleteDataBySessionId(testSessionId).futureValue.isDefined shouldBe true
+          testSessionDataRepository.deleteDataBySessionId(testSessionId).futureValue.map(_ \ "session-id").flatMap(_.asOpt[String]) shouldBe Some(testSessionId)
 
           val optionalData: Option[JsValue] = testSessionDataRepository.getSessionData(testSessionId).futureValue
           optionalData shouldBe None
@@ -168,8 +169,8 @@ class SessionDataRepositorySpec extends AnyWordSpecLike with Matchers with Optio
         "return no document" in new Setup(testDocument("testSessionIdTwo")) {
           testSessionDataRepository.deleteDataBySessionId(testSessionId).futureValue shouldBe None
 
-          val optionalData: Option[JsValue] = testSessionDataRepository.getSessionData(testSessionId).futureValue
-          optionalData shouldBe None
+          val optionalData: Option[JsValue] = testSessionDataRepository.getSessionData("testSessionIdTwo").futureValue
+          optionalData.isDefined shouldBe true
         }
       }
     }

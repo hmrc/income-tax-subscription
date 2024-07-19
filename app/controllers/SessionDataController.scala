@@ -68,9 +68,9 @@ class SessionDataController @Inject()(authService: AuthService,
     }
   }
 
-  def deleteAllSessionData(sessionId: String): Action[AnyContent] = Action.async { implicit request =>
+  def deleteAllSessionData(): Action[AnyContent] = Action.async { implicit request =>
     authService.authorised() {
-      sessionDataService.deleteAllSessionData(sessionId).map(_ => Ok)
+      sessionDataService.deleteAllSessionData.map(_ => Ok)
     }
   }
 }

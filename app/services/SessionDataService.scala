@@ -48,8 +48,8 @@ class SessionDataService @Inject()(sessionDataRepository: SessionDataRepository,
       dataId = dataId
     )
 
-  def deleteAllSessionData(sessionId: String): Future[Option[JsValue]] =
-    sessionDataRepository.deleteDataBySessionId(sessionId)
+  def deleteAllSessionData(implicit hc: HeaderCarrier): Future[Option[JsValue]] =
+    sessionDataRepository.deleteDataBySessionId(sessionId = sessionIdFromHC)
 
 
   private[services] def sessionIdFromHC(implicit hc: HeaderCarrier): String = {
