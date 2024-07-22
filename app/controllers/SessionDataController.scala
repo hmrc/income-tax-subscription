@@ -67,4 +67,10 @@ class SessionDataController @Inject()(authService: AuthService,
       ).map(_ => Ok)
     }
   }
+
+  def deleteAllSessionData(): Action[AnyContent] = Action.async { implicit request =>
+    authService.authorised() {
+      sessionDataService.deleteAllSessionData.map(_ => Ok)
+    }
+  }
 }

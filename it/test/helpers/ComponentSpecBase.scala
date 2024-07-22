@@ -159,6 +159,9 @@ trait ComponentSpecBase extends AnyWordSpecLike
     def deleteSessionData(id:String): WSResponse =
       authorisedClient(s"/session-data/id/$id").delete().futureValue
 
+    def deleteAllSessionData(): WSResponse =
+      authorisedClient(s"/session-data/id").delete().futureValue
+
     def insertSessionData(id:String, body: JsObject): WSResponse =
       authorisedClient(s"/session-data/id/$id", "Content-Type" -> "application/json").post(body.toString()).futureValue
 

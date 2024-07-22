@@ -110,4 +110,19 @@ class SessionDataServiceSpec extends CommonSpec with MockitoSugar with FeatureSw
     }
   }
 
+  "deleteAllSessionData" should {
+    "delete session using sessionId" in new Setup {
+
+      when(mockSessionDataRepository.deleteDataBySessionId(ArgumentMatchers.eq(testSessionId)))
+        .thenReturn(Future.successful(Some(testJson)))
+
+      await(service.deleteAllSessionData(headerCarrier)) shouldBe Some(testJson)
+    }
+    "throw an internal server exception when no session id exists" in new Setup {
+      intercept[InternalServerException](
+        await(service.deleteAllSessionData(headerCarrierWithOutSessionId))
+      ).message shouldBe errorMessage
+    }
+  }
+
 }

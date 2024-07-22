@@ -101,12 +101,20 @@ class SessionDataRepository @Inject()(config: SessionDataRepositoryConfig)(impli
     findAndUpdate(selector, update)
   }
 
-
   private def findAndUpdate(selector: JsObject, update: JsObject, fetchNewObject: Boolean = false, upsert: Boolean = false) = {
     collection
       .findOneAndUpdate(selector, update, findOneAndUpdateOptions(upsert))
       .toFuture()
       .map(asOption)
+  }
+
+  def deleteDataBySessionId(sessionId: String): Future[Option[JsValue]] = {
+    val selector: JsObject = Json.obj("session-id" -> sessionId)
+    findAndDelete(selector)
+  }
+  private def findAndDelete(selector: JsObject): Future[Option[JsValue]] = {
+    collection.findOneAndDelete(selector)
+      .toFutureOption()
   }
 
   def insert(document: JsObject): Future[InsertOneResult] = {
