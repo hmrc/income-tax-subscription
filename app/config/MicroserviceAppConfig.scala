@@ -52,6 +52,10 @@ trait AppConfig {
 
   val signUpServiceAuthorisationToken: String
   val signUpServiceEnvironment: String
+
+  val prePopURL: String
+  val prePopAuthorisationToken: String
+  val prePopEnvironment: String
 }
 
 
@@ -79,6 +83,12 @@ class MicroserviceAppConfig @Inject()(servicesConfig: ServicesConfig, val config
   override lazy val signUpServiceAuthorisationToken: String = s"Bearer ${loadConfig(s"$signUpServiceBase.authorization-token")}"
   override lazy val signUpServiceEnvironment: String = loadConfig(s"$signUpServiceBase.environment")
 
+  override lazy val prePopURL: String = servicesConfig.baseUrl("pre-pop")
+
+  private val prePopBase = "microservice.services.pre-pop"
+  override lazy val prePopAuthorisationToken: String = s"Bearer ${loadConfig(s"$prePopBase.authorization-token")}"
+  override lazy val prePopEnvironment: String = loadConfig(s"$prePopBase.environment")
+
   private def desBase =
     if (FeatureSwitching.isEnabled(featureswitch.StubDESFeature, configuration)) "microservice.services.stub-des"
     else "microservice.services.des"
@@ -98,5 +108,4 @@ class MicroserviceAppConfig @Inject()(servicesConfig: ServicesConfig, val config
   lazy val timeToLiveSeconds: Int = loadConfig("mongodb.timeToLiveSeconds").toInt
   lazy val sessionTimeToLiveSeconds: Int = loadConfig("mongodb.sessionTimeToLiveSeconds").toInt
   lazy val throttleTimeToLiveSeconds: Int = loadConfig("mongodb.throttleTimeToLiveSeconds").toInt
-
 }

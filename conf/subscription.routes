@@ -24,6 +24,8 @@ POST        /mis/sign-up/:nino/:taxYear                 controllers.SignUpContro
 
 POST        /mis/create/:mtdbsaRef                      controllers.BusinessIncomeSourcesController.createIncomeSource(mtdbsaRef: String)
 
+GET         /pre-pop/:nino                              controllers.PrePopController.prePop(nino: String)
+
 POST        /throttled                                  controllers.throttle.ThrottlingController.throttled(throttleId: String)
 
 POST        /itsa-status                                controllers.MandationStatusController.mandationStatus

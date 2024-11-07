@@ -60,15 +60,17 @@ trait ComponentSpecBase extends AnyWordSpecLike
     "microservice.services.gg-authentication.host" -> mockHost,
     "microservice.services.gg-authentication.port" -> mockPort,
     "microservice.services.throttle-threshold" -> "2",
-    "throttle.testThrottle.max"-> "10",
-    "throttle.zeroTestThrottle.max"-> "0",
+    "throttle.testThrottle.max" -> "10",
+    "throttle.zeroTestThrottle.max" -> "0",
     "throttle.oneTestThrottle.max" -> "1",
     "microservice.services.status-determination-service.host" -> mockHost,
     "microservice.services.status-determination-service.port" -> mockPort,
     "microservice.services.signup-tax-year-service.host" -> mockHost,
     "microservice.services.signup-tax-year-service.port" -> mockPort,
     "microservice.services.get-business-details.host" -> mockHost,
-    "microservice.services.get-business-details.port" -> mockPort
+    "microservice.services.get-business-details.port" -> mockPort,
+    "microservice.services.pre-pop.host" -> mockHost,
+    "microservice.services.pre-pop.port" -> mockPort
   ) ++ overriddenConfig()
 
   def overriddenConfig(): Map[String, String] = Map.empty
@@ -153,17 +155,20 @@ trait ComponentSpecBase extends AnyWordSpecLike
     def getAllSessionData: WSResponse =
       authorisedClient(s"/session-data/all").get().futureValue
 
-    def retrieveSessionData(id:String): WSResponse =
+    def retrieveSessionData(id: String): WSResponse =
       authorisedClient(s"/session-data/id/$id").get().futureValue
 
-    def deleteSessionData(id:String): WSResponse =
+    def deleteSessionData(id: String): WSResponse =
       authorisedClient(s"/session-data/id/$id").delete().futureValue
 
     def deleteAllSessionData(): WSResponse =
       authorisedClient(s"/session-data/id").delete().futureValue
 
-    def insertSessionData(id:String, body: JsObject): WSResponse =
+    def insertSessionData(id: String, body: JsObject): WSResponse =
       authorisedClient(s"/session-data/id/$id", "Content-Type" -> "application/json").post(body.toString()).futureValue
+
+    def getPrePop(nino: String): WSResponse =
+      authorisedClient(s"/pre-pop/$nino").get().futureValue
 
     def post[T](uri: String, body: T)(implicit writes: Writes[T]): WSResponse =
       buildClient(uri)
@@ -182,6 +187,6 @@ trait ComponentSpecBase extends AnyWordSpecLike
     val authorisation = "Authorization" -> "Bearer 123"
     val headers = extraHeaders.toList :+ sessionId :+ authorisation
     buildClient(path)
-      .withHttpHeaders(headers:_*)
+      .withHttpHeaders(headers: _*)
   }
 }
