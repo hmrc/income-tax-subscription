@@ -56,7 +56,7 @@ class PrePopConnectorISpec extends ComponentSpecBase {
 
         result.futureValue shouldBe Right(PrePopData(
           selfEmployment = Some(Seq(
-            PrePopSelfEmployment(name = "ABC", trade = Some("Plumbing"), address = None, startDate = None, accountingMethod = Cash)
+            PrePopSelfEmployment(name = Some("ABC"), trade = Some("Plumbing"), address = None, startDate = None, accountingMethod = Cash)
           )),
           ukPropertyAccountingMethod = None,
           foreignPropertyAccountingMethod = None

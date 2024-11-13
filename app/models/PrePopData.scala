@@ -47,7 +47,7 @@ object PrePopData {
 
 }
 
-case class PrePopSelfEmployment(name: String,
+case class PrePopSelfEmployment(name: Option[String],
                                 trade: Option[String],
                                 address: Option[Address],
                                 startDate: Option[DateModel],
@@ -60,7 +60,7 @@ object PrePopSelfEmployment {
   private val tradeMaxLength: Int = 35
   private val tradeMinLetters: Int = 2
 
-  private def fromApi(name: String,
+  private def fromApi(name: Option[String],
                       trade: String,
                       addressFirstLine: Option[String],
                       addressPostcode: Option[String],
@@ -69,7 +69,7 @@ object PrePopSelfEmployment {
 
     // Any characters not defined in this list will be matched on and replaced by single spaces
     val notAllowedCharactersRegex: String = """[^ A-Za-z0-9&'/\\.,-]"""
-    val adjustedName = name.replaceAll(notAllowedCharactersRegex, " ").trim
+    val adjustedName = name.map(_.replaceAll(notAllowedCharactersRegex, " ").trim)
     val adjustedTrade = trade.replaceAll(notAllowedCharactersRegex, " ").trim
 
     PrePopSelfEmployment(
@@ -94,7 +94,7 @@ object PrePopSelfEmployment {
   }
 
   implicit val reads: Reads[PrePopSelfEmployment] = (
-    (__ \ "businessName").read[String] and
+    (__ \ "businessName").readNullable[String] and
       (__ \ "businessDescription").read[String] and
       (__ \ "businessAddressFirstLine").readNullable[String] and
       (__ \ "businessAddressPostcode").readNullable[String] and
