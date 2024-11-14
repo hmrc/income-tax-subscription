@@ -38,7 +38,7 @@ class PrePopDataSpec extends PlaySpec with Matchers {
           "businessDescription" -> ("A" * 36),
           "accountingMethod" -> "A"
         )) mustBe JsSuccess(PrePopSelfEmployment(
-          name = "AB 123",
+          name = Some("AB 123"),
           trade = None,
           address = None,
           startDate = None,
@@ -51,7 +51,7 @@ class PrePopDataSpec extends PlaySpec with Matchers {
           "businessDescription" -> "P 383",
           "accountingMethod" -> "A"
         )) mustBe JsSuccess(PrePopSelfEmployment(
-          name = "AB 123",
+          name = Some("AB 123"),
           trade = None,
           address = None,
           startDate = None,
@@ -64,7 +64,7 @@ class PrePopDataSpec extends PlaySpec with Matchers {
           "businessDescription" -> """!@£$%^*()_+}{":?><~`#§± AZaz09&'/\.,-""",
           "accountingMethod" -> "A"
         )) mustBe JsSuccess(PrePopSelfEmployment(
-          name = "AB 123",
+          name = Some("AB 123"),
           trade = Some("""AZaz09&'/\.,-"""),
           address = None,
           startDate = None,
@@ -77,7 +77,7 @@ class PrePopDataSpec extends PlaySpec with Matchers {
           "businessDescription" -> "Plumbing",
           "accountingMethod" -> "A"
         )) mustBe JsSuccess(PrePopSelfEmployment(
-          name = """AZaz09&'/\.,-""",
+          name = Some("""AZaz09&'/\.,-"""),
           trade = Some("Plumbing"),
           address = None,
           startDate = None,
@@ -86,9 +86,6 @@ class PrePopDataSpec extends PlaySpec with Matchers {
       }
     }
     "fail to read from json" when {
-      "business name is missing" in {
-        Json.fromJson[PrePopSelfEmployment](selfEmploymentJsonFull - "businessName") mustBe JsError(__ \ "businessName", "error.path.missing")
-      }
       "business description is missing" in {
         Json.fromJson[PrePopSelfEmployment](selfEmploymentJsonFull - "businessDescription") mustBe JsError(__ \ "businessDescription", "error.path.missing")
       }
@@ -132,7 +129,7 @@ class PrePopDataSpec extends PlaySpec with Matchers {
     "accountingMethod" -> Accruals.stringValue
   )
   lazy val selfEmploymentModelFull: PrePopSelfEmployment = PrePopSelfEmployment(
-    name = "AB 123",
+    name = Some("AB 123"),
     trade = Some("EL 987"),
     address = Some(Address(
       lines = Seq("1 long road"),
@@ -142,17 +139,15 @@ class PrePopDataSpec extends PlaySpec with Matchers {
     accountingMethod = Accruals
   )
   lazy val selfEmploymentJsonMinimal: JsObject = Json.obj(
-    "businessName" -> "AB 123",
     "businessDescription" -> "PL 567",
     "accountingMethod" -> "C"
   )
   lazy val selfEmploymentJsonWriteMinimal: JsObject = Json.obj(
-    "name" -> "AB 123",
     "trade" -> "PL 567",
     "accountingMethod" -> Cash.stringValue
   )
   lazy val selfEmploymentModelMinimal: PrePopSelfEmployment = PrePopSelfEmployment(
-    name = "AB 123",
+    name = None,
     trade = Some("PL 567"),
     address = None,
     startDate = None,

@@ -33,7 +33,7 @@ class PrePopParserSpec extends CommonSpec {
         "valid json is returned" in {
           read(OK, Json.obj("selfEmployment" -> Json.arr(selfEmploymentJson))) shouldBe Right(PrePopData(
             Some(Seq(PrePopSelfEmployment(
-              "ABC",
+              Some("ABC"),
               Some("Plumbing"),
               Some(Address(Seq("123 Street"), Some("ZZ1 1ZZ"))),
               Some(DateModel("01", "01", "1900")),
