@@ -21,7 +21,7 @@ import play.api.libs.json.JsValue
 
 object PrePopStub extends WireMockMethods {
 
-  private def prePopUri(nino: String): String = s"/income-tax/pre-pop/$nino"
+  private def prePopUri(nino: String): String = s"/income-tax/pre-prop/$nino"
 
   def stubPrePop(nino: String)
                 (authorizationHeader: String, environmentHeader: String)
