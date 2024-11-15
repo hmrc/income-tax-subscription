@@ -27,7 +27,7 @@ import scala.concurrent.{ExecutionContext, Future}
 class PrePopConnector @Inject()(http: HttpClient,
                                 appConfig: AppConfig)(implicit ec: ExecutionContext) {
 
-  def prepopUrl(nino: String): String = s"${appConfig.prePopURL}/income-tax/pre-pop/$nino"
+  def prepopUrl(nino: String): String = s"${appConfig.prePopURL}/income-tax/pre-prop/$nino"
 
   def getPrePopData(nino: String)(implicit hc: HeaderCarrier): Future[GetPrePopResponse] = {
 
