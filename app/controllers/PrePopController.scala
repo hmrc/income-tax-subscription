@@ -16,30 +16,40 @@
 
 package controllers
 
+import common.Constants.hmrcAsAgent
 import connectors.PrePopConnector
+import models.PrePopAuditModel
 import play.api.Logging
 import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import services.AuthService
+import services.monitoring.AuditService
+import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals.allEnrolments
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
 import javax.inject.{Inject, Singleton}
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class PrePopController @Inject()(authService: AuthService,
+                                 auditService: AuditService,
                                  prePopConnector: PrePopConnector,
                                  cc: ControllerComponents)(implicit ec: ExecutionContext) extends BackendController(cc) with Logging {
 
   def prePop(nino: String): Action[AnyContent] = Action.async { implicit request =>
-    authService.authorised() {
-      prePopConnector.getPrePopData(nino) map {
-        case Right(value) => Ok(Json.toJson(value))
+    authService.authorised().retrieve(allEnrolments) { allEnrolments =>
+      prePopConnector.getPrePopData(nino) flatMap {
+        case Right(value) =>
+          val agentReferenceNumber: Option[String] = allEnrolments.getEnrolment(hmrcAsAgent).flatMap(_.identifiers.headOption).map(_.value)
+          auditService.extendedAudit(PrePopAuditModel(prePopData = value, nino = nino, maybeArn = agentReferenceNumber)) map { _ =>
+            Ok(Json.toJson(value))
+          }
         case Left(error) =>
           logger.error(s"[PrePopController][prePop] - Error when fetching pre-pop data. Status: ${error.status}, Reason: ${error.reason}")
-          InternalServerError
+          Future.successful(InternalServerError)
       }
     }
   }
+
 
 }

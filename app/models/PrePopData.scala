@@ -84,6 +84,7 @@ object PrePopSelfEmployment {
       },
       startDate = startDate map {
         case dateRegex(year, month, day) => DateModel(day = day, month = month, year = year)
+        case invalid => throw new InternalServerException(s"[PrePopSelfEmployment] - Could not parse date received from api. Received: $invalid")
       },
       accountingMethod = accountingMethod match {
         case "A" => Accruals
