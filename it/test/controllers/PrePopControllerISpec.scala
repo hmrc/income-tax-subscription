@@ -20,7 +20,7 @@ import config.MicroserviceAppConfig
 import config.featureswitch.FeatureSwitching
 import helpers.ComponentSpecBase
 import helpers.IntegrationTestConstants._
-import helpers.servicemocks.{AuthStub, PrePopStub, SignUpTaxYearStub}
+import helpers.servicemocks.{AuditStub, AuthStub, PrePopStub, SignUpTaxYearStub}
 import models.PrePopData
 import models.SignUpResponse.SignUpSuccess
 import play.api.http.Status._
@@ -29,6 +29,10 @@ import play.api.libs.json.{JsObject, Json}
 class PrePopControllerISpec extends ComponentSpecBase with FeatureSwitching {
 
   val appConfig: MicroserviceAppConfig = app.injector.instanceOf[MicroserviceAppConfig]
+
+  override def overriddenConfig(): Map[String, String] = Map(
+    "auditing.enabled" -> "true"
+  )
 
   val readJson: JsObject = Json.obj(
     "selfEmployments" -> Json.arr(
@@ -60,6 +64,8 @@ class PrePopControllerISpec extends ComponentSpecBase with FeatureSwitching {
         httpStatus(OK),
         jsonBodyOf(writeJson)
       )
+
+      AuditStub.verifyAudit()
     }
     "return an INTERNAL_SERVER_ERROR" when {
       "there was a problem with the pre-pop json from the API" in {
