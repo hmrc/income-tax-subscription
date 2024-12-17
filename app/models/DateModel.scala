@@ -26,7 +26,7 @@ case class DateModel(day: String, month: String, year: String) {
 
   private val outputFormat: DateTimeFormatter = DateTimeFormatter.ofPattern("d MMMM uuuu").withResolverStyle(ResolverStyle.STRICT)
   private val desFormat: DateTimeFormatter = DateTimeFormatter.ofPattern("uuuu-MM-dd").withResolverStyle(ResolverStyle.STRICT)
-  private val auditFormat: DateTimeFormatter = DateTimeFormatter.ofPattern("uuuu/MM/DD").withResolverStyle(ResolverStyle.STRICT)
+  private val auditFormat: DateTimeFormatter = DateTimeFormatter.ofPattern("uuuu/MM/dd").withResolverStyle(ResolverStyle.STRICT)
 
   def toLocalDate: LocalDate = LocalDate.of(year.toInt, month.toInt, day.toInt)
 
