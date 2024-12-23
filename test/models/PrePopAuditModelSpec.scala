@@ -68,7 +68,7 @@ class PrePopAuditModelSpec extends PlaySpec {
               "description" -> "Plumbing",
               "addressFirstLine" -> "1 long road",
               "addressPostcode" -> "ZZ1 1ZZ",
-              "startDate" -> "1980/12/12",
+              "startDate" -> "1980-12-12",
               "accountingMethod" -> "cash"
             )
           ),
