@@ -21,7 +21,7 @@ import models.subscription.Address
 import models.subscription.business.Cash
 import models.{DateModel, ErrorModel, PrePopData, PrePopSelfEmployment}
 import parsers.PrePopParser.GetPrePopResponse
-import play.api.http.Status.{INTERNAL_SERVER_ERROR, NOT_FOUND, OK}
+import play.api.http.Status.{INTERNAL_SERVER_ERROR, NOT_FOUND, OK, SERVICE_UNAVAILABLE}
 import play.api.libs.json.{JsObject, Json}
 import uk.gov.hmrc.http.HttpResponse
 
@@ -53,6 +53,11 @@ class PrePopParserSpec extends CommonSpec {
     "a NOT_FOUND (404) status is returned" should {
       "return an empty prepop data set" in {
         read(NOT_FOUND) shouldBe Right(PrePopData(None, None, None))
+      }
+    }
+    "a SERVICE_UNAVAILABLE (503) status is returned" should {
+      "return an empty prepop data set" in {
+        read(SERVICE_UNAVAILABLE) shouldBe Right(PrePopData(None, None, None))
       }
     }
     "a different status is returned" should {
