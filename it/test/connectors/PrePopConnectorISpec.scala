@@ -97,6 +97,23 @@ class PrePopConnectorISpec extends ComponentSpecBase {
         ))
       }
     }
+    "receiving a SERVICE_UNAVAILABLE (503) response" should {
+      "return an empty pre-pop data" in {
+        PrePopStub.stubPrePop(testNino)(
+          appConfig.prePopAuthorisationToken,
+          appConfig.prePopEnvironment
+        )(
+          status = SERVICE_UNAVAILABLE,
+          body = Json.obj()
+        )
+
+        val result = prePopConnector.getPrePopData(testNino)
+
+        result.futureValue shouldBe Right(PrePopData(
+          selfEmployment = None, ukPropertyAccountingMethod = None, foreignPropertyAccountingMethod = None
+        ))
+      }
+    }
     "receiving a non handled status response" should {
       "return an unexpected status error" in {
         PrePopStub.stubPrePop(testNino)(

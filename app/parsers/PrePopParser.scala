@@ -18,7 +18,7 @@ package parsers
 
 import models.{ErrorModel, PrePopData}
 import play.api.Logging
-import play.api.http.Status.{NOT_FOUND, OK}
+import play.api.http.Status.{NOT_FOUND, OK, SERVICE_UNAVAILABLE}
 import play.api.libs.json.{JsError, JsSuccess}
 import uk.gov.hmrc.http.{HttpReads, HttpResponse}
 
@@ -34,7 +34,7 @@ object PrePopParser extends Logging {
             case JsSuccess(value, _) => Right(value)
             case JsError(_) => Left(ErrorModel(OK, s"Failure parsing json response from prepop api"))
           }
-        case NOT_FOUND =>
+        case NOT_FOUND | SERVICE_UNAVAILABLE =>
           Right(PrePopData(None, None, None))
         case status =>
           logger.error(s"[PrePopParser] - Unexpected status from pre-pop API. Status: $status")
