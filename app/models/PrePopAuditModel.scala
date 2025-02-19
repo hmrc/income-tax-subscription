@@ -71,9 +71,13 @@ case class PrePopAuditModel(prePopData: PrePopData, nino: String, maybeArn: Opti
     )
   }.getOrElse(Json.obj())
 
+  val incomeSources: JsObject = Json.obj(
+    "incomeSources" -> (selfEmployments ++ ukProperty ++ foreignProperty)
+  )
+
   override val detail: JsValue = Json.obj(
     "userType" -> userType,
     "nino" -> nino
-  ) ++ agentReferenceNumber ++ selfEmployments ++ ukProperty ++ foreignProperty
+  ) ++ agentReferenceNumber ++ incomeSources
 
 }
