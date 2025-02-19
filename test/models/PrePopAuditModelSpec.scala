@@ -62,28 +62,31 @@ class PrePopAuditModelSpec extends PlaySpec {
           "userType" -> "agent",
           "nino" -> nino,
           "agentReferenceNumber" -> agentReferenceNumber,
-          "selfEmployments" -> Json.arr(
-            Json.obj(
-              "name" -> "ABC",
-              "description" -> "Plumbing",
-              "addressFirstLine" -> "1 long road",
-              "addressPostcode" -> "ZZ1 1ZZ",
-              "startDate" -> "1980-12-12",
+          "incomeSources" -> Json.obj(
+            "selfEmployments" -> Json.arr(
+              Json.obj(
+                "name" -> "ABC",
+                "description" -> "Plumbing",
+                "addressFirstLine" -> "1 long road",
+                "addressPostcode" -> "ZZ1 1ZZ",
+                "startDate" -> "1980-12-12",
+                "accountingMethod" -> "cash"
+              )
+            ),
+            "ukProperty" -> Json.obj(
               "accountingMethod" -> "cash"
+            ),
+            "overseasProperty" -> Json.obj(
+              "accountingMethod" -> "accruals"
             )
-          ),
-          "ukProperty" -> Json.obj(
-            "accountingMethod" -> "cash"
-          ),
-          "overseasProperty" -> Json.obj(
-            "accountingMethod" -> "accruals"
           )
         )
       }
       "the pre-pop data is missing all possible values" in {
         minimalAuditModel.detail mustBe Json.obj(
           "userType" -> "individual",
-          "nino" -> nino
+          "nino" -> nino,
+          "incomeSources" -> Json.obj()
         )
       }
     }
