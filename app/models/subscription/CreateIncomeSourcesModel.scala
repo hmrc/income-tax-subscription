@@ -36,9 +36,9 @@ object CreateIncomeSourcesModel {
   def addressDetailsJson(businessAddressModel: BusinessAddressModel): JsObject = {
     Json.obj(
       "addressLine1" -> businessAddressModel.address.lines.headOption.getOrElse(throwError("addressLine1")),
-      "postalCode" -> businessAddressModel.address.postcode,
       "countryCode" -> "GB"
     ) ++
+      businessAddressModel.address.postcode.map(value => Json.obj("postalCode" -> value)) ++
       businessAddressModel.address.lines.lift(1).map(value => Json.obj("addressLine2" -> value)) ++
       businessAddressModel.address.lines.lift(2).map(value => Json.obj("addressLine3" -> value)) ++
       businessAddressModel.address.lines.lift(3).map(value => Json.obj("addressLine4" -> value))
