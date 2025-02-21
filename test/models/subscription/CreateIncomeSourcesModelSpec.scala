@@ -18,11 +18,12 @@ package models.subscription
 
 import models.DateModel
 import models.subscription.business.{Accruals, Cash}
+import org.scalatest.matchers.must.{Matchers => MustMatchers}
 import org.scalatestplus.play.PlaySpec
 import play.api.libs.json._
 import uk.gov.hmrc.http.InternalServerException
 import utils.TestConstants.testNino
-import org.scalatest.matchers.must.{Matchers => MustMatchers}
+
 import java.time.LocalDate
 
 class CreateIncomeSourcesModelSpec extends PlaySpec with MustMatchers {
@@ -189,6 +190,34 @@ class CreateIncomeSourcesModelSpec extends PlaySpec with MustMatchers {
     )
   )
 
+  val fullCreateIncomeSourcesModelJsonWriteMinimal: JsObject = Json.obj(
+    "businessDetails" -> Json.arr(
+      Json.obj(
+        "accountingPeriodStartDate" -> desFormattedNow,
+        "accountingPeriodEndDate" -> desFormattedNow,
+        "tradingStartDate" -> desFormattedNow,
+        "tradingName" -> "testBusinessName",
+        "typeOfBusiness" -> "testBusinessTrade",
+        "cashOrAccrualsFlag" -> Cash.stringValue.toUpperCase,
+        "addressDetails" -> Json.obj(
+          "addressLine1" -> "line 1",
+          "addressLine2" -> "line 2",
+          "countryCode" -> "GB"
+        )
+      )
+    ),
+    "ukPropertyDetails" -> Json.obj(
+      "tradingStartDate" -> desFormattedNow,
+      "cashOrAccrualsFlag" -> Accruals.stringValue.toUpperCase,
+      "startDate" -> desFormattedNow
+    ),
+    "foreignPropertyDetails" -> Json.obj(
+      "tradingStartDate" -> desFormattedNow,
+      "cashOrAccrualsFlag" -> Cash.stringValue.toUpperCase,
+      "startDate" -> desFormattedNow
+    )
+  )
+
   "CreateIncomeSourcesModel" must {
     "read from json successfully" when {
       "the json is complete and valid" in {
@@ -212,6 +241,30 @@ class CreateIncomeSourcesModelSpec extends PlaySpec with MustMatchers {
     "write to json successfully" when {
       "all required fields are present in the model" in {
         Json.toJson(fullCreateIncomeSourcesModel) mustBe fullCreateIncomeSourcesModelJsonWrite
+      }
+      "all income sources are present, but any optional fields are not present" in {
+        val minimalModel = CreateIncomeSourcesModel(
+          nino = testNino,
+          soleTraderBusinesses = Some(SoleTraderBusinesses(
+            accountingPeriod = AccountingPeriodModel(now, now),
+            accountingMethod = Cash,
+            businesses = Seq(
+              SelfEmploymentData(
+                id = "testBusinessId",
+                businessStartDate = Some(BusinessStartDate(now)),
+                businessName = Some(BusinessNameModel("testBusinessName")),
+                businessTradeName = Some(BusinessTradeNameModel("testBusinessTrade")),
+                businessAddress = Some(BusinessAddressModel(
+                  address = Address(lines = Seq("line 1", "line 2"), postcode = None)
+                ))
+              )
+            )
+          )),
+          ukProperty = Some(fullUkProperty),
+          overseasProperty = Some(fullOverseasProperty)
+        )
+
+        Json.toJson(minimalModel) mustBe fullCreateIncomeSourcesModelJsonWriteMinimal
       }
     }
     "return an exception when writing to json" when {

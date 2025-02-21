@@ -45,7 +45,7 @@ class CreateIncomeSourceConnectorSpec extends MockHttp with GuiceOneAppPerSuite 
   class Test(mtdbsaRef: String, expectedBody: JsValue, response: PostIncomeSourceResponse) {
     val appConfig: AppConfig = app.injector.instanceOf[AppConfig]
     val httpClient: HttpClient = mockHttpClient
-    val headers = Seq(
+    val headers: Seq[(String, String)] = Seq(
       HeaderNames.authorisation -> appConfig.desAuthorisationToken,
       appConfig.desEnvironmentHeader
     )
