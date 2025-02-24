@@ -23,7 +23,6 @@ import models.lockout.LockoutRequest
 import models.matching.LockoutResponse
 import models.subscription._
 import models.subscription.business.Cash
-import models.subscription.property.PropertySubscriptionResponseModel
 import play.api.http.Status._
 import play.api.libs.json.{JsValue, Json}
 import uk.gov.hmrc.domain.Generator
@@ -34,6 +33,7 @@ import java.util.UUID
 object TestConstants extends JsonUtils {
 
   lazy val testNino: String = new Generator().nextNino.nino
+  lazy val testUtr: String = new Generator().nextAtedUtr.utr
   lazy val testTaxYear: String = "2023-24"
   // for the purpose of unit tests we only need a random string for the ARN
   lazy val testArn: String = new Generator().nextNino.nino
@@ -70,178 +70,6 @@ object TestConstants extends JsonUtils {
 
   lazy val testException = new Exception("an error")
 
-
-  object GetBusinessDetailsResponse {
-    val successResponse: (String, String, String) => JsValue = (nino: String, safeId: String, mtdbsa: String) =>
-      s"""{
-         |   "safeId": "$safeId",
-         |   "nino": "$nino",
-         |   "mtdbsa": "$mtdbsa",
-         |   "propertyIncome": false,
-         |   "businessData": [
-         |      {
-         |         "incomeSourceId": "123456789012345",
-         |         "accountingPeriodStartDate": "2001-01-01",
-         |         "accountingPeriodEndDate": "2001-01-01",
-         |         "tradingName": "RCDTS",
-         |         "businessAddressDetails": {
-         |            "addressLine1": "100 SuttonStreet",
-         |            "addressLine2": "Wokingham",
-         |            "addressLine3": "Surrey",
-         |            "addressLine4": "London",
-         |            "postalCode": "DH14EJ",
-         |            "countryCode": "GB"
-         |         },
-         |         "businessContactDetails": {
-         |            "phoneNumber": "01332752856",
-         |            "mobileNumber": "07782565326",
-         |            "faxNumber": "01332754256",
-         |            "emailAddress": "stephen@manncorpone.co.uk"
-         |         },
-         |         "tradingStartDate": "2001-01-01",
-         |         "cashOrAccruals": "cash",
-         |         "seasonal": true
-         |      }
-         |   ]
-         |}
-      """.stripMargin
-
-    val failureResponse: (String, String) => JsValue = (code: String, reason: String) =>
-      s"""
-         |{
-         |    "code": "$code",
-         |    "reason":"$reason"
-         |}
-      """.stripMargin
-  }
-
-  object PaperlessPreferenceResponse {
-    val successResponse: String => JsValue = (nino: String) =>
-      s"""
-         |{
-         |    "identifiers": [
-         |        {
-         |            "name":"nino",
-         |            "value":"$nino"
-         |        }
-         |    ]
-         |}
-         """.stripMargin
-  }
-
-  object NewRegistrationResponse {
-    val successResponse: String => JsValue = (safeId: String) =>
-      s"""
-         | {
-         |  "safeId": "$safeId",
-         |  "agentReferenceNumber": "AARN1234567",
-         |  "isEditable": true,
-         |  "isAnAgent": false,
-         |  "isAnIndividual": true,
-         |  "individual": {
-         |    "firstName": "Stephen",
-         |    "lastName": "Wood",
-         |    "dateOfBirth": "1990-04-03"
-         |  },
-         |  "address": {
-         |    "addressLine1": "100 SuttonStreet",
-         |    "addressLine2": "Wokingham",
-         |    "addressLine3": "Surrey",
-         |    "addressLine4": "London",
-         |    "postalCode": "DH14EJ",
-         |    "countryCode": "GB"
-         |  },
-         |  "contactDetails": {
-         |    "primaryPhoneNumber": "01332752856",
-         |    "secondaryPhoneNumber": "07782565326",
-         |    "faxNumber": "01332754256",
-         |    "emailAddress": "stephen@manncorpone.co.uk"
-         |  }
-         | }
-         |
-      """.stripMargin
-
-    val failureResponse: (String, String) => JsValue = (code: String, reason: String) =>
-      s"""
-         |{
-         |    "code": "$code",
-         |    "reason":"$reason"
-         |}
-      """.stripMargin
-  }
-
-  object GetRegistrationResponse {
-    val successResponse: String => JsValue = (safeId: String) =>
-      s"""{
-         |"sapNumber": "1234567890",
-         |"safeId": "$safeId",
-         |"agentReferenceNumber": "AARN1234567",
-         |"nonUKIdentification":
-         |{
-         |"idNumber": "123456",
-         |"issuingInstitution": "France Institution",
-         |"issuingCountryCode": "FR"
-         |},
-         |"isEditable": true,
-         |"isAnAgent": false,
-         |"isAnIndividual": true,
-         |"individual": {
-         |"firstName": "Stephen",
-         |"lastName": "Wood",
-         |"dateOfBirth": "1990-04-03"
-         |},
-         |"addressDetails": {
-         |"addressLine1": "100 SuttonStreet",
-         |"addressLine2": "Wokingham",
-         |"addressLine3": "Surrey",
-         |"addressLine4": "London",
-         |"postalCode": "DH14EJ",
-         |"countryCode": "GB"
-         |},
-         |"contactDetails": {
-         |"phoneNumber": "01332752856",
-         |"mobileNumber": "07782565326",
-         |"faxNumber": "01332754256",
-         |"eMailAddress": "stephen@manncorpone.co.uk"
-         |}
-         |}
-      """.stripMargin
-
-    val failureResponse: String => JsValue = (reason: String) =>
-      s"""
-         |{
-         |    "reason":"$reason"
-         |}
-      """.stripMargin
-  }
-
-  object BusinessSubscriptionResponse {
-    def successResponse(safeId: String, mtditId: String, sourceId: String): JsValue =
-      s"""{
-         |  "safeId": "$safeId",
-         |  "mtditId": "$mtditId",
-         |  "incomeSources": [{
-         |    "incomeSourceId": "$sourceId"
-         |  }]
-         |}
-      """.stripMargin
-  }
-
-  object PropertySubscriptionResponse {
-    def successResponse(safeId: String, mtditId: String, sourceId: String): JsValue =
-      s"""
-         |{
-         | "safeId": "$safeId",
-         | "mtditId": "$mtditId",
-         | "incomeSource":
-         | {
-         |   "incomeSourceId": "$sourceId"
-         | }
-         |}
-    """.stripMargin
-  }
-
-
   def failureResponse(code: String, reason: String): JsValue =
     s"""
        |{
@@ -251,17 +79,7 @@ object TestConstants extends JsonUtils {
     """.stripMargin
 
 
-  object GovernmentGateway {
-    val MTDITID = "MTDITID"
-    val NINO = "NINO"
-    val ggPortalId = "Default"
-    val ggServiceName = "HMRC-MTD-IT"
-    val ggFriendlyName = "Making Tax Digital Income Tax Self-Assessment enrolment"
-  }
-
   val hmrcAsAgent = Constants.hmrcAsAgent
-
-  val propertySubscriptionSuccess = PropertySubscriptionResponseModel(testSafeId, testMtditId, IncomeSourceModel(testSourceId))
 
   val feSuccessResponse = FESuccessResponse(Some(testMtditId))
 
@@ -269,36 +87,10 @@ object TestConstants extends JsonUtils {
 
   val testEndDate = LocalDate.now().plusDays(1)
 
-
-  def testSignUpSubmission(nino: String): JsValue = Json.parse(
-    s"""
-       |{
-       | "idType" : "NINO",
-       | "idValue" : "$nino"
-       |}
-      """.stripMargin)
-
-
-  def testTaxYearSignUpSubmission(nino: String, taxYear: String): JsValue = Json.obj(
+  def testTaxYearSignUpSubmission(nino: String, utr: String, taxYear: String): JsValue = Json.obj(
     "nino" -> nino,
+    "utr" -> utr,
     "taxYear" -> taxYear
-  )
-
-
-  val testSignUpSuccessBody: JsValue = Json.parse(
-    """
-      |{
-      | "mtdbsa": "XQIT00000000001"
-      |}
-    """.stripMargin
-  )
-
-  val testSignUpInvalidBody: JsValue = Json.parse(
-    """
-      |{
-      | "mtdbs": "XQIT00000000001"
-      |}
-    """.stripMargin
   )
 
   val testCreateIncomeSubmissionModel: BusinessSubscriptionDetailsModel = BusinessSubscriptionDetailsModel(

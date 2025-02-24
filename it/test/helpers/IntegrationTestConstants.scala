@@ -147,8 +147,14 @@ object IntegrationTestConstants extends JsonUtils {
        |}
     """.stripMargin
 
-  def testTaxYearSignUpSubmission(nino: String, taxYear:String): JsValue = Json.obj(
+  def testTaxYearSignUpRequestBody(nino: String, taxYear: String): JsValue = Json.obj(
     "nino" -> nino,
+    "signupTaxYear" -> taxYear
+  )
+
+  def testTaxYearSignUpRequestBodyWithUtr(nino: String, utr: String, taxYear:String): JsValue = Json.obj(
+    "nino" -> nino,
+    "utr" -> utr,
     "signupTaxYear" -> taxYear
   )
 

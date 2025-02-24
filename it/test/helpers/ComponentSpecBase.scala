@@ -98,7 +98,7 @@ trait ComponentSpecBase extends AnyWordSpecLike
 
     def get(uri: String): WSResponse = authorisedClient(uri).get().futureValue
 
-    def signUp(nino: String, taxYear: String): WSResponse = post(s"/mis/sign-up/$nino/$taxYear", Json.parse("{}"))
+    def signUp(body: JsValue) : WSResponse = post(s"/mis/sign-up", body)
 
     def throttled(throttleId: String): WSResponse = post(s"/throttled?throttleId=$throttleId", Json.parse("{}"))
 

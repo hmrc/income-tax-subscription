@@ -19,6 +19,7 @@ package services.mocks
 import config.AppConfig
 import connectors.SignUpTaxYearConnector
 import connectors.mocks.MockHttp
+import models.SignUpRequest
 import org.mockito.ArgumentMatchers
 import org.mockito.Mockito.{reset, when}
 import org.scalatest.Suite
@@ -41,7 +42,9 @@ trait MockSignUpTaxYearConnector extends MockHttp with GuiceOneAppPerSuite {
   val connectorTaxYear = new SignUpTaxYearConnector(mockHttpClient, appConfig)
 
 
-  def signUpTaxYear(nino: String, taxYear: String)(response: Future[PostSignUpResponse]): Unit = {
-    when(mockSignUpTaxYearConnector.signUp(ArgumentMatchers.eq(nino), ArgumentMatchers.eq(taxYear))(ArgumentMatchers.any())).thenReturn(response)
+  def signUpTaxYear(signUpRequest: SignUpRequest)(response: Future[PostSignUpResponse]): Unit = {
+    when(mockSignUpTaxYearConnector.signUp(
+      ArgumentMatchers.eq(signUpRequest),
+    )(ArgumentMatchers.any())).thenReturn(response)
   }
 }

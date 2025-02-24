@@ -19,10 +19,9 @@ package controllers
 
 import common.CommonSpec
 import config.MicroserviceAppConfig
-import config.featureswitch.FeatureSwitching
 import models.SignUpResponse.SignUpSuccess
 import models.monitoring.{RegistrationFailureAudit, RegistrationSuccessAudit}
-import models.{ErrorModel, SignUpResponse}
+import models.{ErrorModel, SignUpRequest, SignUpResponse}
 import play.api.Configuration
 import play.api.http.Status.{INTERNAL_SERVER_ERROR, OK, UNPROCESSABLE_ENTITY}
 import play.api.libs.json.Json
@@ -33,7 +32,7 @@ import services.mocks.monitoring.MockAuditService
 import services.mocks.{MockAuthService, MockSignUpTaxYearConnector}
 import uk.gov.hmrc.auth.core.{Enrolment, EnrolmentIdentifier, Enrolments}
 import utils.MaterializerSupport
-import utils.TestConstants.{hmrcAsAgent, testNino, testTaxYear, testTaxYearSignUpSubmission}
+import utils.TestConstants.{hmrcAsAgent, testNino, testTaxYear, testTaxYearSignUpSubmission, testUtr}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -42,8 +41,7 @@ class SignUpControllerSpec extends CommonSpec
   with MockAuthService
   with MockSignUpTaxYearConnector
   with MaterializerSupport
-  with MockAuditService
-  with FeatureSwitching {
+  with MockAuditService {
 
   lazy val mockCC: ControllerComponents = stubControllerComponents()
   private lazy val configuration: Configuration = app.injector.instanceOf[Configuration]
@@ -58,16 +56,18 @@ class SignUpControllerSpec extends CommonSpec
     mockAppConfig
   )
 
+  lazy val testSignUpRequest: SignUpRequest = SignUpRequest(nino = testNino, utr = testUtr, taxYear = testTaxYear)
+
   "SignUpController" should {
     "return OK with the sign up successful response" when {
       "sign up was successful" when {
         "an individual signs themselves up" in {
-          val fakeRequest = FakeRequest().withJsonBody(Json.toJson(testTaxYearSignUpSubmission(testNino, testTaxYear)))
+          val fakeRequest = FakeRequest().withBody(Json.toJson(testTaxYearSignUpSubmission(testNino, testUtr, testTaxYear)))
 
           mockRetrievalSuccess(Enrolments(Set()))
-          signUpTaxYear(testNino, testTaxYear)(Future.successful(Right(SignUpSuccess("XAIT000000"))))
+          signUpTaxYear(testSignUpRequest)(Future.successful(Right(SignUpSuccess("XAIT000000"))))
 
-          val result: Future[Result] = TestController.signUp(testNino, testTaxYear)(fakeRequest)
+          val result: Future[Result] = TestController.signUp(fakeRequest)
 
           status(result) shouldBe OK
           contentAsJson(result) shouldBe Json.obj(
@@ -76,12 +76,12 @@ class SignUpControllerSpec extends CommonSpec
           verifyAudit(RegistrationSuccessAudit(None, testNino, "XAIT000000", "Bearer dev", None))
         }
         "an agent signs up their client" in {
-          val fakeRequest = FakeRequest().withJsonBody(Json.toJson(testTaxYearSignUpSubmission(testNino, testTaxYear)))
+          val fakeRequest = FakeRequest().withBody(Json.toJson(testTaxYearSignUpSubmission(testNino, testUtr, testTaxYear)))
 
           mockRetrievalSuccess(Enrolments(Set(Enrolment(hmrcAsAgent, Seq(EnrolmentIdentifier("AgentReferenceNumber", "123456789")), "Activated"))))
-          signUpTaxYear(testNino, testTaxYear)(Future.successful(Right(SignUpSuccess("XAIT000000"))))
+          signUpTaxYear(testSignUpRequest)(Future.successful(Right(SignUpSuccess("XAIT000000"))))
 
-          val result: Future[Result] = TestController.signUp(testNino, testTaxYear)(fakeRequest)
+          val result: Future[Result] = TestController.signUp(fakeRequest)
 
           status(result) shouldBe OK
           contentAsJson(result) shouldBe Json.obj(
@@ -93,12 +93,12 @@ class SignUpControllerSpec extends CommonSpec
     }
     "return UnprocessableEntity" when {
       "the customer is already signed up" in {
-        val fakeRequest = FakeRequest()
+        val fakeRequest = FakeRequest().withBody(Json.toJson(testTaxYearSignUpSubmission(testNino, testUtr, testTaxYear)))
 
         mockRetrievalSuccess(Enrolments(Set()))
-        signUpTaxYear(testNino, testTaxYear)(Future.successful(Right(SignUpResponse.AlreadySignedUp)))
+        signUpTaxYear(testSignUpRequest)(Future.successful(Right(SignUpResponse.AlreadySignedUp)))
 
-        val result: Future[Result] = TestController.signUp(testNino, testTaxYear)(fakeRequest)
+        val result: Future[Result] = TestController.signUp(fakeRequest)
 
         status(result) shouldBe UNPROCESSABLE_ENTITY
         contentAsString(result) shouldBe "Customer already signed up"
@@ -106,12 +106,12 @@ class SignUpControllerSpec extends CommonSpec
     }
     "return InternalServerError" when {
       "sign up was unsuccessful and an error was returned" in {
-        val fakeRequest = FakeRequest().withJsonBody(Json.toJson(testTaxYearSignUpSubmission(testNino, testTaxYear)))
+        val fakeRequest = FakeRequest().withBody(Json.toJson(testTaxYearSignUpSubmission(testNino, testUtr, testTaxYear)))
 
         mockRetrievalSuccess(Enrolments(Set(Enrolment(hmrcAsAgent, Seq(EnrolmentIdentifier("AgentReferenceNumber", "123456789")), "Activated"))))
-        signUpTaxYear(testNino, testTaxYear)(Future.successful(Left(ErrorModel(INTERNAL_SERVER_ERROR, "Failure"))))
+        signUpTaxYear(testSignUpRequest)(Future.successful(Left(ErrorModel(INTERNAL_SERVER_ERROR, "Failure"))))
 
-        val result = TestController.signUp(testNino, testTaxYear)(fakeRequest)
+        val result = TestController.signUp(fakeRequest)
 
         status(result) shouldBe INTERNAL_SERVER_ERROR
         contentAsString(result) shouldBe "Failed Sign up"
