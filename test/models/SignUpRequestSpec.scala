@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 HM Revenue & Customs
+ * Copyright 2025 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,38 +16,34 @@
 
 package models
 
-import common.CommonSpec
-import models.frontend.{Both, Business, IncomeSourceType, Property}
-import play.api.libs.json.{JsString, JsValue, Json}
+import org.scalatestplus.play.PlaySpec
+import play.api.libs.json.{JsSuccess, Json}
 
-class SignUpRequestSpec extends CommonSpec {
+class SignUpRequestSpec extends PlaySpec {
 
-  "IncomeSourceType" should {
+  val signUpRequestModel: SignUpRequest = SignUpRequest(
+    nino = "test-nino",
+    utr = "test-utr",
+    taxYear = "2024-2025"
+  )
 
-    "Provide the correct reader and writer for Business" in {
-      val business: JsValue = Json.toJson[IncomeSourceType](Business)
-      val expected = JsString(IncomeSourceType.business)
-      business shouldBe expected
-      val readBack = Json.fromJson[IncomeSourceType](business).get
-      readBack shouldBe Business
+  val json = Json.obj(
+    "nino" -> "test-nino",
+    "utr" -> "test-utr",
+    "taxYear" -> "2024-2025"
+  )
+
+  "SignUpRequest" must {
+    "successfully read from json" in {
+      Json.fromJson[SignUpRequest](json) mustBe JsSuccess(signUpRequestModel)
     }
-
-    "Provide the correct reader and writer for Property" in {
-      val property: JsValue = Json.toJson[IncomeSourceType](Property)
-      val expected = JsString(IncomeSourceType.property)
-      property shouldBe expected
-      val readBack = Json.fromJson[IncomeSourceType](property).get
-      readBack shouldBe Property
+    "successfully write to json" in {
+      Json.toJson(signUpRequestModel) mustBe json
     }
-
-    "Provide the correct reader and writer for Both" in {
-      val both: JsValue = Json.toJson[IncomeSourceType](Both)
-      val expected = JsString(IncomeSourceType.both)
-      both shouldBe expected
-      val readBack = Json.fromJson[IncomeSourceType](both).get
-      readBack shouldBe Both
-    }
-
   }
+
+
+
+
 
 }

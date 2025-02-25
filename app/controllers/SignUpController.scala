@@ -20,9 +20,10 @@ package controllers
 import common.Extractors
 import config.AppConfig
 import connectors.SignUpTaxYearConnector
+import models.SignUpRequest
 import models.SignUpResponse.{AlreadySignedUp, SignUpSuccess}
 import models.monitoring.{RegistrationFailureAudit, RegistrationSuccessAudit}
-import play.api.libs.json.Json
+import play.api.libs.json.{JsValue, Json}
 import play.api.mvc._
 import play.api.{Configuration, Logger}
 import services.AuthService
@@ -42,22 +43,23 @@ class SignUpController @Inject()(authService: AuthService,
 
   val logger: Logger = Logger(this.getClass)
 
-  def signUp(nino: String, taxYear: String): Action[AnyContent] = Action.async { implicit request =>
+  def signUp: Action[JsValue] = Action.async(parse.json) { implicit request =>
     authService.authorised().retrieve(Retrievals.allEnrolments) { enrolments =>
-      signUp(
-        nino = nino,
-        taxYear = taxYear,
-        agentReferenceNumber = getArnFromEnrolments(enrolments)
-      )
+      withJsonBody[SignUpRequest] { signUpRequest =>
+        signUp(
+          signUpRequest = signUpRequest,
+          agentReferenceNumber = getArnFromEnrolments(enrolments)
+        )
+      }
     }
   }
 
-  private def signUp(nino: String, taxYear: String, agentReferenceNumber: Option[String])(implicit request: Request[AnyContent]) =
-    signUpTaxYearConnector.signUp(nino, taxYear).map {
+  private def signUp(signUpRequest: SignUpRequest, agentReferenceNumber: Option[String])(implicit request: Request[JsValue]) =
+    signUpTaxYearConnector.signUp(signUpRequest).map {
       case Right(response: SignUpSuccess) =>
         val path: Option[String] = request.headers.get(ITSASessionKeys.RequestURI)
         auditService.audit(RegistrationSuccessAudit(
-          agentReferenceNumber, nino, response.mtdbsa, appConfig.signUpServiceAuthorisationToken, path
+          agentReferenceNumber, signUpRequest.nino, response.mtdbsa, appConfig.signUpServiceAuthorisationToken, path
         ))
         Ok(Json.toJson(response))
       case Right(AlreadySignedUp) =>
@@ -65,7 +67,7 @@ class SignUpController @Inject()(authService: AuthService,
         UnprocessableEntity("Customer already signed up")
       case Left(error) =>
         logger.error(s"Error processing Sign up request with status ${error.status} and message ${error.reason}")
-        auditService.audit(RegistrationFailureAudit(nino, error.status, error.reason))
+        auditService.audit(RegistrationFailureAudit(signUpRequest.nino, error.status, error.reason))
         InternalServerError("Failed Sign up")
     }
 

@@ -17,6 +17,8 @@
 package connectors
 
 import config.AppConfig
+import config.featureswitch.{FeatureSwitching, SubmitUtrToSignUp}
+import models.SignUpRequest
 import parsers.SignUpParser.{PostSignUpResponse, signUpResponseHttpReads}
 import play.api.libs.json.{JsObject, JsValue, Json}
 import uk.gov.hmrc.http.{Authorization, HeaderCarrier, HeaderNames, HttpClient, HttpReads}
@@ -26,16 +28,27 @@ import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class SignUpTaxYearConnector @Inject()(http: HttpClient,
-                                       appConfig: AppConfig)(implicit ec: ExecutionContext) {
+                                       val appConfig: AppConfig)(implicit ec: ExecutionContext) extends FeatureSwitching {
 
   def signUpUrl: String = s"${appConfig.signUpServiceURL}/income-tax/sign-up/ITSA"
 
-  def requestBody(nino: String, taxYear: String): JsObject = Json.obj(
-    "nino" -> nino,
-    "signupTaxYear" -> taxYear
-  )
+  def requestBody(signUpRequest: SignUpRequest): JsObject = {
 
-  def signUp(nino: String, taxYear: String)(implicit hc: HeaderCarrier): Future[PostSignUpResponse] = {
+    if (isEnabled(SubmitUtrToSignUp)) {
+      Json.obj(
+        "nino" -> signUpRequest.nino,
+        "utr" -> signUpRequest.utr,
+        "signupTaxYear" -> signUpRequest.taxYear
+      )
+    } else {
+      Json.obj(
+        "nino" -> signUpRequest.nino,
+        "signupTaxYear" -> signUpRequest.taxYear
+      )
+    }
+  }
+
+  def signUp(signUpRequest: SignUpRequest)(implicit hc: HeaderCarrier): Future[PostSignUpResponse] = {
 
     val headerCarrier: HeaderCarrier = hc
       .copy(authorization = Some(Authorization(appConfig.signUpServiceAuthorisationToken)))
@@ -46,7 +59,7 @@ class SignUpTaxYearConnector @Inject()(http: HttpClient,
       "Environment" -> appConfig.signUpServiceEnvironment
     )
 
-    http.POST[JsValue, PostSignUpResponse](signUpUrl, requestBody(nino, taxYear), headers = headers)(
+    http.POST[JsValue, PostSignUpResponse](signUpUrl, requestBody(signUpRequest), headers = headers)(
       implicitly, implicitly[HttpReads[PostSignUpResponse]], headerCarrier, implicitly)
   }
 }

@@ -17,68 +17,134 @@
 package controllers
 
 import config.MicroserviceAppConfig
-import config.featureswitch.FeatureSwitching
+import config.featureswitch.{FeatureSwitching, SubmitUtrToSignUp}
 import helpers.ComponentSpecBase
 import helpers.IntegrationTestConstants._
 import helpers.servicemocks.{AuthStub, SignUpTaxYearStub}
+import models.SignUpRequest
 import models.SignUpResponse.SignUpSuccess
 import play.api.Configuration
 import play.api.http.Status._
+import utils.TestConstants.testUtr
 
 class SignUpControllerISpec extends ComponentSpecBase with FeatureSwitching {
+
+  override def beforeEach(): Unit = {
+    super.beforeEach()
+    disable(SubmitUtrToSignUp)
+  }
 
   val appConfig: MicroserviceAppConfig = app.injector.instanceOf[MicroserviceAppConfig]
   val signUpController: SignUpController = app.injector.instanceOf[SignUpController]
   val configuration: Configuration = app.injector.instanceOf[Configuration]
 
-  "signUp" should {
+  lazy val testSignUpRequest = SignUpRequest(testNino, testUtr, testTaxYear)
 
-    "call sign up connector successfully when auth succeeds for a sign up submission 200" in {
-      AuthStub.stubAuth(OK)
-      SignUpTaxYearStub.stubSignUp(
-        testTaxYearSignUpSubmission(testNino, testTaxYear),
-        appConfig.signUpServiceAuthorisationToken,
-        appConfig.signUpServiceEnvironment
-      )(OK, testSignUpSuccessBody)
+  "signUp" when {
+    "the SubmitUtrToSignUp feature switch is enabled" should {
+      "call sign up connector successfully when auth succeeds for a sign up submission 200" in {
+        enable(SubmitUtrToSignUp)
 
-      val res = IncomeTaxSubscription.signUp(testNino, testTaxYear)
+        AuthStub.stubAuth(OK)
+        SignUpTaxYearStub.stubSignUp(
+          testTaxYearSignUpRequestBodyWithUtr(testNino, testUtr, testTaxYear),
+          appConfig.signUpServiceAuthorisationToken,
+          appConfig.signUpServiceEnvironment
+        )(OK, testSignUpSuccessBody)
 
-      res should have(
-        httpStatus(OK)
-      )
-      res should have(
-        jsonBodyAs[SignUpSuccess](SignUpSuccess("XQIT00000000001"))
-      )
+        val res = IncomeTaxSubscription.signUp(testSignUpRequest)
+
+        res should have(
+          httpStatus(OK)
+        )
+        res should have(
+          jsonBodyAs[SignUpSuccess](SignUpSuccess("XQIT00000000001"))
+        )
+      }
+
+      "return a Json parse failure when invalid json is found" in {
+        enable(SubmitUtrToSignUp)
+
+        AuthStub.stubAuthSuccess()
+        SignUpTaxYearStub.stubSignUp(
+          testTaxYearSignUpRequestBodyWithUtr(testNino, testUtr, testTaxYear),
+          appConfig.signUpServiceAuthorisationToken,
+          appConfig.signUpServiceEnvironment
+        )(OK, testSignUpInvalidBody)
+
+        val res = IncomeTaxSubscription.signUp(testSignUpRequest)
+
+        res should have(
+          httpStatus(INTERNAL_SERVER_ERROR)
+        )
+      }
+
+      "Show error processing Sign up request with status Internal Server Error" in {
+        enable(SubmitUtrToSignUp)
+
+        AuthStub.stubAuthSuccess()
+        SignUpTaxYearStub.stubSignUp(
+          testTaxYearSignUpRequestBodyWithUtr(testNino, testUtr, testTaxYear),
+          appConfig.signUpServiceAuthorisationToken,
+          appConfig.signUpServiceEnvironment
+        )(INTERNAL_SERVER_ERROR, failureResponse("code", "reason"))
+
+        val res = IncomeTaxSubscription.signUp(testSignUpRequest)
+
+        res should have(
+          httpStatus(INTERNAL_SERVER_ERROR)
+        )
+      }
     }
 
-    "return a Json parse failure when invalid json is found" in {
-      AuthStub.stubAuthSuccess()
-      SignUpTaxYearStub.stubSignUp(
-        testTaxYearSignUpSubmission(testNino, testTaxYear),
-        appConfig.signUpServiceAuthorisationToken,
-        appConfig.signUpServiceEnvironment
-      )(OK, testSignUpInvalidBody)
+    "the SubmitUtrToSignUp feature switch is disabled" should {
+      "call sign up connector successfully when auth succeeds for a sign up submission 200" in {
+        AuthStub.stubAuth(OK)
+        SignUpTaxYearStub.stubSignUp(
+          testTaxYearSignUpRequestBody(testNino, testTaxYear),
+          appConfig.signUpServiceAuthorisationToken,
+          appConfig.signUpServiceEnvironment
+        )(OK, testSignUpSuccessBody)
 
-      val res = IncomeTaxSubscription.signUp(testNino, testTaxYear)
+        val res = IncomeTaxSubscription.signUp(testSignUpRequest)
 
-      res should have(
-        httpStatus(INTERNAL_SERVER_ERROR)
-      )
-    }
+        res should have(
+          httpStatus(OK)
+        )
+        res should have(
+          jsonBodyAs[SignUpSuccess](SignUpSuccess("XQIT00000000001"))
+        )
+      }
 
-    "Show error processing Sign up request with status Internal Server Error" in {
-      AuthStub.stubAuthSuccess()
-      SignUpTaxYearStub.stubSignUp(
-        testTaxYearSignUpSubmission(testNino, testTaxYear),
-        appConfig.signUpServiceAuthorisationToken,
-        appConfig.signUpServiceEnvironment
-      )(INTERNAL_SERVER_ERROR, failureResponse("code", "reason"))
+      "return a Json parse failure when invalid json is found" in {
+        AuthStub.stubAuthSuccess()
+        SignUpTaxYearStub.stubSignUp(
+          testTaxYearSignUpRequestBody(testNino, testTaxYear),
+          appConfig.signUpServiceAuthorisationToken,
+          appConfig.signUpServiceEnvironment
+        )(OK, testSignUpInvalidBody)
 
-      val res = IncomeTaxSubscription.signUp(testNino, testTaxYear)
+        val res = IncomeTaxSubscription.signUp(testSignUpRequest)
 
-      res should have(
-        httpStatus(INTERNAL_SERVER_ERROR)
-      )
+        res should have(
+          httpStatus(INTERNAL_SERVER_ERROR)
+        )
+      }
+
+      "Show error processing Sign up request with status Internal Server Error" in {
+        AuthStub.stubAuthSuccess()
+        SignUpTaxYearStub.stubSignUp(
+          testTaxYearSignUpRequestBody(testNino, testTaxYear),
+          appConfig.signUpServiceAuthorisationToken,
+          appConfig.signUpServiceEnvironment
+        )(INTERNAL_SERVER_ERROR, failureResponse("code", "reason"))
+
+        val res = IncomeTaxSubscription.signUp(testSignUpRequest)
+
+        res should have(
+          httpStatus(INTERNAL_SERVER_ERROR)
+        )
+      }
     }
   }
 }
