@@ -85,8 +85,7 @@ class PrePopAuditModelSpec extends PlaySpec {
       "the pre-pop data is missing all possible values" in {
         minimalAuditModel.detail mustBe Json.obj(
           "userType" -> "individual",
-          "nino" -> nino,
-          "incomeSources" -> Json.obj()
+          "nino" -> nino
         )
       }
     }
