@@ -84,6 +84,20 @@ class PrePopDataSpec extends PlaySpec with Matchers {
           accountingMethod = Accruals
         ))
       }
+      "incomplete address with only the first line provided but no postcode" in {
+        Json.fromJson[PrePopSelfEmployment](Json.obj(
+          "businessName" -> "AB 123",
+          "businessDescription" -> "Plumbing",
+          "businessAddressFirstLine" -> "1 long road",
+          "accountingMethod" -> "A"
+        )) mustBe JsSuccess(PrePopSelfEmployment(
+          name = Some("AB 123"),
+          trade = Some("Plumbing"),
+          address = None,
+          startDate = None,
+          accountingMethod = Accruals
+        ))
+      }
     }
     "fail to read from json" when {
       "business description is missing" in {
