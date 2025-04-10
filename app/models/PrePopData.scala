@@ -21,6 +21,8 @@ import models.subscription.business.{AccountingMethod, Accruals, Cash}
 import play.api.libs.functional.syntax.toFunctionalBuilderOps
 import play.api.libs.json.{Json, OWrites, Reads, __}
 import uk.gov.hmrc.http.InternalServerException
+import play.api.Logging
+
 
 import scala.util.matching.Regex
 
@@ -53,7 +55,7 @@ case class PrePopSelfEmployment(name: Option[String],
                                 startDate: Option[DateModel],
                                 accountingMethod: AccountingMethod)
 
-object PrePopSelfEmployment {
+object PrePopSelfEmployment extends Logging {
 
   private val dateRegex: Regex = "^([0-9]{4})-([0-9]{2})-([0-9]{2})$".r
 
@@ -78,8 +80,12 @@ object PrePopSelfEmployment {
         case value if value.length <= tradeMaxLength && value.count(_.isLetter) >= tradeMinLetters => Some(value)
         case _ => None
       },
-      address = addressFirstLine match {
-        case Some(firstLine) => Some(Address(Seq(firstLine), addressPostcode))
+      address = (addressFirstLine, addressPostcode)
+      match {
+        case (Some(firstLine), Some(postcode)) => Some(Address(Seq(firstLine), Some(postcode)))
+        case (Some(_), None) =>
+          logger.warn("[PrePopSelfEmployment] - Did not receive a postcode from the api.")
+          None
         case _ => None
       },
       startDate = startDate map {
