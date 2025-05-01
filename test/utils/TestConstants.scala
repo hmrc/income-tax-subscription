@@ -21,8 +21,6 @@ import models.ErrorModel
 import models.frontend._
 import models.lockout.LockoutRequest
 import models.matching.LockoutResponse
-import models.subscription._
-import models.subscription.business.{Accruals, Cash}
 import play.api.http.Status._
 import play.api.libs.json.{JsValue, Json}
 import uk.gov.hmrc.domain.Generator
@@ -93,7 +91,6 @@ object TestConstants extends JsonUtils {
     "utr" -> utr,
     "taxYear" -> taxYear
   )
-
 
 
   val testCreateIncomeSuccessBody: JsValue = Json.parse(

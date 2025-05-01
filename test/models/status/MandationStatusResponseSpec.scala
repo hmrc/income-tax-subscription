@@ -16,15 +16,15 @@
 
 package models.status
 
-import models.status.MtdMandationStatus.{Mandated, Voluntary}
+import models.status.ITSAStatus.{MTDMandated, MTDVoluntary}
 import org.scalatestplus.play.PlaySpec
 import play.api.libs.json._
 
 class MandationStatusResponseSpec extends PlaySpec {
 
-  val fullModel = MandationStatusResponse(
-    currentYearStatus = Voluntary,
-    nextYearStatus = Mandated
+  val fullModel: MandationStatusResponse = MandationStatusResponse(
+    currentYearStatus = MTDVoluntary,
+    nextYearStatus = MTDMandated
   )
 
   val fullJson: JsObject = Json.obj(

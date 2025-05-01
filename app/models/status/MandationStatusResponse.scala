@@ -18,7 +18,7 @@ package models.status
 
 import play.api.libs.json.{Json, OFormat}
 
-case class MandationStatusResponse(currentYearStatus: MtdMandationStatus, nextYearStatus: MtdMandationStatus)
+case class MandationStatusResponse(currentYearStatus: ITSAStatus, nextYearStatus: ITSAStatus)
 
 object MandationStatusResponse {
   implicit val format: OFormat[MandationStatusResponse] = Json.format[MandationStatusResponse]

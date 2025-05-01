@@ -17,9 +17,12 @@
 package controllers
 
 import common.Extractors
+import config.AppConfig
+import config.featureswitch.{FeatureSwitching, NewGetITSAStatusAPI}
 import connectors.ItsaStatusConnector
+import connectors.hip.GetITSAStatusConnector
 import models.monitoring.MandationStatusAuditModel
-import models.status.{MandationStatusRequest, MandationStatusResponse}
+import models.status.{ITSAStatus, MandationStatusRequest, MandationStatusResponse}
 import models.subscription.AccountingPeriodUtil
 import play.api.Logger
 import play.api.libs.json.{JsValue, Json}
@@ -27,50 +30,67 @@ import play.api.mvc.{Action, ControllerComponents}
 import services.AuthService
 import services.monitoring.AuditService
 import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals
+import uk.gov.hmrc.http.InternalServerException
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
 import javax.inject.{Inject, Singleton}
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class MandationStatusController @Inject()(
                                            authService: AuthService,
                                            auditService: AuditService,
                                            mandationStatusConnector: ItsaStatusConnector,
-                                           cc: ControllerComponents
-                               )(implicit ec: ExecutionContext)
-  extends BackendController(cc) with Extractors {
+                                           getITSAStatusConnector: GetITSAStatusConnector,
+                                           cc: ControllerComponents,
+                                           val appConfig: AppConfig
+                                         )(implicit ec: ExecutionContext)
+  extends BackendController(cc) with Extractors with FeatureSwitching {
 
   val logger: Logger = Logger(this.getClass)
 
-  def mandationStatus: Action[JsValue] = Action.async(parse.json) { implicit request  =>
+  def mandationStatus: Action[JsValue] = Action.async(parse.json) { implicit request =>
     authService.authorised().retrieve(Retrievals.allEnrolments) { enrolments =>
       withJsonBody[MandationStatusRequest] { requestBody =>
-        mandationStatusConnector.getItsaStatus(requestBody.nino, requestBody.utr).map {
-          case Right(response) => {
-            val maybeCurrentTaxYearStatus = response.taxYearStatus.find(_.taxYear.equals(AccountingPeriodUtil.getCurrentTaxYear.toItsaStatusShortTaxYear))
-            val maybeNextTaxYearStatus = response.taxYearStatus.find(_.taxYear.equals(AccountingPeriodUtil.getNextTaxYear.toItsaStatusShortTaxYear))
 
-            (maybeCurrentTaxYearStatus, maybeNextTaxYearStatus) match {
-              case (Some(currentTaxYearStatus), Some(nextTaxYearStatus)) => {
-                auditService.audit(MandationStatusAuditModel(
-                  getArnFromEnrolments(enrolments),
-                  requestBody.utr,
-                  requestBody.nino,
-                  AccountingPeriodUtil.getCurrentTaxYear.toShortTaxYear,
-                  currentTaxYearStatus.status.value,
-                  AccountingPeriodUtil.getNextTaxYear.toShortTaxYear,
-                  nextTaxYearStatus.status.value
-                ))
-                Ok(Json.toJson(MandationStatusResponse(currentTaxYearStatus.status, nextTaxYearStatus.status)))
-              }
-              case _ => InternalServerError("Failed to retrieve the mandation status")
+        val statusResult: Future[(Option[ITSAStatus], Option[ITSAStatus])] = if (isEnabled(NewGetITSAStatusAPI)) {
+          getITSAStatusConnector.getItsaStatus(requestBody.utr) map { response =>
+            val current = response.find(_.taxYear == AccountingPeriodUtil.getCurrentTaxYear.toItsaStatusShortTaxYear)
+              .flatMap(_.itsaStatusDetails.headOption).map(_.status)
+            val next = response.find(_.taxYear == AccountingPeriodUtil.getNextTaxYear.toItsaStatusShortTaxYear)
+              .flatMap(_.itsaStatusDetails.headOption).map(_.status)
+            (current, next)
+          }
+        } else {
+          mandationStatusConnector.getItsaStatus(requestBody.nino, requestBody.utr) map {
+            case Right(response) =>
+              val current = response.taxYearStatus.find(_.taxYear == AccountingPeriodUtil.getCurrentTaxYear.toItsaStatusShortTaxYear).map(_.status)
+              val next = response.taxYearStatus.find(_.taxYear == AccountingPeriodUtil.getNextTaxYear.toItsaStatusShortTaxYear).map(_.status)
+              (current, next)
+            case Left(error) =>
+              throw new InternalServerException(s"[MandationStatusController] - Failure response fetching mandation status. ${error.status}, ${error.reason}")
+          }
+        }
+
+        statusResult flatMap {
+          case (maybeCurrentYearStatus, maybeNextYearStatus) =>
+            val currentYearStatus = maybeCurrentYearStatus.getOrElse(
+              throw new InternalServerException("[MandationStatusController] - No itsa status found for current tax year")
+            )
+            val nextYearStatus = maybeNextYearStatus.getOrElse(
+              throw new InternalServerException("[MandationStatusController] - No itsa status found for next tax year")
+            )
+            auditService.audit(MandationStatusAuditModel(
+              agentReferenceNumber = getArnFromEnrolments(enrolments),
+              utr = requestBody.utr,
+              nino = requestBody.nino,
+              currentYear = AccountingPeriodUtil.getCurrentTaxYear.toShortTaxYear,
+              currentYearStatus = currentYearStatus.value,
+              nextYear = AccountingPeriodUtil.getNextTaxYear.toShortTaxYear,
+              nextYearStatus = nextYearStatus.value
+            )) map { _ =>
+              Ok(Json.toJson(MandationStatusResponse(currentYearStatus = currentYearStatus, nextYearStatus = nextYearStatus)))
             }
-          }
-          case Left(error) => {
-            logger.error(s"Error processing mandation status request with status ${error.status} and message ${error.reason}")
-            InternalServerError("Failed to retrieve the mandation status")
-          }
         }
       }
     }

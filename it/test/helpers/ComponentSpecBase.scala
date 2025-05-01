@@ -65,6 +65,8 @@ trait ComponentSpecBase extends AnyWordSpecLike
     "throttle.oneTestThrottle.max" -> "1",
     "microservice.services.status-determination-service.host" -> mockHost,
     "microservice.services.status-determination-service.port" -> mockPort,
+    "microservice.services.taxable-entity-api.host" -> mockHost,
+    "microservice.services.taxable-entity-api.port" -> mockPort,
     "microservice.services.signup-tax-year-service.host" -> mockHost,
     "microservice.services.signup-tax-year-service.port" -> mockPort,
     "microservice.services.get-business-details.host" -> mockHost,

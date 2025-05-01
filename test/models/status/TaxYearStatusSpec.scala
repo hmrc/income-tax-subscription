@@ -16,14 +16,15 @@
 
 package models.status
 
-import models.status.MtdMandationStatus.Voluntary
+import models.status.ITSAStatus.MTDVoluntary
 import org.scalatestplus.play.PlaySpec
-import play.api.libs.json.{JsError, JsSuccess, Json, __}
+import play.api.libs.json.{JsError, JsObject, JsSuccess, Json, __}
 
 class TaxYearStatusSpec extends PlaySpec {
-  private val fullModel = TaxYearStatus("2022-23", Voluntary)
 
-  val fullJson = Json.obj(
+  private val fullModel = TaxYearStatus("2022-23", MTDVoluntary)
+
+  val fullJson: JsObject = Json.obj(
     "taxYear" -> "2022-23",
     "status" -> "MTD Voluntary"
   )

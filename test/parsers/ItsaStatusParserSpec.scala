@@ -18,17 +18,18 @@ package parsers
 
 import common.CommonSpec
 import models.ErrorModel
-import models.status.MtdMandationStatus.Voluntary
+import models.status.ITSAStatus.MTDVoluntary
 import models.status.{ItsaStatusResponse, TaxYearStatus}
 import play.api.http.Status.{INTERNAL_SERVER_ERROR, OK}
 import play.api.libs.json.Json
 import uk.gov.hmrc.http.HttpResponse
 
 class ItsaStatusParserSpec extends CommonSpec {
+
   private val expectedResponse =
     List(
-      TaxYearStatus("2022-23", Voluntary),
-      TaxYearStatus("2023-24", Voluntary)
+      TaxYearStatus("2022-23", MTDVoluntary),
+      TaxYearStatus("2023-24", MTDVoluntary)
     )
 
   "ItsaStatusParser" should {

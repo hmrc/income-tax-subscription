@@ -20,7 +20,7 @@ import common.CommonSpec
 import config.AppConfig
 import connectors.mocks.MockHttp
 import models.ErrorModel
-import models.status.MtdMandationStatus.Voluntary
+import models.status.ITSAStatus.MTDVoluntary
 import models.status.{ItsaStatusResponse, TaxYearStatus}
 import models.subscription.AccountingPeriodUtil
 import org.mockito.ArgumentMatchers
@@ -48,8 +48,8 @@ class ItsaStatusConnectorSpec extends CommonSpec with MockHttp with GuiceOneAppP
       "the status-determination-service returns a successful response" in {
         val expectedResponse = ItsaStatusResponse(
           List(
-            TaxYearStatus("2022-23", Voluntary),
-            TaxYearStatus("2023-24", Voluntary)
+            TaxYearStatus("2022-23", MTDVoluntary),
+            TaxYearStatus("2023-24", MTDVoluntary)
           )
         )
 
