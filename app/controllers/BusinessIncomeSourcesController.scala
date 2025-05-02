@@ -18,8 +18,8 @@ package controllers
 
 import common.Extractors
 import config.AppConfig
-import config.featureswitch.FeatureSwitching
-import connectors.CreateIncomeSourcesConnector
+import config.featureswitch.{FeatureSwitching, HIPItsaIncomeSource}
+import connectors.{CreateIncomeSourcesConnector, ItsaIncomeSourceConnector}
 import models.subscription.CreateIncomeSourcesModel
 import play.api.Logger
 import play.api.libs.json.JsValue
@@ -34,6 +34,7 @@ import scala.concurrent.ExecutionContext
 @Singleton
 class BusinessIncomeSourcesController @Inject()(authService: AuthService,
                                                 createIncomeSourcesConnector: CreateIncomeSourcesConnector,
+                                                itsaIncomeSourceConnector: ItsaIncomeSourceConnector,
                                                 cc: ControllerComponents,
                                                 val appConfig: AppConfig
                                                )
@@ -44,11 +45,22 @@ class BusinessIncomeSourcesController @Inject()(authService: AuthService,
   def createIncomeSource(mtdbsaRef: String): Action[JsValue] = Action.async(parse.json) { implicit request =>
     authService.authorised().retrieve(Retrievals.allEnrolments) { enrolments =>
       val agentReferenceNumber: Option[String] = getArnFromEnrolments(enrolments)
-      withJsonBody[CreateIncomeSourcesModel] { incomeSources =>
-        createIncomeSourcesConnector.createBusinessIncomeSources(agentReferenceNumber, mtdbsaRef, incomeSources).map {
-          case Right(_) => NoContent
-          case Left(error) => logger.error(s"Error processing Business Income Source with status ${error.status} and message ${error.reason}")
-            InternalServerError("Business Income Source Failure")
+
+      if (isEnabled(HIPItsaIncomeSource)) {
+        withJsonBody[CreateIncomeSourcesModel] { incomeSources =>
+          itsaIncomeSourceConnector.createIncomeSources(mtdbsaRef, incomeSources).map {
+            case Right(_) => NoContent
+            case Left(error) => logger.error(s"Error processing Create Income Sources with status ${error.status} and message ${error.reason}")
+              InternalServerError("Create Income Sources Failure")
+          }
+        }
+      } else {
+        withJsonBody[CreateIncomeSourcesModel] { incomeSources =>
+          createIncomeSourcesConnector.createBusinessIncomeSources(agentReferenceNumber, mtdbsaRef, incomeSources).map {
+            case Right(_) => NoContent
+            case Left(error) => logger.error(s"Error processing Business Income Source with status ${error.status} and message ${error.reason}")
+              InternalServerError("Business Income Source Failure")
+          }
         }
       }
     }

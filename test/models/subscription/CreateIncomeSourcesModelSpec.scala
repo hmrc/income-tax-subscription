@@ -34,30 +34,35 @@ class CreateIncomeSourcesModelSpec extends PlaySpec with MustMatchers {
 
   val desFormattedNow: String = DateModel.dateConvert(now).toDesDateFormat
 
+  val testSelfEmploymentData: SelfEmploymentData = SelfEmploymentData(
+    id = "testBusinessId",
+    businessStartDate = Some(BusinessStartDate(now)),
+    businessName = Some(BusinessNameModel("testBusinessName")),
+    businessTradeName = Some(BusinessTradeNameModel("testBusinessTrade")),
+    businessAddress = Some(BusinessAddressModel(
+      address = Address(lines = Seq("line 1", "line 2"), postcode = Some("testPostcode"))
+    )),
+    startDateBeforeLimit = false
+  )
+
   val fullSoleTraderBusinesses: SoleTraderBusinesses = SoleTraderBusinesses(
     accountingPeriod = AccountingPeriodModel(now, now),
     accountingMethod = Cash,
     businesses = Seq(
-      SelfEmploymentData(
-        id = "testBusinessId",
-        businessStartDate = Some(BusinessStartDate(now)),
-        businessName = Some(BusinessNameModel("testBusinessName")),
-        businessTradeName = Some(BusinessTradeNameModel("testBusinessTrade")),
-        businessAddress = Some(BusinessAddressModel(
-          address = Address(lines = Seq("line 1", "line 2"), postcode = Some("testPostcode"))
-        ))
-      )
+      testSelfEmploymentData
     )
   )
 
   val fullUkProperty: UkProperty = UkProperty(
     accountingPeriod = AccountingPeriodModel(now, now),
+    startDateBeforeLimit = false,
     tradingStartDate = LocalDate.now,
     accountingMethod = Accruals
   )
 
   val fullOverseasProperty: OverseasProperty = OverseasProperty(
     accountingPeriod = AccountingPeriodModel(now, now),
+    startDateBeforeLimit = false,
     tradingStartDate = LocalDate.now,
     accountingMethod = Cash
   )
@@ -107,7 +112,8 @@ class CreateIncomeSourcesModelSpec extends PlaySpec with MustMatchers {
             ),
             "postcode" -> "testPostcode"
           )
-        )
+        ),
+        "startDateBeforeLimit" -> false
       )
     )
   )
@@ -125,6 +131,7 @@ class CreateIncomeSourcesModelSpec extends PlaySpec with MustMatchers {
         "year" -> now.getYear.toString
       )
     ),
+    "startDateBeforeLimit" -> false,
     "tradingStartDate" -> Json.obj(
       "day" -> now.getDayOfMonth.toString,
       "month" -> now.getMonthValue.toString,
@@ -151,6 +158,7 @@ class CreateIncomeSourcesModelSpec extends PlaySpec with MustMatchers {
       "month" -> now.getMonthValue.toString,
       "year" -> now.getYear.toString
     ),
+    "startDateBeforeLimit" -> false,
     "accountingMethod" -> "Cash"
   )
 
@@ -218,6 +226,72 @@ class CreateIncomeSourcesModelSpec extends PlaySpec with MustMatchers {
     )
   )
 
+  val fullModelTradingStartDateJsonWrite: JsObject = Json.obj(
+    "mtdbsa" -> mtditid,
+    "businessDetails" -> Json.arr(
+      Json.obj(
+        "accountingPeriodStartDate" -> desFormattedNow,
+        "accountingPeriodEndDate" -> desFormattedNow,
+        "tradingName" -> "testBusinessName",
+        "typeOfBusiness" -> "testBusinessTrade",
+        "cashAccrualsFlag" -> Cash.stringValue.toUpperCase,
+        "address" -> Json.obj(
+          "addressLine1" -> "line 1",
+          "countryCode" -> "GB",
+          "postcode" -> "testPostcode",
+          "addressLine2" -> "line 2"
+        ),
+        "tradingStartDate" -> desFormattedNow
+      )
+    ),
+    "ukPropertyDetails" -> Json.obj(
+
+      "cashAccrualsFlag" -> Accruals.stringValue.toUpperCase,
+      "startDate" -> desFormattedNow,
+      "tradingStartDate" -> desFormattedNow
+    ),
+    "foreignPropertyDetails" -> Json.obj(
+
+      "cashAccrualsFlag" -> Cash.stringValue.toUpperCase,
+      "startDate" -> desFormattedNow,
+      "tradingStartDate" -> desFormattedNow
+
+    )
+  )
+
+  val contextualTaxYear: String = DateModel.dateConvert(now).year
+  val fullModelContextualTaxYearJsonWrite: JsObject = Json.obj(
+    "mtdbsa" -> mtditid,
+    "businessDetails" -> Json.arr(
+      Json.obj(
+        "accountingPeriodStartDate" -> desFormattedNow,
+        "accountingPeriodEndDate" -> desFormattedNow,
+        "tradingName" -> "testBusinessName",
+        "typeOfBusiness" -> "testBusinessTrade",
+        "cashAccrualsFlag" -> Cash.stringValue.toUpperCase,
+        "address" -> Json.obj(
+          "addressLine1" -> "line 1",
+          "countryCode" -> "GB",
+          "postcode" -> "testPostcode",
+          "addressLine2" -> "line 2"
+        ),
+        "contextualTaxYear" -> contextualTaxYear
+      )
+    ),
+    "ukPropertyDetails" -> Json.obj(
+      "cashAccrualsFlag" -> Accruals.stringValue.toUpperCase,
+      "startDate" -> desFormattedNow,
+      "contextualTaxYear" -> contextualTaxYear
+    ),
+    "foreignPropertyDetails" -> Json.obj(
+
+      "cashAccrualsFlag" -> Cash.stringValue.toUpperCase,
+      "startDate" -> desFormattedNow,
+      "contextualTaxYear" -> contextualTaxYear
+
+    )
+  )
+
   "CreateIncomeSourcesModel" must {
     "read from json successfully" when {
       "the json is complete and valid" in {
@@ -240,7 +314,7 @@ class CreateIncomeSourcesModelSpec extends PlaySpec with MustMatchers {
 
     "write to json successfully" when {
       "all required fields are present in the model" in {
-        Json.toJson(fullCreateIncomeSourcesModel) mustBe fullCreateIncomeSourcesModelJsonWrite
+        Json.toJson(fullCreateIncomeSourcesModel)(CreateIncomeSourcesModel.desWrites) mustBe fullCreateIncomeSourcesModelJsonWrite
       }
       "all income sources are present, but any optional fields are not present" in {
         val minimalModel = CreateIncomeSourcesModel(
@@ -256,7 +330,8 @@ class CreateIncomeSourcesModelSpec extends PlaySpec with MustMatchers {
                 businessTradeName = Some(BusinessTradeNameModel("testBusinessTrade")),
                 businessAddress = Some(BusinessAddressModel(
                   address = Address(lines = Seq("line 1", "line 2"), postcode = None)
-                ))
+                )),
+                startDateBeforeLimit = false
               )
             )
           )),
@@ -264,7 +339,7 @@ class CreateIncomeSourcesModelSpec extends PlaySpec with MustMatchers {
           overseasProperty = Some(fullOverseasProperty)
         )
 
-        Json.toJson(minimalModel) mustBe fullCreateIncomeSourcesModelJsonWriteMinimal
+        Json.toJson(minimalModel)(CreateIncomeSourcesModel.desWrites) mustBe fullCreateIncomeSourcesModelJsonWriteMinimal
       }
     }
     "return an exception when writing to json" when {
@@ -277,7 +352,7 @@ class CreateIncomeSourcesModelSpec extends PlaySpec with MustMatchers {
           ))
         )
 
-        intercept[InternalServerException](Json.toJson(missingAddressLineModel))
+        intercept[InternalServerException](Json.toJson(missingAddressLineModel)(CreateIncomeSourcesModel.desWrites))
           .message mustBe "[CreateIncomeSourcesModel] - Unable to create model, addressLine1 is missing"
       }
       "businessName is missing in the model" in {
@@ -289,7 +364,7 @@ class CreateIncomeSourcesModelSpec extends PlaySpec with MustMatchers {
           ))
         )
 
-        intercept[InternalServerException](Json.toJson(missingBusinessName))
+        intercept[InternalServerException](Json.toJson(missingBusinessName)(CreateIncomeSourcesModel.desWrites))
           .message mustBe "[CreateIncomeSourcesModel] - Unable to create model, businessName is missing"
       }
       "tradingName is missing in the model" in {
@@ -301,7 +376,7 @@ class CreateIncomeSourcesModelSpec extends PlaySpec with MustMatchers {
           ))
         )
 
-        intercept[InternalServerException](Json.toJson(missingTradingName))
+        intercept[InternalServerException](Json.toJson(missingTradingName)(CreateIncomeSourcesModel.desWrites))
           .message mustBe "[CreateIncomeSourcesModel] - Unable to create model, tradingName is missing"
       }
       "addressDetails is missing in the model" in {
@@ -313,7 +388,7 @@ class CreateIncomeSourcesModelSpec extends PlaySpec with MustMatchers {
           ))
         )
 
-        intercept[InternalServerException](Json.toJson(missingAddressDetails))
+        intercept[InternalServerException](Json.toJson(missingAddressDetails)(CreateIncomeSourcesModel.desWrites))
           .message mustBe "[CreateIncomeSourcesModel] - Unable to create model, addressDetails is missing"
       }
       "tradingStartDate is missing in the model" in {
@@ -325,7 +400,84 @@ class CreateIncomeSourcesModelSpec extends PlaySpec with MustMatchers {
           ))
         )
 
-        intercept[InternalServerException](Json.toJson(missingTradingStartDate))
+        intercept[InternalServerException](Json.toJson(missingTradingStartDate)(CreateIncomeSourcesModel.desWrites))
+          .message mustBe "[CreateIncomeSourcesModel] - Unable to create model, tradingStartDate is missing"
+      }
+    }
+
+    "write to hip json successfully" when {
+      "startDateBeforeLimit is false and all fields are present in the model" in {
+        Json.toJson(fullCreateIncomeSourcesModel)(CreateIncomeSourcesModel.hipWrites(mtditid)) mustBe fullModelTradingStartDateJsonWrite
+      }
+      "startDateBeforeLimit is true and all fields are present in the model" in {
+        lazy val fullModelWithContextualTaxYear = CreateIncomeSourcesModel(
+          nino = testNino,
+          soleTraderBusinesses = Some(fullSoleTraderBusinesses.copy(businesses = Seq(testSelfEmploymentData.copy(startDateBeforeLimit = true)))),
+          ukProperty = Some(fullUkProperty.copy(startDateBeforeLimit = true)),
+          overseasProperty = Some(fullOverseasProperty.copy(startDateBeforeLimit = true))
+        )
+        Json.toJson(fullModelWithContextualTaxYear)(CreateIncomeSourcesModel.hipWrites(mtditid)) mustBe fullModelContextualTaxYearJsonWrite
+      }
+    }
+    "return an exception when writing to hip json" when {
+      "addressLine1 is missing in the model" in {
+        val missingAddressLineModel = fullCreateIncomeSourcesModel.copy(
+          soleTraderBusinesses = Some(fullSoleTraderBusinesses.copy(
+            businesses = fullSoleTraderBusinesses.businesses.map { business =>
+              business.copy(businessAddress = business.businessAddress.map(_.copy(address = Address(lines = Nil, postcode = Some("testPostcode")))))
+            }
+          ))
+        )
+
+        intercept[InternalServerException](Json.toJson(missingAddressLineModel)(CreateIncomeSourcesModel.hipWrites(mtditid)))
+          .message mustBe "[CreateIncomeSourcesModel] - Unable to create model, addressLine1 is missing"
+      }
+      "businessName is missing in the model" in {
+        val missingBusinessName = fullCreateIncomeSourcesModel.copy(
+          soleTraderBusinesses = Some(fullSoleTraderBusinesses.copy(
+            businesses = fullSoleTraderBusinesses.businesses.map { business =>
+              business.copy(businessName = None)
+            }
+          ))
+        )
+
+        intercept[InternalServerException](Json.toJson(missingBusinessName)(CreateIncomeSourcesModel.hipWrites(mtditid)))
+          .message mustBe "[CreateIncomeSourcesModel] - Unable to create model, businessName is missing"
+      }
+      "tradingName is missing in the model" in {
+        val missingTradingName = fullCreateIncomeSourcesModel.copy(
+          soleTraderBusinesses = Some(fullSoleTraderBusinesses.copy(
+            businesses = fullSoleTraderBusinesses.businesses.map { business =>
+              business.copy(businessTradeName = None)
+            }
+          ))
+        )
+
+        intercept[InternalServerException](Json.toJson(missingTradingName)(CreateIncomeSourcesModel.hipWrites(mtditid)))
+          .message mustBe "[CreateIncomeSourcesModel] - Unable to create model, tradingName is missing"
+      }
+      "addressDetails is missing in the model" in {
+        val missingAddressDetails = fullCreateIncomeSourcesModel.copy(
+          soleTraderBusinesses = Some(fullSoleTraderBusinesses.copy(
+            businesses = fullSoleTraderBusinesses.businesses.map { business =>
+              business.copy(businessAddress = None)
+            }
+          ))
+        )
+
+        intercept[InternalServerException](Json.toJson(missingAddressDetails)(CreateIncomeSourcesModel.hipWrites(mtditid)))
+          .message mustBe "[CreateIncomeSourcesModel] - Unable to create model, address is missing"
+      }
+      "tradingStartDate is missing in the model" in {
+        val missingTradingStartDate = fullCreateIncomeSourcesModel.copy(
+          soleTraderBusinesses = Some(fullSoleTraderBusinesses.copy(
+            businesses = fullSoleTraderBusinesses.businesses.map { business =>
+              business.copy(businessStartDate = None)
+            }
+          ))
+        )
+
+        intercept[InternalServerException](Json.toJson(missingTradingStartDate)(CreateIncomeSourcesModel.hipWrites(mtditid)))
           .message mustBe "[CreateIncomeSourcesModel] - Unable to create model, tradingStartDate is missing"
       }
     }

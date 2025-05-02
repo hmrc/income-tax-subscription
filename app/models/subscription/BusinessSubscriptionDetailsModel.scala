@@ -17,7 +17,6 @@
 package models.subscription
 
 import models.DateModel
-import models.subscription.business.AccountingMethod
 import play.api.libs.json._
 
 case class AccountingPeriodModel(startDate: DateModel, endDate: DateModel) {
@@ -71,6 +70,7 @@ object BusinessAddressModel {
 }
 
 case class  SelfEmploymentData(id: String,
+                               startDateBeforeLimit: Boolean,
                                businessStartDate: Option[BusinessStartDate] = None,
                                businessName: Option[BusinessNameModel] = None,
                                businessTradeName: Option[BusinessTradeNameModel] = None,
@@ -80,97 +80,4 @@ object SelfEmploymentData {
   implicit val format: Format[SelfEmploymentData] = Json.format[SelfEmploymentData]
 }
 
-case class FeIncomeSourceModel(selfEmployment: Boolean,
-                               ukProperty: Boolean,
-                               foreignProperty: Boolean)
-
-object FeIncomeSourceModel {
-  implicit val format: Format[FeIncomeSourceModel] = Json.format[FeIncomeSourceModel]
-}
-
-case class PropertyStartDateModel(startDate: DateModel)
-
-object PropertyStartDateModel {
-  implicit val format: OFormat[PropertyStartDateModel] = Json.format[PropertyStartDateModel]
-}
-
-case class AccountingMethodPropertyModel(propertyAccountingMethod: AccountingMethod)
-
-object AccountingMethodPropertyModel {
-  implicit val format: OFormat[AccountingMethodPropertyModel] = Json.format[AccountingMethodPropertyModel]
-}
-
-case class OverseasPropertyStartDateModel(startDate: DateModel)
-
-object OverseasPropertyStartDateModel {
-  implicit val format: OFormat[OverseasPropertyStartDateModel] = Json.format[OverseasPropertyStartDateModel]
-}
-
-case class OverseasAccountingMethodPropertyModel(overseasPropertyAccountingMethod: AccountingMethod)
-
-object OverseasAccountingMethodPropertyModel {
-  implicit val format: OFormat[OverseasAccountingMethodPropertyModel] = Json.format[OverseasAccountingMethodPropertyModel]
-}
-
-case class BusinessSubscriptionDetailsModel(nino: String,
-                                            accountingPeriod: AccountingPeriodModel,
-                                            selfEmploymentsData: Option[Seq[SelfEmploymentData]],
-                                            accountingMethod: Option[AccountingMethod],
-                                            incomeSource: FeIncomeSourceModel,
-                                            propertyStartDate: Option[PropertyStartDateModel] = None,
-                                            propertyAccountingMethod: Option[AccountingMethodPropertyModel] = None,
-                                            overseasPropertyStartDate: Option[OverseasPropertyStartDateModel] = None,
-                                            overseasAccountingMethodProperty: Option[OverseasAccountingMethodPropertyModel] = None
-                                           )
-
-object BusinessSubscriptionDetailsModel {
-
-  implicit val businessSubscriptionReads: Reads[BusinessSubscriptionDetailsModel] = Json.reads[BusinessSubscriptionDetailsModel]
-
-  def withoutValue(value: JsValue): Boolean= value match {
-    case JsNull => true
-    case JsString("") => true
-    case _ => false
-  }
-
-  implicit val businessSubscriptionWrites: Writes[BusinessSubscriptionDetailsModel] = new Writes[BusinessSubscriptionDetailsModel] {
-    def writes(details: BusinessSubscriptionDetailsModel): JsObject = JsObject(Json.obj(
-      "businessDetails" -> details.selfEmploymentsData.map(_.map(
-        data => Map("accountingPeriodStartDate" -> JsString(details.accountingPeriod.startDate.toDesDateFormat),
-          "accountingPeriodEndDate" -> JsString(details.accountingPeriod.endDate.toDesDateFormat),
-          "tradingName" -> JsString(data.businessName.map(_.businessName).getOrElse(throw new Exception("Missing businessName parameter"))),
-          "addressDetails" -> JsObject(Json.obj(
-            "addressLine1" -> data.businessAddress.map(_.address.lines.head).getOrElse(throw new Exception("Missing addressLine1 parameter")),
-            "addressLine2" -> data.businessAddress.map(model => if(model.address.lines.length > 1) model.address.lines(1) else ""),
-            "addressLine3" -> data.businessAddress.map(model => if(model.address.lines.length > 2) model.address.lines(2) else ""),
-            "addressLine4" -> data.businessAddress.map(model => if(model.address.lines.length > 3) model.address.lines(3) else ""),
-            "postalCode" -> data.businessAddress.map(_.address.postcode),
-            "countryCode" -> "GB"
-          ).fields.filterNot(json => withoutValue(json._2))),
-          "typeOfBusiness" -> JsString(data.businessTradeName.map(_.businessTradeName).getOrElse(throw new Exception("Missing tradingName parameter"))),
-          "tradingStartDate" -> JsString(data.businessStartDate.getOrElse(
-            throw new Exception("Missing businessStartDate Parameter")).startDate.toDesDateFormat),
-          "cashOrAccrualsFlag" -> details.accountingMethod.map(method =>JsString(method.stringValue.toUpperCase)).getOrElse(JsNull)
-        ))),
-      "ukPropertyDetails" -> Json.toJson(
-        if(details.incomeSource.ukProperty)
-          Json.obj(
-            "tradingStartDate" -> details.propertyStartDate.map(_.startDate.toDesDateFormat),
-            "cashOrAccrualsFlag" -> details.propertyAccountingMethod.map(_.propertyAccountingMethod.stringValue.toUpperCase),
-            "startDate" -> details.accountingPeriod.startDate.toDesDateFormat
-          )
-        else JsNull
-      ),
-      "foreignPropertyDetails" -> Json.toJson(
-        if(details.incomeSource.foreignProperty)
-          Json.obj(
-          "tradingStartDate" -> details.overseasPropertyStartDate.map(_.startDate.toDesDateFormat),
-          "cashOrAccrualsFlag" -> details.overseasAccountingMethodProperty.map(_.overseasPropertyAccountingMethod.stringValue.toUpperCase),
-          "startDate" -> details.accountingPeriod.startDate.toDesDateFormat
-          )
-        else JsNull
-      )
-    ).fields.filterNot(json => withoutValue(json._2)))
-  }
-}
 

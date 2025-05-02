@@ -18,13 +18,14 @@ package helpers.servicemocks
 
 import com.github.tomakehurst.wiremock.stubbing.StubMapping
 import play.api.libs.json.JsValue
+import uk.gov.hmrc.http.HeaderNames
 
 object CreateIncomeSourceStub extends WireMockMethods {
 
   private def createBusinessIncomeUrl(mtdbsaRef: String): String = s"/income-tax/income-sources/mtdbsa/$mtdbsaRef/ITSA/business"
 
   def stub(mtdbsaRef: String, expectedBody: JsValue, authorizationHeader: String, environmentHeader: String)
-                (status: Int, body: JsValue): StubMapping = {
+          (status: Int, body: JsValue): StubMapping = {
     when(
       method = POST,
       uri = createBusinessIncomeUrl(mtdbsaRef),
@@ -34,6 +35,22 @@ object CreateIncomeSourceStub extends WireMockMethods {
         "Environment" -> environmentHeader
       )
     ).thenReturn(status, body)
+  }
 
+  def stubItsaIncomeSource(expectedBody: JsValue)(status: Int, body: JsValue): StubMapping = {
+    when(
+      method = POST,
+      uri = "/RESTAdapter/itsa/taxpayer/income-source",
+      body = expectedBody,
+      headers = Map(
+        HeaderNames.authorisation -> "Bearer .*",
+        "correlationId" -> "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "X-Message-Type" -> "CreateIncomeSource",
+        "X-Originating-System" -> "MDTP",
+        "X-Receipt-Date" -> "^(\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2})Z$",
+        "X-Regime" -> "ITSA",
+        "X-Transmitting-System" -> "HIP"
+      )
+    ).thenReturn(status, body)
   }
 }

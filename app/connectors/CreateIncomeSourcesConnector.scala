@@ -17,8 +17,8 @@
 package connectors
 
 import config.AppConfig
-import models.monitoring.{CompletedSignUpAudit, SignUpCompleteAudit}
-import models.subscription.{BusinessSubscriptionDetailsModel, CreateIncomeSourcesModel}
+import models.monitoring.CompletedSignUpAudit
+import models.subscription.CreateIncomeSourcesModel
 import parsers.CreateIncomeSourceParser._
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.Request
@@ -51,7 +51,7 @@ class CreateIncomeSourcesConnector @Inject()(http: HttpClient,
       appConfig.desEnvironmentHeader
     )
 
-    http.POST[JsValue, PostIncomeSourceResponse](businessIncomeUrl(mtdbsaRef), Json.toJson(createIncomeSources), headers = desHeaders)(
+    http.POST[JsValue, PostIncomeSourceResponse](businessIncomeUrl(mtdbsaRef), Json.toJson(createIncomeSources)(CreateIncomeSourcesModel.desWrites), headers = desHeaders)(
       implicitly,
       implicitly[HttpReads[PostIncomeSourceResponse]],
       headerCarrier,
@@ -63,27 +63,6 @@ class CreateIncomeSourcesConnector @Inject()(http: HttpClient,
         auditService.extendedAudit(CompletedSignUpAudit(agentReferenceNumber, createIncomeSources, appConfig.desAuthorisationToken))
         Right(value)
     }
-
   }
 
-  def createBusinessIncome(agentReferenceNumber: Option[String],
-                           mtdbsaRef: String,
-                           incomeSourceRequest: BusinessSubscriptionDetailsModel)
-                          (implicit hc: HeaderCarrier,
-                           request: Request[_]): Future[PostIncomeSourceResponse] = {
-
-    auditService.extendedAudit(SignUpCompleteAudit(agentReferenceNumber, incomeSourceRequest, appConfig.desAuthorisationToken))
-
-    val headerCarrier: HeaderCarrier = hc
-      .copy(authorization = Some(Authorization(appConfig.desAuthorisationToken)))
-      .withExtraHeaders(appConfig.desEnvironmentHeader)
-
-    val desHeaders: Seq[(String, String)] = Seq(
-      HeaderNames.authorisation -> appConfig.desAuthorisationToken,
-      appConfig.desEnvironmentHeader
-    )
-
-    http.POST[JsValue, PostIncomeSourceResponse](businessIncomeUrl(mtdbsaRef), Json.toJson(incomeSourceRequest), headers = desHeaders)(implicitly,
-      implicitly[HttpReads[PostIncomeSourceResponse]], headerCarrier, implicitly)
-  }
 }

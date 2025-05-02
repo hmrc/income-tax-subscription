@@ -29,15 +29,6 @@ class CompletedSignUpAuditSpec extends CommonSpec with Matchers {
 
   private val testNino = "testNino"
 
-  private val testSelfEmploymentData = SelfEmploymentData(
-    id = "testBusinessId",
-    businessStartDate = Some(BusinessStartDate(now)),
-    businessName = Some(BusinessNameModel("testBusinessName")),
-    businessTradeName = Some(BusinessTradeNameModel("testBusinessTrade")),
-    businessAddress = Some(BusinessAddressModel(
-      address = Address(lines = Seq("line 1", "line 2"), postcode = Some("testPostcode"))
-    ))
-  )
   private val testSoleTraderBusinesses = SoleTraderBusinesses(
     accountingPeriod = AccountingPeriodModel(now, now),
     accountingMethod = Cash,
@@ -49,19 +40,22 @@ class CompletedSignUpAuditSpec extends CommonSpec with Matchers {
         businessTradeName = Some(BusinessTradeNameModel("testBusinessTrade")),
         businessAddress = Some(BusinessAddressModel(
           address = Address(lines = Seq("line 1", "line 2"), postcode = Some("testPostcode"))
-        ))
+        )),
+        startDateBeforeLimit = false
       )
     )
   )
 
   private val testUkProperty = UkProperty(
     accountingPeriod = AccountingPeriodModel(now, now),
+    startDateBeforeLimit = false,
     tradingStartDate = now,
     accountingMethod = Accruals
   )
 
   private val testOverseasProperty = OverseasProperty(
     accountingPeriod = AccountingPeriodModel(now, now),
+    startDateBeforeLimit = false,
     tradingStartDate = now,
     accountingMethod = Cash
   )
@@ -215,61 +209,6 @@ class CompletedSignUpAuditSpec extends CommonSpec with Matchers {
           "Authorization" -> "test"
         )
       }
-    }
-  }
-
-  "SignUpCompleteAudit" should {
-    "write empty json" in {
-      val model = BusinessSubscriptionDetailsModel(
-        nino = testNino,
-        accountingPeriod = AccountingPeriodModel(now, now),
-        accountingMethod = Some(Cash),
-        incomeSource = FeIncomeSourceModel(selfEmployment = false, ukProperty = false, foreignProperty = false),
-        selfEmploymentsData = None
-      )
-
-      Json.toJson(model) shouldBe Json.obj()
-    }
-
-    "write to json" in {
-      val model = BusinessSubscriptionDetailsModel(
-        nino = testNino,
-        accountingPeriod = AccountingPeriodModel(now, now),
-        accountingMethod = Some(Cash),
-        incomeSource = FeIncomeSourceModel(selfEmployment = true, ukProperty = true, foreignProperty = true),
-        selfEmploymentsData = Some(Seq(testSelfEmploymentData)),
-        propertyStartDate = Some(PropertyStartDateModel(now)),
-        propertyAccountingMethod = Some(AccountingMethodPropertyModel(Cash)),
-        overseasPropertyStartDate = Some(OverseasPropertyStartDateModel(now)),
-        overseasAccountingMethodProperty = Some(OverseasAccountingMethodPropertyModel(Accruals))
-      )
-
-      Json.toJson(model) shouldBe Json.obj(
-        "businessDetails" -> Json.arr(Json.obj(
-          "accountingPeriodStartDate" -> "2021-11-26",
-          "accountingPeriodEndDate" -> "2021-11-26",
-          "tradingName" -> "testBusinessName",
-          "addressDetails" -> Json.obj(
-            "addressLine1" -> "line 1",
-            "addressLine2" -> "line 2",
-            "postalCode" -> "testPostcode",
-            "countryCode" -> "GB"
-          ),
-          "typeOfBusiness" -> "testBusinessTrade",
-          "tradingStartDate" -> "2021-11-26",
-          "cashOrAccrualsFlag" -> "CASH"
-        )),
-        "ukPropertyDetails" -> Json.obj(
-          "tradingStartDate" -> "2021-11-26",
-          "cashOrAccrualsFlag" -> "CASH",
-          "startDate" -> "2021-11-26"
-        ),
-        "foreignPropertyDetails" -> Json.obj(
-          "tradingStartDate" -> "2021-11-26",
-          "cashOrAccrualsFlag" -> "ACCRUALS",
-          "startDate" -> "2021-11-26"
-        )
-      )
     }
   }
 
