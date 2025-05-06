@@ -17,10 +17,13 @@
 package connectors
 
 import config.AppConfig
+import models.monitoring.CompletedSignUpAudit
 import models.subscription.CreateIncomeSourcesModel
 import parsers.ITSAIncomeSourceParser.{PostITSAIncomeSourceResponse, itsaIncomeSourceResponseHttpReads}
 import play.api.libs.json.{JsValue, Json}
-import uk.gov.hmrc.http.{Authorization, HeaderCarrier, HttpClient, HttpReads}
+import play.api.mvc.Request
+import services.monitoring.AuditService
+import uk.gov.hmrc.http.{Authorization, HeaderCarrier, HeaderNames, HttpClient, HttpReads}
 
 import java.time.format.DateTimeFormatter
 import java.time.{Instant, ZoneId}
@@ -30,11 +33,12 @@ import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class ItsaIncomeSourceConnector @Inject()(http: HttpClient,
-                                          appConfig: AppConfig
+                                          appConfig: AppConfig,
+                                          auditService: AuditService
                                          )(implicit ec: ExecutionContext) {
 
   private def itsaIncomeSourceUrl: String = {
-    s"${appConfig.desURL}/RESTAdapter/itsa/taxpayer/income-source"
+    s"${appConfig.itsaIncomeSourceURL}/RESTAdapter/itsa/taxpayer/income-source"
   }
 
   private val isoDatePattern: DateTimeFormatter = DateTimeFormatter
@@ -42,11 +46,13 @@ class ItsaIncomeSourceConnector @Inject()(http: HttpClient,
     .withZone(ZoneId.of("UTC"))
 
 
-  def createIncomeSources(mtdbsaRef: String,
+  def createIncomeSources(agentReferenceNumber: Option[String],
+                          mtdbsaRef: String,
                           createIncomeSources: CreateIncomeSourcesModel)
-                         (implicit hc: HeaderCarrier): Future[PostITSAIncomeSourceResponse] = {
+                         (implicit hc: HeaderCarrier, request: Request[_]): Future[PostITSAIncomeSourceResponse] = {
 
-    val hipHeaders: Seq[(String, String)] = Seq(
+    val hipHeaders: Map[String, String] = Map(
+      HeaderNames.authorisation -> appConfig.itsaIncomeSourceAuthorisationToken,
       "correlationid" -> UUID.randomUUID().toString,
       "X-Message-Type" -> "CreateIncomeSource",
       "X-Originating-System" -> "MDTP",
@@ -57,7 +63,7 @@ class ItsaIncomeSourceConnector @Inject()(http: HttpClient,
 
     val headerCarrier: HeaderCarrier = hc
       .copy(authorization = Some(Authorization(appConfig.itsaIncomeSourceAuthorisationToken)))
-      .withExtraHeaders(hipHeaders: _*)
+      .withExtraHeaders((hipHeaders - HeaderNames.authorisation).toSeq: _*)
 
 
     http.POST[JsValue, PostITSAIncomeSourceResponse](
@@ -69,13 +75,14 @@ class ItsaIncomeSourceConnector @Inject()(http: HttpClient,
       implicitly[HttpReads[PostITSAIncomeSourceResponse]],
       headerCarrier,
       implicitly
-    ) map {
+    ) flatMap {
       case Left(error) =>
-        Left(error)
+        Future.successful(Left(error))
       case Right(value) =>
-        Right(value)
+        auditService.extendedAudit(CompletedSignUpAudit(agentReferenceNumber, createIncomeSources, appConfig.itsaIncomeSourceAuthorisationToken)) map {
+          _ => Right(value)
+        }
     }
-
   }
 
 }

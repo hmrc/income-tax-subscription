@@ -48,7 +48,7 @@ class BusinessIncomeSourcesController @Inject()(authService: AuthService,
 
       if (isEnabled(HIPItsaIncomeSource)) {
         withJsonBody[CreateIncomeSourcesModel] { incomeSources =>
-          itsaIncomeSourceConnector.createIncomeSources(mtdbsaRef, incomeSources).map {
+          itsaIncomeSourceConnector.createIncomeSources(agentReferenceNumber, mtdbsaRef, incomeSources).map {
             case Right(_) => NoContent
             case Left(error) => logger.error(s"Error processing Create Income Sources with status ${error.status} and message ${error.reason}")
               InternalServerError("Create Income Sources Failure")

@@ -17,17 +17,25 @@
 package connectors
 
 import helpers.ComponentSpecBase
-import helpers.IntegrationTestConstants.{testCreateIncomeFailureBody, testCreateIncomeSources, testMtdbsaRef}
-import helpers.servicemocks.CreateIncomeSourceStub
+import helpers.IntegrationTestConstants.{testArn, testCreateIncomeFailureBody, testCreateIncomeSources, testMtdbsaRef}
+import helpers.servicemocks.AuditStub.stubAuditing
+import helpers.servicemocks.{AuditStub, CreateIncomeSourceStub}
 import models.subscription._
 import models.subscription.business.{CreateIncomeSourceErrorModel, CreateIncomeSourceSuccessModel}
 import play.api.http.Status.{CREATED, INTERNAL_SERVER_ERROR}
 import play.api.libs.json.Json
+import play.api.mvc.Request
+import play.api.test.FakeRequest
 import utils.TestConstants.testCreateIncomeSuccessBody
 
-class ItsaIncomeSourceConnectorISpec extends ComponentSpecBase {
+class ItsaIncomeSourceConnectorISpec extends ComponentSpecBase{
 
   private lazy val connector: ItsaIncomeSourceConnector = app.injector.instanceOf[ItsaIncomeSourceConnector]
+  implicit val request: Request[_] = FakeRequest()
+
+  override def overriddenConfig(): Map[String, String] = Map(
+    "auditing.enabled" -> "true"
+  )
 
   "createIncomeSources" must {
     s"return a successful response when receiving a $CREATED response" in {
@@ -37,19 +45,22 @@ class ItsaIncomeSourceConnectorISpec extends ComponentSpecBase {
       )(status = CREATED, body = testCreateIncomeSuccessBody)
 
       val result = connector.createIncomeSources(
+        agentReferenceNumber = Some(testArn),
         mtdbsaRef = testMtdbsaRef,
         createIncomeSources = testCreateIncomeSources
       )
 
       result.futureValue shouldBe Right(CreateIncomeSourceSuccessModel())
+      AuditStub.verifyAudit()
     }
-    s"return a failure response when receiving a non-$CREATED response" in {
 
+    s"return a failure response when receiving a non-$CREATED response" in {
       CreateIncomeSourceStub.stubItsaIncomeSource(
         expectedBody = Json.toJson(testCreateIncomeSources)(CreateIncomeSourcesModel.hipWrites(testMtdbsaRef))
       )(status = INTERNAL_SERVER_ERROR, body = testCreateIncomeFailureBody)
 
       val result = connector.createIncomeSources(
+        agentReferenceNumber = Some(testArn),
         mtdbsaRef = testMtdbsaRef,
         createIncomeSources = testCreateIncomeSources
       )

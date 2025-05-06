@@ -35,7 +35,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 class BusinessIncomeSourcesControllerSpec extends CommonSpec
-  with MockAuthService with MockIncomeSourcesConnector with MaterializerSupport with FeatureSwitching {
+  with MockAuthService with MockIncomeSourcesConnector with MaterializerSupport with FeatureSwitching{
 
   override def beforeEach(): Unit = {
     super.beforeEach()
@@ -182,7 +182,7 @@ class BusinessIncomeSourcesControllerSpec extends CommonSpec
           enable(HIPItsaIncomeSource)
 
           mockAgentAuthSuccess()
-          mockCreateIncomeSources(mtditid, testCreateIncomeSources)(
+          mockCreateIncomeSources(Some(testArn), mtditid, testCreateIncomeSources)(
             Right(CreateIncomeSourceSuccessModel())
           )
 
@@ -196,7 +196,7 @@ class BusinessIncomeSourcesControllerSpec extends CommonSpec
           enable(HIPItsaIncomeSource)
 
           mockAgentAuthSuccess()
-          mockCreateIncomeSources(mtditid, testCreateIncomeSources)(
+          mockCreateIncomeSources(Some(testArn),mtditid, testCreateIncomeSources)(
             Left(CreateIncomeSourceErrorModel(INTERNAL_SERVER_ERROR, "error"))
           )
 

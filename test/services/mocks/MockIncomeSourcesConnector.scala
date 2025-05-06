@@ -59,13 +59,14 @@ trait MockIncomeSourcesConnector extends MockitoSugar with MockHttp with GuiceOn
 
   }
 
-  def mockCreateIncomeSources(mtdbsaRef: String,
+  def mockCreateIncomeSources(agentReferenceNumber: Option[String], mtdbsaRef: String,
                               createItsaIncomeSourcesModel: CreateIncomeSourcesModel)
                              (response: PostITSAIncomeSourceResponse): Unit = {
     when(mockItsaIncomeSourceConnector.createIncomeSources(
+      ArgumentMatchers.eq(agentReferenceNumber),
       ArgumentMatchers.eq(mtdbsaRef),
       ArgumentMatchers.eq(createItsaIncomeSourcesModel)
-    )(ArgumentMatchers.any[HeaderCarrier])).thenReturn(Future.successful(response))
+    )(ArgumentMatchers.any[HeaderCarrier], ArgumentMatchers.any[Request[_]])).thenReturn(Future.successful(response))
   }
 
 }
