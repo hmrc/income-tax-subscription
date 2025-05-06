@@ -30,7 +30,8 @@ object FeatureSwitch {
   val switches: Set[FeatureSwitch] = Set(
     StubDESFeature,
     SubmitUtrToSignUp,
-    HIPItsaIncomeSource
+    HIPItsaIncomeSource,
+    UseHIPSignUpTaxYearAPI
   )
 
   def apply(str: String): FeatureSwitch =
@@ -59,4 +60,9 @@ object SubmitUtrToSignUp extends FeatureSwitch {
 object HIPItsaIncomeSource extends FeatureSwitch {
   val displayName = "Use HIP endpoint for Create Income Source"
   val name = s"$prefix.hip-itsa-income-source"
+}
+
+object UseHIPSignUpTaxYearAPI extends FeatureSwitch {
+  val displayName = s"Use HIP SignUp Tax Year API "
+  val name = s"$prefix.use-hip-signup-tax-year-api"
 }
