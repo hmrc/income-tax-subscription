@@ -38,6 +38,9 @@ trait AppConfig {
   val desAuthorisationToken: String
   val desEnvironmentHeader: (String, String)
 
+  val itsaIncomeSourceURL: String
+  val itsaIncomeSourceAuthorisationToken: String
+
   def getBusinessDetailsURL: String
 
   val getBusinessDetailsAuthorisationToken: String
@@ -102,6 +105,9 @@ class MicroserviceAppConfig @Inject()(servicesConfig: ServicesConfig, val config
 
   override lazy val desEnvironment: String = loadConfig(s"$desBase.environment")
   override lazy val desToken: String = loadConfig(s"$desBase.authorization-token")
+
+  lazy val itsaIncomeSourceURL: String = servicesConfig.baseUrl("itsa-income-source")
+  lazy val itsaIncomeSourceAuthorisationToken: String = s"Bearer ${loadConfig("microservice.services.itsa-income-source.authorization-token")}"
 
   lazy val mongoUri: String = loadConfig("mongodb.uri")
 

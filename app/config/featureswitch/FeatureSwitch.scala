@@ -29,7 +29,8 @@ object FeatureSwitch {
 
   val switches: Set[FeatureSwitch] = Set(
     StubDESFeature,
-    SubmitUtrToSignUp
+    SubmitUtrToSignUp,
+    HIPItsaIncomeSource
   )
 
   def apply(str: String): FeatureSwitch =
@@ -51,6 +52,11 @@ object StubDESFeature extends FeatureSwitch {
 }
 
 object SubmitUtrToSignUp extends FeatureSwitch {
-  val displayName = s"Submit UTR to API 1565 "
+  val displayName = "Submit UTR to API 1565"
   val name = s"$prefix.submit-utr-to-api-1565"
+}
+
+object HIPItsaIncomeSource extends FeatureSwitch {
+  val displayName = "Use HIP endpoint for Create Income Source"
+  val name = s"$prefix.hip-itsa-income-source"
 }

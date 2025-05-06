@@ -22,7 +22,7 @@ import models.frontend._
 import models.lockout.LockoutRequest
 import models.matching.LockoutResponse
 import models.subscription._
-import models.subscription.business.Cash
+import models.subscription.business.{Accruals, Cash}
 import play.api.http.Status._
 import play.api.libs.json.{JsValue, Json}
 import uk.gov.hmrc.domain.Generator
@@ -42,6 +42,7 @@ object TestConstants extends JsonUtils {
   lazy val testSourceId = "sourceId0001"
   lazy val testErrorReason = "Error Reason"
   lazy val testPreferencesToken: String = s"${UUID.randomUUID()}"
+  lazy val now: LocalDate = LocalDate.now
 
   val INVALID_NINO_MODEL = ErrorModel(BAD_REQUEST, "INVALID_NINO", "Submission has not passed validation. Invalid parameter NINO.")
   val INVALID_PAYLOAD_MODEL = ErrorModel(BAD_REQUEST, "INVALID_PAYLOAD", "Submission has not passed validation. Invalid PAYLOAD.")
@@ -93,57 +94,7 @@ object TestConstants extends JsonUtils {
     "taxYear" -> taxYear
   )
 
-  val testCreateIncomeSubmissionModel: BusinessSubscriptionDetailsModel = BusinessSubscriptionDetailsModel(
-    nino = "AA111111A",
-    accountingPeriod = AccountingPeriodModel(LocalDate.now(), LocalDate.now()),
-    selfEmploymentsData = Some(Seq()),
-    accountingMethod = None,
-    incomeSource = FeIncomeSourceModel(selfEmployment = false, ukProperty = true, foreignProperty = false),
-    propertyStartDate = Some(PropertyStartDateModel(LocalDate.now())),
-    propertyAccountingMethod = Some(AccountingMethodPropertyModel(Cash))
-  )
 
-  val testCreateIncomeSubmissionJson: JsValue = {
-    val date = LocalDate.now()
-    Json.parse(
-      s"""
-         | {
-         | "nino": "AA111111A",
-         |
-         | "agentReferenceNumber": "1223456",
-         |
-         | "accountingPeriod": {
-         |   "startDate": {
-         |    "day": "${date.getDayOfMonth}",
-         |    "month": "${date.getMonthValue}",
-         |    "year": "${date.getYear}"
-         |   },
-         |   "endDate": {
-         |    "day": "${date.getDayOfMonth}",
-         |    "month": "${date.getMonthValue}",
-         |    "year": "${date.getYear}"
-         |   }
-         |   },
-         |   "selfEmploymentsData": [],
-         |   "incomeSource": {
-         |     "selfEmployment": false,
-         |     "ukProperty": true,
-         |     "foreignProperty":false
-         |   },
-         |   "propertyStartDate": {
-         |     "startDate": {
-         |    "day": "${date.getDayOfMonth}",
-         |    "month": "${date.getMonthValue}",
-         |    "year": "${date.getYear}"
-         |   }
-         |   },
-         |   "propertyAccountingMethod": {
-         |     "propertyAccountingMethod": "cash"
-         |   }
-         | }
-         |""".stripMargin
-    )
-  }
 
   val testCreateIncomeSuccessBody: JsValue = Json.parse(
     """
@@ -160,4 +111,5 @@ object TestConstants extends JsonUtils {
       |}
     """.stripMargin
   )
+
 }

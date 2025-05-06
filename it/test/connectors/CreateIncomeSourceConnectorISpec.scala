@@ -20,6 +20,7 @@ import config.MicroserviceAppConfig
 import helpers.ComponentSpecBase
 import helpers.IntegrationTestConstants._
 import helpers.servicemocks.CreateIncomeSourceStub
+import models.subscription.CreateIncomeSourcesModel
 import models.subscription.business.{CreateIncomeSourceErrorModel, CreateIncomeSourceSuccessModel}
 import play.api.http.Status._
 import play.api.libs.json.Json
@@ -38,13 +39,13 @@ class CreateIncomeSourceConnectorISpec extends ComponentSpecBase {
 
       "return a valid response when valid json is found" in {
         CreateIncomeSourceStub.stub(testMtdbsaRef,
-          Json.toJson(testCreateIncomeSubmissionModel),
+          Json.toJson(testCreateIncomeSources)(CreateIncomeSourcesModel.desWrites),
           appConfig.desAuthorisationToken,
           appConfig.desEnvironment)(
           OK, testCreateIncomeSuccessBody
         )
 
-        val result = createIncomeSourceConnector.createBusinessIncome(Some(testArn), testMtdbsaRef, testCreateIncomeSubmissionModel)
+        val result = createIncomeSourceConnector.createBusinessIncomeSources(Some(testArn), testMtdbsaRef, testCreateIncomeSources)
 
         result.futureValue shouldBe Right(CreateIncomeSourceSuccessModel())
       }
@@ -55,13 +56,13 @@ class CreateIncomeSourceConnectorISpec extends ComponentSpecBase {
 
       "return an error response" in {
         CreateIncomeSourceStub.stub(testMtdbsaRef,
-          Json.toJson(testCreateIncomeSubmissionModel),
+          Json.toJson(testCreateIncomeSources)(CreateIncomeSourcesModel.desWrites),
           appConfig.desAuthorisationToken,
           appConfig.desEnvironment)(
           INTERNAL_SERVER_ERROR, testCreateIncomeFailureBody
         )
 
-        val result = createIncomeSourceConnector.createBusinessIncome(Some(testArn), testMtdbsaRef, testCreateIncomeSubmissionModel)
+        val result = createIncomeSourceConnector.createBusinessIncomeSources(Some(testArn), testMtdbsaRef, testCreateIncomeSources)
 
         result.futureValue shouldBe Left(CreateIncomeSourceErrorModel(INTERNAL_SERVER_ERROR, testCreateIncomeFailureBody.toString()))
       }

@@ -19,12 +19,13 @@ package helpers
 import common.Constants.hmrcAsAgent
 import models.lockout.LockoutRequest
 import models.subscription._
-import models.subscription.business.Cash
+import models.subscription.business.{Accruals, Cash}
 import models.{DateModel, ErrorModel}
 import play.api.http.Status._
 import play.api.libs.json.{JsValue, Json}
 import uk.gov.hmrc.domain.Generator
 import utils.JsonUtils
+import utils.TestConstants.testNino
 
 import java.time.{Instant, LocalDate}
 import java.util.UUID
@@ -92,39 +93,6 @@ object IntegrationTestConstants extends JsonUtils {
          |}
       """.stripMargin
 
-    val oldSuccessResponse: (String, String, String) => JsValue = (nino: String, safeId: String, mtdbsa: String) =>
-      s"""{
-         |   "safeId": "$safeId",
-         |   "nino": "$nino",
-         |   "mtdbsa": "$mtdbsa",
-         |   "propertyIncome": false,
-         |   "businessData": [
-         |      {
-         |         "incomeSourceId": "123456789012345",
-         |         "accountingPeriodStartDate": "2001-01-01",
-         |         "accountingPeriodEndDate": "2001-01-01",
-         |         "tradingName": "RCDTS",
-         |         "businessAddressDetails": {
-         |            "addressLine1": "100 SuttonStreet",
-         |            "addressLine2": "Wokingham",
-         |            "addressLine3": "Surrey",
-         |            "addressLine4": "London",
-         |            "postalCode": "DH14EJ",
-         |            "countryCode": "GB"
-         |         },
-         |         "businessContactDetails": {
-         |            "phoneNumber": "01332752856",
-         |            "mobileNumber": "07782565326",
-         |            "faxNumber": "01332754256",
-         |            "emailAddress": "stephen@manncorpone.co.uk"
-         |         },
-         |         "tradingStartDate": "2001-01-01",
-         |         "cashOrAccruals": "cash",
-         |         "seasonal": true
-         |      }
-         |   ]
-         |}
-      """.stripMargin
 
     val failureResponse: (String, String) => JsValue = (code: String, reason: String) =>
       s"""
@@ -174,57 +142,38 @@ object IntegrationTestConstants extends JsonUtils {
     """.stripMargin
   )
 
-  val testCreateIncomeSubmissionModel: BusinessSubscriptionDetailsModel = BusinessSubscriptionDetailsModel(
-    nino = "AA111111A",
-    accountingPeriod = AccountingPeriodModel(LocalDate.now(), LocalDate.now()),
-    selfEmploymentsData = Some(Seq()),
-    accountingMethod = None,
-    incomeSource = FeIncomeSourceModel(selfEmployment = false, ukProperty = true, foreignProperty = false),
-    propertyStartDate = Some(PropertyStartDateModel(LocalDate.now())),
-    propertyAccountingMethod = Some(AccountingMethodPropertyModel(Cash))
+  val now: LocalDate = LocalDate.now
+  val testCreateIncomeSources: CreateIncomeSourcesModel = CreateIncomeSourcesModel(
+    nino = testNino,
+    soleTraderBusinesses = Some(SoleTraderBusinesses(
+      accountingPeriod = AccountingPeriodModel(now, now),
+      accountingMethod = Cash,
+      businesses = Seq(
+        SelfEmploymentData(
+          id = "testBusinessId",
+          businessStartDate = Some(BusinessStartDate(now)),
+          businessName = Some(BusinessNameModel("testBusinessName")),
+          businessTradeName = Some(BusinessTradeNameModel("testBusinessTrade")),
+          businessAddress = Some(BusinessAddressModel(
+            address = Address(lines = Seq("line 1", "line 2"), postcode = Some("testPostcode"))
+          )),
+          startDateBeforeLimit = false
+        )
+      )
+    )),
+    ukProperty = Some(UkProperty(
+      accountingPeriod = AccountingPeriodModel(now, now),
+      startDateBeforeLimit = false,
+      tradingStartDate = LocalDate.now,
+      accountingMethod = Accruals
+    )),
+    overseasProperty = Some(OverseasProperty(
+      accountingPeriod = AccountingPeriodModel(now, now),
+      startDateBeforeLimit = false,
+      tradingStartDate = LocalDate.now,
+      accountingMethod = Cash
+    ))
   )
-
-  val testCreateIncomeSubmissionJson: JsValue = {
-    val date = LocalDate.now()
-    Json.parse(
-      s"""
-         | {
-         | "nino": "AA111111A",
-         |
-         | "agentReferenceNumber": "1223456",
-         |
-         | "accountingPeriod": {
-         |   "startDate": {
-         |    "day": "${date.getDayOfMonth}",
-         |    "month": "${date.getMonthValue}",
-         |    "year": "${date.getYear}"
-         |   },
-         |   "endDate": {
-         |    "day": "${date.getDayOfMonth}",
-         |    "month": "${date.getMonthValue}",
-         |    "year": "${date.getYear}"
-         |   }
-         |   },
-         |   "selfEmploymentsData": [],
-         |   "incomeSource": {
-         |     "selfEmployment": false,
-         |     "ukProperty": true,
-         |     "foreignProperty":false
-         |   },
-         |   "propertyStartDate": {
-         |     "startDate": {
-         |    "day": "${date.getDayOfMonth}",
-         |    "month": "${date.getMonthValue}",
-         |    "year": "${date.getYear}"
-         |   }
-         |   },
-         |   "propertyAccountingMethod": {
-         |     "propertyAccountingMethod": "cash"
-         |   }
-         | }
-         |""".stripMargin
-    )
-  }
 
   val testCreateIncomeSuccessBody: JsValue = Json.parse(
     """

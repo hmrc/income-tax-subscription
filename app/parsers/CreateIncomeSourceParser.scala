@@ -17,8 +17,8 @@
 package parsers
 
 import models.subscription.business.{CreateIncomeSourceErrorModel, CreateIncomeSourceSuccessModel}
-import play.api.http.Status.OK
 import play.api.Logger
+import play.api.http.Status.{CREATED, OK}
 import uk.gov.hmrc.http.{HttpReads, HttpResponse}
 
 
@@ -27,17 +27,31 @@ object CreateIncomeSourceParser {
 
   implicit val incomeSourceResponseHttpReads: HttpReads[PostIncomeSourceResponse] = {
     val logger: Logger = Logger(this.getClass)
-    new HttpReads[PostIncomeSourceResponse] {
-      override def read(method: String, url: String, response: HttpResponse): PostIncomeSourceResponse =
-        response.status match {
-          case OK =>
-            logger.debug("[IncomeSourceResponseHttpReads][read]: Status OK")
-            Right(CreateIncomeSourceSuccessModel())
-          case status =>
-            logger.warn(s"[IncomeSourceResponseHttpReads][read]: Unexpected response, status $status returned. Body: ${response.body}")
-            Left(CreateIncomeSourceErrorModel(status,response.body))
-        }
+    (_: String, _: String, response: HttpResponse) => response.status match {
+      case OK =>
+        logger.debug("[IncomeSourceResponseHttpReads][read]: Status OK")
+        Right(CreateIncomeSourceSuccessModel())
+      case status =>
+        logger.warn(s"[IncomeSourceResponseHttpReads][read]: Unexpected response, status $status returned. Body: ${response.body}")
+        Left(CreateIncomeSourceErrorModel(status, response.body))
     }
   }
 
+}
+
+object ITSAIncomeSourceParser {
+  type PostITSAIncomeSourceResponse = Either[CreateIncomeSourceErrorModel, CreateIncomeSourceSuccessModel]
+
+  implicit val itsaIncomeSourceResponseHttpReads: HttpReads[PostITSAIncomeSourceResponse] = {
+    val logger: Logger = Logger(this.getClass)
+    (_: String, _: String, response: HttpResponse) =>
+      response.status match {
+        case CREATED =>
+          logger.debug("[ItsaIncomeSourcesResponseHttpReads][read]: Status Created")
+          Right(CreateIncomeSourceSuccessModel())
+        case status =>
+          logger.warn(s"[ItsaIncomeSourcesResponseHttpReads][read]: Unexpected response, status $status returned. Body: ${response.body}")
+          Left(CreateIncomeSourceErrorModel(status, response.body))
+      }
+  }
 }

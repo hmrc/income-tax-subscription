@@ -42,7 +42,7 @@ trait WireMockMethods {
       val uriMapping = method.wireMockMapping(urlMatching(uri))
 
       val uriMappingWithHeaders = headers.foldLeft(uriMapping){
-        case (m, (key, value)) => m.withHeader(key, equalTo(value) )
+        case (m, (key, value)) => m.withHeader(key, matching(value) )
       }
 
       body match {

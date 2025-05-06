@@ -17,21 +17,27 @@
 package controllers
 
 import config.MicroserviceAppConfig
-import config.featureswitch.FeatureSwitching
+import config.featureswitch.{FeatureSwitching, HIPItsaIncomeSource}
 import helpers.ComponentSpecBase
 import helpers.IntegrationTestConstants._
 import helpers.servicemocks.AuditStub.stubAuditing
 import helpers.servicemocks.{AuthStub, CreateIncomeSourceStub}
 import models.subscription._
 import models.subscription.business.{Accruals, Cash}
-import play.api.http.Status.{INTERNAL_SERVER_ERROR, NO_CONTENT, OK}
+import play.api.http.Status.{CREATED, INTERNAL_SERVER_ERROR, NO_CONTENT, OK}
 import play.api.libs.json.{JsValue, Json}
 import play.api.libs.ws.WSResponse
+import utils.TestConstants.testNino
 
 import java.time.LocalDate
 
 
 class BusinessIncomeSourcesControllerISpec extends ComponentSpecBase with FeatureSwitching {
+
+  override def beforeEach(): Unit = {
+    super.beforeEach()
+    disable(HIPItsaIncomeSource)
+  }
 
   val appConfig: MicroserviceAppConfig = app.injector.instanceOf[MicroserviceAppConfig]
 
@@ -50,17 +56,20 @@ class BusinessIncomeSourcesControllerISpec extends ComponentSpecBase with Featur
           businessTradeName = Some(BusinessTradeNameModel("testBusinessTrade")),
           businessAddress = Some(BusinessAddressModel(
             address = Address(lines = Seq("line 1", "line 2"), postcode = Some("testPostcode"))
-          ))
+          )),
+          startDateBeforeLimit = false
         )
       )
     )),
     ukProperty = Some(UkProperty(
       accountingPeriod = AccountingPeriodModel(now, now),
+      startDateBeforeLimit = false,
       tradingStartDate = LocalDate.now,
       accountingMethod = Accruals
     )),
     overseasProperty = Some(OverseasProperty(
       accountingPeriod = AccountingPeriodModel(now, now),
+      startDateBeforeLimit = false,
       tradingStartDate = LocalDate.now,
       accountingMethod = Cash
     ))
@@ -106,7 +115,8 @@ class BusinessIncomeSourcesControllerISpec extends ComponentSpecBase with Featur
               ),
               "postcode" -> "testPostcode"
             )
-          )
+          ),
+          "startDateBeforeLimit" -> false
         )
       )
     ),
@@ -123,6 +133,7 @@ class BusinessIncomeSourcesControllerISpec extends ComponentSpecBase with Featur
           "year" -> now.getYear.toString
         )
       ),
+      "startDateBeforeLimit" -> false,
       "tradingStartDate" -> Json.obj(
         "day" -> now.getDayOfMonth.toString,
         "month" -> now.getMonthValue.toString,
@@ -143,6 +154,7 @@ class BusinessIncomeSourcesControllerISpec extends ComponentSpecBase with Featur
           "year" -> now.getYear.toString
         )
       ),
+      "startDateBeforeLimit" -> false,
       "tradingStartDate" -> Json.obj(
         "day" -> now.getDayOfMonth.toString,
         "month" -> now.getMonthValue.toString,
@@ -152,36 +164,68 @@ class BusinessIncomeSourcesControllerISpec extends ComponentSpecBase with Featur
     )
   )
 
-  "POST /mis/create/mtditid" should {
-    s"return a $NO_CONTENT response" when {
-      "income sources are successfully submitted" in {
-        AuthStub.stubAuth(OK)
-        stubAuditing()
-        CreateIncomeSourceStub.stub(testMtdbsaRef, Json.toJson(testCreateIncomeSources), appConfig.desAuthorisationToken, appConfig.desEnvironment)(
-          OK, testCreateIncomeSuccessBody
-        )
 
-        val result: WSResponse = IncomeTaxSubscription.businessIncomeSource(testMtdbsaRef, testCreateIncomeSourcesJson)
+  "POST /mis/create/mtditid" when {
+    "the HIPItsaIncomeSource feature switch is enabled" should {
+      s"return a $NO_CONTENT response" when {
+        "income sources are successfully submitted" in {
+          enable(HIPItsaIncomeSource)
+          AuthStub.stubAuth(OK)
+          CreateIncomeSourceStub.stubItsaIncomeSource(Json.toJson(testCreateIncomeSources)(CreateIncomeSourcesModel.hipWrites(testMtdbsaRef))
+          )(CREATED, testCreateIncomeSuccessBody)
 
-        result should have(
-          httpStatus(NO_CONTENT)
-        )
+          val result: WSResponse = IncomeTaxSubscription.businessIncomeSource(testMtdbsaRef, testCreateIncomeSourcesJson)
+
+          result should have(httpStatus(NO_CONTENT))
+        }
+      }
+      s"return a $INTERNAL_SERVER_ERROR response" when {
+        "the submission of income sources failed" in {
+          enable(HIPItsaIncomeSource)
+          AuthStub.stubAuth(OK)
+          CreateIncomeSourceStub.stubItsaIncomeSource(Json.toJson(testCreateIncomeSources)(CreateIncomeSourcesModel.hipWrites(testMtdbsaRef))
+          )(INTERNAL_SERVER_ERROR, testCreateIncomeFailureBody)
+
+          val result: WSResponse = IncomeTaxSubscription.businessIncomeSource(testMtdbsaRef, testCreateIncomeSourcesJson)
+
+          result should have(
+            httpStatus(INTERNAL_SERVER_ERROR),
+            bodyOf("Create Income Sources Failure")
+          )
+        }
       }
     }
-    s"return a $INTERNAL_SERVER_ERROR" when {
-      "the submission of income sources failed" in {
-        AuthStub.stubAuth(OK)
-        stubAuditing()
-        CreateIncomeSourceStub.stub(testMtdbsaRef, Json.toJson(testCreateIncomeSources), appConfig.desAuthorisationToken, appConfig.desEnvironment)(
-          INTERNAL_SERVER_ERROR, testCreateIncomeFailureBody
-        )
+    "the HIPItsaIncomeSource feature switch is disabled" should {
+      s"return a $NO_CONTENT response" when {
+        "income sources are successfully submitted" in {
+          AuthStub.stubAuth(OK)
+          stubAuditing()
+          CreateIncomeSourceStub.stub(testMtdbsaRef, Json.toJson(testCreateIncomeSources)(CreateIncomeSourcesModel.desWrites), appConfig.desAuthorisationToken, appConfig.desEnvironment)(
+            OK, testCreateIncomeSuccessBody
+          )
 
-        val result: WSResponse = IncomeTaxSubscription.businessIncomeSource(testMtdbsaRef, testCreateIncomeSourcesJson)
+          val result: WSResponse = IncomeTaxSubscription.businessIncomeSource(testMtdbsaRef, testCreateIncomeSourcesJson)
 
-        result should have(
-          httpStatus(INTERNAL_SERVER_ERROR),
-          bodyOf("Business Income Source Failure")
-        )
+          result should have(
+            httpStatus(NO_CONTENT)
+          )
+        }
+      }
+      s"return a $INTERNAL_SERVER_ERROR" when {
+        "the submission of income sources failed" in {
+          AuthStub.stubAuth(OK)
+          stubAuditing()
+          CreateIncomeSourceStub.stub(testMtdbsaRef, Json.toJson(testCreateIncomeSources)(CreateIncomeSourcesModel.desWrites), appConfig.desAuthorisationToken, appConfig.desEnvironment)(
+            INTERNAL_SERVER_ERROR, testCreateIncomeFailureBody
+          )
+
+          val result: WSResponse = IncomeTaxSubscription.businessIncomeSource(testMtdbsaRef, testCreateIncomeSourcesJson)
+
+          result should have(
+            httpStatus(INTERNAL_SERVER_ERROR),
+            bodyOf("Business Income Source Failure")
+          )
+        }
       }
     }
   }
