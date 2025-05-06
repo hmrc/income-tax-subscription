@@ -56,9 +56,11 @@ trait AppConfig {
   def getITSAStatusAuthorisationToken: String
 
   def signUpServiceURL: String
-
   val signUpServiceAuthorisationToken: String
   val signUpServiceEnvironment: String
+
+  val hipSignUpServiceURL: String
+  val hipSignUpServiceAuthorisationToken: String
 
   val prePopURL: String
   val prePopAuthorisationToken: String
@@ -91,6 +93,11 @@ class MicroserviceAppConfig @Inject()(servicesConfig: ServicesConfig, val config
   private val signUpServiceBase = "microservice.services.signup-tax-year-service"
   override lazy val signUpServiceAuthorisationToken: String = s"Bearer ${loadConfig(s"$signUpServiceBase.authorization-token")}"
   override lazy val signUpServiceEnvironment: String = loadConfig(s"$signUpServiceBase.environment")
+
+  override lazy val hipSignUpServiceURL: String = servicesConfig.baseUrl("hip-signup-tax-year-service")
+
+  override lazy val hipSignUpServiceAuthorisationToken: String =
+    s"Bearer ${loadConfig("microservice.services.hip-signup-tax-year-service.authorization-token")}"
 
   override lazy val prePopURL: String = servicesConfig.baseUrl("pre-pop")
 

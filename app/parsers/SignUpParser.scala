@@ -18,7 +18,7 @@ package parsers
 
 import models.SignUpResponse.SignUpSuccess
 import models.{ErrorModel, SignUpResponse}
-import play.api.http.Status.{OK, UNPROCESSABLE_ENTITY}
+import play.api.http.Status._
 import play.api.libs.json.{JsError, JsSuccess}
 import uk.gov.hmrc.http.{HttpReads, HttpResponse}
 
@@ -44,5 +44,28 @@ object SignUpParser {
   }
 
   private val CustomerAlreadySignedUp: String = "CUSTOMER_ALREADY_SIGNED_UP"
+
+  implicit val hipSignUpResponseHttpReads: HttpReads[PostSignUpResponse] = {
+    (_: String, _: String, response: HttpResponse) =>
+      response.status match {
+        case CREATED => (response.json \ "success").validate[SignUpSuccess] match {
+          case JsSuccess(value, _) => Right(value)
+          case JsError(_) => Left(ErrorModel(CREATED, s"Failed to read Json for MTD Sign Up Response"))
+        }
+        case UNPROCESSABLE_ENTITY if (response.json \ "errors").isDefined =>
+          (response.json \ "errors" \\ "code").map(_.validate[String]).headOption match {
+            case Some(JsSuccess(code, _)) => code match {
+              case CustomerAlreadySignedUpEnum => Right(SignUpResponse.AlreadySignedUp)
+              case _ => Left(ErrorModel(UNPROCESSABLE_ENTITY, code))
+            }
+            case _ => Left(ErrorModel(UNPROCESSABLE_ENTITY, s"Failed to read Json for MTD Sign Up Response"))
+          }
+        case UNPROCESSABLE_ENTITY => Left(ErrorModel(UNPROCESSABLE_ENTITY, s"Failed to read Json for MTD Sign Up Response"))
+        case status => Left(ErrorModel(status, response.body))
+      }
+  }
+
+  private val CustomerAlreadySignedUpEnum: String = "820"
+
 
 }

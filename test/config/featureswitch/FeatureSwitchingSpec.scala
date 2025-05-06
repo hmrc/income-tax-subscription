@@ -75,4 +75,30 @@ class FeatureSwitchingSpec extends CommonSpec with FeatureSwitching with Mockito
     }
   }
 
+  "UseHIPSignUpTaxYearAPI" should {
+    "return true if UseHIPSignUpTaxYearAPI feature switch is enabled in sys.props" in {
+      enable(UseHIPSignUpTaxYearAPI)
+      isEnabled(UseHIPSignUpTaxYearAPI) shouldBe true
+    }
+    "return false if UseHIPSignUpTaxYearAPI feature switch is disabled in sys.props" in {
+      disable(UseHIPSignUpTaxYearAPI)
+      isEnabled(UseHIPSignUpTaxYearAPI) shouldBe false
+    }
+
+    "return false if UseHIPSignUpTaxYearAPI feature switch does not exist" in {
+      when(mockConfig.getOptional[String]("feature-switch.use-hip-signup-tax-year-api")).thenReturn(None)
+      isEnabled(UseHIPSignUpTaxYearAPI) shouldBe false
+    }
+
+    "return false if UseHIPSignUpTaxYearAPI feature switch is not in sys.props but is set to 'off' in config" in {
+      when(mockConfig.getOptional[String]("feature-switch.use-hip-signup-tax-year-api")).thenReturn(Some(FEATURE_SWITCH_OFF))
+      isEnabled(UseHIPSignUpTaxYearAPI) shouldBe false
+    }
+
+    "return true if UseHIPSignUpTaxYearAPI feature switch is not in sys.props but is set to 'on' in config" in {
+      when(mockConfig.getOptional[String]("feature-switch.use-hip-signup-tax-year-api")).thenReturn(Some(FEATURE_SWITCH_ON))
+      isEnabled(UseHIPSignUpTaxYearAPI) shouldBe true
+    }
+  }
+
 }
