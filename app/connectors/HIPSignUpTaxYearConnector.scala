@@ -17,7 +17,6 @@
 package connectors
 
 import config.AppConfig
-import config.featureswitch.{FeatureSwitching, SubmitUtrToSignUp}
 import models.SignUpRequest
 import parsers.SignUpParser.{PostSignUpResponse, hipSignUpResponseHttpReads}
 import play.api.libs.json.{JsObject, JsValue, Json}
@@ -31,13 +30,11 @@ import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class HIPSignUpTaxYearConnector @Inject()(http: HttpClient,
-                                          val appConfig: AppConfig)(implicit ec: ExecutionContext) extends FeatureSwitching {
+                                          val appConfig: AppConfig)(implicit ec: ExecutionContext) {
 
   def signUpUrl: String = s"${appConfig.hipSignUpServiceURL}/RESTAdapter/itsa/taxpayer/signup-mtdfb"
 
-  def requestBody(signUpRequest: SignUpRequest): JsObject = {
-
-    if (isEnabled(SubmitUtrToSignUp)) {
+  def requestBody(signUpRequest: SignUpRequest): JsObject =
       Json.obj(
         "signUpMTDfB" ->Json.obj(
           "nino" -> signUpRequest.nino,
@@ -45,15 +42,6 @@ class HIPSignUpTaxYearConnector @Inject()(http: HttpClient,
           "signupTaxYear" -> signUpRequest.taxYear
         )
       )
-    } else {
-      Json.obj(
-        "signUpMTDfB" ->Json.obj(
-          "nino" -> signUpRequest.nino,
-          "signupTaxYear" -> signUpRequest.taxYear
-        )
-      )
-    }
-  }
 
   def signUp(signUpRequest: SignUpRequest)(implicit hc: HeaderCarrier): Future[PostSignUpResponse] = {
 
@@ -61,7 +49,7 @@ class HIPSignUpTaxYearConnector @Inject()(http: HttpClient,
       .copy(authorization = Some(Authorization(appConfig.hipSignUpServiceAuthorisationToken)))
 
     val formatter = DateTimeFormatter
-      .ofPattern("yyyy-MM-ddTHH:mm:ssZ")
+      .ofPattern("yyyy-MM-dd'T'HH:mm:ssZ")
       .withZone(ZoneId.of("UTC"))
 
     val headers: Seq[(String, String)] = Seq(

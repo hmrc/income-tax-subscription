@@ -175,6 +175,38 @@ object IntegrationTestConstants extends JsonUtils {
     ))
   )
 
+  def hipTestTaxYearSignUpRequestBodyWithUtr(nino: String, utr: String, taxYear:String): JsValue = Json.parse(
+    s"""
+      |{
+      |  "signUpMTDfB": {
+      |    "nino": "$nino",
+      |    "utr": "$utr",
+      |    "signupTaxYear": "$taxYear"
+      |  }
+      |}
+    """.stripMargin
+  )
+
+  val hipTestSignUpSuccessBody: JsValue = Json.parse(
+    """
+      |{
+      |  "success": {
+      |    "processingDate": "2022-01-31T09:26:17Z",
+      |    "mtdbsa": "XQIT00000000001"
+      |  }
+      |}
+    """.stripMargin
+  )
+
+  val hipTestSignUpInvalidBody: JsValue = Json.parse(
+    """
+      |{
+      | "mtdbs": "XQIT00000000001"
+      |}
+    """.stripMargin
+  )
+
+
   val testCreateIncomeSuccessBody: JsValue = Json.parse(
     """
       | {

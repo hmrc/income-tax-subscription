@@ -48,9 +48,9 @@ object SignUpParser {
   implicit val hipSignUpResponseHttpReads: HttpReads[PostSignUpResponse] = {
     (_: String, _: String, response: HttpResponse) =>
       response.status match {
-        case NO_CONTENT => (response.json \ "success").validate[SignUpSuccess] match {
+        case CREATED => (response.json \ "success").validate[SignUpSuccess] match {
           case JsSuccess(value, _) => Right(value)
-          case JsError(_) => Left(ErrorModel(OK, s"Failed to read Json for MTD Sign Up Response"))
+          case JsError(_) => Left(ErrorModel(CREATED, s"Failed to read Json for MTD Sign Up Response"))
         }
         case UNPROCESSABLE_ENTITY if (response.json \ "errors").isDefined =>
           (response.json \ "errors" \\ "code").map(_.validate[String]).headOption match {
