@@ -54,7 +54,7 @@ class HIPSignUpTaxYearConnector @Inject()(http: HttpClient,
 
     val headers: Seq[(String, String)] = Seq(
       HeaderNames.authorisation -> appConfig.hipSignUpServiceAuthorisationToken,
-      "correlationId" -> UUID.randomUUID().toString,
+      "correlationid" -> UUID.randomUUID().toString,
       "X-Message-Type" -> "ITSASignUpMTDfB",
       "X-Originating-System" -> "MDTP",
       "X-Receipt-Date" -> formatter.format(Instant.now()),

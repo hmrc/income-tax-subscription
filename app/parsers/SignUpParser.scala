@@ -54,7 +54,6 @@ object SignUpParser {
         }
         case UNPROCESSABLE_ENTITY if (response.json \ "errors").isDefined =>
           (response.json \ "errors" \\ "code").map(_.validate[String]).headOption match {
-            case Some(JsSuccess(CustomerAlreadySignedUp, _)) => Right(SignUpResponse.AlreadySignedUp)
             case Some(JsSuccess(code, _)) => code match {
               case "820" => Right(SignUpResponse.AlreadySignedUp)
               case _ => Left(ErrorModel(UNPROCESSABLE_ENTITY, code))
