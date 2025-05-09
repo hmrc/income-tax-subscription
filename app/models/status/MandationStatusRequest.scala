@@ -16,16 +16,10 @@
 
 package models.status
 
-import play.api.libs.json.{Json, OWrites, Reads}
+import play.api.libs.json.{Json, OFormat}
 
 case class MandationStatusRequest(nino: String, utr: String)
 
 object MandationStatusRequest {
-  implicit val reads: Reads[MandationStatusRequest] = Json.reads[MandationStatusRequest]
-  implicit val writes: OWrites[MandationStatusRequest] = OWrites[MandationStatusRequest] { mandationStatus =>
-    Json.obj(
-      "nino" -> mandationStatus.nino,
-      "utr" -> mandationStatus.utr
-    )
-  }
+  implicit val reads: OFormat[MandationStatusRequest] = Json.format[MandationStatusRequest]
 }

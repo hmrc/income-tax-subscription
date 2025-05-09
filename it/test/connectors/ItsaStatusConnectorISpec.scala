@@ -19,7 +19,7 @@ package connectors
 import helpers.ComponentSpecBase
 import helpers.servicemocks.GetItsaStatusStub
 import models.ErrorModel
-import models.status.MtdMandationStatus.Voluntary
+import models.status.ITSAStatus.MTDVoluntary
 import models.status.{ItsaStatusResponse, TaxYearStatus}
 import models.subscription.AccountingPeriodUtil
 import play.api.http.Status.{INTERNAL_SERVER_ERROR, OK}
@@ -28,6 +28,7 @@ import play.api.mvc.Request
 import play.api.test.FakeRequest
 
 class ItsaStatusConnectorISpec extends ComponentSpecBase {
+
   private lazy val connector: ItsaStatusConnector = app.injector.instanceOf[ItsaStatusConnector]
   implicit val request: Request[_] = FakeRequest()
 
@@ -36,8 +37,8 @@ class ItsaStatusConnectorISpec extends ComponentSpecBase {
       "the status determination service returns OK and a valid JSON response body" in {
         val expectedResponse =
           List(
-            TaxYearStatus(AccountingPeriodUtil.getCurrentTaxYear.toItsaStatusShortTaxYear, Voluntary),
-            TaxYearStatus(AccountingPeriodUtil.getNextTaxYear.toItsaStatusShortTaxYear, Voluntary)
+            TaxYearStatus(AccountingPeriodUtil.getCurrentTaxYear.toItsaStatusShortTaxYear, MTDVoluntary),
+            TaxYearStatus(AccountingPeriodUtil.getNextTaxYear.toItsaStatusShortTaxYear, MTDVoluntary)
           )
 
         GetItsaStatusStub.stub(

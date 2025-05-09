@@ -16,97 +16,329 @@
 
 package controllers
 
+import config.AppConfig
+import config.featureswitch.{FeatureSwitching, NewGetITSAStatusAPI}
 import helpers.ComponentSpecBase
+import helpers.servicemocks.hip.GetITSAStatusStub
 import helpers.servicemocks.{AuthStub, GetItsaStatusStub}
-import models.status.MtdMandationStatus.Voluntary
-import models.status.{MandationStatusRequest, MandationStatusResponse, TaxYearStatus}
-import models.subscription.AccountingPeriodUtil
-import play.api.http.Status.{BAD_REQUEST, INTERNAL_SERVER_ERROR, OK}
+import models.status.ITSAStatus.{MTDMandated, MTDVoluntary}
+import models.status.{MandationStatusRequest, MandationStatusResponse}
+import models.subscription.{AccountingPeriodModel, AccountingPeriodUtil}
+import play.api.http.Status.{BAD_REQUEST, INTERNAL_SERVER_ERROR, OK, UNAUTHORIZED}
 import play.api.libs.json.Json
 
-class MandationStatusControllerISpec extends ComponentSpecBase {
-  "POST /itsa-status" should {
-    "return OK"  when {
-      "the status-determination-service returns OK status and valid JSON" in {
-        Given("I setup the Wiremock stubs")
-        val expectedResponse =
-          List(
-            TaxYearStatus(AccountingPeriodUtil.getCurrentTaxYear.toItsaStatusShortTaxYear, Voluntary),
-            TaxYearStatus(AccountingPeriodUtil.getNextTaxYear.toItsaStatusShortTaxYear, Voluntary)
-          )
-        AuthStub.stubAuth(OK)
-        GetItsaStatusStub.stub(
-          "test-nino", "test-utr", AccountingPeriodUtil.getCurrentTaxYear.toItsaStatusShortTaxYear
-        )(OK, Json.toJson(expectedResponse))
+class MandationStatusControllerISpec extends ComponentSpecBase with FeatureSwitching {
 
-        When("POST /itsa-status is called")
-        val response = IncomeTaxSubscription.mandationStatus(Json.toJson(MandationStatusRequest("test-nino", "test-utr")))
+  override val appConfig: AppConfig = app.injector.instanceOf[AppConfig]
 
-        Then("Should return a OK and the mandation status response")
-        response should have(
-          httpStatus(OK)
+  override def beforeEach(): Unit = {
+    super.beforeEach()
+    disable(NewGetITSAStatusAPI)
+  }
+
+  s"POST ${routes.MandationStatusController.mandationStatus.url}" when {
+    "there is no authorisation" should {
+      "return UNAUTHORISED" in {
+        AuthStub.stubAuthFailure()
+
+        val result = IncomeTaxSubscription.mandationStatus(
+          body = Json.toJson(MandationStatusRequest(testNino, testUtr))
         )
-        response should have(
-          jsonBodyAs[MandationStatusResponse](MandationStatusResponse(currentYearStatus = Voluntary, nextYearStatus = Voluntary))
+
+        result should have(
+          httpStatus(UNAUTHORIZED)
         )
       }
     }
 
-    "return BAD_REQUEST" when {
-      "the request body is invalid" in {
-        Given("I setup the Wiremock stubs")
-        AuthStub.stubAuth(OK)
+    "the new get itsa status api feature switch is enabled" should {
+      "return OK" when {
+        "the api call returns OK with valid json" in {
+          enable(NewGetITSAStatusAPI)
 
-        When("POST /itsa-status is called")
-        val response = IncomeTaxSubscription.mandationStatus(Json.obj("invalid" -> "request"))
-
-        Then("Should return a BAD_REQUEST")
-        response should have(
-          httpStatus(BAD_REQUEST)
-        )
-      }
-    }
-
-    "return INTERNAL_SERVER_ERROR"  when {
-      "the status-determination-service returns OK status and invalid JSON" in {
-        Given("I setup the Wiremock stubs")
-        AuthStub.stubAuth(OK)
-        GetItsaStatusStub.stubInvalidResponse(
-          "test-nino", "test-utr", AccountingPeriodUtil.getCurrentTaxYear.toItsaStatusShortTaxYear
-        )(OK, "{ currentYearStatus")
-
-        When("POST /itsa-status is called")
-        val response = IncomeTaxSubscription.mandationStatus(Json.toJson(MandationStatusRequest("test-nino", "test-utr")))
-
-        Then("Should return an INTERNAL_SERVER_ERROR")
-        response should have(
-          httpStatus(INTERNAL_SERVER_ERROR)
-        )
-      }
-
-      "the status-determination-service returns INTERNAL_SERVER_ERROR" in {
-        Given("I setup the Wiremock stubs")
-        AuthStub.stubAuth(OK)
-        val failedResponse = Json.obj(
-          "failures" -> Json.arr(
-            Json.obj(
-              "code" -> "INVALID_TAX_YEAR",
-              "reason" -> "Submission has not passed validation. Invalid parameter taxYear."
+          AuthStub.stubAuthSuccess()
+          GetITSAStatusStub.stub(testUtr)(
+            status = OK,
+            body = Json.arr(
+              Json.obj(
+                "taxYear" -> currentTaxYear.toItsaStatusShortTaxYear,
+                "itsaStatusDetails" -> Json.arr(
+                  Json.obj(
+                    "status" -> "02"
+                  )
+                )
+              ),
+              Json.obj(
+                "taxYear" -> nextTaxYear.toItsaStatusShortTaxYear,
+                "itsaStatusDetails" -> Json.arr(
+                  Json.obj(
+                    "status" -> "01"
+                  )
+                )
+              )
             )
           )
-        )
-        GetItsaStatusStub.stub(
-          "test-nino", "test-utr", AccountingPeriodUtil.getCurrentTaxYear.toItsaStatusShortTaxYear
-        )(INTERNAL_SERVER_ERROR, failedResponse)
 
-        When("POST /itsa-status is called")
-        val response = IncomeTaxSubscription.mandationStatus(Json.toJson(MandationStatusRequest("test-nino", "test-utr")))
+          val result = IncomeTaxSubscription.mandationStatus(
+            body = Json.toJson(MandationStatusRequest(testNino, testUtr))
+          )
 
-        Then("Should return an INTERNAL_SERVER_ERROR")
-        response should have(
-          httpStatus(INTERNAL_SERVER_ERROR)
-        )
+          result should have(
+            httpStatus(OK),
+            jsonBodyAs(MandationStatusResponse(MTDVoluntary, MTDMandated))
+          )
+        }
+      }
+      "return BAD_REQUEST" when {
+        "the request received does not have the correct payload" in {
+          enable(NewGetITSAStatusAPI)
+
+          AuthStub.stubAuthSuccess()
+
+          val result = IncomeTaxSubscription.mandationStatus(
+            body = Json.obj()
+          )
+
+          result should have(
+            httpStatus(BAD_REQUEST)
+          )
+        }
+      }
+      "return INTERNAL_SERVER_ERROR" when {
+        "an error occurred calling the API" in {
+          enable(NewGetITSAStatusAPI)
+
+          AuthStub.stubAuthSuccess()
+          GetITSAStatusStub.stub(testUtr)(
+            status = INTERNAL_SERVER_ERROR,
+            body = Json.arr()
+          )
+
+          val result = IncomeTaxSubscription.mandationStatus(
+            body = Json.toJson(MandationStatusRequest(testNino, testUtr))
+          )
+
+          result should have(
+            httpStatus(INTERNAL_SERVER_ERROR)
+          )
+        }
+        "the current tax year could not be found in the api response" in {
+          enable(NewGetITSAStatusAPI)
+
+          AuthStub.stubAuthSuccess()
+          GetITSAStatusStub.stub(testUtr)(
+            status = OK,
+            body = Json.arr(
+              Json.obj(
+                "taxYear" -> nextTaxYear.toItsaStatusShortTaxYear,
+                "itsaStatusDetails" -> Json.arr(
+                  Json.obj(
+                    "status" -> "01"
+                  )
+                )
+              )
+            )
+          )
+
+          val result = IncomeTaxSubscription.mandationStatus(
+            body = Json.toJson(MandationStatusRequest(testNino, testUtr))
+          )
+
+          result should have(
+            httpStatus(INTERNAL_SERVER_ERROR)
+          )
+        }
+        "the current tax year status could not be found in the api response" in {
+          enable(NewGetITSAStatusAPI)
+
+          AuthStub.stubAuthSuccess()
+          GetITSAStatusStub.stub(testUtr)(
+            status = OK,
+            body = Json.arr(
+              Json.obj(
+                "taxYear" -> currentTaxYear.toItsaStatusShortTaxYear,
+                "itsaStatusDetails" -> Json.arr()
+              ),
+              Json.obj(
+                "taxYear" -> nextTaxYear.toItsaStatusShortTaxYear,
+                "itsaStatusDetails" -> Json.arr(
+                  Json.obj(
+                    "status" -> "01"
+                  )
+                )
+              )
+            )
+          )
+
+          val result = IncomeTaxSubscription.mandationStatus(
+            body = Json.toJson(MandationStatusRequest(testNino, testUtr))
+          )
+
+          result should have(
+            httpStatus(INTERNAL_SERVER_ERROR)
+          )
+        }
+        "the next tax year could not be found in the api response" in {
+          enable(NewGetITSAStatusAPI)
+
+          AuthStub.stubAuthSuccess()
+          GetITSAStatusStub.stub(testUtr)(
+            status = OK,
+            body = Json.arr(
+              Json.obj(
+                "taxYear" -> currentTaxYear.toItsaStatusShortTaxYear,
+                "itsaStatusDetails" -> Json.arr(
+                  Json.obj(
+                    "status" -> "02"
+                  )
+                )
+              )
+            )
+          )
+
+          val result = IncomeTaxSubscription.mandationStatus(
+            body = Json.toJson(MandationStatusRequest(testNino, testUtr))
+          )
+
+          result should have(
+            httpStatus(INTERNAL_SERVER_ERROR)
+          )
+        }
+        "the next tax year status could not be found in the api response" in {
+          enable(NewGetITSAStatusAPI)
+
+          AuthStub.stubAuthSuccess()
+          GetITSAStatusStub.stub(testUtr)(
+            status = OK,
+            body = Json.arr(
+              Json.obj(
+                "taxYear" -> currentTaxYear.toItsaStatusShortTaxYear,
+                "itsaStatusDetails" -> Json.arr(
+                  Json.obj(
+                    "status" -> "02"
+                  )
+                )
+              ),
+              Json.obj(
+                "taxYear" -> nextTaxYear.toItsaStatusShortTaxYear,
+                "itsaStatusDetails" -> Json.arr()
+              )
+            )
+          )
+
+          val result = IncomeTaxSubscription.mandationStatus(
+            body = Json.toJson(MandationStatusRequest(testNino, testUtr))
+          )
+
+          result should have(
+            httpStatus(INTERNAL_SERVER_ERROR)
+          )
+        }
+      }
+    }
+    "the new get itsa status api feature switch is disabled" should {
+      "return OK" when {
+        "the api call returns OK with valid json" in {
+          AuthStub.stubAuthSuccess()
+          GetItsaStatusStub.stub(testNino, testUtr, currentTaxYear.toItsaStatusShortTaxYear)(
+            status = OK,
+            body = Json.arr(
+              Json.obj(
+                "taxYear" -> currentTaxYear.toItsaStatusShortTaxYear,
+                "status" -> MTDVoluntary.value
+              ),
+              Json.obj(
+                "taxYear" -> nextTaxYear.toItsaStatusShortTaxYear,
+                "status" -> MTDMandated.value
+              )
+            )
+          )
+
+          val result = IncomeTaxSubscription.mandationStatus(
+            body = Json.toJson(MandationStatusRequest(testNino, testUtr))
+          )
+
+          result should have(
+            httpStatus(OK),
+            jsonBodyAs(MandationStatusResponse(MTDVoluntary, MTDMandated))
+          )
+        }
+      }
+      "return BAD_REQUEST" when {
+        "the request received does not have the correct payload" in {
+          AuthStub.stubAuthSuccess()
+
+          val result = IncomeTaxSubscription.mandationStatus(body = Json.obj())
+
+          result should have(
+            httpStatus(BAD_REQUEST)
+          )
+        }
+      }
+      "return INTERNAL_SERVER_ERROR" when {
+        "an error occurred calling the API" in {
+          AuthStub.stubAuthSuccess()
+          GetItsaStatusStub.stub(testNino, testUtr, currentTaxYear.toItsaStatusShortTaxYear)(
+            status = INTERNAL_SERVER_ERROR,
+            body = Json.arr()
+          )
+
+          val result = IncomeTaxSubscription.mandationStatus(
+            body = Json.toJson(MandationStatusRequest(testNino, testUtr))
+          )
+
+          result should have(
+            httpStatus(INTERNAL_SERVER_ERROR)
+          )
+        }
+        "the current tax year status could not be found in the api response" in {
+          AuthStub.stubAuthSuccess()
+          GetItsaStatusStub.stub(testNino, testUtr, currentTaxYear.toItsaStatusShortTaxYear)(
+            status = OK,
+            body = Json.arr(
+              Json.obj(
+                "taxYear" -> nextTaxYear.toItsaStatusShortTaxYear,
+                "status" -> MTDMandated.value
+              )
+            )
+          )
+
+          val result = IncomeTaxSubscription.mandationStatus(
+            body = Json.toJson(MandationStatusRequest(testNino, testUtr))
+          )
+
+          result should have(
+            httpStatus(INTERNAL_SERVER_ERROR)
+          )
+        }
+        "the next tax year status could not be found in the api response" in {
+          AuthStub.stubAuthSuccess()
+          GetItsaStatusStub.stub(testNino, testUtr, currentTaxYear.toItsaStatusShortTaxYear)(
+            status = OK,
+            body = Json.arr(
+              Json.obj(
+                "taxYear" -> currentTaxYear.toItsaStatusShortTaxYear,
+                "status" -> MTDVoluntary.value
+              )
+            )
+          )
+
+          val result = IncomeTaxSubscription.mandationStatus(
+            body = Json.toJson(MandationStatusRequest(testNino, testUtr))
+          )
+
+          result should have(
+            httpStatus(INTERNAL_SERVER_ERROR)
+          )
+        }
       }
     }
   }
+
+  lazy val testNino: String = "AA000000A"
+  lazy val testUtr: String = "1234567890"
+
+  lazy val currentTaxYear: AccountingPeriodModel = AccountingPeriodUtil.getCurrentTaxYear
+  lazy val nextTaxYear: AccountingPeriodModel = AccountingPeriodUtil.getNextTaxYear
+
 }
