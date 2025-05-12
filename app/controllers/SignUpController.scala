@@ -19,7 +19,8 @@ package controllers
 
 import common.Extractors
 import config.AppConfig
-import connectors.SignUpTaxYearConnector
+import config.featureswitch.{FeatureSwitching, UseHIPSignUpTaxYearAPI}
+import connectors.{HIPSignUpTaxYearConnector, SignUpTaxYearConnector}
 import models.SignUpRequest
 import models.SignUpResponse.{AlreadySignedUp, SignUpSuccess}
 import models.monitoring.{RegistrationFailureAudit, RegistrationSuccessAudit}
@@ -39,7 +40,9 @@ class SignUpController @Inject()(authService: AuthService,
                                  auditService: AuditService,
                                  configuration: Configuration,
                                  signUpTaxYearConnector: SignUpTaxYearConnector,
-                                 cc: ControllerComponents, appConfig: AppConfig)(implicit ec: ExecutionContext) extends BackendController(cc) with Extractors {
+                                 hipSignUpTaxYearConnector: HIPSignUpTaxYearConnector,
+                                 cc: ControllerComponents, val appConfig: AppConfig)(implicit ec: ExecutionContext)
+  extends BackendController(cc) with Extractors with FeatureSwitching {
 
   val logger: Logger = Logger(this.getClass)
 
@@ -54,8 +57,15 @@ class SignUpController @Inject()(authService: AuthService,
     }
   }
 
-  private def signUp(signUpRequest: SignUpRequest, agentReferenceNumber: Option[String])(implicit request: Request[JsValue]) =
-    signUpTaxYearConnector.signUp(signUpRequest).map {
+  private def signUp(signUpRequest: SignUpRequest, agentReferenceNumber: Option[String])(implicit request: Request[JsValue]) = {
+
+    val signUpResponse = if (isEnabled(UseHIPSignUpTaxYearAPI)) {
+      hipSignUpTaxYearConnector.signUp(signUpRequest)
+    } else {
+      signUpTaxYearConnector.signUp(signUpRequest)
+    }
+
+    signUpResponse.map {
       case Right(response: SignUpSuccess) =>
         val path: Option[String] = request.headers.get(ITSASessionKeys.RequestURI)
         auditService.audit(RegistrationSuccessAudit(
@@ -70,6 +80,7 @@ class SignUpController @Inject()(authService: AuthService,
         auditService.audit(RegistrationFailureAudit(signUpRequest.nino, error.status, error.reason))
         InternalServerError("Failed Sign up")
     }
+  }
 
 
 }

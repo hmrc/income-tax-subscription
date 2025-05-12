@@ -69,6 +69,8 @@ trait ComponentSpecBase extends AnyWordSpecLike
     "microservice.services.taxable-entity-api.port" -> mockPort,
     "microservice.services.signup-tax-year-service.host" -> mockHost,
     "microservice.services.signup-tax-year-service.port" -> mockPort,
+    "microservice.services.hip-signup-tax-year-service.host" -> mockHost,
+    "microservice.services.hip-signup-tax-year-service.port" -> mockPort,
     "microservice.services.get-business-details.host" -> mockHost,
     "microservice.services.get-business-details.port" -> mockPort,
     "microservice.services.pre-pop.host" -> mockHost,

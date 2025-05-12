@@ -29,7 +29,7 @@ import play.api.mvc.{ControllerComponents, Result}
 import play.api.test.FakeRequest
 import play.api.test.Helpers.{contentAsJson, contentAsString, defaultAwaitTimeout, status, stubControllerComponents}
 import services.mocks.monitoring.MockAuditService
-import services.mocks.{MockAuthService, MockSignUpTaxYearConnector}
+import services.mocks.{MockAuthService, MockHIPSignUpTaxYearConnector, MockSignUpTaxYearConnector}
 import uk.gov.hmrc.auth.core.{Enrolment, EnrolmentIdentifier, Enrolments}
 import utils.MaterializerSupport
 import utils.TestConstants.{hmrcAsAgent, testNino, testTaxYear, testTaxYearSignUpSubmission, testUtr}
@@ -40,6 +40,7 @@ import scala.concurrent.Future
 class SignUpControllerSpec extends CommonSpec
   with MockAuthService
   with MockSignUpTaxYearConnector
+  with MockHIPSignUpTaxYearConnector
   with MaterializerSupport
   with MockAuditService {
 
@@ -52,6 +53,7 @@ class SignUpControllerSpec extends CommonSpec
     mockAuditService,
     configuration,
     mockSignUpTaxYearConnector,
+    mockHIPSignUpTaxYearConnector,
     mockCC,
     mockAppConfig
   )
