@@ -32,7 +32,8 @@ object FeatureSwitch {
     SubmitUtrToSignUp,
     HIPItsaIncomeSource,
     UseHIPSignUpTaxYearAPI,
-    NewGetITSAStatusAPI
+    NewGetITSAStatusAPI,
+    GetNewITSABusinessDetails
   )
 
   def apply(str: String): FeatureSwitch =
@@ -73,3 +74,7 @@ object NewGetITSAStatusAPI extends FeatureSwitch {
   val name = s"$prefix.replace-get-itsa-status"
 }
 
+object GetNewITSABusinessDetails extends FeatureSwitch {
+  val displayName = s"Get Business Details from API 5266"
+  val name = s"$prefix.get-business-details-api-5266"
+}

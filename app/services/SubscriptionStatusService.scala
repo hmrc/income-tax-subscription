@@ -17,10 +17,11 @@
 package services
 
 import config.AppConfig
-import config.featureswitch.FeatureSwitching
-import connectors.BusinessDetailsConnector
+import config.featureswitch.{FeatureSwitching, GetNewITSABusinessDetails}
+import connectors.{BusinessDetailsConnector, GetITSABusinessDetailsConnector}
 import models.ErrorModel
 import models.frontend.FESuccessResponse
+import parsers.GetITSABusinessDetailsParser
 import play.api.Logging
 import play.api.http.Status._
 import play.api.mvc.Request
@@ -31,7 +32,8 @@ import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class SubscriptionStatusService @Inject()(val appConfig: AppConfig,
-                                          businessDetailsConnector: BusinessDetailsConnector)
+                                          businessDetailsConnector: BusinessDetailsConnector,
+                                          itsaBusinessDetailsConnector: GetITSABusinessDetailsConnector)
   extends Logging with FeatureSwitching {
 
   /*
@@ -42,15 +44,22 @@ class SubscriptionStatusService @Inject()(val appConfig: AppConfig,
 
   def checkMtditsaSubscription(nino: String)
                               (implicit hc: HeaderCarrier, ec: ExecutionContext, request: Request[_]): Future[Either[ErrorModel, Option[FESuccessResponse]]] = {
-    businessDetailsConnector.getBusinessDetails(nino) map {
-      case Right(response) =>
-        Right(Some(FESuccessResponse(Some(response.mtdId))))
-      case Left(error: ErrorModel) =>
-        if (error.status == NOT_FOUND) {
-          Right(None)
-        } else {
-          Left(error)
-        }
+    if (isEnabled(GetNewITSABusinessDetails)) {
+      itsaBusinessDetailsConnector.getHIPBusinessDetails(nino).map {
+        case GetITSABusinessDetailsParser.AlreadySignedUp(mtdId) => Right(Some(FESuccessResponse(Some(mtdId))))
+        case GetITSABusinessDetailsParser.NotSignedUp => Right(None)
+      }
+    } else {
+      businessDetailsConnector.getBusinessDetails(nino) map {
+        case Right(response) =>
+          Right(Some(FESuccessResponse(Some(response.mtdId))))
+        case Left(error: ErrorModel) =>
+          if (error.status == NOT_FOUND) {
+            Right(None)
+          } else {
+            Left(error)
+          }
+      }
     }
   }
 }

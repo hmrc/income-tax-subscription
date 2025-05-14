@@ -39,7 +39,7 @@ object WiremockHelper extends Eventually with IntegrationPatience {
   }
 
   def verifyGet(uri: String): Unit = {
-    verify(getRequestedFor(urlEqualTo(uri)))
+    verify(getRequestedFor(urlMatching(uri)))
   }
 
   def stubGet(url: String, status: Integer, body: String): StubMapping =
