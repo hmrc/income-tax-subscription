@@ -27,7 +27,7 @@ object GetITSAStatusStub extends WireMockMethods {
   def stub(utr: String)(status: Int, body: JsValue): StubMapping = {
     when(
       method = GET,
-      uri = s"/person-itd/itsa-status/$utr\\?taxYear=${AccountingPeriodUtil.getCurrentTaxYear.toShortTaxYear}&futureYears=true",
+      uri = s"/itsd/person-itd/itsa-status/$utr\\?taxYear=${AccountingPeriodUtil.getCurrentTaxYear.toShortTaxYear}&futureYears=true",
       headers = Map(
         HeaderNames.AUTHORIZATION -> "Bearer .*",
         "correlationId" -> "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"

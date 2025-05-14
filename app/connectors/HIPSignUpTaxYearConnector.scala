@@ -32,7 +32,7 @@ import scala.concurrent.{ExecutionContext, Future}
 class HIPSignUpTaxYearConnector @Inject()(http: HttpClient,
                                           val appConfig: AppConfig)(implicit ec: ExecutionContext) {
 
-  def signUpUrl: String = s"${appConfig.hipSignUpServiceURL}/RESTAdapter/itsa/taxpayer/signup-mtdfb"
+  def signUpUrl: String = s"${appConfig.hipSignUpServiceURL}/etmp/RESTAdapter/itsa/taxpayer/signup-mtdfb"
 
   def requestBody(signUpRequest: SignUpRequest): JsObject =
       Json.obj(

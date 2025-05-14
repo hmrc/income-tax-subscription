@@ -27,7 +27,7 @@ object ITSABusinessDetailsStub extends WireMockMethods {
   val registrationResponse: JsValue = IntegrationTestConstants.GetITSABusinessDetailsResponse.successResponse(testNino, testMtditId)
   val invalidRegistrationResponse: JsValue = IntegrationTestConstants.GetITSABusinessDetailsResponse.invalidSuccessResponse
 
-  def getITSABusinessDetailsUri(nino: String): String = s"/RESTAdapter/itsa/taxpayer/business-details\\?nino=$nino"
+  def getITSABusinessDetailsUri(nino: String): String = s"/etmp/RESTAdapter/itsa/taxpayer/business-details\\?nino=$nino"
 
   def verifyGetITSABusinessDetails(): Unit = {
     verify(method = GET, uri = getITSABusinessDetailsUri(testNino))

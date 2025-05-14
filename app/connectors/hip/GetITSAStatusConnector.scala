@@ -51,7 +51,7 @@ class GetITSAStatusConnector @Inject()(httpClient: HttpClient,
   }
 
   private def getItsaStatusUrl(utr: String): String = {
-    s"${appConfig.taxableEntityAPI}/person-itd/itsa-status/$utr?taxYear=${AccountingPeriodUtil.getCurrentTaxYear.toShortTaxYear}&futureYears=true"
+    s"${appConfig.taxableEntityAPI}/itsd/person-itd/itsa-status/$utr?taxYear=${AccountingPeriodUtil.getCurrentTaxYear.toShortTaxYear}&futureYears=true"
   }
 
 }

@@ -39,7 +39,7 @@ class GetITSABusinessDetailsConnectorISpec extends ComponentSpecBase with Featur
 
   private def stubGetITSABusinessDetails(nino: String)(status: Int, responseBody: JsValue): Unit = {
     stubGet(
-      url = s"/RESTAdapter/itsa/taxpayer/business-details\\?nino=$nino",
+      url = s"/etmp/RESTAdapter/itsa/taxpayer/business-details\\?nino=$nino",
       status = status,
       body = responseBody.toString()
     )

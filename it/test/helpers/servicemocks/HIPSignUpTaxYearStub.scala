@@ -21,7 +21,7 @@ import play.api.libs.json.JsValue
 
 object HIPSignUpTaxYearStub extends WireMockMethods {
 
-  private def signUpUri: String = s"/RESTAdapter/itsa/taxpayer/signup-mtdfb"
+  private def signUpUri: String = s"/etmp/RESTAdapter/itsa/taxpayer/signup-mtdfb"
 
   def stubSignUp(expectedBody: JsValue, authorizationHeader: String)
                 (status: Int, body: JsValue): StubMapping = {

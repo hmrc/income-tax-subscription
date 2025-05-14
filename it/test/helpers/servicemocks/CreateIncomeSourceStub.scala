@@ -40,7 +40,7 @@ object CreateIncomeSourceStub extends WireMockMethods {
   def stubItsaIncomeSource(expectedBody: JsValue)(status: Int, body: JsValue): StubMapping = {
     when(
       method = POST,
-      uri = "/RESTAdapter/itsa/taxpayer/income-source",
+      uri = "/etmp/RESTAdapter/itsa/taxpayer/income-source",
       body = expectedBody,
       headers = Map(
         HeaderNames.authorisation -> "Bearer .*",
