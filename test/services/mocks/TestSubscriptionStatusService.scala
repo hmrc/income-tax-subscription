@@ -17,7 +17,8 @@
 package services.mocks
 
 import config.MicroserviceAppConfig
-import connectors.mocks.MockBusinessDetailsConnector
+import config.featureswitch.{FeatureSwitch, FeatureSwitching, GetNewITSABusinessDetails}
+import connectors.mocks.{MockBusinessDetailsConnector, MockGetITSABusinessDetailsConnector}
 import models.ErrorModel
 import models.frontend.FESuccessResponse
 import org.mockito.Mockito._
@@ -30,16 +31,27 @@ import utils.TestConstants._
 
 import scala.concurrent.Future
 
-trait TestSubscriptionStatusService extends MockBusinessDetailsConnector {
+trait TestSubscriptionStatusService extends MockBusinessDetailsConnector with MockGetITSABusinessDetailsConnector {
 
   val mockServicesConfig: ServicesConfig = mock[ServicesConfig]
   val mockConfiguration: Configuration = mock[Configuration]
   val mockConfig: MicroserviceAppConfig = new MicroserviceAppConfig(mockServicesConfig, mockConfiguration)
 
-  object TestSubscriptionStatusService extends SubscriptionStatusService(
+  object NewTestSubscriptionStatusService extends SubscriptionStatusService(
     mockConfig,
-    mockBusinessDetailsConnector
-  )
+    mockBusinessDetailsConnector,
+    mockITSABusinessDetailsConnector
+  ) with FeatureSwitching {
+    override def isEnabled(feature: FeatureSwitch): Boolean = feature == GetNewITSABusinessDetails
+  }
+
+  object OldTestSubscriptionStatusService extends SubscriptionStatusService(
+    mockConfig,
+    mockBusinessDetailsConnector,
+    mockITSABusinessDetailsConnector
+  ) with FeatureSwitching {
+    override def isEnabled(feature: FeatureSwitch): Boolean = false
+  }
 
 }
 

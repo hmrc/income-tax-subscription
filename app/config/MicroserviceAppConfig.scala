@@ -46,6 +46,9 @@ trait AppConfig {
   val getBusinessDetailsAuthorisationToken: String
   val getBusinessDetailsEnvironment: String
 
+  val hipBusinessDetailsURL: String
+  val getItsaBusinessDetailsEnvironmentToken: String
+
   def statusDeterminationServiceURL: String
 
   val statusDeterminationServiceAuthorisationToken: String
@@ -78,6 +81,9 @@ class MicroserviceAppConfig @Inject()(servicesConfig: ServicesConfig, val config
   private val getBusinessDetailsBase = "microservice.services.get-business-details"
   override lazy val getBusinessDetailsAuthorisationToken: String = s"Bearer ${loadConfig(s"$getBusinessDetailsBase.authorization-token")}"
   override lazy val getBusinessDetailsEnvironment: String = loadConfig(s"$getBusinessDetailsBase.environment")
+
+  override lazy val hipBusinessDetailsURL: String = servicesConfig.baseUrl("get-itsa-business-details")
+  override lazy val getItsaBusinessDetailsEnvironmentToken = s"Bearer ${loadConfig("microservice.services.get-itsa-business-details.authorization-token")}"
 
   override lazy val statusDeterminationServiceURL: String = servicesConfig.baseUrl("status-determination-service")
 

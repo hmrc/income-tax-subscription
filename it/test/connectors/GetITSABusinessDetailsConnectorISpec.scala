@@ -1,0 +1,109 @@
+/*
+ * Copyright 2025 HM Revenue & Customs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package connectors
+
+import config.MicroserviceAppConfig
+import config.featureswitch._
+import helpers.ComponentSpecBase
+import helpers.WiremockHelper.stubGet
+import models.ErrorModel
+import parsers.GetITSABusinessDetailsParser.{AlreadySignedUp, NotSignedUp}
+import play.api.http.Status.{BAD_REQUEST, INTERNAL_SERVER_ERROR, NOT_FOUND, OK}
+import play.api.libs.json.{JsValue, Json}
+import play.api.mvc.Request
+import play.api.test.FakeRequest
+import play.api.test.Helpers.{await, defaultAwaitTimeout}
+import uk.gov.hmrc.http.{HeaderCarrier, InternalServerException}
+import utils.TestConstants.{testMtditId, testNino}
+
+class GetITSABusinessDetailsConnectorISpec extends ComponentSpecBase with FeatureSwitching {
+
+  private lazy val getITSABusinessConnector: GetITSABusinessDetailsConnector = app.injector.instanceOf[GetITSABusinessDetailsConnector]
+  lazy val appConfig: MicroserviceAppConfig = app.injector.instanceOf[MicroserviceAppConfig]
+  implicit val request: Request[_] = FakeRequest()
+  override implicit val hc: HeaderCarrier = HeaderCarrier()
+
+  private def stubGetITSABusinessDetails(nino: String)(status: Int, responseBody: JsValue): Unit = {
+    stubGet(
+      url = s"/RESTAdapter/itsa/taxpayer/business-details\\?nino=$nino",
+      status = status,
+      body = responseBody.toString()
+    )
+  }
+
+  override def beforeEach(): Unit = {
+    super.beforeEach()
+    enable(GetNewITSABusinessDetails)
+  }
+
+  def successResponseJson = Json.obj("success" -> Json.obj("taxPayerDisplayResponse" -> Json.obj("mtdId" -> testMtditId)))
+
+  "GetITSABusinessDetailsConnector" should {
+    "return AlreadySignedUp when mtdId is present in response" in {
+     stubGetITSABusinessDetails(testNino)(OK, successResponseJson)
+
+      val result = getITSABusinessConnector.getHIPBusinessDetails(testNino).futureValue
+
+      result shouldBe AlreadySignedUp(testMtditId)
+    }
+
+    "return NotSignedUp when response is NOT_FOUND" in {
+      val errorResponse = Json.obj("error" -> "NOT_FOUND")
+      stubGetITSABusinessDetails(testNino)(NOT_FOUND, errorResponse)
+
+      val result = getITSABusinessConnector.getHIPBusinessDetails(testNino).futureValue
+
+      result shouldBe NotSignedUp
+    }
+
+    "throw InternalServerException for unsupported status" in {
+      val errorResponse = Json.obj("error" -> "Unsupported status")
+      stubGetITSABusinessDetails(testNino)(INTERNAL_SERVER_ERROR, errorResponse)
+
+      val result = getITSABusinessConnector.getHIPBusinessDetails(testNino)
+
+      intercept[InternalServerException](await(result)).getMessage should include("Unsupported status received")
+    }
+
+    "throw InternalServerException when mtdId is missing in response" in {
+      val badJson = Json.obj("success" -> Json.obj("taxPayerDisplayResponse" -> Json.obj()))
+      stubGetITSABusinessDetails(testNino)(OK, badJson)
+
+      val result = getITSABusinessConnector.getHIPBusinessDetails(testNino)
+
+      intercept[InternalServerException](await(result)).getMessage should include("Failure parsing json")
+    }
+
+    "throw InternalServerException for BAD_REQUEST response" in {
+      val errorResponse = Json.obj("error" -> "Invalid request")
+      stubGetITSABusinessDetails(testNino)(BAD_REQUEST, errorResponse)
+
+      val result = getITSABusinessConnector.getHIPBusinessDetails(testNino)
+
+      intercept[InternalServerException](await(result)).getMessage should include("Unsupported status received")
+    }
+
+    "throw InternalServerException for INTERNAL_SERVER_ERROR response" in {
+      val errorResponse = Json.obj("error" -> "Internal server error")
+      stubGetITSABusinessDetails(testNino)(INTERNAL_SERVER_ERROR, errorResponse)
+
+      val result = getITSABusinessConnector.getHIPBusinessDetails(testNino)
+
+      intercept[InternalServerException](await(result)).getMessage should include("Unsupported status received")
+    }
+  }
+}

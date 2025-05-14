@@ -82,6 +82,34 @@ object IntegrationTestConstants extends JsonUtils {
     timeoutSeconds = 10
   )
 
+  object GetITSABusinessDetailsResponse {
+    val successResponse: (String, String) => JsValue = (nino: String, mtdbsa: String) =>
+      Json.parse(
+        s"""
+           |{
+           |   "success": {
+           |      "taxPayerDisplayResponse": {
+           |        "nino": "$nino",
+           |        "mtdId": "$mtdbsa"
+           |      }
+           |   }
+           |}
+     """.stripMargin
+      )
+
+    val invalidSuccessResponse: JsValue =
+      Json.parse(
+        s"""
+           |{
+           |  "success": {
+           |      "taxPayerDisplayResponse": {
+           |        "nino": "AA123456A"
+           |      }
+           |   }
+           |}
+           |""".stripMargin
+      )
+  }
   object GetBusinessDetailsResponse {
     val successResponse: (String, String, String) => JsValue = (nino: String, safeId: String, mtdbsa: String) =>
       s"""{
