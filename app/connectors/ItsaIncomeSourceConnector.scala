@@ -38,7 +38,7 @@ class ItsaIncomeSourceConnector @Inject()(http: HttpClient,
                                          )(implicit ec: ExecutionContext) {
 
   private def itsaIncomeSourceUrl: String = {
-    s"${appConfig.itsaIncomeSourceURL}/RESTAdapter/itsa/taxpayer/income-source"
+    s"${appConfig.itsaIncomeSourceURL}/etmp/RESTAdapter/itsa/taxpayer/income-source"
   }
 
   private val isoDatePattern: DateTimeFormatter = DateTimeFormatter

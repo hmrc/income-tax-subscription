@@ -57,6 +57,6 @@ class GetITSABusinessDetailsConnector @Inject()(httpClient: HttpClient,
     )}
 
   private def getHIPBusinessDetailsUrl(nino: String) =
-    s"${appConfig.hipBusinessDetailsURL}/RESTAdapter/itsa/taxpayer/business-details?nino=$nino"
+    s"${appConfig.hipBusinessDetailsURL}/etmp/RESTAdapter/itsa/taxpayer/business-details?nino=$nino"
 
 }
