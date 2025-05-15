@@ -43,7 +43,7 @@ object CreateIncomeSourceStub extends WireMockMethods {
       uri = "/etmp/RESTAdapter/itsa/taxpayer/income-source",
       body = expectedBody,
       headers = Map(
-        HeaderNames.authorisation -> "Bearer .*",
+        HeaderNames.authorisation -> "Basic .*",
         "correlationId" -> "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
         "X-Message-Type" -> "CreateIncomeSource",
         "X-Originating-System" -> "MDTP",

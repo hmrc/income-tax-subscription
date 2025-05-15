@@ -29,7 +29,7 @@ object GetITSAStatusStub extends WireMockMethods {
       method = GET,
       uri = s"/itsd/person-itd/itsa-status/$utr\\?taxYear=${AccountingPeriodUtil.getCurrentTaxYear.toShortTaxYear}&futureYears=true",
       headers = Map(
-        HeaderNames.AUTHORIZATION -> "Bearer .*",
+        HeaderNames.AUTHORIZATION -> "Basic .*",
         "correlationId" -> "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
       )
     ).thenReturn(status, body)
