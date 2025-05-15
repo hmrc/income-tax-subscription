@@ -83,7 +83,7 @@ class MicroserviceAppConfig @Inject()(servicesConfig: ServicesConfig, val config
   override lazy val getBusinessDetailsEnvironment: String = loadConfig(s"$getBusinessDetailsBase.environment")
 
   override lazy val hipBusinessDetailsURL: String = servicesConfig.baseUrl("get-itsa-business-details")
-  override lazy val getItsaBusinessDetailsEnvironmentToken = s"Bearer ${loadConfig("microservice.services.get-itsa-business-details.authorization-token")}"
+  override lazy val getItsaBusinessDetailsEnvironmentToken = s"Basic ${loadConfig("microservice.services.get-itsa-business-details.authorization-token")}"
 
   override lazy val statusDeterminationServiceURL: String = servicesConfig.baseUrl("status-determination-service")
 
@@ -92,7 +92,7 @@ class MicroserviceAppConfig @Inject()(servicesConfig: ServicesConfig, val config
   override lazy val statusDeterminationServiceEnvironment: String = loadConfig(s"$statusDeterminationServiceBase.environment")
 
   override lazy val taxableEntityAPI: String = servicesConfig.baseUrl("taxable-entity-api")
-  override lazy val getITSAStatusAuthorisationToken = s"Bearer ${loadConfig("microservice.services.taxable-entity-api.get-itsa-status.authorization-token")}"
+  override lazy val getITSAStatusAuthorisationToken = s"Basic ${loadConfig("microservice.services.taxable-entity-api.get-itsa-status.authorization-token")}"
 
   override lazy val signUpServiceURL: String = servicesConfig.baseUrl("signup-tax-year-service")
 
@@ -103,7 +103,7 @@ class MicroserviceAppConfig @Inject()(servicesConfig: ServicesConfig, val config
   override lazy val hipSignUpServiceURL: String = servicesConfig.baseUrl("hip-signup-tax-year-service")
 
   override lazy val hipSignUpServiceAuthorisationToken: String =
-    s"Bearer ${loadConfig("microservice.services.hip-signup-tax-year-service.authorization-token")}"
+    s"Basic ${loadConfig("microservice.services.hip-signup-tax-year-service.authorization-token")}"
 
   override lazy val prePopURL: String = servicesConfig.baseUrl("pre-pop")
 
@@ -126,7 +126,7 @@ class MicroserviceAppConfig @Inject()(servicesConfig: ServicesConfig, val config
   override lazy val desToken: String = loadConfig(s"$desBase.authorization-token")
 
   lazy val itsaIncomeSourceURL: String = servicesConfig.baseUrl("itsa-income-source")
-  lazy val itsaIncomeSourceAuthorisationToken: String = s"Bearer ${loadConfig("microservice.services.itsa-income-source.authorization-token")}"
+  lazy val itsaIncomeSourceAuthorisationToken: String = s"Basic ${loadConfig("microservice.services.itsa-income-source.authorization-token")}"
 
   lazy val mongoUri: String = loadConfig("mongodb.uri")
 
