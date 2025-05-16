@@ -37,7 +37,7 @@ class GetITSABusinessDetailsConnector @Inject()(httpClient: HttpClient,
       .copy(authorization = Some(Authorization(appConfig.getItsaBusinessDetailsEnvironmentToken)))
 
    val formatter = DateTimeFormatter
-     .ofPattern("yyyy-MM-dd'T'HH:mm:ssZ")
+     .ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'")
      .withZone(ZoneId.of("UTC"))
 
     val headers: Seq[(String, String)] = Seq(
