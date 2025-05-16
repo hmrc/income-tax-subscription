@@ -16,10 +16,10 @@
 
 package parsers
 
-import models.ErrorModel
-import play.api.http.Status.{NOT_FOUND, OK}
+import play.api.http.Status.{OK, UNPROCESSABLE_ENTITY}
 import play.api.libs.json.{JsError, JsSuccess, Reads}
 import uk.gov.hmrc.http.{HttpReads, HttpResponse, InternalServerException}
+
 object GetITSABusinessDetailsParser {
 
   sealed trait GetITSABusinessDetailsResponse
@@ -31,19 +31,32 @@ object GetITSABusinessDetailsParser {
       (json \ "success" \ "taxPayerDisplayResponse" \ "mtdId").validate[String].map(AlreadySignedUp.apply)
     )
   }
+
   case object NotSignedUp extends GetITSABusinessDetailsResponse
 
   implicit val getITSABusinessDetailsResponseHttpReads: HttpReads[GetITSABusinessDetailsResponse] =
     (_: String, _: String, response: HttpResponse) => {
       response.status match {
-        case OK => response.json.validate[AlreadySignedUp] match {
-          case JsSuccess(value, _) => value
-          case JsError(errors) =>
-            throw new InternalServerException(s"[GetITSABusinessDetailsParser] - Failure parsing json. Errors: $errors")
-        }
-        case NOT_FOUND => NotSignedUp
+        case OK =>
+          response.json.validate[AlreadySignedUp] match {
+            case JsSuccess(value, _) => value
+            case JsError(_) => throw GetITSABusinessDetailsParserException("Failure parsing json", OK)
+          }
+        case UNPROCESSABLE_ENTITY =>
+          (response.json \ "errors" \ "code").validate[String] match {
+            case JsSuccess(IDNotFound, _) => NotSignedUp
+            case JsSuccess(code, _) => throw GetITSABusinessDetailsParserException(s"Unsupported error code returned: $code", UNPROCESSABLE_ENTITY)
+            case JsError(_) => throw GetITSABusinessDetailsParserException("Failure parsing json", UNPROCESSABLE_ENTITY)
+          }
         case status =>
-          throw new InternalServerException(s"[GetITSABusinessDetailsParser] - Unsupported status received: $status")
+          throw GetITSABusinessDetailsParserException("Unsupported status received", status)
       }
     }
+
+  private case class GetITSABusinessDetailsParserException(error: String, status: Int) extends InternalServerException(
+    s"[GetITSABusinessDetailsParser] - $error - $status"
+  )
+
+  private val IDNotFound: String = "008"
+
 }

@@ -19,7 +19,7 @@ package helpers.servicemocks
 import com.github.tomakehurst.wiremock.stubbing.StubMapping
 import helpers.IntegrationTestConstants
 import helpers.IntegrationTestConstants.{SERVER_ERROR, SERVER_ERROR_MODEL, testMtditId, testNino}
-import play.api.http.Status.{BAD_REQUEST, INTERNAL_SERVER_ERROR, NOT_FOUND, OK}
+import play.api.http.Status.{BAD_REQUEST, INTERNAL_SERVER_ERROR, NOT_FOUND, OK, UNPROCESSABLE_ENTITY}
 import play.api.libs.json.{JsValue, Json}
 
 object ITSABusinessDetailsStub extends WireMockMethods {
@@ -39,7 +39,7 @@ object ITSABusinessDetailsStub extends WireMockMethods {
     .thenReturn(status = OK, body = invalidRegistrationResponse)
 
   def stubGetITSABusinessDetailsNotFound(): StubMapping = when(method = GET, uri = getITSABusinessDetailsUri(testNino))
-    .thenReturn(status = NOT_FOUND, body = Json.obj("reason" -> "Not Found"))
+    .thenReturn(status = UNPROCESSABLE_ENTITY, body = Json.obj("errors" -> Json.obj("code" -> "008")))
   def stubGetITSABusinessDetailsInternalServerError(): StubMapping = when(method = GET, uri = getITSABusinessDetailsUri(testNino))
     .thenReturn(status = INTERNAL_SERVER_ERROR, body = Json.obj("reason" -> "Internal error"))
 
