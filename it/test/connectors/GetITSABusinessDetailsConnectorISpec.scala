@@ -19,9 +19,8 @@ package connectors
 import config.MicroserviceAppConfig
 import config.featureswitch._
 import helpers.ComponentSpecBase
-import helpers.WiremockHelper.stubGet
-import models.ErrorModel
 import parsers.GetITSABusinessDetailsParser.{AlreadySignedUp, NotSignedUp}
+import play.api.http.HeaderNames
 import play.api.http.Status.{BAD_REQUEST, INTERNAL_SERVER_ERROR, NOT_FOUND, OK}
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.Request
@@ -38,11 +37,19 @@ class GetITSABusinessDetailsConnectorISpec extends ComponentSpecBase with Featur
   override implicit val hc: HeaderCarrier = HeaderCarrier()
 
   private def stubGetITSABusinessDetails(nino: String)(status: Int, responseBody: JsValue): Unit = {
-    stubGet(
-      url = s"/etmp/RESTAdapter/itsa/taxpayer/business-details\\?nino=$nino",
-      status = status,
-      body = responseBody.toString()
-    )
+    when(
+      method = GET,
+      uri = s"/etmp/RESTAdapter/itsa/taxpayer/business-details\\?nino=$nino",
+      headers = Map(
+        HeaderNames.AUTHORIZATION -> "Basic .*",
+        "correlationId" -> "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "X-Message-Type" -> "TaxpayerDisplay",
+        "X-Originating-System" -> "MDTP",
+        "X-Receipt-Date" -> """^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$""",
+        "X-Regime-Type" -> "ITSA",
+        "X-Transmitting-System" -> "HIP"
+      )
+    ).thenReturn(status, responseBody)
   }
 
   override def beforeEach(): Unit = {
@@ -54,7 +61,7 @@ class GetITSABusinessDetailsConnectorISpec extends ComponentSpecBase with Featur
 
   "GetITSABusinessDetailsConnector" should {
     "return AlreadySignedUp when mtdId is present in response" in {
-     stubGetITSABusinessDetails(testNino)(OK, successResponseJson)
+      stubGetITSABusinessDetails(testNino)(OK, successResponseJson)
 
       val result = getITSABusinessConnector.getHIPBusinessDetails(testNino).futureValue
 

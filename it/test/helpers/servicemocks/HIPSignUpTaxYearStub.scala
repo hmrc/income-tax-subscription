@@ -19,6 +19,9 @@ package helpers.servicemocks
 import com.github.tomakehurst.wiremock.stubbing.StubMapping
 import play.api.libs.json.JsValue
 
+import java.time.Instant
+import java.util.UUID
+
 object HIPSignUpTaxYearStub extends WireMockMethods {
 
   private def signUpUri: String = s"/etmp/RESTAdapter/itsa/taxpayer/signup-mtdfb"
@@ -30,7 +33,13 @@ object HIPSignUpTaxYearStub extends WireMockMethods {
       uri = signUpUri,
       body = expectedBody,
       headers = Map[String, String](
-        "Authorization" -> authorizationHeader
+        "Authorization" -> authorizationHeader,
+        "correlationid" -> "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "X-Message-Type" -> "ITSASignUpMTDfB",
+        "X-Originating-System" -> "MDTP",
+        "X-Receipt-Date" -> """^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$""",
+        "X-Regime-Type" -> "ITSA",
+        "X-Transmitting-System" -> "HIP"
       )
     ).thenReturn(status, body)
 
