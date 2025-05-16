@@ -168,7 +168,7 @@ class SubscriptionDataRepository @Inject()(config: SubscriptionDataRepositoryCon
       .toFuture()
   }
 
-  def drop(): Future[Void] = {
+  def drop(): Future[Unit] = {
     collection
       .drop()
       .toFuture()
