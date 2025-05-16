@@ -21,7 +21,7 @@ import config.featureswitch._
 import helpers.ComponentSpecBase
 import parsers.GetITSABusinessDetailsParser.{AlreadySignedUp, NotSignedUp}
 import play.api.http.HeaderNames
-import play.api.http.Status.{BAD_REQUEST, INTERNAL_SERVER_ERROR, NOT_FOUND, OK}
+import play.api.http.Status.{BAD_REQUEST, INTERNAL_SERVER_ERROR, OK, UNPROCESSABLE_ENTITY}
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.Request
 import play.api.test.FakeRequest
@@ -68,9 +68,9 @@ class GetITSABusinessDetailsConnectorISpec extends ComponentSpecBase with Featur
       result shouldBe AlreadySignedUp(testMtditId)
     }
 
-    "return NotSignedUp when response is NOT_FOUND" in {
-      val errorResponse = Json.obj("error" -> "NOT_FOUND")
-      stubGetITSABusinessDetails(testNino)(NOT_FOUND, errorResponse)
+    "return NotSignedUp when response is UNPROCESSABLE_ENTITY and code 008" in {
+      val errorResponse = Json.obj("errors" -> Json.obj("code" -> "008"))
+      stubGetITSABusinessDetails(testNino)(UNPROCESSABLE_ENTITY, errorResponse)
 
       val result = getITSABusinessConnector.getHIPBusinessDetails(testNino).futureValue
 
