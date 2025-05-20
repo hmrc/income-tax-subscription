@@ -107,7 +107,7 @@ class ThrottlingRepository @Inject()(config: ThrottlingRepositoryConfig, instant
 
   def insert(document: JsObject): Future[InsertOneResult] = collection.insertOne(document).toFuture()
 
-  def drop(): Future[Void] = collection.drop().toFuture()
+  def drop(): Future[Unit] = collection.drop().toFuture()
 
   private val findOneAndUpdateOptions: FindOneAndUpdateOptions = new FindOneAndUpdateOptions()
     .upsert(true)
