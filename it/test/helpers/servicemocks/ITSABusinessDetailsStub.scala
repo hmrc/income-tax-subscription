@@ -39,7 +39,7 @@ object ITSABusinessDetailsStub extends WireMockMethods {
     .thenReturn(status = OK, body = invalidRegistrationResponse)
 
   def stubGetITSABusinessDetailsNotFound(): StubMapping = when(method = GET, uri = getITSABusinessDetailsUri(testNino))
-    .thenReturn(status = UNPROCESSABLE_ENTITY, body = Json.obj("errors" -> Json.obj("code" -> "008")))
+    .thenReturn(status = UNPROCESSABLE_ENTITY, body = Json.obj("errors" -> Json.obj("code" -> "006")))
   def stubGetITSABusinessDetailsInternalServerError(): StubMapping = when(method = GET, uri = getITSABusinessDetailsUri(testNino))
     .thenReturn(status = INTERNAL_SERVER_ERROR, body = Json.obj("reason" -> "Internal error"))
 
