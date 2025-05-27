@@ -65,7 +65,6 @@ class ItsaIncomeSourceConnector @Inject()(http: HttpClient,
       .copy(authorization = Some(Authorization(appConfig.itsaIncomeSourceAuthorisationToken)))
       .withExtraHeaders((hipHeaders - HeaderNames.authorisation).toSeq: _*)
 
-
     http.POST[JsValue, PostITSAIncomeSourceResponse](
       url = itsaIncomeSourceUrl,
       body = Json.toJson(createIncomeSources)(CreateIncomeSourcesModel.hipWrites(mtdbsaRef)),
