@@ -117,7 +117,7 @@ object CreateIncomeSourcesModel {
           "accountingPeriodEndDate" -> soleTraderBusinesses.accountingPeriod.endDate.toDesDateFormat,
           "tradingName" -> business.businessName.map(_.businessName).getOrElse(throwError("businessName")),
           "typeOfBusiness" -> business.businessTradeName.map(_.businessTradeName).getOrElse(throwError("tradingName")),
-          "cashAccrualsFlag" -> soleTraderBusinesses.accountingMethod.stringValue.toUpperCase,
+          "cashAccrualsFlag" -> soleTraderBusinesses.accountingMethod.stringValue.take(1).toUpperCase,
           "address" -> business.businessAddress.map(addressDetailsJson).getOrElse(throwError("address"))
         ) ++ startDateOrContextualTaxYear(
           business.startDateBeforeLimit,
@@ -131,7 +131,7 @@ object CreateIncomeSourcesModel {
     Json.obj(
       "ukPropertyDetails" -> {
         Json.obj(
-          "cashAccrualsFlag" -> ukProperty.accountingMethod.stringValue.toUpperCase,
+          "cashAccrualsFlag" -> ukProperty.accountingMethod.stringValue.take(1).toUpperCase,
           "startDate" -> ukProperty.accountingPeriod.startDate.toDesDateFormat
         ) ++ startDateOrContextualTaxYear(
           ukProperty.startDateBeforeLimit,
@@ -145,7 +145,7 @@ object CreateIncomeSourcesModel {
     Json.obj(
       "foreignPropertyDetails" -> {
         Json.obj(
-          "cashAccrualsFlag" -> overseasProperty.accountingMethod.stringValue.toUpperCase,
+          "cashAccrualsFlag" -> overseasProperty.accountingMethod.stringValue.take(1).toUpperCase,
           "startDate" -> overseasProperty.accountingPeriod.startDate.toDesDateFormat
         ) ++ startDateOrContextualTaxYear(
           overseasProperty.startDateBeforeLimit,

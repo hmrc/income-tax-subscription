@@ -234,7 +234,7 @@ class CreateIncomeSourcesModelSpec extends PlaySpec with MustMatchers {
         "accountingPeriodEndDate" -> desFormattedNow,
         "tradingName" -> "testBusinessName",
         "typeOfBusiness" -> "testBusinessTrade",
-        "cashAccrualsFlag" -> Cash.stringValue.toUpperCase,
+        "cashAccrualsFlag" -> Cash.stringValue.take(1).toUpperCase,
         "address" -> Json.obj(
           "addressLine1" -> "line 1",
           "countryCode" -> "GB",
@@ -246,13 +246,13 @@ class CreateIncomeSourcesModelSpec extends PlaySpec with MustMatchers {
     ),
     "ukPropertyDetails" -> Json.obj(
 
-      "cashAccrualsFlag" -> Accruals.stringValue.toUpperCase,
+      "cashAccrualsFlag" -> Accruals.stringValue.take(1).toUpperCase,
       "startDate" -> desFormattedNow,
       "tradingStartDate" -> desFormattedNow
     ),
     "foreignPropertyDetails" -> Json.obj(
 
-      "cashAccrualsFlag" -> Cash.stringValue.toUpperCase,
+      "cashAccrualsFlag" -> Cash.stringValue.take(1).toUpperCase,
       "startDate" -> desFormattedNow,
       "tradingStartDate" -> desFormattedNow
 
@@ -268,7 +268,7 @@ class CreateIncomeSourcesModelSpec extends PlaySpec with MustMatchers {
         "accountingPeriodEndDate" -> desFormattedNow,
         "tradingName" -> "testBusinessName",
         "typeOfBusiness" -> "testBusinessTrade",
-        "cashAccrualsFlag" -> Cash.stringValue.toUpperCase,
+        "cashAccrualsFlag" -> Cash.stringValue.take(1).toUpperCase,
         "address" -> Json.obj(
           "addressLine1" -> "line 1",
           "countryCode" -> "GB",
@@ -279,13 +279,13 @@ class CreateIncomeSourcesModelSpec extends PlaySpec with MustMatchers {
       )
     ),
     "ukPropertyDetails" -> Json.obj(
-      "cashAccrualsFlag" -> Accruals.stringValue.toUpperCase,
+      "cashAccrualsFlag" -> Accruals.stringValue.take(1).toUpperCase,
       "startDate" -> desFormattedNow,
       "contextualTaxYear" -> contextualTaxYear
     ),
     "foreignPropertyDetails" -> Json.obj(
 
-      "cashAccrualsFlag" -> Cash.stringValue.toUpperCase,
+      "cashAccrualsFlag" -> Cash.stringValue.take(1).toUpperCase,
       "startDate" -> desFormattedNow,
       "contextualTaxYear" -> contextualTaxYear
 
