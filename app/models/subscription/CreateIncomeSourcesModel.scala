@@ -92,7 +92,7 @@ object CreateIncomeSourcesModel {
 
   private def startDateOrContextualTaxYear(startDateBeforeLimit: Boolean, startDate: DateModel): JsObject = {
     if (startDateBeforeLimit) {
-      Json.obj("contextualTaxYear" -> startDate.year)
+      Json.obj("contextualTaxYear" -> startDate.toLocalDate.plusYears(1).getYear.toString)
     } else {
       Json.obj("tradingStartDate" -> startDate.toDesDateFormat)
     }

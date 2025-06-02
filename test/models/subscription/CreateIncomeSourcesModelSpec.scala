@@ -259,7 +259,7 @@ class CreateIncomeSourcesModelSpec extends PlaySpec with MustMatchers {
     )
   )
 
-  val contextualTaxYear: String = DateModel.dateConvert(now).year
+  val contextualTaxYear: String = (DateModel.dateConvert(now).getYear + 1).toString
   val fullModelContextualTaxYearJsonWrite: JsObject = Json.obj(
     "mtdbsa" -> mtditid,
     "businessDetails" -> Json.arr(
