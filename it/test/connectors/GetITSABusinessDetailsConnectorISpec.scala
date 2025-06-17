@@ -77,6 +77,15 @@ class GetITSABusinessDetailsConnectorISpec extends ComponentSpecBase with Featur
       result shouldBe NotSignedUp
     }
 
+    "return NotSignedUp when response is UNPROCESSABLE_ENTITY and code 008" in {
+      val errorResponse = Json.obj("errors" -> Json.obj("code" -> "008"))
+      stubGetITSABusinessDetails(testNino)(UNPROCESSABLE_ENTITY, errorResponse)
+
+      val result = getITSABusinessConnector.getHIPBusinessDetails(testNino).futureValue
+
+      result shouldBe NotSignedUp
+    }
+
     "throw InternalServerException for unsupported status" in {
       val errorResponse = Json.obj("error" -> "Unsupported status")
       stubGetITSABusinessDetails(testNino)(INTERNAL_SERVER_ERROR, errorResponse)

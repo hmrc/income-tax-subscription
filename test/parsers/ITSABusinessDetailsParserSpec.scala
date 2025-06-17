@@ -42,10 +42,18 @@ class ITSABusinessDetailsParserSpec extends CommonSpec {
     }
   }
 
-  "return NotSignedUp when status is UNPROCESSABLE_ENTITY and has a code of 006" in {
-    val json = Json.obj("errors" -> Json.obj("code" -> "006"))
-    val response = HttpResponse(UNPROCESSABLE_ENTITY, json, Map.empty)
-    getITSABusinessDetailsResponseHttpReads.read("GET", "test-url", response) shouldBe NotSignedUp
+  "return NotSignedUp" when {
+    "status is UNPROCESSABLE_ENTITY and has a code of 006" in {
+      val json = Json.obj("errors" -> Json.obj("code" -> "006"))
+      val response = HttpResponse(UNPROCESSABLE_ENTITY, json, Map.empty)
+      getITSABusinessDetailsResponseHttpReads.read("GET", "test-url", response) shouldBe NotSignedUp
+    }
+
+    "status is UNPROCESSABLE_ENTITY and has a code of 008" in {
+      val json = Json.obj("errors" -> Json.obj("code" -> "008"))
+      val response = HttpResponse(UNPROCESSABLE_ENTITY, json, Map.empty)
+      getITSABusinessDetailsResponseHttpReads.read("GET", "test-url", response) shouldBe NotSignedUp
+    }
   }
 
   "throw an InternalServerException" when {
@@ -65,7 +73,7 @@ class ITSABusinessDetailsParserSpec extends CommonSpec {
         getITSABusinessDetailsResponseHttpReads.read("GET", "/test-url", response)
       }.getMessage shouldBe s"[GetITSABusinessDetailsParser] - Failure parsing json - $UNPROCESSABLE_ENTITY"
     }
-    "code in the UNPROCESSABLE_ENTITY response json is not 006" in {
+    "code in the UNPROCESSABLE_ENTITY response json is not 006 or 008" in {
       val json = Json.obj("errors" -> Json.obj("code" -> "100"))
       val response = HttpResponse(UNPROCESSABLE_ENTITY, json, Map.empty)
 
