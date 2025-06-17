@@ -44,7 +44,7 @@ object GetITSABusinessDetailsParser {
           }
         case UNPROCESSABLE_ENTITY =>
           (response.json \ "errors" \ "code").validate[String] match {
-            case JsSuccess(SubscriptionDataNotFound, _) => NotSignedUp
+            case JsSuccess(SubscriptionDataNotFound | IdNotFound, _) => NotSignedUp
             case JsSuccess(code, _) => throw GetITSABusinessDetailsParserException(s"Unsupported error code returned: $code", UNPROCESSABLE_ENTITY)
             case JsError(_) => throw GetITSABusinessDetailsParserException("Failure parsing json", UNPROCESSABLE_ENTITY)
           }
@@ -58,5 +58,6 @@ object GetITSABusinessDetailsParser {
   )
 
   private val SubscriptionDataNotFound: String = "006"
+  private val IdNotFound: String = "008"
 
 }
