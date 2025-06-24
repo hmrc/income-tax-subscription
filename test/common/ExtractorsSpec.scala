@@ -16,14 +16,10 @@
 
 package common
 
-import config.featureswitch.FeatureSwitching
-import services.mocks.{MockAuthService, MockIncomeSourcesConnector}
 import uk.gov.hmrc.auth.core.{Enrolment, EnrolmentIdentifier, Enrolments}
-import utils.MaterializerSupport
 import utils.TestConstants.hmrcAsAgent
 
-class ExtractorsSpec extends CommonSpec
-  with MockAuthService with MockIncomeSourcesConnector with MaterializerSupport with FeatureSwitching with Extractors {
+class ExtractorsSpec extends CommonSpec with Extractors {
 
   "getArnFromEnrolments" when {
     "called with no enrolments present" should {

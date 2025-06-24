@@ -17,33 +17,14 @@
 package parsers
 
 import models.subscription.business.{CreateIncomeSourceErrorModel, CreateIncomeSourceSuccessModel}
-import play.api.Logger
-import play.api.http.Status.{CREATED, OK}
+import play.api.Logging
+import play.api.http.Status.CREATED
 import uk.gov.hmrc.http.{HttpReads, HttpResponse}
 
-
-object CreateIncomeSourceParser {
-  type PostIncomeSourceResponse = Either[CreateIncomeSourceErrorModel, CreateIncomeSourceSuccessModel]
-
-  implicit val incomeSourceResponseHttpReads: HttpReads[PostIncomeSourceResponse] = {
-    val logger: Logger = Logger(this.getClass)
-    (_: String, _: String, response: HttpResponse) => response.status match {
-      case OK =>
-        logger.debug("[IncomeSourceResponseHttpReads][read]: Status OK")
-        Right(CreateIncomeSourceSuccessModel())
-      case status =>
-        logger.warn(s"[IncomeSourceResponseHttpReads][read]: Unexpected response, status $status returned. Body: ${response.body}")
-        Left(CreateIncomeSourceErrorModel(status, response.body))
-    }
-  }
-
-}
-
-object ITSAIncomeSourceParser {
+object ITSAIncomeSourceParser extends Logging {
   type PostITSAIncomeSourceResponse = Either[CreateIncomeSourceErrorModel, CreateIncomeSourceSuccessModel]
 
   implicit val itsaIncomeSourceResponseHttpReads: HttpReads[PostITSAIncomeSourceResponse] = {
-    val logger: Logger = Logger(this.getClass)
     (_: String, _: String, response: HttpResponse) =>
       response.status match {
         case CREATED =>

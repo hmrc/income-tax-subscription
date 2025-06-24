@@ -17,11 +17,9 @@
 package controllers
 
 import common.Extractors
-import config.AppConfig
-import config.featureswitch.{FeatureSwitching, HIPItsaIncomeSource}
-import connectors.{CreateIncomeSourcesConnector, ItsaIncomeSourceConnector}
+import connectors.ItsaIncomeSourceConnector
 import models.subscription.CreateIncomeSourcesModel
-import play.api.Logger
+import play.api.Logging
 import play.api.libs.json.JsValue
 import play.api.mvc._
 import services.AuthService
@@ -33,34 +31,24 @@ import scala.concurrent.ExecutionContext
 
 @Singleton
 class BusinessIncomeSourcesController @Inject()(authService: AuthService,
-                                                createIncomeSourcesConnector: CreateIncomeSourcesConnector,
                                                 itsaIncomeSourceConnector: ItsaIncomeSourceConnector,
-                                                cc: ControllerComponents,
-                                                val appConfig: AppConfig
-                                               )
-                                               (implicit ec: ExecutionContext) extends BackendController(cc) with FeatureSwitching with Extractors {
-
-  val logger: Logger = Logger(this.getClass)
+                                                cc: ControllerComponents)
+                                               (implicit ec: ExecutionContext)
+  extends BackendController(cc) with Extractors with Logging {
 
   def createIncomeSource(mtdbsaRef: String): Action[JsValue] = Action.async(parse.json) { implicit request =>
     authService.authorised().retrieve(Retrievals.allEnrolments) { enrolments =>
-      val agentReferenceNumber: Option[String] = getArnFromEnrolments(enrolments)
-
-      if (isEnabled(HIPItsaIncomeSource)) {
-        withJsonBody[CreateIncomeSourcesModel] { incomeSources =>
-          itsaIncomeSourceConnector.createIncomeSources(agentReferenceNumber, mtdbsaRef, incomeSources).map {
-            case Right(_) => NoContent
-            case Left(error) => logger.error(s"Error processing Create Income Sources with status ${error.status} and message ${error.reason}")
-              InternalServerError("Create Income Sources Failure")
-          }
-        }
-      } else {
-        withJsonBody[CreateIncomeSourcesModel] { incomeSources =>
-          createIncomeSourcesConnector.createBusinessIncomeSources(agentReferenceNumber, mtdbsaRef, incomeSources).map {
-            case Right(_) => NoContent
-            case Left(error) => logger.error(s"Error processing Business Income Source with status ${error.status} and message ${error.reason}")
-              InternalServerError("Business Income Source Failure")
-          }
+      withJsonBody[CreateIncomeSourcesModel] { incomeSources =>
+        itsaIncomeSourceConnector.createIncomeSources(
+          agentReferenceNumber = getArnFromEnrolments(enrolments),
+          mtdbsaRef = mtdbsaRef,
+          createIncomeSources = incomeSources
+        ) map {
+          case Right(_) =>
+            NoContent
+          case Left(error) =>
+            logger.error(s"Error processing Create Income Sources with status ${error.status} and message ${error.reason}")
+            InternalServerError("Create Income Sources Failure")
         }
       }
     }

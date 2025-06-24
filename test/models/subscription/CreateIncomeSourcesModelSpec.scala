@@ -18,7 +18,6 @@ package models.subscription
 
 import models.DateModel
 import models.subscription.business.{Accruals, Cash}
-import org.scalatest.matchers.must.{Matchers => MustMatchers}
 import org.scalatestplus.play.PlaySpec
 import play.api.libs.json._
 import uk.gov.hmrc.http.InternalServerException
@@ -26,271 +25,7 @@ import utils.TestConstants.testNino
 
 import java.time.LocalDate
 
-class CreateIncomeSourcesModelSpec extends PlaySpec with MustMatchers {
-
-  val mtditid: String = "XAIT0000006"
-
-  val now: LocalDate = LocalDate.now
-
-  val desFormattedNow: String = DateModel.dateConvert(now).toDesDateFormat
-
-  val testSelfEmploymentData: SelfEmploymentData = SelfEmploymentData(
-    id = "testBusinessId",
-    businessStartDate = Some(BusinessStartDate(now)),
-    businessName = Some(BusinessNameModel("testBusinessName")),
-    businessTradeName = Some(BusinessTradeNameModel("testBusinessTrade")),
-    businessAddress = Some(BusinessAddressModel(
-      address = Address(lines = Seq("line 1", "line 2"), postcode = Some("testPostcode"))
-    )),
-    startDateBeforeLimit = false
-  )
-
-  val fullSoleTraderBusinesses: SoleTraderBusinesses = SoleTraderBusinesses(
-    accountingPeriod = AccountingPeriodModel(now, now),
-    accountingMethod = Cash,
-    businesses = Seq(
-      testSelfEmploymentData
-    )
-  )
-
-  val fullUkProperty: UkProperty = UkProperty(
-    accountingPeriod = AccountingPeriodModel(now, now),
-    startDateBeforeLimit = false,
-    tradingStartDate = LocalDate.now,
-    accountingMethod = Accruals
-  )
-
-  val fullOverseasProperty: OverseasProperty = OverseasProperty(
-    accountingPeriod = AccountingPeriodModel(now, now),
-    startDateBeforeLimit = false,
-    tradingStartDate = LocalDate.now,
-    accountingMethod = Cash
-  )
-
-  val fullCreateIncomeSourcesModel: CreateIncomeSourcesModel = CreateIncomeSourcesModel(
-    nino = testNino,
-    soleTraderBusinesses = Some(fullSoleTraderBusinesses),
-    ukProperty = Some(fullUkProperty),
-    overseasProperty = Some(fullOverseasProperty)
-  )
-
-  val fullSoleTraderBusinessesJsonRead: JsObject = Json.obj(
-    "accountingPeriod" -> Json.obj(
-      "startDate" -> Json.obj(
-        "day" -> now.getDayOfMonth.toString,
-        "month" -> now.getMonthValue.toString,
-        "year" -> now.getYear.toString
-      ),
-      "endDate" -> Json.obj(
-        "day" -> now.getDayOfMonth.toString,
-        "month" -> now.getMonthValue.toString,
-        "year" -> now.getYear.toString
-      )
-    ),
-    "accountingMethod" -> "Cash",
-    "businesses" -> Json.arr(
-      Json.obj(
-        "id" -> "testBusinessId",
-        "businessStartDate" -> Json.obj(
-          "startDate" -> Json.obj(
-            "day" -> now.getDayOfMonth.toString,
-            "month" -> now.getMonthValue.toString,
-            "year" -> now.getYear.toString
-          )
-        ),
-        "businessName" -> Json.obj(
-          "businessName" -> "testBusinessName"
-        ),
-        "businessTradeName" -> Json.obj(
-          "businessTradeName" -> "testBusinessTrade"
-        ),
-        "businessAddress" -> Json.obj(
-          "address" -> Json.obj(
-            "lines" -> Json.arr(
-              "line 1",
-              "line 2"
-            ),
-            "postcode" -> "testPostcode"
-          )
-        ),
-        "startDateBeforeLimit" -> false
-      )
-    )
-  )
-
-  val fullUkPropertyJsonRead: JsObject = Json.obj(
-    "accountingPeriod" -> Json.obj(
-      "startDate" -> Json.obj(
-        "day" -> now.getDayOfMonth.toString,
-        "month" -> now.getMonthValue.toString,
-        "year" -> now.getYear.toString
-      ),
-      "endDate" -> Json.obj(
-        "day" -> now.getDayOfMonth.toString,
-        "month" -> now.getMonthValue.toString,
-        "year" -> now.getYear.toString
-      )
-    ),
-    "startDateBeforeLimit" -> false,
-    "tradingStartDate" -> Json.obj(
-      "day" -> now.getDayOfMonth.toString,
-      "month" -> now.getMonthValue.toString,
-      "year" -> now.getYear.toString
-    ),
-    "accountingMethod" -> "Accruals"
-  )
-
-  val fullOverseasPropertyJsonRead: JsObject = Json.obj(
-    "accountingPeriod" -> Json.obj(
-      "startDate" -> Json.obj(
-        "day" -> now.getDayOfMonth.toString,
-        "month" -> now.getMonthValue.toString,
-        "year" -> now.getYear.toString
-      ),
-      "endDate" -> Json.obj(
-        "day" -> now.getDayOfMonth.toString,
-        "month" -> now.getMonthValue.toString,
-        "year" -> now.getYear.toString
-      )
-    ),
-    "tradingStartDate" -> Json.obj(
-      "day" -> now.getDayOfMonth.toString,
-      "month" -> now.getMonthValue.toString,
-      "year" -> now.getYear.toString
-    ),
-    "startDateBeforeLimit" -> false,
-    "accountingMethod" -> "Cash"
-  )
-
-  val fullCreateIncomeSourcesModelJsonRead: JsObject = Json.obj(
-    "nino" -> testNino,
-    "soleTraderBusinesses" -> fullSoleTraderBusinessesJsonRead,
-    "ukProperty" -> fullUkPropertyJsonRead,
-    "overseasProperty" -> fullOverseasPropertyJsonRead
-  )
-
-  val fullCreateIncomeSourcesModelJsonWrite: JsObject = Json.obj(
-    "businessDetails" -> Json.arr(
-      Json.obj(
-        "accountingPeriodStartDate" -> desFormattedNow,
-        "accountingPeriodEndDate" -> desFormattedNow,
-        "tradingStartDate" -> desFormattedNow,
-        "tradingName" -> "testBusinessName",
-        "typeOfBusiness" -> "testBusinessTrade",
-        "cashOrAccrualsFlag" -> Cash.stringValue.toUpperCase,
-        "addressDetails" -> Json.obj(
-          "addressLine1" -> "line 1",
-          "addressLine2" -> "line 2",
-          "postalCode" -> "testPostcode",
-          "countryCode" -> "GB"
-        )
-      )
-    ),
-    "ukPropertyDetails" -> Json.obj(
-      "tradingStartDate" -> desFormattedNow,
-      "cashOrAccrualsFlag" -> Accruals.stringValue.toUpperCase,
-      "startDate" -> desFormattedNow
-    ),
-    "foreignPropertyDetails" -> Json.obj(
-      "tradingStartDate" -> desFormattedNow,
-      "cashOrAccrualsFlag" -> Cash.stringValue.toUpperCase,
-      "startDate" -> desFormattedNow
-    )
-  )
-
-  val fullCreateIncomeSourcesModelJsonWriteMinimal: JsObject = Json.obj(
-    "businessDetails" -> Json.arr(
-      Json.obj(
-        "accountingPeriodStartDate" -> desFormattedNow,
-        "accountingPeriodEndDate" -> desFormattedNow,
-        "tradingStartDate" -> desFormattedNow,
-        "tradingName" -> "testBusinessName",
-        "typeOfBusiness" -> "testBusinessTrade",
-        "cashOrAccrualsFlag" -> Cash.stringValue.toUpperCase,
-        "addressDetails" -> Json.obj(
-          "addressLine1" -> "line 1",
-          "addressLine2" -> "line 2",
-          "countryCode" -> "GB"
-        )
-      )
-    ),
-    "ukPropertyDetails" -> Json.obj(
-      "tradingStartDate" -> desFormattedNow,
-      "cashOrAccrualsFlag" -> Accruals.stringValue.toUpperCase,
-      "startDate" -> desFormattedNow
-    ),
-    "foreignPropertyDetails" -> Json.obj(
-      "tradingStartDate" -> desFormattedNow,
-      "cashOrAccrualsFlag" -> Cash.stringValue.toUpperCase,
-      "startDate" -> desFormattedNow
-    )
-  )
-
-  val fullModelTradingStartDateJsonWrite: JsObject = Json.obj(
-    "mtdbsa" -> mtditid,
-    "businessDetails" -> Json.arr(
-      Json.obj(
-        "accountingPeriodStartDate" -> desFormattedNow,
-        "accountingPeriodEndDate" -> desFormattedNow,
-        "tradingName" -> "testBusinessName",
-        "typeOfBusiness" -> "testBusinessTrade",
-        "cashAccrualsFlag" -> Cash.stringValue.take(1).toUpperCase,
-        "address" -> Json.obj(
-          "addressLine1" -> "line 1",
-          "countryCode" -> "GB",
-          "postcode" -> "testPostcode",
-          "addressLine2" -> "line 2"
-        ),
-        "tradingStartDate" -> desFormattedNow
-      )
-    ),
-    "ukPropertyDetails" -> Json.obj(
-
-      "cashAccrualsFlag" -> Accruals.stringValue.take(1).toUpperCase,
-      "startDate" -> desFormattedNow,
-      "tradingStartDate" -> desFormattedNow
-    ),
-    "foreignPropertyDetails" -> Json.obj(
-
-      "cashAccrualsFlag" -> Cash.stringValue.take(1).toUpperCase,
-      "startDate" -> desFormattedNow,
-      "tradingStartDate" -> desFormattedNow
-
-    )
-  )
-
-  val contextualTaxYear: String = (DateModel.dateConvert(now).getYear + 1).toString
-  val fullModelContextualTaxYearJsonWrite: JsObject = Json.obj(
-    "mtdbsa" -> mtditid,
-    "businessDetails" -> Json.arr(
-      Json.obj(
-        "accountingPeriodStartDate" -> desFormattedNow,
-        "accountingPeriodEndDate" -> desFormattedNow,
-        "tradingName" -> "testBusinessName",
-        "typeOfBusiness" -> "testBusinessTrade",
-        "cashAccrualsFlag" -> Cash.stringValue.take(1).toUpperCase,
-        "address" -> Json.obj(
-          "addressLine1" -> "line 1",
-          "countryCode" -> "GB",
-          "postcode" -> "testPostcode",
-          "addressLine2" -> "line 2"
-        ),
-        "contextualTaxYear" -> contextualTaxYear
-      )
-    ),
-    "ukPropertyDetails" -> Json.obj(
-      "cashAccrualsFlag" -> Accruals.stringValue.take(1).toUpperCase,
-      "startDate" -> desFormattedNow,
-      "contextualTaxYear" -> contextualTaxYear
-    ),
-    "foreignPropertyDetails" -> Json.obj(
-
-      "cashAccrualsFlag" -> Cash.stringValue.take(1).toUpperCase,
-      "startDate" -> desFormattedNow,
-      "contextualTaxYear" -> contextualTaxYear
-
-    )
-  )
+class CreateIncomeSourcesModelSpec extends PlaySpec {
 
   "CreateIncomeSourcesModel" must {
     "read from json successfully" when {
@@ -313,99 +48,6 @@ class CreateIncomeSourcesModelSpec extends PlaySpec with MustMatchers {
     }
 
     "write to json successfully" when {
-      "all required fields are present in the model" in {
-        Json.toJson(fullCreateIncomeSourcesModel)(CreateIncomeSourcesModel.desWrites) mustBe fullCreateIncomeSourcesModelJsonWrite
-      }
-      "all income sources are present, but any optional fields are not present" in {
-        val minimalModel = CreateIncomeSourcesModel(
-          nino = testNino,
-          soleTraderBusinesses = Some(SoleTraderBusinesses(
-            accountingPeriod = AccountingPeriodModel(now, now),
-            accountingMethod = Cash,
-            businesses = Seq(
-              SelfEmploymentData(
-                id = "testBusinessId",
-                businessStartDate = Some(BusinessStartDate(now)),
-                businessName = Some(BusinessNameModel("testBusinessName")),
-                businessTradeName = Some(BusinessTradeNameModel("testBusinessTrade")),
-                businessAddress = Some(BusinessAddressModel(
-                  address = Address(lines = Seq("line 1", "line 2"), postcode = None)
-                )),
-                startDateBeforeLimit = false
-              )
-            )
-          )),
-          ukProperty = Some(fullUkProperty),
-          overseasProperty = Some(fullOverseasProperty)
-        )
-
-        Json.toJson(minimalModel)(CreateIncomeSourcesModel.desWrites) mustBe fullCreateIncomeSourcesModelJsonWriteMinimal
-      }
-    }
-    "return an exception when writing to json" when {
-      "addressLine1 is missing in the model" in {
-        val missingAddressLineModel = fullCreateIncomeSourcesModel.copy(
-          soleTraderBusinesses = Some(fullSoleTraderBusinesses.copy(
-            businesses = fullSoleTraderBusinesses.businesses.map { business =>
-              business.copy(businessAddress = business.businessAddress.map(_.copy(address = Address(lines = Nil, postcode = Some("testPostcode")))))
-            }
-          ))
-        )
-
-        intercept[InternalServerException](Json.toJson(missingAddressLineModel)(CreateIncomeSourcesModel.desWrites))
-          .message mustBe "[CreateIncomeSourcesModel] - Unable to create model, addressLine1 is missing"
-      }
-      "businessName is missing in the model" in {
-        val missingBusinessName = fullCreateIncomeSourcesModel.copy(
-          soleTraderBusinesses = Some(fullSoleTraderBusinesses.copy(
-            businesses = fullSoleTraderBusinesses.businesses.map { business =>
-              business.copy(businessName = None)
-            }
-          ))
-        )
-
-        intercept[InternalServerException](Json.toJson(missingBusinessName)(CreateIncomeSourcesModel.desWrites))
-          .message mustBe "[CreateIncomeSourcesModel] - Unable to create model, businessName is missing"
-      }
-      "tradingName is missing in the model" in {
-        val missingTradingName = fullCreateIncomeSourcesModel.copy(
-          soleTraderBusinesses = Some(fullSoleTraderBusinesses.copy(
-            businesses = fullSoleTraderBusinesses.businesses.map { business =>
-              business.copy(businessTradeName = None)
-            }
-          ))
-        )
-
-        intercept[InternalServerException](Json.toJson(missingTradingName)(CreateIncomeSourcesModel.desWrites))
-          .message mustBe "[CreateIncomeSourcesModel] - Unable to create model, tradingName is missing"
-      }
-      "addressDetails is missing in the model" in {
-        val missingAddressDetails = fullCreateIncomeSourcesModel.copy(
-          soleTraderBusinesses = Some(fullSoleTraderBusinesses.copy(
-            businesses = fullSoleTraderBusinesses.businesses.map { business =>
-              business.copy(businessAddress = None)
-            }
-          ))
-        )
-
-        intercept[InternalServerException](Json.toJson(missingAddressDetails)(CreateIncomeSourcesModel.desWrites))
-          .message mustBe "[CreateIncomeSourcesModel] - Unable to create model, addressDetails is missing"
-      }
-      "tradingStartDate is missing in the model" in {
-        val missingTradingStartDate = fullCreateIncomeSourcesModel.copy(
-          soleTraderBusinesses = Some(fullSoleTraderBusinesses.copy(
-            businesses = fullSoleTraderBusinesses.businesses.map { business =>
-              business.copy(businessStartDate = None)
-            }
-          ))
-        )
-
-        intercept[InternalServerException](Json.toJson(missingTradingStartDate)(CreateIncomeSourcesModel.desWrites))
-          .message mustBe "[CreateIncomeSourcesModel] - Unable to create model, tradingStartDate is missing"
-      }
-    }
-
-    "write to hip json successfully" when {
       "startDateBeforeLimit is false and all fields are present in the model" in {
         Json.toJson(fullCreateIncomeSourcesModel)(CreateIncomeSourcesModel.hipWrites(mtditid)) mustBe fullModelTradingStartDateJsonWrite
       }
@@ -419,7 +61,7 @@ class CreateIncomeSourcesModelSpec extends PlaySpec with MustMatchers {
         Json.toJson(fullModelWithContextualTaxYear)(CreateIncomeSourcesModel.hipWrites(mtditid)) mustBe fullModelContextualTaxYearJsonWrite
       }
     }
-    "return an exception when writing to hip json" when {
+    "return an exception when writing to json" when {
       "addressLine1 is missing in the model" in {
         val missingAddressLineModel = fullCreateIncomeSourcesModel.copy(
           soleTraderBusinesses = Some(fullSoleTraderBusinesses.copy(
@@ -549,5 +191,269 @@ class CreateIncomeSourcesModelSpec extends PlaySpec with MustMatchers {
       }
     }
   }
+
+  lazy val mtditid: String = "XAIT0000006"
+
+  lazy val now: LocalDate = LocalDate.now
+
+  lazy val desFormattedNow: String = DateModel.dateConvert(now).toDesDateFormat
+
+  lazy val testSelfEmploymentData: SelfEmploymentData = SelfEmploymentData(
+    id = "testBusinessId",
+    businessStartDate = Some(BusinessStartDate(now)),
+    businessName = Some(BusinessNameModel("testBusinessName")),
+    businessTradeName = Some(BusinessTradeNameModel("testBusinessTrade")),
+    businessAddress = Some(BusinessAddressModel(
+      address = Address(lines = Seq("line 1", "line 2"), postcode = Some("testPostcode"))
+    )),
+    startDateBeforeLimit = false
+  )
+
+  lazy val fullSoleTraderBusinesses: SoleTraderBusinesses = SoleTraderBusinesses(
+    accountingPeriod = AccountingPeriodModel(now, now),
+    accountingMethod = Cash,
+    businesses = Seq(
+      testSelfEmploymentData
+    )
+  )
+
+  lazy val fullUkProperty: UkProperty = UkProperty(
+    accountingPeriod = AccountingPeriodModel(now, now),
+    startDateBeforeLimit = false,
+    tradingStartDate = LocalDate.now,
+    accountingMethod = Accruals
+  )
+
+  lazy val fullOverseasProperty: OverseasProperty = OverseasProperty(
+    accountingPeriod = AccountingPeriodModel(now, now),
+    startDateBeforeLimit = false,
+    tradingStartDate = LocalDate.now,
+    accountingMethod = Cash
+  )
+
+  lazy val fullCreateIncomeSourcesModel: CreateIncomeSourcesModel = CreateIncomeSourcesModel(
+    nino = testNino,
+    soleTraderBusinesses = Some(fullSoleTraderBusinesses),
+    ukProperty = Some(fullUkProperty),
+    overseasProperty = Some(fullOverseasProperty)
+  )
+
+  lazy val fullSoleTraderBusinessesJsonRead: JsObject = Json.obj(
+    "accountingPeriod" -> Json.obj(
+      "startDate" -> Json.obj(
+        "day" -> now.getDayOfMonth.toString,
+        "month" -> now.getMonthValue.toString,
+        "year" -> now.getYear.toString
+      ),
+      "endDate" -> Json.obj(
+        "day" -> now.getDayOfMonth.toString,
+        "month" -> now.getMonthValue.toString,
+        "year" -> now.getYear.toString
+      )
+    ),
+    "accountingMethod" -> "Cash",
+    "businesses" -> Json.arr(
+      Json.obj(
+        "id" -> "testBusinessId",
+        "businessStartDate" -> Json.obj(
+          "startDate" -> Json.obj(
+            "day" -> now.getDayOfMonth.toString,
+            "month" -> now.getMonthValue.toString,
+            "year" -> now.getYear.toString
+          )
+        ),
+        "businessName" -> Json.obj(
+          "businessName" -> "testBusinessName"
+        ),
+        "businessTradeName" -> Json.obj(
+          "businessTradeName" -> "testBusinessTrade"
+        ),
+        "businessAddress" -> Json.obj(
+          "address" -> Json.obj(
+            "lines" -> Json.arr(
+              "line 1",
+              "line 2"
+            ),
+            "postcode" -> "testPostcode"
+          )
+        ),
+        "startDateBeforeLimit" -> false
+      )
+    )
+  )
+
+  lazy val fullUkPropertyJsonRead: JsObject = Json.obj(
+    "accountingPeriod" -> Json.obj(
+      "startDate" -> Json.obj(
+        "day" -> now.getDayOfMonth.toString,
+        "month" -> now.getMonthValue.toString,
+        "year" -> now.getYear.toString
+      ),
+      "endDate" -> Json.obj(
+        "day" -> now.getDayOfMonth.toString,
+        "month" -> now.getMonthValue.toString,
+        "year" -> now.getYear.toString
+      )
+    ),
+    "startDateBeforeLimit" -> false,
+    "tradingStartDate" -> Json.obj(
+      "day" -> now.getDayOfMonth.toString,
+      "month" -> now.getMonthValue.toString,
+      "year" -> now.getYear.toString
+    ),
+    "accountingMethod" -> "Accruals"
+  )
+
+  lazy val fullOverseasPropertyJsonRead: JsObject = Json.obj(
+    "accountingPeriod" -> Json.obj(
+      "startDate" -> Json.obj(
+        "day" -> now.getDayOfMonth.toString,
+        "month" -> now.getMonthValue.toString,
+        "year" -> now.getYear.toString
+      ),
+      "endDate" -> Json.obj(
+        "day" -> now.getDayOfMonth.toString,
+        "month" -> now.getMonthValue.toString,
+        "year" -> now.getYear.toString
+      )
+    ),
+    "tradingStartDate" -> Json.obj(
+      "day" -> now.getDayOfMonth.toString,
+      "month" -> now.getMonthValue.toString,
+      "year" -> now.getYear.toString
+    ),
+    "startDateBeforeLimit" -> false,
+    "accountingMethod" -> "Cash"
+  )
+
+  lazy val fullCreateIncomeSourcesModelJsonRead: JsObject = Json.obj(
+    "nino" -> testNino,
+    "soleTraderBusinesses" -> fullSoleTraderBusinessesJsonRead,
+    "ukProperty" -> fullUkPropertyJsonRead,
+    "overseasProperty" -> fullOverseasPropertyJsonRead
+  )
+
+  lazy val fullCreateIncomeSourcesModelJsonWrite: JsObject = Json.obj(
+    "businessDetails" -> Json.arr(
+      Json.obj(
+        "accountingPeriodStartDate" -> desFormattedNow,
+        "accountingPeriodEndDate" -> desFormattedNow,
+        "tradingStartDate" -> desFormattedNow,
+        "tradingName" -> "testBusinessName",
+        "typeOfBusiness" -> "testBusinessTrade",
+        "cashOrAccrualsFlag" -> Cash.stringValue.toUpperCase,
+        "addressDetails" -> Json.obj(
+          "addressLine1" -> "line 1",
+          "addressLine2" -> "line 2",
+          "postalCode" -> "testPostcode",
+          "countryCode" -> "GB"
+        )
+      )
+    ),
+    "ukPropertyDetails" -> Json.obj(
+      "tradingStartDate" -> desFormattedNow,
+      "cashOrAccrualsFlag" -> Accruals.stringValue.toUpperCase,
+      "startDate" -> desFormattedNow
+    ),
+    "foreignPropertyDetails" -> Json.obj(
+      "tradingStartDate" -> desFormattedNow,
+      "cashOrAccrualsFlag" -> Cash.stringValue.toUpperCase,
+      "startDate" -> desFormattedNow
+    )
+  )
+
+  lazy val fullCreateIncomeSourcesModelJsonWriteMinimal: JsObject = Json.obj(
+    "businessDetails" -> Json.arr(
+      Json.obj(
+        "accountingPeriodStartDate" -> desFormattedNow,
+        "accountingPeriodEndDate" -> desFormattedNow,
+        "tradingStartDate" -> desFormattedNow,
+        "tradingName" -> "testBusinessName",
+        "typeOfBusiness" -> "testBusinessTrade",
+        "cashOrAccrualsFlag" -> Cash.stringValue.toUpperCase,
+        "addressDetails" -> Json.obj(
+          "addressLine1" -> "line 1",
+          "addressLine2" -> "line 2",
+          "countryCode" -> "GB"
+        )
+      )
+    ),
+    "ukPropertyDetails" -> Json.obj(
+      "tradingStartDate" -> desFormattedNow,
+      "cashOrAccrualsFlag" -> Accruals.stringValue.toUpperCase,
+      "startDate" -> desFormattedNow
+    ),
+    "foreignPropertyDetails" -> Json.obj(
+      "tradingStartDate" -> desFormattedNow,
+      "cashOrAccrualsFlag" -> Cash.stringValue.toUpperCase,
+      "startDate" -> desFormattedNow
+    )
+  )
+
+  lazy val fullModelTradingStartDateJsonWrite: JsObject = Json.obj(
+    "mtdbsa" -> mtditid,
+    "businessDetails" -> Json.arr(
+      Json.obj(
+        "accountingPeriodStartDate" -> desFormattedNow,
+        "accountingPeriodEndDate" -> desFormattedNow,
+        "tradingName" -> "testBusinessName",
+        "typeOfBusiness" -> "testBusinessTrade",
+        "cashAccrualsFlag" -> Cash.stringValue.take(1).toUpperCase,
+        "address" -> Json.obj(
+          "addressLine1" -> "line 1",
+          "countryCode" -> "GB",
+          "postcode" -> "testPostcode",
+          "addressLine2" -> "line 2"
+        ),
+        "tradingStartDate" -> desFormattedNow
+      )
+    ),
+    "ukPropertyDetails" -> Json.obj(
+
+      "cashAccrualsFlag" -> Accruals.stringValue.take(1).toUpperCase,
+      "startDate" -> desFormattedNow,
+      "tradingStartDate" -> desFormattedNow
+    ),
+    "foreignPropertyDetails" -> Json.obj(
+
+      "cashAccrualsFlag" -> Cash.stringValue.take(1).toUpperCase,
+      "startDate" -> desFormattedNow,
+      "tradingStartDate" -> desFormattedNow
+
+    )
+  )
+
+  lazy val contextualTaxYear: String = (DateModel.dateConvert(now).getYear + 1).toString
+  lazy val fullModelContextualTaxYearJsonWrite: JsObject = Json.obj(
+    "mtdbsa" -> mtditid,
+    "businessDetails" -> Json.arr(
+      Json.obj(
+        "accountingPeriodStartDate" -> desFormattedNow,
+        "accountingPeriodEndDate" -> desFormattedNow,
+        "tradingName" -> "testBusinessName",
+        "typeOfBusiness" -> "testBusinessTrade",
+        "cashAccrualsFlag" -> Cash.stringValue.take(1).toUpperCase,
+        "address" -> Json.obj(
+          "addressLine1" -> "line 1",
+          "countryCode" -> "GB",
+          "postcode" -> "testPostcode",
+          "addressLine2" -> "line 2"
+        ),
+        "contextualTaxYear" -> contextualTaxYear
+      )
+    ),
+    "ukPropertyDetails" -> Json.obj(
+      "cashAccrualsFlag" -> Accruals.stringValue.take(1).toUpperCase,
+      "startDate" -> desFormattedNow,
+      "contextualTaxYear" -> contextualTaxYear
+    ),
+    "foreignPropertyDetails" -> Json.obj(
+
+      "cashAccrualsFlag" -> Cash.stringValue.take(1).toUpperCase,
+      "startDate" -> desFormattedNow,
+      "contextualTaxYear" -> contextualTaxYear
+
+    )
+  )
 
 }

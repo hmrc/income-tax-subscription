@@ -33,62 +33,7 @@ object CreateIncomeSourcesModel {
     throw new InternalServerException(s"[CreateIncomeSourcesModel] - Unable to create model, $field is missing")
   }
 
-  def desAddressDetailsJson(businessAddressModel: BusinessAddressModel): JsObject = {
-    Json.obj(
-      "addressLine1" -> businessAddressModel.address.lines.headOption.getOrElse(throwError("addressLine1")),
-      "countryCode" -> "GB"
-    ) ++
-      businessAddressModel.address.postcode.map(value => Json.obj("postalCode" -> value)) ++
-      businessAddressModel.address.lines.lift(1).map(value => Json.obj("addressLine2" -> value)) ++
-      businessAddressModel.address.lines.lift(2).map(value => Json.obj("addressLine3" -> value)) ++
-      businessAddressModel.address.lines.lift(3).map(value => Json.obj("addressLine4" -> value))
-  }
-
-  private def desBusinessDetailsJson(soleTraderBusinesses: SoleTraderBusinesses): JsObject = {
-    Json.obj(
-      "businessDetails" -> soleTraderBusinesses.businesses.map { business =>
-        Json.obj(
-          "accountingPeriodStartDate" -> soleTraderBusinesses.accountingPeriod.startDate.toDesDateFormat,
-          "accountingPeriodEndDate" -> soleTraderBusinesses.accountingPeriod.endDate.toDesDateFormat,
-          "tradingName" -> business.businessName.map(_.businessName).getOrElse(throwError("businessName")),
-          "addressDetails" -> business.businessAddress.map(desAddressDetailsJson).getOrElse(throwError("addressDetails")),
-          "typeOfBusiness" -> business.businessTradeName.map(_.businessTradeName).getOrElse(throwError("tradingName")),
-          "tradingStartDate" -> business.businessStartDate.map(_.startDate.toDesDateFormat).getOrElse(throwError("tradingStartDate")),
-          "cashOrAccrualsFlag" -> soleTraderBusinesses.accountingMethod.stringValue.toUpperCase
-        )
-      }
-    )
-  }
-
-  private def desUkPropertyJson(ukProperty: UkProperty): JsObject = {
-    Json.obj(
-      "ukPropertyDetails" -> Json.obj(
-        "tradingStartDate" -> ukProperty.tradingStartDate.toDesDateFormat,
-        "cashOrAccrualsFlag" -> ukProperty.accountingMethod.stringValue.toUpperCase,
-        "startDate" -> ukProperty.accountingPeriod.startDate.toDesDateFormat
-      )
-    )
-  }
-
-  private def desOverseasProperty(overseasProperty: OverseasProperty): JsObject = {
-    Json.obj(
-      "foreignPropertyDetails" -> Json.obj(
-        "tradingStartDate" -> overseasProperty.tradingStartDate.toDesDateFormat,
-        "cashOrAccrualsFlag" -> overseasProperty.accountingMethod.stringValue.toUpperCase,
-        "startDate" -> overseasProperty.accountingPeriod.startDate.toDesDateFormat
-      )
-    )
-  }
-
   implicit val reads: Reads[CreateIncomeSourcesModel] = Json.reads[CreateIncomeSourcesModel]
-
-  def desWrites: OWrites[CreateIncomeSourcesModel] = OWrites { createIncomeSourcesModel =>
-    Json.obj() ++
-      createIncomeSourcesModel.soleTraderBusinesses.map(desBusinessDetailsJson) ++
-      createIncomeSourcesModel.ukProperty.map(desUkPropertyJson) ++
-      createIncomeSourcesModel.overseasProperty.map(desOverseasProperty)
-  }
-
 
   private def startDateOrContextualTaxYear(startDateBeforeLimit: Boolean, startDate: DateModel): JsObject = {
     if (startDateBeforeLimit) {
@@ -98,7 +43,7 @@ object CreateIncomeSourcesModel {
     }
   }
 
-  def addressDetailsJson(businessAddressModel: BusinessAddressModel): JsObject = {
+  private def addressDetailsJson(businessAddressModel: BusinessAddressModel): JsObject = {
     Json.obj(
       "addressLine1" -> businessAddressModel.address.lines.headOption.getOrElse(throwError("addressLine1")),
       "countryCode" -> "GB"

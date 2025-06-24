@@ -16,11 +16,8 @@
 
 package controllers
 
-import config.MicroserviceAppConfig
-import config.featureswitch.{FeatureSwitching, HIPItsaIncomeSource}
 import helpers.ComponentSpecBase
 import helpers.IntegrationTestConstants._
-import helpers.servicemocks.AuditStub.stubAuditing
 import helpers.servicemocks.{AuthStub, CreateIncomeSourceStub}
 import models.subscription._
 import models.subscription.business.{Accruals, Cash}
@@ -31,19 +28,39 @@ import utils.TestConstants.testNino
 
 import java.time.LocalDate
 
+class BusinessIncomeSourcesControllerISpec extends ComponentSpecBase {
 
-class BusinessIncomeSourcesControllerISpec extends ComponentSpecBase with FeatureSwitching {
+  "POST /mis/create/mtditid" when {
+    s"return a $NO_CONTENT response" when {
+      "income sources are successfully submitted" in {
+        AuthStub.stubAuth(OK)
+        CreateIncomeSourceStub.stubItsaIncomeSource(Json.toJson(testCreateIncomeSources)(CreateIncomeSourcesModel.hipWrites(testMtdbsaRef))
+        )(CREATED, testCreateIncomeSuccessBody)
 
-  override def beforeEach(): Unit = {
-    super.beforeEach()
-    disable(HIPItsaIncomeSource)
+        val result: WSResponse = IncomeTaxSubscription.businessIncomeSource(testMtdbsaRef, testCreateIncomeSourcesJson)
+
+        result should have(httpStatus(NO_CONTENT))
+      }
+    }
+    s"return a $INTERNAL_SERVER_ERROR response" when {
+      "the submission of income sources failed" in {
+        AuthStub.stubAuth(OK)
+        CreateIncomeSourceStub.stubItsaIncomeSource(Json.toJson(testCreateIncomeSources)(CreateIncomeSourcesModel.hipWrites(testMtdbsaRef))
+        )(INTERNAL_SERVER_ERROR, testCreateIncomeFailureBody)
+
+        val result: WSResponse = IncomeTaxSubscription.businessIncomeSource(testMtdbsaRef, testCreateIncomeSourcesJson)
+
+        result should have(
+          httpStatus(INTERNAL_SERVER_ERROR),
+          bodyOf("Create Income Sources Failure")
+        )
+      }
+    }
   }
 
-  val appConfig: MicroserviceAppConfig = app.injector.instanceOf[MicroserviceAppConfig]
+  lazy val now: LocalDate = LocalDate.now
 
-  val now: LocalDate = LocalDate.now
-
-  val testCreateIncomeSources: CreateIncomeSourcesModel = CreateIncomeSourcesModel(
+  lazy val testCreateIncomeSources: CreateIncomeSourcesModel = CreateIncomeSourcesModel(
     nino = testNino,
     soleTraderBusinesses = Some(SoleTraderBusinesses(
       accountingPeriod = AccountingPeriodModel(now, now),
@@ -75,7 +92,7 @@ class BusinessIncomeSourcesControllerISpec extends ComponentSpecBase with Featur
     ))
   )
 
-  val testCreateIncomeSourcesJson: JsValue = Json.obj(
+  lazy val testCreateIncomeSourcesJson: JsValue = Json.obj(
     "nino" -> testNino,
     "soleTraderBusinesses" -> Json.obj(
       "accountingPeriod" -> Json.obj(
@@ -164,69 +181,4 @@ class BusinessIncomeSourcesControllerISpec extends ComponentSpecBase with Featur
     )
   )
 
-
-  "POST /mis/create/mtditid" when {
-    "the HIPItsaIncomeSource feature switch is enabled" should {
-      s"return a $NO_CONTENT response" when {
-        "income sources are successfully submitted" in {
-          enable(HIPItsaIncomeSource)
-          AuthStub.stubAuth(OK)
-          CreateIncomeSourceStub.stubItsaIncomeSource(Json.toJson(testCreateIncomeSources)(CreateIncomeSourcesModel.hipWrites(testMtdbsaRef))
-          )(CREATED, testCreateIncomeSuccessBody)
-
-          val result: WSResponse = IncomeTaxSubscription.businessIncomeSource(testMtdbsaRef, testCreateIncomeSourcesJson)
-
-          result should have(httpStatus(NO_CONTENT))
-        }
-      }
-      s"return a $INTERNAL_SERVER_ERROR response" when {
-        "the submission of income sources failed" in {
-          enable(HIPItsaIncomeSource)
-          AuthStub.stubAuth(OK)
-          CreateIncomeSourceStub.stubItsaIncomeSource(Json.toJson(testCreateIncomeSources)(CreateIncomeSourcesModel.hipWrites(testMtdbsaRef))
-          )(INTERNAL_SERVER_ERROR, testCreateIncomeFailureBody)
-
-          val result: WSResponse = IncomeTaxSubscription.businessIncomeSource(testMtdbsaRef, testCreateIncomeSourcesJson)
-
-          result should have(
-            httpStatus(INTERNAL_SERVER_ERROR),
-            bodyOf("Create Income Sources Failure")
-          )
-        }
-      }
-    }
-    "the HIPItsaIncomeSource feature switch is disabled" should {
-      s"return a $NO_CONTENT response" when {
-        "income sources are successfully submitted" in {
-          AuthStub.stubAuth(OK)
-          stubAuditing()
-          CreateIncomeSourceStub.stub(testMtdbsaRef, Json.toJson(testCreateIncomeSources)(CreateIncomeSourcesModel.desWrites), appConfig.desAuthorisationToken, appConfig.desEnvironment)(
-            OK, testCreateIncomeSuccessBody
-          )
-
-          val result: WSResponse = IncomeTaxSubscription.businessIncomeSource(testMtdbsaRef, testCreateIncomeSourcesJson)
-
-          result should have(
-            httpStatus(NO_CONTENT)
-          )
-        }
-      }
-      s"return a $INTERNAL_SERVER_ERROR" when {
-        "the submission of income sources failed" in {
-          AuthStub.stubAuth(OK)
-          stubAuditing()
-          CreateIncomeSourceStub.stub(testMtdbsaRef, Json.toJson(testCreateIncomeSources)(CreateIncomeSourcesModel.desWrites), appConfig.desAuthorisationToken, appConfig.desEnvironment)(
-            INTERNAL_SERVER_ERROR, testCreateIncomeFailureBody
-          )
-
-          val result: WSResponse = IncomeTaxSubscription.businessIncomeSource(testMtdbsaRef, testCreateIncomeSourcesJson)
-
-          result should have(
-            httpStatus(INTERNAL_SERVER_ERROR),
-            bodyOf("Business Income Source Failure")
-          )
-        }
-      }
-    }
-  }
 }

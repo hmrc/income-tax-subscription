@@ -16,7 +16,6 @@
 
 package config
 
-import config.featureswitch.FeatureSwitching
 import play.api.Configuration
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
@@ -30,13 +29,6 @@ trait AppConfig {
   val throttleTimeToLiveSeconds: Int
 
   val mongoUri: String
-
-  def desURL: String
-
-  val desEnvironment: String
-  val desToken: String
-  val desAuthorisationToken: String
-  val desEnvironmentHeader: (String, String)
 
   val itsaIncomeSourceURL: String
   val itsaIncomeSourceAuthorisationToken: String
@@ -59,6 +51,7 @@ trait AppConfig {
   def getITSAStatusAuthorisationToken: String
 
   def signUpServiceURL: String
+
   val signUpServiceAuthorisationToken: String
   val signUpServiceEnvironment: String
 
@@ -110,20 +103,6 @@ class MicroserviceAppConfig @Inject()(servicesConfig: ServicesConfig, val config
   private val prePopBase = "microservice.services.pre-pop"
   override lazy val prePopAuthorisationToken: String = s"Bearer ${loadConfig(s"$prePopBase.authorization-token")}"
   override lazy val prePopEnvironment: String = loadConfig(s"$prePopBase.environment")
-
-  private def desBase =
-    if (FeatureSwitching.isEnabled(featureswitch.StubDESFeature, configuration)) "microservice.services.stub-des"
-    else "microservice.services.des"
-
-  override def desURL: String = loadConfig(s"$desBase.url")
-
-  lazy val desAuthorisationToken: String = s"Bearer ${loadConfig(s"$desBase.authorization-token")}"
-
-  lazy val desEnvironmentHeader: (String, String) =
-    "Environment" -> loadConfig(s"$desBase.environment")
-
-  override lazy val desEnvironment: String = loadConfig(s"$desBase.environment")
-  override lazy val desToken: String = loadConfig(s"$desBase.authorization-token")
 
   lazy val itsaIncomeSourceURL: String = servicesConfig.baseUrl("itsa-income-source")
   lazy val itsaIncomeSourceAuthorisationToken: String = s"Basic ${loadConfig("microservice.services.itsa-income-source.authorization-token")}"
