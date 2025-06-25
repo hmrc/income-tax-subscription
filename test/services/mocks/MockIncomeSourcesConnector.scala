@@ -16,48 +16,28 @@
 
 package services.mocks
 
-import config.AppConfig
+import connectors.ItsaIncomeSourceConnector
 import connectors.mocks.MockHttp
-import connectors.{CreateIncomeSourcesConnector, ItsaIncomeSourceConnector}
 import models.subscription.CreateIncomeSourcesModel
 import org.mockito.ArgumentMatchers
 import org.mockito.Mockito.{reset, when}
 import org.scalatest.Suite
 import org.scalatestplus.mockito.MockitoSugar
-import org.scalatestplus.play.guice.GuiceOneAppPerSuite
-import parsers.CreateIncomeSourceParser.PostIncomeSourceResponse
 import parsers.ITSAIncomeSourceParser.PostITSAIncomeSourceResponse
 import play.api.mvc.Request
-import services.monitoring.AuditService
 import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.Future
 
-trait MockIncomeSourcesConnector extends MockitoSugar with MockHttp with GuiceOneAppPerSuite {
+trait MockIncomeSourcesConnector extends MockitoSugar with MockHttp {
   this: Suite =>
 
   override def beforeEach(): Unit = {
     super.beforeEach()
-    reset(mockIncomeSourcesConnector)
+    reset(mockItsaIncomeSourceConnector)
   }
 
-  val mockIncomeSourcesConnector: CreateIncomeSourcesConnector = mock[CreateIncomeSourcesConnector]
   val mockItsaIncomeSourceConnector: ItsaIncomeSourceConnector = mock[ItsaIncomeSourceConnector]
-  val appConfig: AppConfig = app.injector.instanceOf[AppConfig]
-  val auditService: AuditService = app.injector.instanceOf[AuditService]
-
-  def mockCreateBusinessIncomeSource(agentReferenceNumber: Option[String],
-                                     mtdbsaRef: String,
-                                     createIncomeSource: CreateIncomeSourcesModel)
-                                    (response: PostIncomeSourceResponse): Unit = {
-
-    when(mockIncomeSourcesConnector.createBusinessIncomeSources(
-      ArgumentMatchers.eq(agentReferenceNumber),
-      ArgumentMatchers.eq(mtdbsaRef),
-      ArgumentMatchers.eq(createIncomeSource)
-    )(ArgumentMatchers.any[HeaderCarrier], ArgumentMatchers.any[Request[_]])).thenReturn(Future.successful(response))
-
-  }
 
   def mockCreateIncomeSources(agentReferenceNumber: Option[String], mtdbsaRef: String,
                               createItsaIncomeSourcesModel: CreateIncomeSourcesModel)

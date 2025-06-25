@@ -17,7 +17,6 @@
 package controllers
 
 import common.CommonSpec
-import config.featureswitch.{FeatureSwitching, HIPItsaIncomeSource}
 import models.subscription._
 import models.subscription.business.{Accruals, Cash, CreateIncomeSourceErrorModel, CreateIncomeSourceSuccessModel}
 import play.api.http.Status._
@@ -27,7 +26,6 @@ import play.api.test.FakeRequest
 import play.api.test.Helpers.{contentAsString, defaultAwaitTimeout, status, stubControllerComponents}
 import services.mocks.{MockAuthService, MockIncomeSourcesConnector}
 import uk.gov.hmrc.http.HeaderCarrier
-import utils.MaterializerSupport
 import utils.TestConstants.testNino
 
 import java.time.LocalDate
@@ -35,24 +33,48 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 class BusinessIncomeSourcesControllerSpec extends CommonSpec
-  with MockAuthService with MockIncomeSourcesConnector with MaterializerSupport with FeatureSwitching{
+  with MockAuthService
+  with MockIncomeSourcesConnector {
 
-  override def beforeEach(): Unit = {
-    super.beforeEach()
-    disable(HIPItsaIncomeSource)
+  "createIncomeSource" when {
+    s"return a $NO_CONTENT response" when {
+      "the income sources were successfully submitted" in {
+        mockAgentAuthSuccess()
+        mockCreateIncomeSources(Some(testArn), mtditid, testCreateIncomeSources)(
+          Right(CreateIncomeSourceSuccessModel())
+        )
+
+        val result: Future[Result] = TestController.createIncomeSource(mtditid)(postSaveAndRetrieveRequest)
+
+        status(result) shouldBe NO_CONTENT
+      }
+    }
+    s"return a $INTERNAL_SERVER_ERROR response" when {
+      "there was an error submitting" in {
+        mockAgentAuthSuccess()
+        mockCreateIncomeSources(Some(testArn), mtditid, testCreateIncomeSources)(
+          Left(CreateIncomeSourceErrorModel(INTERNAL_SERVER_ERROR, "error"))
+        )
+
+        val result: Future[Result] = TestController.createIncomeSource(mtditid)(postSaveAndRetrieveRequest)
+
+        status(result) shouldBe INTERNAL_SERVER_ERROR
+        contentAsString(result) shouldBe "Create Income Sources Failure"
+      }
+    }
   }
 
   lazy val mockCC: ControllerComponents = stubControllerComponents()
 
-  object TestController extends BusinessIncomeSourcesController(mockAuthService, mockIncomeSourcesConnector, mockItsaIncomeSourceConnector, mockCC, appConfig)
+  object TestController extends BusinessIncomeSourcesController(mockAuthService, mockItsaIncomeSourceConnector, mockCC)
 
-  implicit val hc: HeaderCarrier = HeaderCarrier()
+  lazy implicit val hc: HeaderCarrier = HeaderCarrier()
 
-  val mtditid: String = "XAIT0000006"
+  lazy val mtditid: String = "XAIT0000006"
 
-  val now: LocalDate = LocalDate.now
+  lazy val now: LocalDate = LocalDate.now
 
-  val testCreateIncomeSources: CreateIncomeSourcesModel = CreateIncomeSourcesModel(
+  lazy val testCreateIncomeSources: CreateIncomeSourcesModel = CreateIncomeSourcesModel(
     nino = testNino,
     soleTraderBusinesses = Some(SoleTraderBusinesses(
       accountingPeriod = AccountingPeriodModel(now, now),
@@ -84,7 +106,7 @@ class BusinessIncomeSourcesControllerSpec extends CommonSpec
     ))
   )
 
-  val testCreateIncomeSourcesJson: JsValue = Json.obj(
+  lazy val testCreateIncomeSourcesJson: JsValue = Json.obj(
     "nino" -> testNino,
     "soleTraderBusinesses" -> Json.obj(
       "accountingPeriod" -> Json.obj(
@@ -173,68 +195,7 @@ class BusinessIncomeSourcesControllerSpec extends CommonSpec
     )
   )
 
-  val postSaveAndRetrieveRequest: Request[JsValue] = FakeRequest().withBody(testCreateIncomeSourcesJson)
+  lazy val postSaveAndRetrieveRequest: Request[JsValue] = FakeRequest().withBody(testCreateIncomeSourcesJson)
 
-  "createIncomeSource" when {
-    "the HIP feature switch is enabled" must {
-      s"return a $NO_CONTENT response" when {
-        "the income sources were successfully submitted" in {
-          enable(HIPItsaIncomeSource)
-
-          mockAgentAuthSuccess()
-          mockCreateIncomeSources(Some(testArn), mtditid, testCreateIncomeSources)(
-            Right(CreateIncomeSourceSuccessModel())
-          )
-
-          val result: Future[Result] = TestController.createIncomeSource(mtditid)(postSaveAndRetrieveRequest)
-
-          status(result) shouldBe NO_CONTENT
-        }
-      }
-      s"return a $INTERNAL_SERVER_ERROR response" when {
-        "there was an error submitting" in {
-          enable(HIPItsaIncomeSource)
-
-          mockAgentAuthSuccess()
-          mockCreateIncomeSources(Some(testArn),mtditid, testCreateIncomeSources)(
-            Left(CreateIncomeSourceErrorModel(INTERNAL_SERVER_ERROR, "error"))
-          )
-
-          val result: Future[Result] = TestController.createIncomeSource(mtditid)(postSaveAndRetrieveRequest)
-
-          status(result) shouldBe INTERNAL_SERVER_ERROR
-          contentAsString(result) shouldBe "Create Income Sources Failure"
-        }
-      }
-    }
-    "the HIP feature switch is disabled" must {
-      s"return a $NO_CONTENT response" when {
-        "the income sources were successfully submitted" in {
-
-          mockAgentAuthSuccess()
-          mockCreateBusinessIncomeSource(Some(testArn), mtditid, testCreateIncomeSources)(
-            Right(CreateIncomeSourceSuccessModel())
-          )
-          val result: Future[Result] = TestController.createIncomeSource(mtditid)(postSaveAndRetrieveRequest)
-          status(result) shouldBe NO_CONTENT
-        }
-      }
-      s"return a $INTERNAL_SERVER_ERROR response" when {
-        "there was an error submitting" in {
-
-          mockAgentAuthSuccess()
-          mockCreateBusinessIncomeSource(Some(testArn), mtditid, testCreateIncomeSources)(
-            Left(CreateIncomeSourceErrorModel(INTERNAL_SERVER_ERROR, "error"))
-          )
-
-          val result: Future[Result] = TestController.createIncomeSource(mtditid)(postSaveAndRetrieveRequest)
-
-          status(result) shouldBe INTERNAL_SERVER_ERROR
-          contentAsString(result) shouldBe "Business Income Source Failure"
-        }
-      }
-    }
-
-  }
 
 }

@@ -21,9 +21,8 @@ import config.featureswitch.{FeatureSwitching, GetNewITSABusinessDetails}
 import helpers.ComponentSpecBase
 import helpers.IntegrationTestConstants._
 import helpers.servicemocks.{AuthStub, BusinessDetailsStub, ITSABusinessDetailsStub}
-import models.frontend.{FEFailureResponse, FESuccessResponse}
+import models.frontend.FESuccessResponse
 import play.api.http.Status._
-import play.api.libs.json.Json
 
 class SubscriptionStatusControllerISpec extends ComponentSpecBase with FeatureSwitching {
 
@@ -164,5 +163,5 @@ class SubscriptionStatusControllerISpec extends ComponentSpecBase with FeatureSw
 
       ITSABusinessDetailsStub.verifyGetITSABusinessDetails()
     }
-}
+  }
 }
