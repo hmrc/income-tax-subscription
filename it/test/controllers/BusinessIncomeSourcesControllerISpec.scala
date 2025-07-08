@@ -17,7 +17,7 @@
 package controllers
 
 import helpers.ComponentSpecBase
-import helpers.IntegrationTestConstants.{testNino, _}
+import helpers.IntegrationTestConstants._
 import helpers.servicemocks.{AuthStub, CreateIncomeSourceStub}
 import models.subscription._
 import play.api.http.Status.{CREATED, INTERNAL_SERVER_ERROR, NO_CONTENT, OK}
