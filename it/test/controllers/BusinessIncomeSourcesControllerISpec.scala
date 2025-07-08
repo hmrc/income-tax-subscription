@@ -17,27 +17,36 @@
 package controllers
 
 import helpers.ComponentSpecBase
-import helpers.IntegrationTestConstants._
+import helpers.IntegrationTestConstants.{testNino, _}
 import helpers.servicemocks.{AuthStub, CreateIncomeSourceStub}
 import models.subscription._
-import models.subscription.business.{Accruals, Cash}
 import play.api.http.Status.{CREATED, INTERNAL_SERVER_ERROR, NO_CONTENT, OK}
 import play.api.libs.json.{JsValue, Json}
 import play.api.libs.ws.WSResponse
-import utils.TestConstants.testNino
 
 import java.time.LocalDate
 
 class BusinessIncomeSourcesControllerISpec extends ComponentSpecBase {
 
-  "POST /mis/create/mtditid" when {
+  "POST /mis/create/mtditid" must {
     s"return a $NO_CONTENT response" when {
-      "income sources are successfully submitted" in {
+      "income sources are successfully submitted" when {
+        "accounting method is present" in {
+          AuthStub.stubAuth(OK)
+          CreateIncomeSourceStub.stubItsaIncomeSource(Json.toJson(testCreateIncomeSources)(CreateIncomeSourcesModel.hipWrites(testMtdbsaRef))
+          )(CREATED, testCreateIncomeSuccessBody)
+
+          val result: WSResponse = IncomeTaxSubscription.businessIncomeSource(testMtdbsaRef, testCreateIncomeSourcesJson)
+
+          result should have(httpStatus(NO_CONTENT))
+        }
+      }
+      "accounting method is not present" in {
         AuthStub.stubAuth(OK)
-        CreateIncomeSourceStub.stubItsaIncomeSource(Json.toJson(testCreateIncomeSources)(CreateIncomeSourcesModel.hipWrites(testMtdbsaRef))
+        CreateIncomeSourceStub.stubItsaIncomeSource(Json.toJson(testCreateIncomeSourcesNoAccountingMethod)(CreateIncomeSourcesModel.hipWrites(testMtdbsaRef))
         )(CREATED, testCreateIncomeSuccessBody)
 
-        val result: WSResponse = IncomeTaxSubscription.businessIncomeSource(testMtdbsaRef, testCreateIncomeSourcesJson)
+        val result: WSResponse = IncomeTaxSubscription.businessIncomeSource(testMtdbsaRef, Json.toJson(testCreateIncomeSourcesNoAccountingMethodJson))
 
         result should have(httpStatus(NO_CONTENT))
       }
@@ -60,11 +69,11 @@ class BusinessIncomeSourcesControllerISpec extends ComponentSpecBase {
 
   lazy val now: LocalDate = LocalDate.now
 
-  lazy val testCreateIncomeSources: CreateIncomeSourcesModel = CreateIncomeSourcesModel(
+  lazy val testCreateIncomeSourcesNoAccountingMethod: CreateIncomeSourcesModel = CreateIncomeSourcesModel(
     nino = testNino,
     soleTraderBusinesses = Some(SoleTraderBusinesses(
       accountingPeriod = AccountingPeriodModel(now, now),
-      accountingMethod = Cash,
+      accountingMethod = None,
       businesses = Seq(
         SelfEmploymentData(
           id = "testBusinessId",
@@ -82,13 +91,13 @@ class BusinessIncomeSourcesControllerISpec extends ComponentSpecBase {
       accountingPeriod = AccountingPeriodModel(now, now),
       startDateBeforeLimit = false,
       tradingStartDate = LocalDate.now,
-      accountingMethod = Accruals
+      accountingMethod = None
     )),
     overseasProperty = Some(OverseasProperty(
       accountingPeriod = AccountingPeriodModel(now, now),
       startDateBeforeLimit = false,
       tradingStartDate = LocalDate.now,
-      accountingMethod = Cash
+      accountingMethod = None
     ))
   )
 
@@ -178,6 +187,92 @@ class BusinessIncomeSourcesControllerISpec extends ComponentSpecBase {
         "year" -> now.getYear.toString
       ),
       "accountingMethod" -> "Cash"
+    )
+  )
+
+  lazy val testCreateIncomeSourcesNoAccountingMethodJson: JsValue = Json.obj(
+    "nino" -> testNino,
+    "soleTraderBusinesses" -> Json.obj(
+      "accountingPeriod" -> Json.obj(
+        "startDate" -> Json.obj(
+          "day" -> now.getDayOfMonth.toString,
+          "month" -> now.getMonthValue.toString,
+          "year" -> now.getYear.toString
+        ),
+        "endDate" -> Json.obj(
+          "day" -> now.getDayOfMonth.toString,
+          "month" -> now.getMonthValue.toString,
+          "year" -> now.getYear.toString
+        )
+      ),
+      "businesses" -> Json.arr(
+        Json.obj(
+          "id" -> "testBusinessId",
+          "businessStartDate" -> Json.obj(
+            "startDate" -> Json.obj(
+              "day" -> now.getDayOfMonth.toString,
+              "month" -> now.getMonthValue.toString,
+              "year" -> now.getYear.toString
+            )
+          ),
+          "businessName" -> Json.obj(
+            "businessName" -> "testBusinessName"
+          ),
+          "businessTradeName" -> Json.obj(
+            "businessTradeName" -> "testBusinessTrade"
+          ),
+          "businessAddress" -> Json.obj(
+            "address" -> Json.obj(
+              "lines" -> Json.arr(
+                "line 1",
+                "line 2"
+              ),
+              "postcode" -> "testPostcode"
+            )
+          ),
+          "startDateBeforeLimit" -> false
+        )
+      )
+    ),
+    "ukProperty" -> Json.obj(
+      "accountingPeriod" -> Json.obj(
+        "startDate" -> Json.obj(
+          "day" -> now.getDayOfMonth.toString,
+          "month" -> now.getMonthValue.toString,
+          "year" -> now.getYear.toString
+        ),
+        "endDate" -> Json.obj(
+          "day" -> now.getDayOfMonth.toString,
+          "month" -> now.getMonthValue.toString,
+          "year" -> now.getYear.toString
+        )
+      ),
+      "startDateBeforeLimit" -> false,
+      "tradingStartDate" -> Json.obj(
+        "day" -> now.getDayOfMonth.toString,
+        "month" -> now.getMonthValue.toString,
+        "year" -> now.getYear.toString
+      )
+    ),
+    "overseasProperty" -> Json.obj(
+      "accountingPeriod" -> Json.obj(
+        "startDate" -> Json.obj(
+          "day" -> now.getDayOfMonth.toString,
+          "month" -> now.getMonthValue.toString,
+          "year" -> now.getYear.toString
+        ),
+        "endDate" -> Json.obj(
+          "day" -> now.getDayOfMonth.toString,
+          "month" -> now.getMonthValue.toString,
+          "year" -> now.getYear.toString
+        )
+      ),
+      "startDateBeforeLimit" -> false,
+      "tradingStartDate" -> Json.obj(
+        "day" -> now.getDayOfMonth.toString,
+        "month" -> now.getMonthValue.toString,
+        "year" -> now.getYear.toString
+      )
     )
   )
 

@@ -62,12 +62,12 @@ object CreateIncomeSourcesModel {
           "accountingPeriodEndDate" -> soleTraderBusinesses.accountingPeriod.endDate.toDesDateFormat,
           "tradingName" -> business.businessName.map(_.businessName).getOrElse(throwError("businessName")),
           "typeOfBusiness" -> business.businessTradeName.map(_.businessTradeName).getOrElse(throwError("tradingName")),
-          "cashAccrualsFlag" -> soleTraderBusinesses.accountingMethod.stringValue.take(1).toUpperCase,
           "address" -> business.businessAddress.map(addressDetailsJson).getOrElse(throwError("address"))
         ) ++ startDateOrContextualTaxYear(
           business.startDateBeforeLimit,
           business.businessStartDate.map(_.startDate).getOrElse(throwError("tradingStartDate"))
-        )
+        ) ++
+          soleTraderBusinesses.accountingMethod.map(value => Json.obj("cashAccrualsFlag" -> value.stringValue.take(1).toUpperCase))
       }
     )
   }
@@ -76,12 +76,12 @@ object CreateIncomeSourcesModel {
     Json.obj(
       "ukPropertyDetails" -> {
         Json.obj(
-          "cashAccrualsFlag" -> ukProperty.accountingMethod.stringValue.take(1).toUpperCase,
           "startDate" -> ukProperty.accountingPeriod.startDate.toDesDateFormat
         ) ++ startDateOrContextualTaxYear(
           ukProperty.startDateBeforeLimit,
           ukProperty.tradingStartDate
-        )
+        ) ++
+          ukProperty.accountingMethod.map(value => Json.obj("cashAccrualsFlag" -> value.stringValue.take(1).toUpperCase))
       }
     )
   }
@@ -90,12 +90,12 @@ object CreateIncomeSourcesModel {
     Json.obj(
       "foreignPropertyDetails" -> {
         Json.obj(
-          "cashAccrualsFlag" -> overseasProperty.accountingMethod.stringValue.take(1).toUpperCase,
           "startDate" -> overseasProperty.accountingPeriod.startDate.toDesDateFormat
         ) ++ startDateOrContextualTaxYear(
           overseasProperty.startDateBeforeLimit,
           overseasProperty.tradingStartDate
-        )
+        ) ++
+          overseasProperty.accountingMethod.map(value => Json.obj("cashAccrualsFlag" -> value.stringValue.take(1).toUpperCase))
       }
     )
   }
@@ -112,7 +112,7 @@ object CreateIncomeSourcesModel {
 }
 
 case class SoleTraderBusinesses(accountingPeriod: AccountingPeriodModel,
-                                accountingMethod: AccountingMethod,
+                                accountingMethod: Option[AccountingMethod],
                                 businesses: Seq[SelfEmploymentData])
 
 object SoleTraderBusinesses {
@@ -122,7 +122,7 @@ object SoleTraderBusinesses {
 case class UkProperty(accountingPeriod: AccountingPeriodModel,
                       startDateBeforeLimit: Boolean,
                       tradingStartDate: DateModel,
-                      accountingMethod: AccountingMethod)
+                      accountingMethod: Option[AccountingMethod])
 
 object UkProperty {
   implicit val reads: Reads[UkProperty] = Json.reads[UkProperty]
@@ -131,7 +131,7 @@ object UkProperty {
 case class OverseasProperty(accountingPeriod: AccountingPeriodModel,
                             startDateBeforeLimit: Boolean,
                             tradingStartDate: DateModel,
-                            accountingMethod: AccountingMethod)
+                            accountingMethod: Option[AccountingMethod])
 
 object OverseasProperty {
   implicit val reads: Reads[OverseasProperty] = Json.reads[OverseasProperty]

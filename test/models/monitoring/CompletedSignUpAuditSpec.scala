@@ -31,7 +31,7 @@ class CompletedSignUpAuditSpec extends CommonSpec with Matchers {
 
   private val testSoleTraderBusinesses = SoleTraderBusinesses(
     accountingPeriod = AccountingPeriodModel(now, now),
-    accountingMethod = Cash,
+    accountingMethod = Some(Cash),
     businesses = Seq(
       SelfEmploymentData(
         id = "testBusinessId",
@@ -50,14 +50,14 @@ class CompletedSignUpAuditSpec extends CommonSpec with Matchers {
     accountingPeriod = AccountingPeriodModel(now, now),
     startDateBeforeLimit = false,
     tradingStartDate = now,
-    accountingMethod = Accruals
+    accountingMethod = Some(Accruals)
   )
 
   private val testOverseasProperty = OverseasProperty(
     accountingPeriod = AccountingPeriodModel(now, now),
     startDateBeforeLimit = false,
     tradingStartDate = now,
-    accountingMethod = Cash
+    accountingMethod = Some(Cash)
   )
 
   "CompletedSignUpAudit" when {
