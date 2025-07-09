@@ -63,25 +63,25 @@ case class CompletedSignUpAudit(agentReferenceNumber: Option[String],
             )
           }
       },
-      "accountingType" -> soleTraderBusinesses.accountingMethod.stringValue.toLowerCase,
       "numberOfBusinesses" -> soleTraderBusinesses.businesses.length.toString
-    )
+    ) ++
+      soleTraderBusinesses.accountingMethod.map(value => Json.obj("accountingType" -> value.stringValue.toLowerCase))
   }
 
   val ukPropertyIncomeSource: Option[JsObject] = createIncomeSourcesModel.ukProperty.map { ukProperty =>
     Json.obj(
       "incomeSource" -> "ukProperty",
-      "commencementDate" -> ukProperty.tradingStartDate.toDesDateFormat,
-      "accountingType" -> ukProperty.accountingMethod.stringValue.toLowerCase
-    )
+      "commencementDate" -> ukProperty.tradingStartDate.toDesDateFormat
+    ) ++
+    ukProperty.accountingMethod.map(value => Json.obj("accountingType" -> value.stringValue.toLowerCase))
   }
 
   val overseasPropertyIncomeSource: Option[JsObject] = createIncomeSourcesModel.overseasProperty.map { overseasProperty =>
     Json.obj(
       "incomeSource" -> "foreignProperty",
-      "commencementDate" -> overseasProperty.tradingStartDate.toDesDateFormat,
-      "accountingType" -> overseasProperty.accountingMethod.stringValue.toLowerCase
-    )
+      "commencementDate" -> overseasProperty.tradingStartDate.toDesDateFormat
+    ) ++
+      overseasProperty.accountingMethod.map(value => Json.obj("accountingType" -> value.stringValue.toLowerCase))
   }
 
   val income: JsArray = Json.arr() ++ soleTraderIncomeSources ++ ukPropertyIncomeSource ++ overseasPropertyIncomeSource

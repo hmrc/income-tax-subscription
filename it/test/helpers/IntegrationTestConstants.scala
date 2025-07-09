@@ -175,7 +175,7 @@ object IntegrationTestConstants extends JsonUtils {
     nino = testNino,
     soleTraderBusinesses = Some(SoleTraderBusinesses(
       accountingPeriod = AccountingPeriodModel(now, now),
-      accountingMethod = Cash,
+      accountingMethod = Some(Cash),
       businesses = Seq(
         SelfEmploymentData(
           id = "testBusinessId",
@@ -193,13 +193,13 @@ object IntegrationTestConstants extends JsonUtils {
       accountingPeriod = AccountingPeriodModel(now, now),
       startDateBeforeLimit = false,
       tradingStartDate = LocalDate.now,
-      accountingMethod = Accruals
+      accountingMethod = Some(Accruals)
     )),
     overseasProperty = Some(OverseasProperty(
       accountingPeriod = AccountingPeriodModel(now, now),
       startDateBeforeLimit = false,
       tradingStartDate = LocalDate.now,
-      accountingMethod = Cash
+      accountingMethod = Some(Cash)
     ))
   )
 

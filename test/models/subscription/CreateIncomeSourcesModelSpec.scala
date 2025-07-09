@@ -60,6 +60,17 @@ class CreateIncomeSourcesModelSpec extends PlaySpec {
         )
         Json.toJson(fullModelWithContextualTaxYear)(CreateIncomeSourcesModel.hipWrites(mtditid)) mustBe fullModelContextualTaxYearJsonWrite
       }
+      "accounting method is not present" in {
+        lazy val fullModelNoAccountingMethod = CreateIncomeSourcesModel(
+          nino = testNino,
+          soleTraderBusinesses = Some(fullSoleTraderBusinesses.copy(
+            accountingMethod = None,
+            businesses = Seq(testSelfEmploymentData.copy(startDateBeforeLimit = true)))),
+          ukProperty = Some(fullUkProperty.copy(startDateBeforeLimit = true, accountingMethod = None)),
+          overseasProperty = Some(fullOverseasProperty.copy(startDateBeforeLimit = true, accountingMethod = None))
+        )
+        Json.toJson(fullModelNoAccountingMethod)(CreateIncomeSourcesModel.hipWrites(mtditid)) mustBe fullModelNoAccountingMethodJsonWrite
+      }
     }
     "return an exception when writing to json" when {
       "addressLine1 is missing in the model" in {
@@ -143,10 +154,6 @@ class CreateIncomeSourcesModelSpec extends PlaySpec {
         Json.fromJson[SoleTraderBusinesses](fullSoleTraderBusinessesJsonRead - "accountingPeriod") mustBe
           JsError(JsPath \ "accountingPeriod", "error.path.missing")
       }
-      "accountingMethod is missing from the json" in {
-        Json.fromJson[SoleTraderBusinesses](fullSoleTraderBusinessesJsonRead - "accountingMethod") mustBe
-          JsError(JsPath \ "accountingMethod", "error.path.missing")
-      }
       "businesses is missing from the json" in {
         Json.fromJson[SoleTraderBusinesses](fullSoleTraderBusinessesJsonRead - "businesses") mustBe
           JsError(JsPath \ "businesses", "error.path.missing")
@@ -167,9 +174,6 @@ class CreateIncomeSourcesModelSpec extends PlaySpec {
       "tradingStartDate is missing from the json" in {
         Json.fromJson[UkProperty](fullUkPropertyJsonRead - "tradingStartDate") mustBe JsError(JsPath \ "tradingStartDate", "error.path.missing")
       }
-      "accountingMethod is missing from the json" in {
-        Json.fromJson[UkProperty](fullUkPropertyJsonRead - "accountingMethod") mustBe JsError(JsPath \ "accountingMethod", "error.path.missing")
-      }
     }
   }
 
@@ -185,9 +189,6 @@ class CreateIncomeSourcesModelSpec extends PlaySpec {
       }
       "tradingStartDate is missing from the json" in {
         Json.fromJson[OverseasProperty](fullOverseasPropertyJsonRead - "tradingStartDate") mustBe JsError(JsPath \ "tradingStartDate", "error.path.missing")
-      }
-      "accountingMethod is missing from the json" in {
-        Json.fromJson[OverseasProperty](fullOverseasPropertyJsonRead - "accountingMethod") mustBe JsError(JsPath \ "accountingMethod", "error.path.missing")
       }
     }
   }
@@ -211,7 +212,7 @@ class CreateIncomeSourcesModelSpec extends PlaySpec {
 
   lazy val fullSoleTraderBusinesses: SoleTraderBusinesses = SoleTraderBusinesses(
     accountingPeriod = AccountingPeriodModel(now, now),
-    accountingMethod = Cash,
+    accountingMethod = Some(Cash),
     businesses = Seq(
       testSelfEmploymentData
     )
@@ -221,14 +222,14 @@ class CreateIncomeSourcesModelSpec extends PlaySpec {
     accountingPeriod = AccountingPeriodModel(now, now),
     startDateBeforeLimit = false,
     tradingStartDate = LocalDate.now,
-    accountingMethod = Accruals
+    accountingMethod = Some(Accruals)
   )
 
   lazy val fullOverseasProperty: OverseasProperty = OverseasProperty(
     accountingPeriod = AccountingPeriodModel(now, now),
     startDateBeforeLimit = false,
     tradingStartDate = LocalDate.now,
-    accountingMethod = Cash
+    accountingMethod = Some(Cash)
   )
 
   lazy val fullCreateIncomeSourcesModel: CreateIncomeSourcesModel = CreateIncomeSourcesModel(
@@ -279,6 +280,27 @@ class CreateIncomeSourcesModelSpec extends PlaySpec {
         ),
         "startDateBeforeLimit" -> false
       )
+    )
+  )
+
+  lazy val ukPropertyNoAccountingMethodJsonRead: JsObject = Json.obj(
+    "accountingPeriod" -> Json.obj(
+      "startDate" -> Json.obj(
+        "day" -> now.getDayOfMonth.toString,
+        "month" -> now.getMonthValue.toString,
+        "year" -> now.getYear.toString
+      ),
+      "endDate" -> Json.obj(
+        "day" -> now.getDayOfMonth.toString,
+        "month" -> now.getMonthValue.toString,
+        "year" -> now.getYear.toString
+      )
+    ),
+    "startDateBeforeLimit" -> false,
+    "tradingStartDate" -> Json.obj(
+      "day" -> now.getDayOfMonth.toString,
+      "month" -> now.getMonthValue.toString,
+      "year" -> now.getYear.toString
     )
   )
 
@@ -448,8 +470,34 @@ class CreateIncomeSourcesModelSpec extends PlaySpec {
       "contextualTaxYear" -> contextualTaxYear
     ),
     "foreignPropertyDetails" -> Json.obj(
-
       "cashAccrualsFlag" -> Cash.stringValue.take(1).toUpperCase,
+      "startDate" -> desFormattedNow,
+      "contextualTaxYear" -> contextualTaxYear
+
+    )
+  )
+  lazy val fullModelNoAccountingMethodJsonWrite: JsObject = Json.obj(
+    "mtdbsa" -> mtditid,
+    "businessDetails" -> Json.arr(
+      Json.obj(
+        "accountingPeriodStartDate" -> desFormattedNow,
+        "accountingPeriodEndDate" -> desFormattedNow,
+        "tradingName" -> "testBusinessName",
+        "typeOfBusiness" -> "testBusinessTrade",
+        "address" -> Json.obj(
+          "addressLine1" -> "line 1",
+          "countryCode" -> "GB",
+          "postcode" -> "testPostcode",
+          "addressLine2" -> "line 2"
+        ),
+        "contextualTaxYear" -> contextualTaxYear
+      )
+    ),
+    "ukPropertyDetails" -> Json.obj(
+      "startDate" -> desFormattedNow,
+      "contextualTaxYear" -> contextualTaxYear
+    ),
+    "foreignPropertyDetails" -> Json.obj(
       "startDate" -> desFormattedNow,
       "contextualTaxYear" -> contextualTaxYear
 

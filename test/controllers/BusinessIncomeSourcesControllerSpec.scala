@@ -78,7 +78,7 @@ class BusinessIncomeSourcesControllerSpec extends CommonSpec
     nino = testNino,
     soleTraderBusinesses = Some(SoleTraderBusinesses(
       accountingPeriod = AccountingPeriodModel(now, now),
-      accountingMethod = Cash,
+      accountingMethod = Some(Cash),
       businesses = Seq(
         SelfEmploymentData(
           id = "testBusinessId",
@@ -96,13 +96,13 @@ class BusinessIncomeSourcesControllerSpec extends CommonSpec
       accountingPeriod = AccountingPeriodModel(now, now),
       startDateBeforeLimit = false,
       tradingStartDate = LocalDate.now,
-      accountingMethod = Accruals
+      accountingMethod = Some(Accruals)
     )),
     overseasProperty = Some(OverseasProperty(
       accountingPeriod = AccountingPeriodModel(now, now),
       startDateBeforeLimit = false,
       tradingStartDate = LocalDate.now,
-      accountingMethod = Cash
+      accountingMethod = Some(Cash)
     ))
   )
 
