@@ -17,7 +17,9 @@
 package controllers
 
 import common.Constants.hmrcAsAgent
+import config.AppConfig
 import connectors.PrePopConnector
+import connectors.hip.HipPrePopConnector
 import models.PrePopAuditModel
 import play.api.Logging
 import play.api.libs.json.Json
@@ -25,6 +27,7 @@ import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import services.AuthService
 import services.monitoring.AuditService
 import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals.allEnrolments
+import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
 import javax.inject.{Inject, Singleton}
@@ -34,11 +37,13 @@ import scala.concurrent.{ExecutionContext, Future}
 class PrePopController @Inject()(authService: AuthService,
                                  auditService: AuditService,
                                  prePopConnector: PrePopConnector,
+                                 hipPrePopConnector: HipPrePopConnector,
+                                 appConfig: AppConfig,
                                  cc: ControllerComponents)(implicit ec: ExecutionContext) extends BackendController(cc) with Logging {
 
   def prePop(nino: String): Action[AnyContent] = Action.async { implicit request =>
     authService.authorised().retrieve(allEnrolments) { allEnrolments =>
-      prePopConnector.getPrePopData(nino) flatMap {
+      getPrePopData(nino) flatMap {
         case Right(value) =>
           val agentReferenceNumber: Option[String] = allEnrolments.getEnrolment(hmrcAsAgent).flatMap(_.identifiers.headOption).map(_.value)
           auditService.extendedAudit(PrePopAuditModel(prePopData = value, nino = nino, maybeArn = agentReferenceNumber)) map { _ =>
@@ -51,5 +56,13 @@ class PrePopController @Inject()(authService: AuthService,
     }
   }
 
-
+  private def getPrePopData(
+    nino: String
+  )(implicit hc: HeaderCarrier) = {
+    if (appConfig.useHipForPrePop) {
+      hipPrePopConnector.getPrePopData(nino)
+    } else {
+      prePopConnector.getPrePopData(nino)
+    }
+  }
 }

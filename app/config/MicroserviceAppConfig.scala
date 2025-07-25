@@ -16,6 +16,7 @@
 
 package config
 
+import config.featureswitch.UseHIPForPrePop
 import play.api.Configuration
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
@@ -61,8 +62,9 @@ trait AppConfig {
   val prePopURL: String
   val prePopAuthorisationToken: String
   val prePopEnvironment: String
-}
 
+  val useHipForPrePop: Boolean = false
+}
 
 @Singleton
 class MicroserviceAppConfig @Inject()(servicesConfig: ServicesConfig, val configuration: Configuration) extends AppConfig {
@@ -112,4 +114,7 @@ class MicroserviceAppConfig @Inject()(servicesConfig: ServicesConfig, val config
   lazy val timeToLiveSeconds: Int = loadConfig("mongodb.timeToLiveSeconds").toInt
   lazy val sessionTimeToLiveSeconds: Int = loadConfig("mongodb.sessionTimeToLiveSeconds").toInt
   lazy val throttleTimeToLiveSeconds: Int = loadConfig("mongodb.throttleTimeToLiveSeconds").toInt
+
+  override val useHipForPrePop: Boolean =
+    configuration.getOptional[Boolean](UseHIPForPrePop.name).contains(true)
 }
