@@ -20,7 +20,7 @@ import common.Constants.hmrcAsAgent
 import config.AppConfig
 import connectors.PrePopConnector
 import connectors.hip.HipPrePopConnector
-import models.PrePopAuditModel
+import models.{ErrorModel, PrePopAuditModel, PrePopData}
 import play.api.Logging
 import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
@@ -58,9 +58,16 @@ class PrePopController @Inject()(authService: AuthService,
 
   private def getPrePopData(
     nino: String
-  )(implicit hc: HeaderCarrier) = {
+  )(implicit hc: HeaderCarrier): Future[Either[ErrorModel, PrePopData]] = {
     if (appConfig.useHipForPrePop) {
-      hipPrePopConnector.getPrePopData(nino)
+      hipPrePopConnector.getHipPrePopData(nino).map {
+        case Right(value) => Right(PrePopData(
+          selfEmployment = if (value.isEmpty) None else Some(value.map(_.toPrePopSelfEmployment())),
+          ukPropertyAccountingMethod = None,
+          foreignPropertyAccountingMethod = None
+        ))
+        case Left(error) => Left(error)
+      }
     } else {
       prePopConnector.getPrePopData(nino)
     }

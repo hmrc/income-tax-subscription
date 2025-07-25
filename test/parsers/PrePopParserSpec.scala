@@ -37,7 +37,7 @@ class PrePopParserSpec extends CommonSpec {
               Some("Plumbing"),
               Some(Address(Seq("123 Street"), Some("ZZ1 1ZZ"))),
               Some(DateModel("01", "01", "1900")),
-              Cash
+              Some(Cash)
             ))),
             None,
             None

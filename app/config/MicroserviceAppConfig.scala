@@ -64,6 +64,9 @@ trait AppConfig {
   val prePopEnvironment: String
 
   val useHipForPrePop: Boolean = false
+
+  val hipPrePopURL: String
+  val hipPrePopEnvironment: String
 }
 
 @Singleton
@@ -117,4 +120,12 @@ class MicroserviceAppConfig @Inject()(servicesConfig: ServicesConfig, val config
 
   override val useHipForPrePop: Boolean =
     configuration.getOptional[Boolean](UseHIPForPrePop.name).contains(true)
+
+  private val hipPrePopBase = "microservice.services.hip-pre-pop"
+
+  override lazy val hipPrePopURL: String =
+    servicesConfig.baseUrl("hip-pre-pop")
+
+  override lazy val hipPrePopEnvironment: String =
+    loadConfig(s"$hipPrePopBase.environment")
 }

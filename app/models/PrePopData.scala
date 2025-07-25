@@ -53,7 +53,7 @@ case class PrePopSelfEmployment(name: Option[String],
                                 trade: Option[String],
                                 address: Option[Address],
                                 startDate: Option[DateModel],
-                                accountingMethod: AccountingMethod)
+                                accountingMethod: Option[AccountingMethod])
 
 object PrePopSelfEmployment extends Logging {
 
@@ -92,11 +92,11 @@ object PrePopSelfEmployment extends Logging {
         case dateRegex(year, month, day) => DateModel(day = day, month = month, year = year)
         case invalid => throw new InternalServerException(s"[PrePopSelfEmployment] - Could not parse date received from api. Received: $invalid")
       },
-      accountingMethod = accountingMethod match {
+      accountingMethod = Some(accountingMethod match {
         case "A" => Accruals
         case "C" => Cash
         case method => throw new InternalServerException(s"[PrePopSelfEmployment] - Could not parse accounting method from api. Received: $method")
-      }
+      })
     )
   }
 

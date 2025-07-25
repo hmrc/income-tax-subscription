@@ -35,7 +35,7 @@ class PrePopAuditModelSpec extends PlaySpec {
           postcode = Some("ZZ1 1ZZ")
         )),
         startDate = Some(DateModel("12", "12", "1980")),
-        accountingMethod = Cash
+        accountingMethod = Some(Cash)
       )
     )),
     ukPropertyAccountingMethod = Some(Cash),

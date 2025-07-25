@@ -17,29 +17,36 @@
 package connectors.hip
 
 import config.AppConfig
-import parsers.PrePopParser.{GetPrePopResponse, GetPrePopResponseHttpReads}
+import parsers.hip.HipPrePopParser.{GetHipPrePopResponse, GetHipPrePopResponseHttpReads}
 import uk.gov.hmrc.http.{Authorization, HeaderCarrier, HeaderNames, HttpClient, HttpReads}
 
+import java.util.UUID
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class HipPrePopConnector @Inject()(http: HttpClient,
-                                   appConfig: AppConfig)(implicit ec: ExecutionContext) {
+class HipPrePopConnector @Inject()(
+  http: HttpClient,
+  appConfig: AppConfig
+)(implicit ec: ExecutionContext) {
 
-  def prepopUrl(nino: String): String = s"${appConfig.prePopURL}/income-tax/pre-prop/$nino"
+  private def hipPrePopUrl(nino: String): String =
+    s"${appConfig.hipPrePopURL}/income-tax/pre-prop/$nino"
 
-  def getPrePopData(nino: String)(implicit hc: HeaderCarrier): Future[GetPrePopResponse] = {
+  def getHipPrePopData(
+    nino: String
+  )(implicit hc: HeaderCarrier): Future[GetHipPrePopResponse] = {
 
     val headerCarrier: HeaderCarrier = hc
       .copy(authorization = Some(Authorization(appConfig.prePopAuthorisationToken)))
-      .withExtraHeaders("Environment" -> appConfig.prePopEnvironment)
+      .withExtraHeaders("Environment" -> appConfig.hipPrePopEnvironment)
+      .withExtraHeaders("correlationId" -> UUID.randomUUID().toString)
 
     val headers: Seq[(String, String)] = Seq(
       HeaderNames.authorisation -> appConfig.prePopAuthorisationToken,
       "Environment" -> appConfig.prePopEnvironment
     )
 
-    http.GET[GetPrePopResponse](prepopUrl(nino), headers = headers)(implicitly[HttpReads[GetPrePopResponse]], headerCarrier, implicitly)
+    http.GET[GetHipPrePopResponse](hipPrePopUrl(nino), headers = headers)(implicitly[HttpReads[GetHipPrePopResponse]], headerCarrier, implicitly)
   }
 }

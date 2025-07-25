@@ -61,6 +61,7 @@ class PrePopControllerSpec extends CommonSpec with MockAuthService {
       ukPropertyAccountingMethod = None,
       foreignPropertyAccountingMethod = None
     )
+    val hipData = Seq.empty
     reset(mockPrePopConnector)
     reset(mockHipPrePopConnector)
     mockRetrievalSuccess[Enrolments](Enrolments(Set(Enrolment(hmrcAsAgent, Seq(EnrolmentIdentifier("AgentReferenceNumber", testArn)), "Activated"))))
@@ -70,8 +71,8 @@ class PrePopControllerSpec extends CommonSpec with MockAuthService {
     when(mockPrePopConnector.getPrePopData(any())(any())).thenReturn(
       Future.successful(Right(data))
     )
-    when(mockHipPrePopConnector.getPrePopData(any())(any())).thenReturn(
-      Future.successful(Right(data))
+    when(mockHipPrePopConnector.getHipPrePopData(any())(any())).thenReturn(
+      Future.successful(Right(hipData))
     )
     when(mockAppConfig.useHipForPrePop).thenReturn(
       useHip
@@ -83,14 +84,14 @@ class PrePopControllerSpec extends CommonSpec with MockAuthService {
       setup(false)
       await(controller.prePop(testNino)(FakeRequest()))
       verify(mockPrePopConnector, times(1)).getPrePopData(any())(any())
-      verify(mockHipPrePopConnector, times(0)).getPrePopData(any())(any())
+      verify(mockHipPrePopConnector, times(0)).getHipPrePopData(any())(any())
     }
 
     "use HIP if feature switch is true" in {
       setup(true)
       await(controller.prePop(testNino)(FakeRequest()))
       verify(mockPrePopConnector, times(0)).getPrePopData(any())(any())
-      verify(mockHipPrePopConnector, times(1)).getPrePopData(any())(any())
+      verify(mockHipPrePopConnector, times(1)).getHipPrePopData(any())(any())
     }
   }
 }
