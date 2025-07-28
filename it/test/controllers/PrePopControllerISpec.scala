@@ -17,7 +17,7 @@
 package controllers
 
 import config.MicroserviceAppConfig
-import config.featureswitch.FeatureSwitching
+import config.featureswitch.{FeatureSwitching, UseHIPForPrePop}
 import helpers.ComponentSpecBase
 import helpers.IntegrationTestConstants._
 import helpers.servicemocks.{AuditStub, AuthStub, PrePopStub, SignUpTaxYearStub}
@@ -44,7 +44,21 @@ class PrePopControllerISpec extends ComponentSpecBase with FeatureSwitching {
     )
   )
 
+  val hipJson = Json.arr(
+    Json.obj("selfEmp" -> Json.obj(
+      "businessName" -> "ABC",
+      "businessDescription" -> "Plumbing"
+    ))
+  )
+
   val writeJson: JsObject = Json.toJsObject(Json.fromJson[PrePopData](readJson).get)
+
+  private def result(fromHip: Boolean) =
+    if (fromHip) {
+      writeJson
+    } else {
+      writeJson
+    }
 
   "PrePopController" should {
     "return a OK response with pre-pop data" in {
@@ -58,15 +72,33 @@ class PrePopControllerISpec extends ComponentSpecBase with FeatureSwitching {
         body = readJson
       )
 
-      val res = IncomeTaxSubscription.getPrePop(testNino)
+//      PrePopStub.stubHipPrePop(testNino)(
+//        appConfig.hipPrePopAuthorisationToken,
+//        appConfig.hipPrePopEnvironment
+//      )(
+//        status = OK,
+//        body = hipJson
+//      )
 
-      res should have(
-        httpStatus(OK),
-        jsonBodyOf(writeJson)
-      )
+      Seq(true).foreach { useHip =>
 
-      AuditStub.verifyAudit()
+        if (useHip) {
+          enable(UseHIPForPrePop)
+        } else {
+          disable(UseHIPForPrePop)
+        }
+
+        val res = IncomeTaxSubscription.getPrePop(testNino)
+
+        res should have(
+          httpStatus(OK),
+          jsonBodyOf(result(useHip))
+        )
+
+        AuditStub.verifyAudit()
+      }
     }
+
     "return an INTERNAL_SERVER_ERROR" when {
       "there was a problem with the pre-pop json from the API" in {
         AuthStub.stubAuth(OK)

@@ -31,22 +31,28 @@ class HipPrePopConnector @Inject()(
 )(implicit ec: ExecutionContext) {
 
   private def hipPrePopUrl(nino: String): String =
-    s"${appConfig.hipPrePopURL}/income-tax/pre-prop/$nino"
+    s"${appConfig.hipPrePopURL}/cesa/prepopulation/businessdata/$nino"
 
   def getHipPrePopData(
     nino: String
   )(implicit hc: HeaderCarrier): Future[GetHipPrePopResponse] = {
 
-    val headerCarrier: HeaderCarrier = hc
-      .copy(authorization = Some(Authorization(appConfig.prePopAuthorisationToken)))
-      .withExtraHeaders("Environment" -> appConfig.hipPrePopEnvironment)
-      .withExtraHeaders("correlationId" -> UUID.randomUUID().toString)
-
-    val headers: Seq[(String, String)] = Seq(
-      HeaderNames.authorisation -> appConfig.prePopAuthorisationToken,
-      "Environment" -> appConfig.prePopEnvironment
+    val headers: Map[String, String] = Map(
+      HeaderNames.authorisation -> appConfig.getITSAStatusAuthorisationToken,
+      "correlationId" -> UUID.randomUUID().toString
     )
 
-    http.GET[GetHipPrePopResponse](hipPrePopUrl(nino), headers = headers)(implicitly[HttpReads[GetHipPrePopResponse]], headerCarrier, implicitly)
+    val headerCarrier: HeaderCarrier = hc
+      .copy(authorization = Some(Authorization(appConfig.hipPrePopAuthorisationToken)))
+      .withExtraHeaders((headers - HeaderNames.authorisation).toSeq: _*)
+
+    http.GET[GetHipPrePopResponse](
+      url = hipPrePopUrl(nino),
+      headers = headers.toSeq
+    )(
+      implicitly[HttpReads[GetHipPrePopResponse]],
+      headerCarrier,
+      implicitly
+    )
   }
 }

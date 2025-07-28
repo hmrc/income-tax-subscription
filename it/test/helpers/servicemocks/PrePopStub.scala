@@ -23,12 +23,31 @@ object PrePopStub extends WireMockMethods {
 
   private def prePopUri(nino: String): String = s"/income-tax/pre-prop/$nino"
 
+  private def hipPrePopUri(nino: String): String =
+    s"/cesa/prepopulation/businessdata/$nino"
+
   def stubPrePop(nino: String)
                 (authorizationHeader: String, environmentHeader: String)
                 (status: Int, body: JsValue): StubMapping = {
     when(
       method = GET,
       uri = prePopUri(nino),
+      headers = Map[String, String](
+        "Authorization" -> authorizationHeader,
+        "Environment" -> environmentHeader
+      )
+    ).thenReturn(status, body)
+
+  }
+
+  def stubHipPrePop
+    (nino: String)
+    (authorizationHeader: String, environmentHeader: String)
+    (status: Int, body: JsValue): StubMapping =
+  {
+    when(
+      method = GET,
+      uri = hipPrePopUri(nino),
       headers = Map[String, String](
         "Authorization" -> authorizationHeader,
         "Environment" -> environmentHeader

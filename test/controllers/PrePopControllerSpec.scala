@@ -21,8 +21,11 @@ import config.MicroserviceAppConfig
 import connectors.PrePopConnector
 import connectors.hip.HipPrePopConnector
 import models.PrePopData
+import models.hip.{SelfEmp, SelfEmpHolder}
 import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito.{reset, times, verify, when}
+import org.scalatest.matchers.must.Matchers.convertToAnyMustWrapper
+import play.api.libs.json.Json
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import services.mocks.MockAuthService
@@ -55,13 +58,23 @@ class PrePopControllerSpec extends CommonSpec with MockAuthService {
     mockCC
   )
 
-  private def setup(useHip: Boolean) = {
-    val data = PrePopData(
-      selfEmployment = None,
-      ukPropertyAccountingMethod = None,
-      foreignPropertyAccountingMethod = None
+  val selfEmp = Seq(SelfEmpHolder(
+    selfEmp = SelfEmp(
+      businessName = Some("ABC Plumbers"),
+      businessDescription = Some("Plumber"),
+      businessAddressFirstLine = Some("1 Hazel Court"),
+      businessAddressPostcode = Some("AB12 3CD"),
+      dateBusinessStarted = Some("2011-08-14")
     )
-    val hipData = Seq.empty
+  ))
+
+  val data = PrePopData(
+    selfEmployment = Some(selfEmp.map(_.toPrePopSelfEmployment())),
+    ukPropertyAccountingMethod = None,
+    foreignPropertyAccountingMethod = None
+  )
+
+  private def setup(useHip: Boolean) = {
     reset(mockPrePopConnector)
     reset(mockHipPrePopConnector)
     mockRetrievalSuccess[Enrolments](Enrolments(Set(Enrolment(hmrcAsAgent, Seq(EnrolmentIdentifier("AgentReferenceNumber", testArn)), "Activated"))))
@@ -72,7 +85,7 @@ class PrePopControllerSpec extends CommonSpec with MockAuthService {
       Future.successful(Right(data))
     )
     when(mockHipPrePopConnector.getHipPrePopData(any())(any())).thenReturn(
-      Future.successful(Right(hipData))
+      Future.successful(Right(selfEmp))
     )
     when(mockAppConfig.useHipForPrePop).thenReturn(
       useHip
@@ -82,14 +95,18 @@ class PrePopControllerSpec extends CommonSpec with MockAuthService {
   "prePop" should {
     "not use HIP if feature switch is false" in {
       setup(false)
-      await(controller.prePop(testNino)(FakeRequest()))
+      val result = controller.prePop(testNino)(FakeRequest())
+      status(result) mustBe OK
+      contentAsJson(result) mustBe Json.toJson(data)
       verify(mockPrePopConnector, times(1)).getPrePopData(any())(any())
       verify(mockHipPrePopConnector, times(0)).getHipPrePopData(any())(any())
     }
 
     "use HIP if feature switch is true" in {
       setup(true)
-      await(controller.prePop(testNino)(FakeRequest()))
+      val result = controller.prePop(testNino)(FakeRequest())
+      status(result) mustBe OK
+      contentAsJson(result) mustBe Json.toJson(data)
       verify(mockPrePopConnector, times(0)).getPrePopData(any())(any())
       verify(mockHipPrePopConnector, times(1)).getHipPrePopData(any())(any())
     }
