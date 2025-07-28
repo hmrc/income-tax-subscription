@@ -17,7 +17,8 @@
 package controllers
 
 import common.CommonSpec
-import config.MicroserviceAppConfig
+import config.{AppConfig, MicroserviceAppConfig}
+import config.featureswitch.{FeatureSwitching, UseHIPForPrePop}
 import connectors.PrePopConnector
 import connectors.hip.HipPrePopConnector
 import models.PrePopData
@@ -38,13 +39,14 @@ import utils.TestConstants.{hmrcAsAgent, testNino}
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class PrePopControllerSpec extends CommonSpec with MockAuthService {
+class PrePopControllerSpec extends CommonSpec with MockAuthService with FeatureSwitching {
 
   private lazy implicit val hc = HeaderCarrier()
 
   private lazy val mockCC = stubControllerComponents()
 
-  private val mockAppConfig = mock[MicroserviceAppConfig]
+  override val appConfig = mock[MicroserviceAppConfig]
+
   private val mockAuditService = mock[AuditService]
   private val mockPrePopConnector = mock[PrePopConnector]
   private val mockHipPrePopConnector = mock[HipPrePopConnector]
@@ -54,7 +56,7 @@ class PrePopControllerSpec extends CommonSpec with MockAuthService {
     mockAuditService,
     mockPrePopConnector,
     mockHipPrePopConnector,
-    mockAppConfig,
+    appConfig,
     mockCC
   )
 
@@ -87,9 +89,11 @@ class PrePopControllerSpec extends CommonSpec with MockAuthService {
     when(mockHipPrePopConnector.getHipPrePopData(any())(any())).thenReturn(
       Future.successful(Right(selfEmp))
     )
-    when(mockAppConfig.useHipForPrePop).thenReturn(
-      useHip
-    )
+    if (useHip) {
+      enable(UseHIPForPrePop)
+    } else {
+      disable(UseHIPForPrePop)
+    }
   }
 
   "prePop" should {

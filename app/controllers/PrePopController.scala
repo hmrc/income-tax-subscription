@@ -18,6 +18,7 @@ package controllers
 
 import common.Constants.hmrcAsAgent
 import config.AppConfig
+import config.featureswitch.{FeatureSwitching, UseHIPForPrePop}
 import connectors.PrePopConnector
 import connectors.hip.HipPrePopConnector
 import models.{ErrorModel, PrePopAuditModel, PrePopData}
@@ -38,8 +39,8 @@ class PrePopController @Inject()(authService: AuthService,
                                  auditService: AuditService,
                                  prePopConnector: PrePopConnector,
                                  hipPrePopConnector: HipPrePopConnector,
-                                 appConfig: AppConfig,
-                                 cc: ControllerComponents)(implicit ec: ExecutionContext) extends BackendController(cc) with Logging {
+                                 val appConfig: AppConfig,
+                                 cc: ControllerComponents)(implicit ec: ExecutionContext) extends BackendController(cc) with Logging with FeatureSwitching {
 
   def prePop(nino: String): Action[AnyContent] = Action.async { implicit request =>
     authService.authorised().retrieve(allEnrolments) { allEnrolments =>
@@ -59,7 +60,7 @@ class PrePopController @Inject()(authService: AuthService,
   private def getPrePopData(
     nino: String
   )(implicit hc: HeaderCarrier): Future[Either[ErrorModel, PrePopData]] = {
-    if (appConfig.useHipForPrePop) {
+    if (isEnabled(UseHIPForPrePop)) {
       hipPrePopConnector.getHipPrePopData(nino).map {
         case Right(value) => Right(PrePopData(
           selfEmployment = if (value.isEmpty) None else Some(value.map(_.toPrePopSelfEmployment())),

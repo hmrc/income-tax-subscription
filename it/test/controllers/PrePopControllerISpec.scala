@@ -53,12 +53,10 @@ class PrePopControllerISpec extends ComponentSpecBase with FeatureSwitching {
 
   val writeJson: JsObject = Json.toJsObject(Json.fromJson[PrePopData](readJson).get)
 
-  private def result(fromHip: Boolean) =
-    if (fromHip) {
-      writeJson
-    } else {
-      writeJson
-    }
+  override def beforeEach(): Unit = {
+    super.beforeEach()
+    disable(UseHIPForPrePop)
+  }
 
   "PrePopController" should {
     "return a OK response with pre-pop data" in {
@@ -72,27 +70,23 @@ class PrePopControllerISpec extends ComponentSpecBase with FeatureSwitching {
         body = readJson
       )
 
-//      PrePopStub.stubHipPrePop(testNino)(
-//        appConfig.hipPrePopAuthorisationToken,
-//        appConfig.hipPrePopEnvironment
-//      )(
-//        status = OK,
-//        body = hipJson
-//      )
+      PrePopStub.stubHipPrePop(testNino)(
+        appConfig.hipPrePopAuthorisationToken,
+        appConfig.hipPrePopEnvironment
+      )(
+        status = OK,
+        body = hipJson
+      )
 
-      Seq(true).foreach { useHip =>
+      Seq(false, true).foreach { useHip =>
 
-        if (useHip) {
-          enable(UseHIPForPrePop)
-        } else {
-          disable(UseHIPForPrePop)
-        }
+        setState(UseHIPForPrePop, useHip)
 
         val res = IncomeTaxSubscription.getPrePop(testNino)
 
         res should have(
           httpStatus(OK),
-          jsonBodyOf(result(useHip))
+          jsonBodyOf(writeJson)
         )
 
         AuditStub.verifyAudit()

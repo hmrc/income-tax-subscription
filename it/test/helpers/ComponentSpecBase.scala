@@ -78,7 +78,9 @@ trait ComponentSpecBase extends AnyWordSpecLike
     "microservice.services.pre-pop.host" -> mockHost,
     "microservice.services.pre-pop.port" -> mockPort,
     "microservice.services.itsa-income-source.host" -> mockHost,
-    "microservice.services.itsa-income-source.port" -> mockPort
+    "microservice.services.itsa-income-source.port" -> mockPort,
+    "microservice.services.hip-pre-pop.host" -> mockHost,
+    "microservice.services.hip-pre-pop.port" -> mockPort
   ) ++ overriddenConfig()
 
   def overriddenConfig(): Map[String, String] = Map.empty
