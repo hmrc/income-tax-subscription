@@ -89,11 +89,7 @@ class PrePopControllerSpec extends CommonSpec with MockAuthService with FeatureS
     when(mockHipPrePopConnector.getHipPrePopData(any())(any())).thenReturn(
       Future.successful(Right(selfEmp))
     )
-    if (useHip) {
-      enable(UseHIPForPrePop)
-    } else {
-      disable(UseHIPForPrePop)
-    }
+    setState(UseHIPForPrePop, useHip)
   }
 
   "prePop" should {
