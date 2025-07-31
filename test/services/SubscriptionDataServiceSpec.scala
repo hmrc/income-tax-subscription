@@ -40,8 +40,6 @@ class SubscriptionDataServiceSpec extends CommonSpec with MockitoSugar with Feat
   val mockServicesConfig: ServicesConfig = mock[ServicesConfig]
   val mockConfiguration: Configuration = mock[Configuration]
 
-  when(mockConfiguration.getOptional(any())(any())).thenReturn(None)
-
   val appConfig = new MicroserviceAppConfig(mockServicesConfig, mockConfiguration)
 
   trait Setup {

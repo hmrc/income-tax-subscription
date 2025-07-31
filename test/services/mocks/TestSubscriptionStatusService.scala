@@ -37,8 +37,6 @@ trait TestSubscriptionStatusService extends MockBusinessDetailsConnector with Mo
   val mockServicesConfig: ServicesConfig = mock[ServicesConfig]
   val mockConfiguration: Configuration = mock[Configuration]
 
-  when(mockConfiguration.getOptional(any())(any())).thenReturn(None)
-
   val mockConfig: MicroserviceAppConfig = new MicroserviceAppConfig(mockServicesConfig, mockConfiguration)
 
   object NewTestSubscriptionStatusService extends SubscriptionStatusService(
