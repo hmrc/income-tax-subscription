@@ -42,7 +42,7 @@ object PrePopStub extends WireMockMethods {
 
   def stubHipPrePop
     (nino: String)
-    (authorizationHeader: String, environmentHeader: String)
+    (authorizationHeader: String)
     (status: Int, body: JsValue): StubMapping =
   {
     when(
@@ -50,7 +50,6 @@ object PrePopStub extends WireMockMethods {
       uri = hipPrePopUri(nino),
       headers = Map[String, String](
         "Authorization" -> authorizationHeader,
-        "Environment" -> environmentHeader
       )
     ).thenReturn(status, body)
 

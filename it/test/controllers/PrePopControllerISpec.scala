@@ -23,7 +23,9 @@ import helpers.IntegrationTestConstants._
 import helpers.servicemocks.{AuditStub, AuthStub, PrePopStub, SignUpTaxYearStub}
 import models.PrePopData
 import models.SignUpResponse.SignUpSuccess
+import models.hip.SelfEmpHolder
 import play.api.http.Status._
+import play.api.libs.json.OFormat.oFormatFromReadsAndOWrites
 import play.api.libs.json.{JsObject, Json}
 
 class PrePopControllerISpec extends ComponentSpecBase with FeatureSwitching {
@@ -53,6 +55,19 @@ class PrePopControllerISpec extends ComponentSpecBase with FeatureSwitching {
 
   val writeJson: JsObject = Json.toJsObject(Json.fromJson[PrePopData](readJson).get)
 
+
+  val writeHipJson: JsObject = Json.obj(
+    "selfEmployment" -> Json.arr(
+      Json.obj(
+        "name" -> "ABC",
+        "trade" -> "Plumbing",
+        "address" -> Json.obj(
+          "lines" -> Json.arr()
+        )
+      )
+    )
+  )
+
   override def beforeEach(): Unit = {
     super.beforeEach()
     disable(UseHIPForPrePop)
@@ -72,7 +87,6 @@ class PrePopControllerISpec extends ComponentSpecBase with FeatureSwitching {
 
       PrePopStub.stubHipPrePop(testNino)(
         appConfig.hipPrePopAuthorisationToken,
-        appConfig.hipPrePopEnvironment
       )(
         status = OK,
         body = hipJson
@@ -84,9 +98,14 @@ class PrePopControllerISpec extends ComponentSpecBase with FeatureSwitching {
 
         val res = IncomeTaxSubscription.getPrePop(testNino)
 
+        val expectedJson = if (useHip)
+          writeHipJson
+        else
+          writeJson
+
         res should have(
           httpStatus(OK),
-          jsonBodyOf(writeJson)
+          jsonBodyOf(expectedJson)
         )
 
         AuditStub.verifyAudit()

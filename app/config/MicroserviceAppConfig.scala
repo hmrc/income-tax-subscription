@@ -64,7 +64,6 @@ trait AppConfig {
   val prePopEnvironment: String
 
   val hipPrePopURL: String
-  val hipPrePopEnvironment: String
 
   def hipPrePopAuthorisationToken: String
 }
@@ -122,9 +121,6 @@ class MicroserviceAppConfig @Inject()(servicesConfig: ServicesConfig, val config
 
   override lazy val hipPrePopURL: String =
     servicesConfig.baseUrl("hip-pre-pop")
-
-  override lazy val hipPrePopEnvironment: String =
-    loadConfig(s"$hipPrePopBase.environment")
 
   override lazy val hipPrePopAuthorisationToken =
     s"Basic ${loadConfig(s"$hipPrePopBase.authorization-token")}"
