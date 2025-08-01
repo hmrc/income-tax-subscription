@@ -42,7 +42,7 @@ class PrePopDataSpec extends PlaySpec with Matchers {
           trade = None,
           address = None,
           startDate = None,
-          accountingMethod = Accruals
+          accountingMethod = Some(Accruals)
         ))
       }
       "trade does not contain a minimum of 2 letters" in {
@@ -55,7 +55,7 @@ class PrePopDataSpec extends PlaySpec with Matchers {
           trade = None,
           address = None,
           startDate = None,
-          accountingMethod = Accruals
+          accountingMethod = Some(Accruals)
         ))
       }
       "trade contains characters which are not allowed" in {
@@ -68,7 +68,7 @@ class PrePopDataSpec extends PlaySpec with Matchers {
           trade = Some("""AZaz09&'/\.,-"""),
           address = None,
           startDate = None,
-          accountingMethod = Accruals
+          accountingMethod = Some(Accruals)
         ))
       }
       "name contains characters which are not allowed" in {
@@ -81,7 +81,7 @@ class PrePopDataSpec extends PlaySpec with Matchers {
           trade = Some("Plumbing"),
           address = None,
           startDate = None,
-          accountingMethod = Accruals
+          accountingMethod = Some(Accruals)
         ))
       }
       "incomplete address with only the first line provided but no postcode" in {
@@ -95,7 +95,7 @@ class PrePopDataSpec extends PlaySpec with Matchers {
           trade = Some("Plumbing"),
           address = None,
           startDate = None,
-          accountingMethod = Accruals
+          accountingMethod = Some(Accruals)
         ))
       }
     }
@@ -150,7 +150,7 @@ class PrePopDataSpec extends PlaySpec with Matchers {
       postcode = Some("ZZ1 1ZZ")
     )),
     startDate = Some(DateModel("01", "01", "1900")),
-    accountingMethod = Accruals
+    accountingMethod = Some(Accruals)
   )
   lazy val selfEmploymentJsonMinimal: JsObject = Json.obj(
     "businessDescription" -> "PL 567",
@@ -165,7 +165,7 @@ class PrePopDataSpec extends PlaySpec with Matchers {
     trade = Some("PL 567"),
     address = None,
     startDate = None,
-    accountingMethod = Cash
+    accountingMethod = Some(Cash)
   )
 
   "PrePopData" should {

@@ -21,6 +21,7 @@ import config.featureswitch.{FeatureSwitch, FeatureSwitching, GetNewITSABusiness
 import connectors.mocks.{MockBusinessDetailsConnector, MockGetITSABusinessDetailsConnector}
 import models.ErrorModel
 import models.frontend.FESuccessResponse
+import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito._
 import org.mockito._
 import org.scalatestplus.mockito.MockitoSugar
@@ -35,6 +36,7 @@ trait TestSubscriptionStatusService extends MockBusinessDetailsConnector with Mo
 
   val mockServicesConfig: ServicesConfig = mock[ServicesConfig]
   val mockConfiguration: Configuration = mock[Configuration]
+
   val mockConfig: MicroserviceAppConfig = new MicroserviceAppConfig(mockServicesConfig, mockConfiguration)
 
   object NewTestSubscriptionStatusService extends SubscriptionStatusService(

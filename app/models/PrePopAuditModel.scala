@@ -48,9 +48,13 @@ case class PrePopAuditModel(prePopData: PrePopData, nino: String, maybeArn: Opti
         val startDate: JsObject = selfEmployment.startDate
           .map(startDate => Json.obj("startDate" -> startDate.toAuditFormat))
           .getOrElse(Json.obj())
-        name ++ description ++ addressFirstLine ++ addressPostcode ++ startDate ++ Json.obj(
-          "accountingMethod" -> selfEmployment.accountingMethod.stringValue
-        )
+        val obj = name ++ description ++ addressFirstLine ++ addressPostcode ++ startDate
+        selfEmployment.accountingMethod match {
+          case Some(value) => obj ++ Json.obj(
+            "accountingMethod" -> value.stringValue
+          )
+          case None => obj
+        }
       }
     )
   }.getOrElse(Json.obj())

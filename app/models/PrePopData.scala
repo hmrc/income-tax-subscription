@@ -53,7 +53,7 @@ case class PrePopSelfEmployment(name: Option[String],
                                 trade: Option[String],
                                 address: Option[Address],
                                 startDate: Option[DateModel],
-                                accountingMethod: AccountingMethod)
+                                accountingMethod: Option[AccountingMethod])
 
 object PrePopSelfEmployment extends Logging {
 
@@ -62,7 +62,7 @@ object PrePopSelfEmployment extends Logging {
   private val tradeMaxLength: Int = 35
   private val tradeMinLetters: Int = 2
 
-  private def fromApi(name: Option[String],
+  def fromApi(name: Option[String],
                       trade: String,
                       addressFirstLine: Option[String],
                       addressPostcode: Option[String],
@@ -93,8 +93,9 @@ object PrePopSelfEmployment extends Logging {
         case invalid => throw new InternalServerException(s"[PrePopSelfEmployment] - Could not parse date received from api. Received: $invalid")
       },
       accountingMethod = accountingMethod match {
-        case "A" => Accruals
-        case "C" => Cash
+        case "A" => Some(Accruals)
+        case "C" => Some(Cash)
+        case "" => None
         case method => throw new InternalServerException(s"[PrePopSelfEmployment] - Could not parse accounting method from api. Received: $method")
       }
     )

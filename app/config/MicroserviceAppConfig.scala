@@ -16,6 +16,7 @@
 
 package config
 
+import config.featureswitch.{FeatureSwitching, UseHIPForPrePop}
 import play.api.Configuration
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
@@ -61,8 +62,11 @@ trait AppConfig {
   val prePopURL: String
   val prePopAuthorisationToken: String
   val prePopEnvironment: String
-}
 
+  val hipPrePopURL: String
+
+  def hipPrePopAuthorisationToken: String
+}
 
 @Singleton
 class MicroserviceAppConfig @Inject()(servicesConfig: ServicesConfig, val configuration: Configuration) extends AppConfig {
@@ -112,4 +116,12 @@ class MicroserviceAppConfig @Inject()(servicesConfig: ServicesConfig, val config
   lazy val timeToLiveSeconds: Int = loadConfig("mongodb.timeToLiveSeconds").toInt
   lazy val sessionTimeToLiveSeconds: Int = loadConfig("mongodb.sessionTimeToLiveSeconds").toInt
   lazy val throttleTimeToLiveSeconds: Int = loadConfig("mongodb.throttleTimeToLiveSeconds").toInt
+
+  private val hipPrePopBase = "microservice.services.hip-pre-pop"
+
+  override lazy val hipPrePopURL: String =
+    servicesConfig.baseUrl("hip-pre-pop")
+
+  override lazy val hipPrePopAuthorisationToken =
+    s"Basic ${loadConfig(s"$hipPrePopBase.authorization-token")}"
 }
