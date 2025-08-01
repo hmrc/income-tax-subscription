@@ -62,7 +62,7 @@ object PrePopSelfEmployment extends Logging {
   private val tradeMaxLength: Int = 35
   private val tradeMinLetters: Int = 2
 
-  private def fromApi(name: Option[String],
+  def fromApi(name: Option[String],
                       trade: String,
                       addressFirstLine: Option[String],
                       addressPostcode: Option[String],
@@ -92,11 +92,12 @@ object PrePopSelfEmployment extends Logging {
         case dateRegex(year, month, day) => DateModel(day = day, month = month, year = year)
         case invalid => throw new InternalServerException(s"[PrePopSelfEmployment] - Could not parse date received from api. Received: $invalid")
       },
-      accountingMethod = Some(accountingMethod match {
-        case "A" => Accruals
-        case "C" => Cash
+      accountingMethod = accountingMethod match {
+        case "A" => Some(Accruals)
+        case "C" => Some(Cash)
+        case "" => None
         case method => throw new InternalServerException(s"[PrePopSelfEmployment] - Could not parse accounting method from api. Received: $method")
-      })
+      }
     )
   }
 

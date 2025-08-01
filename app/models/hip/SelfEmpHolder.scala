@@ -16,9 +16,7 @@
 
 package models.hip
 
-import models.hip.Converter.Utils
-import models.subscription.Address
-import models.{DateModel, PrePopSelfEmployment}
+import models.PrePopSelfEmployment
 import play.api.libs.json.{Json, OFormat}
 
 case class SelfEmpHolder(
@@ -39,30 +37,16 @@ case class SelfEmp(
   businessAddressPostcode: Option[String],
   dateBusinessStarted: Option[String]
 ) {
-  private[models] def toPrePopSelfEmployment(): PrePopSelfEmployment = PrePopSelfEmployment(
+  private[models] def toPrePopSelfEmployment(): PrePopSelfEmployment = PrePopSelfEmployment.fromApi(
     name = businessName,
-    trade = businessDescription,
-    address = Some(Address(
-      lines = Seq(businessAddressFirstLine).flatten,
-      postcode = businessAddressPostcode
-    )),
-    startDate = dateBusinessStarted.toDate(),
-    accountingMethod = None
+    trade = businessDescription.getOrElse(""),
+    addressFirstLine = businessAddressFirstLine,
+    addressPostcode = businessAddressPostcode,
+    startDate = dateBusinessStarted,
+    accountingMethod = ""
   )
 }
 
 object SelfEmp {
   implicit val format: OFormat[SelfEmp] = Json.format[SelfEmp]
-}
-
-object Converter {
-  implicit class Utils(value: Option[String]) {
-    def toDate(): Option[DateModel] = {
-      value.map(date => DateModel(
-        day = date.substring(8, 10),
-        month = date.substring(5, 7),
-        year = date.substring(0, 4)
-      ))
-    }
-  }
 }

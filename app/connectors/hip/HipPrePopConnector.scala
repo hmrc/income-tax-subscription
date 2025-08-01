@@ -38,7 +38,7 @@ class HipPrePopConnector @Inject()(
   )(implicit hc: HeaderCarrier): Future[GetHipPrePopResponse] = {
 
     val headers: Map[String, String] = Map(
-      HeaderNames.authorisation -> appConfig.getITSAStatusAuthorisationToken,
+      HeaderNames.authorisation -> appConfig.hipPrePopAuthorisationToken,
       "correlationId" -> UUID.randomUUID().toString
     )
 

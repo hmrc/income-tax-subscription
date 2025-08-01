@@ -54,10 +54,7 @@ class SelfEmpHolderSpec extends PlaySpec {
     ), empty -> PrePopSelfEmployment(
         name = None,
         trade = None,
-        address = Some(Address(
-          Seq.empty,
-          None
-        )),
+        address = None,
         startDate = None,
         accountingMethod = None
       )

@@ -19,6 +19,8 @@ package helpers.servicemocks
 import com.github.tomakehurst.wiremock.stubbing.StubMapping
 import play.api.libs.json.JsValue
 
+import java.util.UUID
+
 object PrePopStub extends WireMockMethods {
 
   private def prePopUri(nino: String): String = s"/income-tax/pre-prop/$nino"
@@ -50,6 +52,7 @@ object PrePopStub extends WireMockMethods {
       uri = hipPrePopUri(nino),
       headers = Map[String, String](
         "Authorization" -> authorizationHeader,
+        "correlationid" -> "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
       )
     ).thenReturn(status, body)
 
