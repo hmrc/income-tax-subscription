@@ -44,7 +44,6 @@ class HipPrePopConnector @Inject()(
 
     val headerCarrier: HeaderCarrier = hc
       .copy(authorization = Some(Authorization(appConfig.hipPrePopAuthorisationToken)))
-      .withExtraHeaders((headers - HeaderNames.authorisation).toSeq: _*)
 
     http.GET[GetHipPrePopResponse](
       url = hipPrePopUrl(nino),
