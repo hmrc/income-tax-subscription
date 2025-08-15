@@ -17,7 +17,7 @@
 package models.hip
 
 import models.PrePopSelfEmployment
-import play.api.libs.json.{Json, OFormat}
+import play.api.libs.json.{Json, OFormat, OWrites, Reads, __}
 
 case class SelfEmpHolder(
   selfEmp: SelfEmp
@@ -49,4 +49,12 @@ case class SelfEmp(
 
 object SelfEmp {
   implicit val format: OFormat[SelfEmp] = Json.format[SelfEmp]
+}
+
+case class SelfEmpResponse(selfEmp: Seq[SelfEmp])
+
+object SelfEmpResponse {
+  implicit val reads: Reads[SelfEmpResponse] = (__ \ "selfEmp").read[Seq[SelfEmp]].map(SelfEmpResponse(_))
+
+  implicit val writes: OWrites[SelfEmpResponse] = Json.writes[SelfEmpResponse]
 }

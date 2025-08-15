@@ -16,7 +16,7 @@
 
 package parsers.hip
 
-import models.hip.SelfEmpHolder
+import models.hip.{SelfEmpHolder, SelfEmpResponse}
 import models.ErrorModel
 import play.api.Logging
 import play.api.http.Status.{NOT_FOUND, OK, SERVICE_UNAVAILABLE}
@@ -31,8 +31,8 @@ object HipPrePopParser extends Logging {
     override def read(method: String, url: String, response: HttpResponse): GetHipPrePopResponse = {
       response.status match {
         case OK =>
-          response.json.validate[Seq[SelfEmpHolder]] match {
-            case JsSuccess(value, _) => Right(value)
+          response.json.validate[SelfEmpResponse] match {
+            case JsSuccess(value, _) => Right(value.selfEmp.map(SelfEmpHolder(_)))
             case JsError(_) => Left(ErrorModel(OK, s"Failure parsing json response from prepop api"))
           }
         case NOT_FOUND | SERVICE_UNAVAILABLE =>
