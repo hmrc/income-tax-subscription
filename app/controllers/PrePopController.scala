@@ -63,7 +63,7 @@ class PrePopController @Inject()(authService: AuthService,
     if (isEnabled(UseHIPForPrePop)) {
       hipPrePopConnector.getHipPrePopData(nino).map {
         case Right(value) => Right(PrePopData(
-          selfEmployment = if (value.isEmpty) None else Some(value.map(_.toPrePopSelfEmployment())),
+          selfEmployment = if (value.selfEmp.isEmpty) None else Some(value.toPrePopSelfEmployment()),
           ukPropertyAccountingMethod = None,
           foreignPropertyAccountingMethod = None
         ))

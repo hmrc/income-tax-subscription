@@ -17,13 +17,13 @@
 package models.hip
 
 import models.PrePopSelfEmployment
-import play.api.libs.json.{Json, OFormat, OWrites, Reads, __}
+import play.api.libs.json.{Json, OFormat}
 
 case class SelfEmpHolder(
-  selfEmp: SelfEmp
+  selfEmp: Seq[SelfEmp]
 ) {
-  def toPrePopSelfEmployment(): PrePopSelfEmployment =
-    selfEmp.toPrePopSelfEmployment()
+  def toPrePopSelfEmployment(): Seq[PrePopSelfEmployment] =
+    selfEmp.map(_.toPrePopSelfEmployment())
 }
 
 object SelfEmpHolder {
@@ -31,12 +31,12 @@ object SelfEmpHolder {
 }
 
 case class SelfEmp(
-  businessName: Option[String],
-  businessDescription: Option[String],
-  businessAddressFirstLine: Option[String],
-  businessAddressPostcode: Option[String],
-  dateBusinessStarted: Option[String]
-) {
+                    businessName: Option[String],
+                    businessDescription: Option[String],
+                    businessAddressFirstLine: Option[String],
+                    businessAddressPostcode: Option[String],
+                    dateBusinessStarted: Option[String]
+                  ) {
   private[models] def toPrePopSelfEmployment(): PrePopSelfEmployment = PrePopSelfEmployment.fromApi(
     name = businessName,
     trade = businessDescription.getOrElse(""),
@@ -49,12 +49,4 @@ case class SelfEmp(
 
 object SelfEmp {
   implicit val format: OFormat[SelfEmp] = Json.format[SelfEmp]
-}
-
-case class SelfEmpResponse(selfEmp: Seq[SelfEmp])
-
-object SelfEmpResponse {
-  implicit val reads: Reads[SelfEmpResponse] = (__ \ "selfEmp").read[Seq[SelfEmp]].map(SelfEmpResponse(_))
-
-  implicit val writes: OWrites[SelfEmpResponse] = Json.writes[SelfEmpResponse]
 }

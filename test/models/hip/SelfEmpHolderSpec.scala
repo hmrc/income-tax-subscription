@@ -17,46 +17,52 @@
 package models.hip
 
 import models.subscription.Address
-import models.{DateModel, PrePopData, PrePopSelfEmployment}
+import models.{DateModel, PrePopSelfEmployment}
 import org.scalatestplus.play.PlaySpec
 
 class SelfEmpHolderSpec extends PlaySpec {
   "toPrePopSelfEmployment" should {
     val empty = SelfEmpHolder(
-      selfEmp = SelfEmp(
+      selfEmp = Seq(SelfEmp(
         businessName = None,
         businessDescription = None,
         businessAddressFirstLine = None,
         businessAddressPostcode = None,
         dateBusinessStarted = None
-      )
+      ))
     )
 
     val data = SelfEmpHolder(
-      selfEmp = SelfEmp(
+      selfEmp = Seq(SelfEmp(
         businessName = Some("ABC Plumbers"),
         businessDescription = Some("Plumber"),
         businessAddressFirstLine = Some("1 Hazel Court"),
         businessAddressPostcode = Some("AB12 3CD"),
         dateBusinessStarted = Some("2011-08-14")
-      )
+      ))
     )
 
-    val expected = Map(data -> PrePopSelfEmployment(
-      name = Some("ABC Plumbers"),
-      trade = Some("Plumber"),
-      address = Some(Address(
-        Seq("1 Hazel Court"),
-        Some("AB12 3CD")
-      )),
-      startDate = Some(DateModel("14", "08", "2011")),
-      accountingMethod = None
-    ), empty -> PrePopSelfEmployment(
-        name = None,
-        trade = None,
-        address = None,
-        startDate = None,
-        accountingMethod = None
+    val expected: Map[SelfEmpHolder, Seq[PrePopSelfEmployment]] = Map(
+      data -> Seq(
+        PrePopSelfEmployment(
+          name = Some("ABC Plumbers"),
+          trade = Some("Plumber"),
+          address = Some(Address(
+            Seq("1 Hazel Court"),
+            Some("AB12 3CD")
+          )),
+          startDate = Some(DateModel("14", "08", "2011")),
+          accountingMethod = None
+        )
+      ),
+      empty -> Seq(
+        PrePopSelfEmployment(
+          name = None,
+          trade = None,
+          address = None,
+          startDate = None,
+          accountingMethod = None
+        )
       )
     )
 
