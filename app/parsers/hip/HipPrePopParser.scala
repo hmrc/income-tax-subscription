@@ -25,18 +25,18 @@ import uk.gov.hmrc.http.{HttpReads, HttpResponse}
 
 object HipPrePopParser extends Logging {
 
-  type GetHipPrePopResponse = Either[ErrorModel, Seq[SelfEmpHolder]]
+  type GetHipPrePopResponse = Either[ErrorModel, SelfEmpHolder]
 
   implicit object GetHipPrePopResponseHttpReads extends HttpReads[GetHipPrePopResponse] {
     override def read(method: String, url: String, response: HttpResponse): GetHipPrePopResponse = {
       response.status match {
         case OK =>
-          response.json.validate[Seq[SelfEmpHolder]] match {
+          response.json.validate[SelfEmpHolder] match {
             case JsSuccess(value, _) => Right(value)
             case JsError(_) => Left(ErrorModel(OK, s"Failure parsing json response from prepop api"))
           }
         case NOT_FOUND | SERVICE_UNAVAILABLE =>
-          Right(Seq.empty)
+          Right(SelfEmpHolder(Seq.empty))
         case status =>
           logger.error(s"[HipPrePopParser] - Unexpected status from pre-pop API. Status: $status")
           Left(ErrorModel(status, "Unexpected status returned from pre-pop api"))

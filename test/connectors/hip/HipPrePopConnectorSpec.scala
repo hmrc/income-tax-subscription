@@ -44,15 +44,15 @@ class HipPrePopConnectorSpec extends CommonSpec with MockHttp with GuiceOneAppPe
   "getHipPrePopData" should {
     "retrieve prepop data" when {
       "the HIP API #1933 returns a successful response" in {
-        val data = Seq(SelfEmpHolder(
-          selfEmp = SelfEmp(
+        val data: SelfEmpHolder = SelfEmpHolder(
+          selfEmp = Seq(SelfEmp(
             businessName = Some("ABC Plumbers"),
             businessDescription = Some("Plumber"),
             businessAddressFirstLine = Some("1 Hazel Court"),
             businessAddressPostcode = Some("AB12 3CD"),
             dateBusinessStarted = Some("2011-08-14")
-          )
-        ))
+          ))
+        )
 
         when(mockHttpClient.GET[GetHipPrePopResponse](any(), any(), any())(any(), any(), any())).thenReturn(
           Future.successful(Right(data))

@@ -17,13 +17,11 @@
 package parsers.hip
 
 import common.CommonSpec
+import models.ErrorModel
 import models.hip.{SelfEmp, SelfEmpHolder}
-import models.subscription.Address
-import models.subscription.business.Cash
-import models.{DateModel, ErrorModel, PrePopData, PrePopSelfEmployment}
 import parsers.hip.HipPrePopParser.GetHipPrePopResponse
 import play.api.http.Status.{INTERNAL_SERVER_ERROR, NOT_FOUND, OK, SERVICE_UNAVAILABLE}
-import play.api.libs.json.{JsObject, JsValue, Json}
+import play.api.libs.json.{JsValue, Json}
 import uk.gov.hmrc.http.HttpResponse
 
 class HipPrePopParserSpec extends CommonSpec {
@@ -33,14 +31,35 @@ class HipPrePopParserSpec extends CommonSpec {
       "parse pre-pop data successfully" when {
         "valid json is returned" in {
           read(OK, selfEmpJson) shouldBe Right(
-            Seq(SelfEmpHolder(SelfEmp(
+            SelfEmpHolder(Seq(SelfEmp(
               Some("ABC"),
               Some("Plumbing"),
               Some("123 Street"),
               Some("ZZ1 1ZZ"),
               Some("1900-01-01")
-            )),
-          ))
+            ))
+            ))
+        }
+
+        "valid json is returned with multiple businesses" in {
+          read(OK, selfEmpMultipleBusinessesJson) shouldBe Right(
+            SelfEmpHolder(Seq(
+              SelfEmp(
+                Some("ABC"),
+                Some("Plumbing"),
+                Some("123 Street"),
+                Some("ZZ1 1ZZ"),
+                Some("1900-01-01")
+              ),
+              SelfEmp(
+                Some("ABCD"),
+                Some("Recycling"),
+                Some("2 Big Road"),
+                Some("ZZ1 2ZZ"),
+                Some("2018-04-06")
+              ),
+            )
+            ))
         }
       }
 
@@ -53,13 +72,13 @@ class HipPrePopParserSpec extends CommonSpec {
 
     "a NOT_FOUND (404) status is returned" should {
       "return an empty prepop data set" in {
-        read(NOT_FOUND) shouldBe Right(Seq.empty)
+        read(NOT_FOUND) shouldBe Right(SelfEmpHolder(Seq.empty))
       }
     }
 
     "a SERVICE_UNAVAILABLE (503) status is returned" should {
       "return an empty prepop data set" in {
-        read(SERVICE_UNAVAILABLE) shouldBe Right(Seq.empty)
+        read(SERVICE_UNAVAILABLE) shouldBe Right(SelfEmpHolder(Seq.empty))
       }
     }
 
@@ -74,14 +93,35 @@ class HipPrePopParserSpec extends CommonSpec {
     HipPrePopParser.GetHipPrePopResponseHttpReads.read("", "", HttpResponse(status, json.toString()))
   }
 
-  lazy val selfEmpJson = Json.arr(Json.obj(
-    "selfEmp" -> Json.obj(
-      "businessName" -> "ABC",
-      "businessDescription" -> "Plumbing",
-      "businessAddressFirstLine" -> "123 Street",
-      "businessAddressPostcode" -> "ZZ1 1ZZ",
-      "dateBusinessStarted" -> "1900-01-01"
+  lazy val selfEmpJson = Json.obj(
+    "selfEmp" -> Json.arr(
+      Json.obj(
+        "businessName" -> "ABC",
+        "businessDescription" -> "Plumbing",
+        "businessAddressFirstLine" -> "123 Street",
+        "businessAddressPostcode" -> "ZZ1 1ZZ",
+        "dateBusinessStarted" -> "1900-01-01"
+      )
     )
-  ))
+  )
+
+  val selfEmpMultipleBusinessesJson: JsValue = Json.obj(
+    "selfEmp" -> Json.arr(
+      Json.obj(
+        "businessName" -> "ABC",
+        "businessDescription" -> "Plumbing",
+        "businessAddressFirstLine" -> "123 Street",
+        "businessAddressPostcode" -> "ZZ1 1ZZ",
+        "dateBusinessStarted" -> "1900-01-01"
+      ),
+      Json.obj(
+        "businessName" -> "ABCD",
+        "businessDescription" -> "Recycling",
+        "businessAddressFirstLine" -> "2 Big Road",
+        "businessAddressPostcode" -> "ZZ1 2ZZ",
+        "dateBusinessStarted" -> "2018-04-06"
+      )
+    )
+  )
 
 }

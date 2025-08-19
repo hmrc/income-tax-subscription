@@ -20,10 +20,8 @@ import config.MicroserviceAppConfig
 import config.featureswitch.{FeatureSwitching, UseHIPForPrePop}
 import helpers.ComponentSpecBase
 import helpers.IntegrationTestConstants._
-import helpers.servicemocks.{AuditStub, AuthStub, PrePopStub, SignUpTaxYearStub}
+import helpers.servicemocks.{AuditStub, AuthStub, PrePopStub}
 import models.PrePopData
-import models.SignUpResponse.SignUpSuccess
-import models.hip.SelfEmpHolder
 import play.api.http.Status._
 import play.api.libs.json.OFormat.oFormatFromReadsAndOWrites
 import play.api.libs.json.{JsObject, Json}
@@ -46,11 +44,13 @@ class PrePopControllerISpec extends ComponentSpecBase with FeatureSwitching {
     )
   )
 
-  val hipJson = Json.arr(
-    Json.obj("selfEmp" -> Json.obj(
-      "businessName" -> "ABC",
-      "businessDescription" -> "Plumbing"
-    ))
+  val hipJson: JsObject = Json.obj(
+    "selfEmp" -> Json.arr(
+      Json.obj(
+        "businessName" -> "ABC",
+        "businessDescription" -> "Plumbing"
+      )
+    )
   )
 
   val writeJson: JsObject = Json.toJsObject(Json.fromJson[PrePopData](readJson).get)

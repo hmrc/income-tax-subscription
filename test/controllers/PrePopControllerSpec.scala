@@ -60,18 +60,18 @@ class PrePopControllerSpec extends CommonSpec with MockAuthService with FeatureS
     mockCC
   )
 
-  val selfEmp = Seq(SelfEmpHolder(
-    selfEmp = SelfEmp(
-      businessName = Some("ABC Plumbers"),
-      businessDescription = Some("Plumber"),
-      businessAddressFirstLine = Some("1 Hazel Court"),
-      businessAddressPostcode = Some("AB12 3CD"),
-      dateBusinessStarted = Some("2011-08-14")
-    )
-  ))
+  val selfEmp: SelfEmpHolder = SelfEmpHolder(
+    selfEmp = Seq(SelfEmp(
+        businessName = Some("ABC Plumbers"),
+        businessDescription = Some("Plumber"),
+        businessAddressFirstLine = Some("1 Hazel Court"),
+        businessAddressPostcode = Some("AB12 3CD"),
+        dateBusinessStarted = Some("2011-08-14")
+      ))
+  )
 
   val data = PrePopData(
-    selfEmployment = Some(selfEmp.map(_.toPrePopSelfEmployment())),
+    selfEmployment = Some(selfEmp.toPrePopSelfEmployment()),
     ukPropertyAccountingMethod = None,
     foreignPropertyAccountingMethod = None
   )
