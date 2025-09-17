@@ -28,7 +28,7 @@ case class PrePopAuditModel(prePopData: PrePopData, nino: String, maybeArn: Opti
 
   val agentReferenceNumber: JsObject = maybeArn.map(arn => Json.obj("agentReferenceNumber" -> arn)).getOrElse(Json.obj())
 
-  val selfEmployments: JsObject = prePopData.selfEmployment.map { selfEmployments =>
+  private val selfEmployments: JsObject = prePopData.selfEmployment.map { selfEmployments =>
     Json.obj(
       "selfEmployments" -> selfEmployments.map { selfEmployment =>
         val name: JsObject = selfEmployment.name
@@ -48,36 +48,14 @@ case class PrePopAuditModel(prePopData: PrePopData, nino: String, maybeArn: Opti
         val startDate: JsObject = selfEmployment.startDate
           .map(startDate => Json.obj("startDate" -> startDate.toAuditFormat))
           .getOrElse(Json.obj())
-        val obj = name ++ description ++ addressFirstLine ++ addressPostcode ++ startDate
-        selfEmployment.accountingMethod match {
-          case Some(value) => obj ++ Json.obj(
-            "accountingMethod" -> value.stringValue
-          )
-          case None => obj
-        }
+        name ++ description ++ addressFirstLine ++ addressPostcode ++ startDate
       }
-    )
-  }.getOrElse(Json.obj())
-
-  val ukProperty: JsObject = prePopData.ukPropertyAccountingMethod.map { accountingMethod =>
-    Json.obj(
-      "ukProperty" -> Json.obj(
-        "accountingMethod" -> accountingMethod.stringValue
-      )
-    )
-  }.getOrElse(Json.obj())
-
-  val foreignProperty: JsObject = prePopData.foreignPropertyAccountingMethod.map { accountingMethod =>
-    Json.obj(
-      "overseasProperty" -> Json.obj(
-        "accountingMethod" -> accountingMethod.stringValue
-      )
     )
   }.getOrElse(Json.obj())
 
 
   val incomeSources: JsObject = {
-    val allIncomeSources: JsObject = selfEmployments ++ ukProperty ++ foreignProperty
+    val allIncomeSources: JsObject = selfEmployments
 
     if (allIncomeSources.values.nonEmpty) {
       Json.obj("incomeSources" -> allIncomeSources)

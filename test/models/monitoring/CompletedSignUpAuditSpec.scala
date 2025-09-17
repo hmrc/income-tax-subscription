@@ -18,7 +18,6 @@ package models.monitoring
 
 import common.CommonSpec
 import models.subscription._
-import models.subscription.business.{Accruals, Cash}
 import org.scalatest.matchers.should.Matchers
 import play.api.libs.json.Json
 
@@ -31,7 +30,6 @@ class CompletedSignUpAuditSpec extends CommonSpec with Matchers {
 
   private val testSoleTraderBusinesses = SoleTraderBusinesses(
     accountingPeriod = AccountingPeriodModel(now, now),
-    accountingMethod = Some(Cash),
     businesses = Seq(
       SelfEmploymentData(
         id = "testBusinessId",
@@ -49,15 +47,13 @@ class CompletedSignUpAuditSpec extends CommonSpec with Matchers {
   private val testUkProperty = UkProperty(
     accountingPeriod = AccountingPeriodModel(now, now),
     startDateBeforeLimit = false,
-    tradingStartDate = now,
-    accountingMethod = Some(Accruals)
+    tradingStartDate = now
   )
 
   private val testOverseasProperty = OverseasProperty(
     accountingPeriod = AccountingPeriodModel(now, now),
     startDateBeforeLimit = false,
-    tradingStartDate = now,
-    accountingMethod = Some(Cash)
+    tradingStartDate = now
   )
 
   "CompletedSignUpAudit" when {
@@ -100,21 +96,20 @@ class CompletedSignUpAuditSpec extends CommonSpec with Matchers {
       "convert soleTraderIncomeSources to JSON" in {
         testCompletedSignUpAudit.soleTraderIncomeSources shouldBe
           Some(Json.obj(
-          "incomeSource" -> "selfEmployment",
-          "businesses" -> Json.arr(
-            Json.obj(
-              "businessCommencementDate"-> "2021-11-26",
-              "businessTrade" -> "testBusinessTrade",
-              "businessName" -> "testBusinessName",
-              "businessAddress" -> Json.obj(
-                "lines" -> Json.arr("line 1", "line 2"),
-                "postcode" -> "testPostcode"
+            "incomeSource" -> "selfEmployment",
+            "businesses" -> Json.arr(
+              Json.obj(
+                "businessCommencementDate" -> "2021-11-26",
+                "businessTrade" -> "testBusinessTrade",
+                "businessName" -> "testBusinessName",
+                "businessAddress" -> Json.obj(
+                  "lines" -> Json.arr("line 1", "line 2"),
+                  "postcode" -> "testPostcode"
+                )
               )
-            )
-          ),
-          "accountingType" -> "cash",
-          "numberOfBusinesses" -> "1"
-        ))
+            ),
+            "numberOfBusinesses" -> "1"
+          ))
       }
 
       "convert detail to JSON" in {
@@ -127,7 +122,7 @@ class CompletedSignUpAuditSpec extends CommonSpec with Matchers {
               "incomeSource" -> "selfEmployment",
               "businesses" -> Json.arr(
                 Json.obj(
-                  "businessCommencementDate"-> "2021-11-26",
+                  "businessCommencementDate" -> "2021-11-26",
                   "businessTrade" -> "testBusinessTrade",
                   "businessName" -> "testBusinessName",
                   "businessAddress" -> Json.obj(
@@ -136,7 +131,6 @@ class CompletedSignUpAuditSpec extends CommonSpec with Matchers {
                   )
                 )
               ),
-              "accountingType" -> "cash",
               "numberOfBusinesses" -> "1"
             )
           ),
@@ -158,8 +152,7 @@ class CompletedSignUpAuditSpec extends CommonSpec with Matchers {
         testCompletedSignUpAudit.ukPropertyIncomeSource shouldBe
           Some(Json.obj(
             "incomeSource" -> "ukProperty",
-            "commencementDate" -> "2021-11-26",
-            "accountingType" -> "accruals"
+            "commencementDate" -> "2021-11-26"
           ))
       }
 
@@ -170,8 +163,7 @@ class CompletedSignUpAuditSpec extends CommonSpec with Matchers {
           "taxYear" -> "2021-2022",
           "income" -> Json.arr(Json.obj(
             "incomeSource" -> "ukProperty",
-            "commencementDate" -> "2021-11-26",
-            "accountingType" -> "accruals"
+            "commencementDate" -> "2021-11-26"
           )),
           "Authorization" -> "test"
         )
@@ -191,8 +183,7 @@ class CompletedSignUpAuditSpec extends CommonSpec with Matchers {
         testCompletedSignUpAudit.overseasPropertyIncomeSource shouldBe
           Some(Json.obj(
             "incomeSource" -> "foreignProperty",
-            "commencementDate" -> "2021-11-26",
-            "accountingType" -> "cash"
+            "commencementDate" -> "2021-11-26"
           ))
       }
 
@@ -203,8 +194,7 @@ class CompletedSignUpAuditSpec extends CommonSpec with Matchers {
           "taxYear" -> "2021-2022",
           "income" -> Json.arr(Json.obj(
             "incomeSource" -> "foreignProperty",
-            "commencementDate" -> "2021-11-26",
-            "accountingType" -> "cash"
+            "commencementDate" -> "2021-11-26"
           )),
           "Authorization" -> "test"
         )
@@ -212,9 +202,8 @@ class CompletedSignUpAuditSpec extends CommonSpec with Matchers {
     }
   }
 
-  private def getCompletedSignUpAudit(
-   testCreateIncomeSources: CreateIncomeSourcesModel = CreateIncomeSourcesModel(nino = testNino),
-   agentReferenceNumber: Option[String] = None) = {
+  private def getCompletedSignUpAudit(testCreateIncomeSources: CreateIncomeSourcesModel = CreateIncomeSourcesModel(nino = testNino),
+                                      agentReferenceNumber: Option[String] = None) = {
     CompletedSignUpAudit(
       agentReferenceNumber = agentReferenceNumber,
       createIncomeSourcesModel = testCreateIncomeSources,

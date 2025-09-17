@@ -19,13 +19,11 @@ package helpers
 import common.Constants.hmrcAsAgent
 import models.lockout.LockoutRequest
 import models.subscription._
-import models.subscription.business.{Accruals, Cash}
 import models.{DateModel, ErrorModel}
 import play.api.http.Status._
 import play.api.libs.json.{JsValue, Json}
 import uk.gov.hmrc.domain.Generator
 import utils.JsonUtils
-import utils.TestConstants.testNino
 
 import java.time.{Instant, LocalDate}
 import java.util.UUID
@@ -74,10 +72,6 @@ object IntegrationTestConstants extends JsonUtils {
   // mongo uses millis, so we need to get an instant with millis
   val instant = Instant.ofEpochMilli(Instant.now().toEpochMilli)
 
-  val testPropertyIncomeCash = Json.obj("cashAccrualsFlag" -> "C")
-  val testPropertyIncomeAccruals = Json.obj("cashAccrualsFlag" -> "A")
-  val testPropertyIncomeNone = Json.obj()
-
   val lockoutRequest = LockoutRequest(
     timeoutSeconds = 10
   )
@@ -110,6 +104,7 @@ object IntegrationTestConstants extends JsonUtils {
            |""".stripMargin
       )
   }
+
   object GetBusinessDetailsResponse {
     val successResponse: (String, String, String) => JsValue = (nino: String, safeId: String, mtdbsa: String) =>
       s"""{
@@ -148,7 +143,7 @@ object IntegrationTestConstants extends JsonUtils {
     "signupTaxYear" -> taxYear
   )
 
-  def testTaxYearSignUpRequestBodyWithUtr(nino: String, utr: String, taxYear:String): JsValue = Json.obj(
+  def testTaxYearSignUpRequestBodyWithUtr(nino: String, utr: String, taxYear: String): JsValue = Json.obj(
     "nino" -> nino,
     "utr" -> utr,
     "signupTaxYear" -> taxYear
@@ -175,7 +170,6 @@ object IntegrationTestConstants extends JsonUtils {
     nino = testNino,
     soleTraderBusinesses = Some(SoleTraderBusinesses(
       accountingPeriod = AccountingPeriodModel(now, now),
-      accountingMethod = Some(Cash),
       businesses = Seq(
         SelfEmploymentData(
           id = "testBusinessId",
@@ -192,26 +186,24 @@ object IntegrationTestConstants extends JsonUtils {
     ukProperty = Some(UkProperty(
       accountingPeriod = AccountingPeriodModel(now, now),
       startDateBeforeLimit = false,
-      tradingStartDate = LocalDate.now,
-      accountingMethod = Some(Accruals)
+      tradingStartDate = LocalDate.now
     )),
     overseasProperty = Some(OverseasProperty(
       accountingPeriod = AccountingPeriodModel(now, now),
       startDateBeforeLimit = false,
-      tradingStartDate = LocalDate.now,
-      accountingMethod = Some(Cash)
+      tradingStartDate = LocalDate.now
     ))
   )
 
-  def hipTestTaxYearSignUpRequestBodyWithUtr(nino: String, utr: String, taxYear:String): JsValue = Json.parse(
+  def hipTestTaxYearSignUpRequestBodyWithUtr(nino: String, utr: String, taxYear: String): JsValue = Json.parse(
     s"""
-      |{
-      |  "signUpMTDfB": {
-      |    "nino": "$nino",
-      |    "utr": "$utr",
-      |    "signupTaxYear": "$taxYear"
-      |  }
-      |}
+       |{
+       |  "signUpMTDfB": {
+       |    "nino": "$nino",
+       |    "utr": "$utr",
+       |    "signupTaxYear": "$taxYear"
+       |  }
+       |}
     """.stripMargin
   )
 
