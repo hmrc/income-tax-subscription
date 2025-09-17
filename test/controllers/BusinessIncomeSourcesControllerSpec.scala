@@ -18,7 +18,7 @@ package controllers
 
 import common.CommonSpec
 import models.subscription._
-import models.subscription.business.{Accruals, Cash, CreateIncomeSourceErrorModel, CreateIncomeSourceSuccessModel}
+import models.subscription.business.{CreateIncomeSourceErrorModel, CreateIncomeSourceSuccessModel}
 import play.api.http.Status._
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.{ControllerComponents, Request, Result}
@@ -78,7 +78,6 @@ class BusinessIncomeSourcesControllerSpec extends CommonSpec
     nino = testNino,
     soleTraderBusinesses = Some(SoleTraderBusinesses(
       accountingPeriod = AccountingPeriodModel(now, now),
-      accountingMethod = Some(Cash),
       businesses = Seq(
         SelfEmploymentData(
           id = "testBusinessId",
@@ -96,13 +95,11 @@ class BusinessIncomeSourcesControllerSpec extends CommonSpec
       accountingPeriod = AccountingPeriodModel(now, now),
       startDateBeforeLimit = false,
       tradingStartDate = LocalDate.now,
-      accountingMethod = Some(Accruals)
     )),
     overseasProperty = Some(OverseasProperty(
       accountingPeriod = AccountingPeriodModel(now, now),
       startDateBeforeLimit = false,
-      tradingStartDate = LocalDate.now,
-      accountingMethod = Some(Cash)
+      tradingStartDate = LocalDate.now
     ))
   )
 
@@ -121,7 +118,6 @@ class BusinessIncomeSourcesControllerSpec extends CommonSpec
           "year" -> now.getYear.toString
         )
       ),
-      "accountingMethod" -> "Cash",
       "businesses" -> Json.arr(
         Json.obj(
           "id" -> "testBusinessId",
@@ -169,8 +165,7 @@ class BusinessIncomeSourcesControllerSpec extends CommonSpec
         "day" -> now.getDayOfMonth.toString,
         "month" -> now.getMonthValue.toString,
         "year" -> now.getYear.toString
-      ),
-      "accountingMethod" -> "Accruals"
+      )
     ),
     "overseasProperty" -> Json.obj(
       "accountingPeriod" -> Json.obj(
@@ -190,8 +185,7 @@ class BusinessIncomeSourcesControllerSpec extends CommonSpec
         "day" -> now.getDayOfMonth.toString,
         "month" -> now.getMonthValue.toString,
         "year" -> now.getYear.toString
-      ),
-      "accountingMethod" -> "Cash"
+      )
     )
   )
 

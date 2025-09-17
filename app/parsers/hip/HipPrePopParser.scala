@@ -16,8 +16,8 @@
 
 package parsers.hip
 
-import models.hip.SelfEmpHolder
 import models.ErrorModel
+import models.hip.SelfEmpHolder
 import play.api.Logging
 import play.api.http.Status.{NOT_FOUND, OK, SERVICE_UNAVAILABLE}
 import play.api.libs.json.{JsError, JsSuccess}
@@ -36,7 +36,7 @@ object HipPrePopParser extends Logging {
             case JsError(_) => Left(ErrorModel(OK, s"Failure parsing json response from prepop api"))
           }
         case NOT_FOUND | SERVICE_UNAVAILABLE =>
-          Right(SelfEmpHolder(Seq.empty))
+          Right(SelfEmpHolder(None))
         case status =>
           logger.error(s"[HipPrePopParser] - Unexpected status from pre-pop API. Status: $status")
           Left(ErrorModel(status, "Unexpected status returned from pre-pop api"))

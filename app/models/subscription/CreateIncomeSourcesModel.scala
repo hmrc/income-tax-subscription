@@ -17,7 +17,6 @@
 package models.subscription
 
 import models.DateModel
-import models.subscription.business.AccountingMethod
 import play.api.libs.json._
 import uk.gov.hmrc.http.InternalServerException
 import utils.JsonUtils.JsObjectUtil
@@ -66,8 +65,7 @@ object CreateIncomeSourcesModel {
         ) ++ startDateOrContextualTaxYear(
           business.startDateBeforeLimit,
           business.businessStartDate.map(_.startDate).getOrElse(throwError("tradingStartDate"))
-        ) ++
-          soleTraderBusinesses.accountingMethod.map(value => Json.obj("cashAccrualsFlag" -> value.stringValue.take(1).toUpperCase))
+        )
       }
     )
   }
@@ -80,8 +78,7 @@ object CreateIncomeSourcesModel {
         ) ++ startDateOrContextualTaxYear(
           ukProperty.startDateBeforeLimit,
           ukProperty.tradingStartDate
-        ) ++
-          ukProperty.accountingMethod.map(value => Json.obj("cashAccrualsFlag" -> value.stringValue.take(1).toUpperCase))
+        )
       }
     )
   }
@@ -94,8 +91,7 @@ object CreateIncomeSourcesModel {
         ) ++ startDateOrContextualTaxYear(
           overseasProperty.startDateBeforeLimit,
           overseasProperty.tradingStartDate
-        ) ++
-          overseasProperty.accountingMethod.map(value => Json.obj("cashAccrualsFlag" -> value.stringValue.take(1).toUpperCase))
+        )
       }
     )
   }
@@ -112,7 +108,6 @@ object CreateIncomeSourcesModel {
 }
 
 case class SoleTraderBusinesses(accountingPeriod: AccountingPeriodModel,
-                                accountingMethod: Option[AccountingMethod],
                                 businesses: Seq[SelfEmploymentData])
 
 object SoleTraderBusinesses {
@@ -121,8 +116,7 @@ object SoleTraderBusinesses {
 
 case class UkProperty(accountingPeriod: AccountingPeriodModel,
                       startDateBeforeLimit: Boolean,
-                      tradingStartDate: DateModel,
-                      accountingMethod: Option[AccountingMethod])
+                      tradingStartDate: DateModel)
 
 object UkProperty {
   implicit val reads: Reads[UkProperty] = Json.reads[UkProperty]
@@ -130,8 +124,7 @@ object UkProperty {
 
 case class OverseasProperty(accountingPeriod: AccountingPeriodModel,
                             startDateBeforeLimit: Boolean,
-                            tradingStartDate: DateModel,
-                            accountingMethod: Option[AccountingMethod])
+                            tradingStartDate: DateModel)
 
 object OverseasProperty {
   implicit val reads: Reads[OverseasProperty] = Json.reads[OverseasProperty]

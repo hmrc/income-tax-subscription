@@ -16,7 +16,6 @@
 
 package config
 
-import config.featureswitch.{FeatureSwitching, UseHIPForPrePop}
 import play.api.Configuration
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
@@ -59,10 +58,6 @@ trait AppConfig {
   val hipSignUpServiceURL: String
   val hipSignUpServiceAuthorisationToken: String
 
-  val prePopURL: String
-  val prePopAuthorisationToken: String
-  val prePopEnvironment: String
-
   val hipPrePopURL: String
 
   def hipPrePopAuthorisationToken: String
@@ -101,12 +96,6 @@ class MicroserviceAppConfig @Inject()(servicesConfig: ServicesConfig, val config
 
   override lazy val hipSignUpServiceAuthorisationToken: String =
     s"Basic ${loadConfig("microservice.services.hip-signup-tax-year-service.authorization-token")}"
-
-  override lazy val prePopURL: String = servicesConfig.baseUrl("pre-pop")
-
-  private val prePopBase = "microservice.services.pre-pop"
-  override lazy val prePopAuthorisationToken: String = s"Bearer ${loadConfig(s"$prePopBase.authorization-token")}"
-  override lazy val prePopEnvironment: String = loadConfig(s"$prePopBase.environment")
 
   lazy val itsaIncomeSourceURL: String = servicesConfig.baseUrl("itsa-income-source")
   lazy val itsaIncomeSourceAuthorisationToken: String = s"Basic ${loadConfig("microservice.services.itsa-income-source.authorization-token")}"

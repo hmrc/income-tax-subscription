@@ -21,28 +21,32 @@ import models.{DateModel, PrePopSelfEmployment}
 import org.scalatestplus.play.PlaySpec
 
 class SelfEmpHolderSpec extends PlaySpec {
+
   "toPrePopSelfEmployment" should {
+    val nothing = SelfEmpHolder(None)
+
     val empty = SelfEmpHolder(
-      selfEmp = Seq(SelfEmp(
+      selfEmp = Some(Seq(SelfEmp(
         businessName = None,
         businessDescription = None,
         businessAddressFirstLine = None,
         businessAddressPostcode = None,
         dateBusinessStarted = None
-      ))
+      )))
     )
 
     val data = SelfEmpHolder(
-      selfEmp = Seq(SelfEmp(
+      selfEmp = Some(Seq(SelfEmp(
         businessName = Some("ABC Plumbers"),
         businessDescription = Some("Plumber"),
         businessAddressFirstLine = Some("1 Hazel Court"),
         businessAddressPostcode = Some("AB12 3CD"),
         dateBusinessStarted = Some("2011-08-14")
-      ))
+      )))
     )
 
     val expected: Map[SelfEmpHolder, Seq[PrePopSelfEmployment]] = Map(
+      nothing -> Seq(),
       data -> Seq(
         PrePopSelfEmployment(
           name = Some("ABC Plumbers"),
@@ -51,8 +55,7 @@ class SelfEmpHolderSpec extends PlaySpec {
             Seq("1 Hazel Court"),
             Some("AB12 3CD")
           )),
-          startDate = Some(DateModel("14", "08", "2011")),
-          accountingMethod = None
+          startDate = Some(DateModel("14", "08", "2011"))
         )
       ),
       empty -> Seq(
@@ -60,15 +63,14 @@ class SelfEmpHolderSpec extends PlaySpec {
           name = None,
           trade = None,
           address = None,
-          startDate = None,
-          accountingMethod = None
+          startDate = None
         )
       )
     )
 
     "convert HIP propop data to non-HIP prepop data" in {
-      Seq(empty, data).foreach { data =>
-        val actual = Some(data.toPrePopSelfEmployment())
+      Seq(nothing, empty, data).foreach { data =>
+        val actual = Some(data.toPrePopSelfEmployment)
         actual mustBe expected.get(data)
       }
     }

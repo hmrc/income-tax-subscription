@@ -17,7 +17,6 @@
 package models
 
 import models.subscription.Address
-import models.subscription.business.{Accruals, Cash}
 import org.scalatest.matchers.must.Matchers
 import org.scalatestplus.play.PlaySpec
 import play.api.libs.json._
@@ -36,75 +35,62 @@ class PrePopDataSpec extends PlaySpec with Matchers {
         Json.fromJson[PrePopSelfEmployment](Json.obj(
           "businessName" -> "AB 123",
           "businessDescription" -> ("A" * 36),
-          "accountingMethod" -> "A"
         )) mustBe JsSuccess(PrePopSelfEmployment(
           name = Some("AB 123"),
           trade = None,
           address = None,
-          startDate = None,
-          accountingMethod = Some(Accruals)
+          startDate = None
         ))
       }
       "trade does not contain a minimum of 2 letters" in {
         Json.fromJson[PrePopSelfEmployment](Json.obj(
           "businessName" -> "AB 123",
-          "businessDescription" -> "P 383",
-          "accountingMethod" -> "A"
+          "businessDescription" -> "P 383"
         )) mustBe JsSuccess(PrePopSelfEmployment(
           name = Some("AB 123"),
           trade = None,
           address = None,
-          startDate = None,
-          accountingMethod = Some(Accruals)
+          startDate = None
         ))
       }
       "trade contains characters which are not allowed" in {
         Json.fromJson[PrePopSelfEmployment](Json.obj(
           "businessName" -> "AB 123",
-          "businessDescription" -> """!@£$%^*()_+}{":?><~`#§± AZaz09&'/\.,-""",
-          "accountingMethod" -> "A"
+          "businessDescription" -> """!@£$%^*()_+}{":?><~`#§± AZaz09&'/\.,-"""
         )) mustBe JsSuccess(PrePopSelfEmployment(
           name = Some("AB 123"),
           trade = Some("""AZaz09&'/\.,-"""),
           address = None,
-          startDate = None,
-          accountingMethod = Some(Accruals)
+          startDate = None
         ))
       }
       "name contains characters which are not allowed" in {
         Json.fromJson[PrePopSelfEmployment](Json.obj(
           "businessName" -> """!@£$%^*()_+}{":?><~`#§± AZaz09&'/\.,-""",
-          "businessDescription" -> "Plumbing",
-          "accountingMethod" -> "A"
+          "businessDescription" -> "Plumbing"
         )) mustBe JsSuccess(PrePopSelfEmployment(
           name = Some("""AZaz09&'/\.,-"""),
           trade = Some("Plumbing"),
           address = None,
-          startDate = None,
-          accountingMethod = Some(Accruals)
+          startDate = None
         ))
       }
       "incomplete address with only the first line provided but no postcode" in {
         Json.fromJson[PrePopSelfEmployment](Json.obj(
           "businessName" -> "AB 123",
           "businessDescription" -> "Plumbing",
-          "businessAddressFirstLine" -> "1 long road",
-          "accountingMethod" -> "A"
+          "businessAddressFirstLine" -> "1 long road"
         )) mustBe JsSuccess(PrePopSelfEmployment(
           name = Some("AB 123"),
           trade = Some("Plumbing"),
           address = None,
-          startDate = None,
-          accountingMethod = Some(Accruals)
+          startDate = None
         ))
       }
     }
     "fail to read from json" when {
       "business description is missing" in {
         Json.fromJson[PrePopSelfEmployment](selfEmploymentJsonFull - "businessDescription") mustBe JsError(__ \ "businessDescription", "error.path.missing")
-      }
-      "accounting method is missing" in {
-        Json.fromJson[PrePopSelfEmployment](selfEmploymentJsonFull - "accountingMethod") mustBe JsError(__ \ "accountingMethod", "error.path.missing")
       }
     }
 
@@ -123,8 +109,7 @@ class PrePopDataSpec extends PlaySpec with Matchers {
     "businessDescription" -> "EL 987",
     "businessAddressFirstLine" -> "1 long road",
     "businessAddressPostcode" -> "ZZ1 1ZZ",
-    "dateBusinessStarted" -> "1900-01-01",
-    "accountingMethod" -> "A"
+    "dateBusinessStarted" -> "1900-01-01"
   )
   lazy val selfEmploymentJsonWriteFull: JsObject = Json.obj(
     "name" -> "AB 123",
@@ -139,8 +124,7 @@ class PrePopDataSpec extends PlaySpec with Matchers {
       "day" -> "01",
       "month" -> "01",
       "year" -> "1900"
-    ),
-    "accountingMethod" -> Accruals.stringValue
+    )
   )
   lazy val selfEmploymentModelFull: PrePopSelfEmployment = PrePopSelfEmployment(
     name = Some("AB 123"),
@@ -149,23 +133,19 @@ class PrePopDataSpec extends PlaySpec with Matchers {
       lines = Seq("1 long road"),
       postcode = Some("ZZ1 1ZZ")
     )),
-    startDate = Some(DateModel("01", "01", "1900")),
-    accountingMethod = Some(Accruals)
+    startDate = Some(DateModel("01", "01", "1900"))
   )
   lazy val selfEmploymentJsonMinimal: JsObject = Json.obj(
-    "businessDescription" -> "PL 567",
-    "accountingMethod" -> "C"
+    "businessDescription" -> "PL 567"
   )
   lazy val selfEmploymentJsonWriteMinimal: JsObject = Json.obj(
-    "trade" -> "PL 567",
-    "accountingMethod" -> Cash.stringValue
+    "trade" -> "PL 567"
   )
   lazy val selfEmploymentModelMinimal: PrePopSelfEmployment = PrePopSelfEmployment(
     name = None,
     trade = Some("PL 567"),
     address = None,
-    startDate = None,
-    accountingMethod = Some(Cash)
+    startDate = None
   )
 
   "PrePopData" should {
@@ -189,9 +169,7 @@ class PrePopDataSpec extends PlaySpec with Matchers {
           "selfEmployment" -> Json.arr(
             selfEmploymentJsonWriteFull,
             selfEmploymentJsonWriteMinimal
-          ),
-          "ukPropertyAccountingMethod" -> Accruals.stringValue,
-          "foreignPropertyAccountingMethod" -> Cash.stringValue
+          )
         )
       }
       "all optional data values are missing" in {
@@ -204,29 +182,16 @@ class PrePopDataSpec extends PlaySpec with Matchers {
     "selfEmployment" -> Json.arr(
       selfEmploymentJsonFull,
       selfEmploymentJsonMinimal
-    ),
-    "ukProperty" -> Json.obj(
-      "accountingMethod" -> "A"
-    ),
-    "foreignProperty" -> Json.arr(
-      Json.obj(
-        "accountingMethod" -> "C"
-      ),
-      Json.obj(
-        "accountingMethod" -> "A"
-      )
     )
   )
   lazy val prePopDataModelFull: PrePopData = PrePopData(
     selfEmployment = Some(Seq(
       selfEmploymentModelFull,
       selfEmploymentModelMinimal
-    )),
-    ukPropertyAccountingMethod = Some(Accruals),
-    foreignPropertyAccountingMethod = Some(Cash)
+    ))
   )
 
   lazy val prePopDataJsonMinimal: JsObject = Json.obj()
-  lazy val prePopDataModelMinimal: PrePopData = PrePopData(None, None, None)
+  lazy val prePopDataModelMinimal: PrePopData = PrePopData(None)
 
 }

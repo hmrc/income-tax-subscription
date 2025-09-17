@@ -19,11 +19,12 @@ package models.hip
 import models.PrePopSelfEmployment
 import play.api.libs.json.{Json, OFormat}
 
-case class SelfEmpHolder(
-  selfEmp: Seq[SelfEmp]
-) {
-  def toPrePopSelfEmployment(): Seq[PrePopSelfEmployment] =
-    selfEmp.map(_.toPrePopSelfEmployment())
+case class SelfEmpHolder(selfEmp: Option[Seq[SelfEmp]]) {
+  def toPrePopSelfEmployment: Seq[PrePopSelfEmployment] =
+    selfEmp match {
+      case Some(value) => value.map(_.toPrePopSelfEmployment)
+      case None => Seq.empty[PrePopSelfEmployment]
+    }
 }
 
 object SelfEmpHolder {
@@ -37,13 +38,12 @@ case class SelfEmp(
                     businessAddressPostcode: Option[String],
                     dateBusinessStarted: Option[String]
                   ) {
-  private[models] def toPrePopSelfEmployment(): PrePopSelfEmployment = PrePopSelfEmployment.fromApi(
+  private[models] def toPrePopSelfEmployment: PrePopSelfEmployment = PrePopSelfEmployment.fromApi(
     name = businessName,
     trade = businessDescription.getOrElse(""),
     addressFirstLine = businessAddressFirstLine,
     addressPostcode = businessAddressPostcode,
-    startDate = dateBusinessStarted,
-    accountingMethod = ""
+    startDate = dateBusinessStarted
   )
 }
 

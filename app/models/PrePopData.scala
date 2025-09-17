@@ -17,43 +17,24 @@
 package models
 
 import models.subscription.Address
-import models.subscription.business.{AccountingMethod, Accruals, Cash}
-import play.api.libs.functional.syntax.toFunctionalBuilderOps
-import play.api.libs.json.{Json, OWrites, Reads, __}
-import uk.gov.hmrc.http.InternalServerException
 import play.api.Logging
-
+import play.api.libs.functional.syntax.toFunctionalBuilderOps
+import play.api.libs.json._
+import uk.gov.hmrc.http.InternalServerException
 
 import scala.util.matching.Regex
 
 
-case class PrePopData(selfEmployment: Option[Seq[PrePopSelfEmployment]],
-                      ukPropertyAccountingMethod: Option[AccountingMethod],
-                      foreignPropertyAccountingMethod: Option[AccountingMethod])
+case class PrePopData(selfEmployment: Option[Seq[PrePopSelfEmployment]])
 
 object PrePopData {
-
-  private val toAccountingMethod: String => AccountingMethod = {
-    case "C" => Cash
-    case "A" => Accruals
-    case method => throw new InternalServerException(s"[PrePopData] - Could not parse accounting method from api. Received: $method")
-  }
-
-  implicit val reads: Reads[PrePopData] = (
-    (__ \ "selfEmployment").readNullable[Seq[PrePopSelfEmployment]] and
-      (__ \ "ukProperty" \ "accountingMethod").readNullable[String].map(_.map(toAccountingMethod)) and
-      (__ \ "foreignProperty" \ 0 \ "accountingMethod").readNullable[String].map(_.map(toAccountingMethod))
-    )(PrePopData.apply _)
-
-  implicit val writes: OWrites[PrePopData] = Json.writes[PrePopData]
-
+  implicit val format: OFormat[PrePopData] = Json.format[PrePopData]
 }
 
 case class PrePopSelfEmployment(name: Option[String],
                                 trade: Option[String],
                                 address: Option[Address],
-                                startDate: Option[DateModel],
-                                accountingMethod: Option[AccountingMethod])
+                                startDate: Option[DateModel])
 
 object PrePopSelfEmployment extends Logging {
 
@@ -63,11 +44,10 @@ object PrePopSelfEmployment extends Logging {
   private val tradeMinLetters: Int = 2
 
   def fromApi(name: Option[String],
-                      trade: String,
-                      addressFirstLine: Option[String],
-                      addressPostcode: Option[String],
-                      startDate: Option[String],
-                      accountingMethod: String): PrePopSelfEmployment = {
+              trade: String,
+              addressFirstLine: Option[String],
+              addressPostcode: Option[String],
+              startDate: Option[String]): PrePopSelfEmployment = {
 
     // Any characters not defined in this list will be matched on and replaced by single spaces
     val notAllowedCharactersRegex: String = """[^ A-Za-z0-9&'/\\.,-]"""
@@ -91,12 +71,6 @@ object PrePopSelfEmployment extends Logging {
       startDate = startDate map {
         case dateRegex(year, month, day) => DateModel(day = day, month = month, year = year)
         case invalid => throw new InternalServerException(s"[PrePopSelfEmployment] - Could not parse date received from api. Received: $invalid")
-      },
-      accountingMethod = accountingMethod match {
-        case "A" => Some(Accruals)
-        case "C" => Some(Cash)
-        case "" => None
-        case method => throw new InternalServerException(s"[PrePopSelfEmployment] - Could not parse accounting method from api. Received: $method")
       }
     )
   }
@@ -106,8 +80,7 @@ object PrePopSelfEmployment extends Logging {
       (__ \ "businessDescription").read[String] and
       (__ \ "businessAddressFirstLine").readNullable[String] and
       (__ \ "businessAddressPostcode").readNullable[String] and
-      (__ \ "dateBusinessStarted").readNullable[String] and
-      (__ \ "accountingMethod").read[String]
+      (__ \ "dateBusinessStarted").readNullable[String]
     )(PrePopSelfEmployment.fromApi _)
 
   implicit val writes: OWrites[PrePopSelfEmployment] = Json.writes[PrePopSelfEmployment]

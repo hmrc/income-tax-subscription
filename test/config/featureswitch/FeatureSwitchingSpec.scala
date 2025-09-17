@@ -105,31 +105,4 @@ class FeatureSwitchingSpec extends CommonSpec with FeatureSwitching with Mockito
       isEnabled(UseHIPSignUpTaxYearAPI) shouldBe true
     }
   }
-
-  "UseHIPForPrePop" should {
-    "return true if UseHIPForPrePop feature switch is enabled in sys.props" in {
-      enable(UseHIPForPrePop)
-      isEnabled(UseHIPForPrePop) shouldBe true
-    }
-
-    "return false if UseHIPForPrePop feature switch is disabled in sys.props" in {
-      disable(UseHIPForPrePop)
-      isEnabled(UseHIPForPrePop) shouldBe false
-    }
-
-    "return false if UseHIPForPrePop feature switch does not exist" in {
-      when(mockConfig.getOptional[String]("feature-switch.use-hip-for-prepop")).thenReturn(None)
-      isEnabled(UseHIPForPrePop) shouldBe false
-    }
-
-    "return false if UseHIPForPrePop feature switch is not in sys.props but is set to 'off' in config" in {
-      when(mockConfig.getOptional[String]("feature-switch.use-hip-for-prepop")).thenReturn(Some(FEATURE_SWITCH_OFF))
-      isEnabled(UseHIPForPrePop) shouldBe false
-    }
-
-    "return true if UseHIPForPrePop feature switch is not in sys.props but is set to 'on' in config" in {
-      when(mockConfig.getOptional[String]("feature-switch.use-hip-for-prepop")).thenReturn(Some(FEATURE_SWITCH_ON))
-      isEnabled(UseHIPForPrePop) shouldBe true
-    }
-  }
 }

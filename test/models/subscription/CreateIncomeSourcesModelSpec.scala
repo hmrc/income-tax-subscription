@@ -17,7 +17,6 @@
 package models.subscription
 
 import models.DateModel
-import models.subscription.business.{Accruals, Cash}
 import org.scalatestplus.play.PlaySpec
 import play.api.libs.json._
 import uk.gov.hmrc.http.InternalServerException
@@ -59,17 +58,6 @@ class CreateIncomeSourcesModelSpec extends PlaySpec {
           overseasProperty = Some(fullOverseasProperty.copy(startDateBeforeLimit = true))
         )
         Json.toJson(fullModelWithContextualTaxYear)(CreateIncomeSourcesModel.hipWrites(mtditid)) mustBe fullModelContextualTaxYearJsonWrite
-      }
-      "accounting method is not present" in {
-        lazy val fullModelNoAccountingMethod = CreateIncomeSourcesModel(
-          nino = testNino,
-          soleTraderBusinesses = Some(fullSoleTraderBusinesses.copy(
-            accountingMethod = None,
-            businesses = Seq(testSelfEmploymentData.copy(startDateBeforeLimit = true)))),
-          ukProperty = Some(fullUkProperty.copy(startDateBeforeLimit = true, accountingMethod = None)),
-          overseasProperty = Some(fullOverseasProperty.copy(startDateBeforeLimit = true, accountingMethod = None))
-        )
-        Json.toJson(fullModelNoAccountingMethod)(CreateIncomeSourcesModel.hipWrites(mtditid)) mustBe fullModelNoAccountingMethodJsonWrite
       }
     }
     "return an exception when writing to json" when {
@@ -212,7 +200,6 @@ class CreateIncomeSourcesModelSpec extends PlaySpec {
 
   lazy val fullSoleTraderBusinesses: SoleTraderBusinesses = SoleTraderBusinesses(
     accountingPeriod = AccountingPeriodModel(now, now),
-    accountingMethod = Some(Cash),
     businesses = Seq(
       testSelfEmploymentData
     )
@@ -221,15 +208,13 @@ class CreateIncomeSourcesModelSpec extends PlaySpec {
   lazy val fullUkProperty: UkProperty = UkProperty(
     accountingPeriod = AccountingPeriodModel(now, now),
     startDateBeforeLimit = false,
-    tradingStartDate = LocalDate.now,
-    accountingMethod = Some(Accruals)
+    tradingStartDate = LocalDate.now
   )
 
   lazy val fullOverseasProperty: OverseasProperty = OverseasProperty(
     accountingPeriod = AccountingPeriodModel(now, now),
     startDateBeforeLimit = false,
-    tradingStartDate = LocalDate.now,
-    accountingMethod = Some(Cash)
+    tradingStartDate = LocalDate.now
   )
 
   lazy val fullCreateIncomeSourcesModel: CreateIncomeSourcesModel = CreateIncomeSourcesModel(
@@ -252,7 +237,6 @@ class CreateIncomeSourcesModelSpec extends PlaySpec {
         "year" -> now.getYear.toString
       )
     ),
-    "accountingMethod" -> "Cash",
     "businesses" -> Json.arr(
       Json.obj(
         "id" -> "testBusinessId",
@@ -283,27 +267,6 @@ class CreateIncomeSourcesModelSpec extends PlaySpec {
     )
   )
 
-  lazy val ukPropertyNoAccountingMethodJsonRead: JsObject = Json.obj(
-    "accountingPeriod" -> Json.obj(
-      "startDate" -> Json.obj(
-        "day" -> now.getDayOfMonth.toString,
-        "month" -> now.getMonthValue.toString,
-        "year" -> now.getYear.toString
-      ),
-      "endDate" -> Json.obj(
-        "day" -> now.getDayOfMonth.toString,
-        "month" -> now.getMonthValue.toString,
-        "year" -> now.getYear.toString
-      )
-    ),
-    "startDateBeforeLimit" -> false,
-    "tradingStartDate" -> Json.obj(
-      "day" -> now.getDayOfMonth.toString,
-      "month" -> now.getMonthValue.toString,
-      "year" -> now.getYear.toString
-    )
-  )
-
   lazy val fullUkPropertyJsonRead: JsObject = Json.obj(
     "accountingPeriod" -> Json.obj(
       "startDate" -> Json.obj(
@@ -322,8 +285,7 @@ class CreateIncomeSourcesModelSpec extends PlaySpec {
       "day" -> now.getDayOfMonth.toString,
       "month" -> now.getMonthValue.toString,
       "year" -> now.getYear.toString
-    ),
-    "accountingMethod" -> "Accruals"
+    )
   )
 
   lazy val fullOverseasPropertyJsonRead: JsObject = Json.obj(
@@ -344,8 +306,7 @@ class CreateIncomeSourcesModelSpec extends PlaySpec {
       "month" -> now.getMonthValue.toString,
       "year" -> now.getYear.toString
     ),
-    "startDateBeforeLimit" -> false,
-    "accountingMethod" -> "Cash"
+    "startDateBeforeLimit" -> false
   )
 
   lazy val fullCreateIncomeSourcesModelJsonRead: JsObject = Json.obj(
@@ -363,7 +324,6 @@ class CreateIncomeSourcesModelSpec extends PlaySpec {
         "tradingStartDate" -> desFormattedNow,
         "tradingName" -> "testBusinessName",
         "typeOfBusiness" -> "testBusinessTrade",
-        "cashOrAccrualsFlag" -> Cash.stringValue.toUpperCase,
         "addressDetails" -> Json.obj(
           "addressLine1" -> "line 1",
           "addressLine2" -> "line 2",
@@ -374,12 +334,10 @@ class CreateIncomeSourcesModelSpec extends PlaySpec {
     ),
     "ukPropertyDetails" -> Json.obj(
       "tradingStartDate" -> desFormattedNow,
-      "cashOrAccrualsFlag" -> Accruals.stringValue.toUpperCase,
       "startDate" -> desFormattedNow
     ),
     "foreignPropertyDetails" -> Json.obj(
       "tradingStartDate" -> desFormattedNow,
-      "cashOrAccrualsFlag" -> Cash.stringValue.toUpperCase,
       "startDate" -> desFormattedNow
     )
   )
@@ -392,7 +350,6 @@ class CreateIncomeSourcesModelSpec extends PlaySpec {
         "tradingStartDate" -> desFormattedNow,
         "tradingName" -> "testBusinessName",
         "typeOfBusiness" -> "testBusinessTrade",
-        "cashOrAccrualsFlag" -> Cash.stringValue.toUpperCase,
         "addressDetails" -> Json.obj(
           "addressLine1" -> "line 1",
           "addressLine2" -> "line 2",
@@ -402,12 +359,10 @@ class CreateIncomeSourcesModelSpec extends PlaySpec {
     ),
     "ukPropertyDetails" -> Json.obj(
       "tradingStartDate" -> desFormattedNow,
-      "cashOrAccrualsFlag" -> Accruals.stringValue.toUpperCase,
       "startDate" -> desFormattedNow
     ),
     "foreignPropertyDetails" -> Json.obj(
       "tradingStartDate" -> desFormattedNow,
-      "cashOrAccrualsFlag" -> Cash.stringValue.toUpperCase,
       "startDate" -> desFormattedNow
     )
   )
@@ -420,7 +375,6 @@ class CreateIncomeSourcesModelSpec extends PlaySpec {
         "accountingPeriodEndDate" -> desFormattedNow,
         "tradingName" -> "testBusinessName",
         "typeOfBusiness" -> "testBusinessTrade",
-        "cashAccrualsFlag" -> Cash.stringValue.take(1).toUpperCase,
         "address" -> Json.obj(
           "addressLine1" -> "line 1",
           "countryCode" -> "GB",
@@ -431,14 +385,10 @@ class CreateIncomeSourcesModelSpec extends PlaySpec {
       )
     ),
     "ukPropertyDetails" -> Json.obj(
-
-      "cashAccrualsFlag" -> Accruals.stringValue.take(1).toUpperCase,
       "startDate" -> desFormattedNow,
       "tradingStartDate" -> desFormattedNow
     ),
     "foreignPropertyDetails" -> Json.obj(
-
-      "cashAccrualsFlag" -> Cash.stringValue.take(1).toUpperCase,
       "startDate" -> desFormattedNow,
       "tradingStartDate" -> desFormattedNow
 
@@ -447,36 +397,6 @@ class CreateIncomeSourcesModelSpec extends PlaySpec {
 
   lazy val contextualTaxYear: String = (DateModel.dateConvert(now).getYear + 1).toString
   lazy val fullModelContextualTaxYearJsonWrite: JsObject = Json.obj(
-    "mtdbsa" -> mtditid,
-    "businessDetails" -> Json.arr(
-      Json.obj(
-        "accountingPeriodStartDate" -> desFormattedNow,
-        "accountingPeriodEndDate" -> desFormattedNow,
-        "tradingName" -> "testBusinessName",
-        "typeOfBusiness" -> "testBusinessTrade",
-        "cashAccrualsFlag" -> Cash.stringValue.take(1).toUpperCase,
-        "address" -> Json.obj(
-          "addressLine1" -> "line 1",
-          "countryCode" -> "GB",
-          "postcode" -> "testPostcode",
-          "addressLine2" -> "line 2"
-        ),
-        "contextualTaxYear" -> contextualTaxYear
-      )
-    ),
-    "ukPropertyDetails" -> Json.obj(
-      "cashAccrualsFlag" -> Accruals.stringValue.take(1).toUpperCase,
-      "startDate" -> desFormattedNow,
-      "contextualTaxYear" -> contextualTaxYear
-    ),
-    "foreignPropertyDetails" -> Json.obj(
-      "cashAccrualsFlag" -> Cash.stringValue.take(1).toUpperCase,
-      "startDate" -> desFormattedNow,
-      "contextualTaxYear" -> contextualTaxYear
-
-    )
-  )
-  lazy val fullModelNoAccountingMethodJsonWrite: JsObject = Json.obj(
     "mtdbsa" -> mtditid,
     "businessDetails" -> Json.arr(
       Json.obj(

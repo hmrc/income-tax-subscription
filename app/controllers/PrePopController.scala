@@ -18,59 +18,45 @@ package controllers
 
 import common.Constants.hmrcAsAgent
 import config.AppConfig
-import config.featureswitch.{FeatureSwitching, UseHIPForPrePop}
-import connectors.PrePopConnector
+import config.featureswitch.FeatureSwitching
 import connectors.hip.HipPrePopConnector
-import models.{ErrorModel, PrePopAuditModel, PrePopData}
+import models.{PrePopAuditModel, PrePopData}
 import play.api.Logging
 import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import services.AuthService
 import services.monitoring.AuditService
 import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals.allEnrolments
-import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
 import javax.inject.{Inject, Singleton}
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.ExecutionContext
 
 @Singleton
 class PrePopController @Inject()(authService: AuthService,
                                  auditService: AuditService,
-                                 prePopConnector: PrePopConnector,
                                  hipPrePopConnector: HipPrePopConnector,
                                  val appConfig: AppConfig,
                                  cc: ControllerComponents)(implicit ec: ExecutionContext) extends BackendController(cc) with Logging with FeatureSwitching {
 
   def prePop(nino: String): Action[AnyContent] = Action.async { implicit request =>
     authService.authorised().retrieve(allEnrolments) { allEnrolments =>
-      getPrePopData(nino) flatMap {
+      hipPrePopConnector.getHipPrePopData(nino).map {
         case Right(value) =>
-          val agentReferenceNumber: Option[String] = allEnrolments.getEnrolment(hmrcAsAgent).flatMap(_.identifiers.headOption).map(_.value)
-          auditService.extendedAudit(PrePopAuditModel(prePopData = value, nino = nino, maybeArn = agentReferenceNumber)) map { _ =>
-            Ok(Json.toJson(value))
-          }
+          val prePopData: PrePopData = PrePopData(
+            selfEmployment = if (value.selfEmp.isEmpty) None else Some(value.toPrePopSelfEmployment)
+          )
+          auditService.extendedAudit(PrePopAuditModel(
+            prePopData = prePopData,
+            nino = nino,
+            maybeArn = allEnrolments.getEnrolment(hmrcAsAgent).flatMap(_.identifiers.headOption).map(_.value)
+          ))
+          Ok(Json.toJson(prePopData))
         case Left(error) =>
           logger.error(s"[PrePopController][prePop] - Error when fetching pre-pop data. Status: ${error.status}, Reason: ${error.reason}")
-          Future.successful(InternalServerError)
+          InternalServerError
       }
     }
   }
 
-  private def getPrePopData(
-    nino: String
-  )(implicit hc: HeaderCarrier): Future[Either[ErrorModel, PrePopData]] = {
-    if (isEnabled(UseHIPForPrePop)) {
-      hipPrePopConnector.getHipPrePopData(nino).map {
-        case Right(value) => Right(PrePopData(
-          selfEmployment = if (value.selfEmp.isEmpty) None else Some(value.toPrePopSelfEmployment()),
-          ukPropertyAccountingMethod = None,
-          foreignPropertyAccountingMethod = None
-        ))
-        case Left(error) => Left(error)
-      }
-    } else {
-      prePopConnector.getPrePopData(nino)
-    }
-  }
 }

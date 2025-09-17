@@ -17,11 +17,10 @@
 package controllers
 
 import config.MicroserviceAppConfig
-import config.featureswitch.{FeatureSwitching, UseHIPForPrePop}
+import config.featureswitch.FeatureSwitching
 import helpers.ComponentSpecBase
 import helpers.IntegrationTestConstants._
 import helpers.servicemocks.{AuditStub, AuthStub, PrePopStub}
-import models.PrePopData
 import play.api.http.Status._
 import play.api.libs.json.OFormat.oFormatFromReadsAndOWrites
 import play.api.libs.json.{JsObject, Json}
@@ -34,16 +33,6 @@ class PrePopControllerISpec extends ComponentSpecBase with FeatureSwitching {
     "auditing.enabled" -> "true"
   )
 
-  val readJson: JsObject = Json.obj(
-    "selfEmployments" -> Json.arr(
-      Json.obj(
-        "businessName" -> "ABC",
-        "businessDescription" -> "Plumbing",
-        "accountingMethod" -> "A"
-      )
-    )
-  )
-
   val hipJson: JsObject = Json.obj(
     "selfEmp" -> Json.arr(
       Json.obj(
@@ -53,9 +42,7 @@ class PrePopControllerISpec extends ComponentSpecBase with FeatureSwitching {
     )
   )
 
-  val writeJson: JsObject = Json.toJsObject(Json.fromJson[PrePopData](readJson).get)
-
-  val writeHipJson: JsObject = Json.obj(
+  val writeJson: JsObject = Json.obj(
     "selfEmployment" -> Json.arr(
       Json.obj(
         "name" -> "ABC",
@@ -64,22 +51,9 @@ class PrePopControllerISpec extends ComponentSpecBase with FeatureSwitching {
     )
   )
 
-  override def beforeEach(): Unit = {
-    super.beforeEach()
-    disable(UseHIPForPrePop)
-  }
-
   "PrePopController" should {
     "return a OK response with pre-pop data" in {
       AuthStub.stubAuth(OK)
-
-      PrePopStub.stubPrePop(testNino)(
-        appConfig.prePopAuthorisationToken,
-        appConfig.prePopEnvironment
-      )(
-        status = OK,
-        body = readJson
-      )
 
       PrePopStub.stubHipPrePop(testNino)(
         appConfig.hipPrePopAuthorisationToken,
@@ -88,24 +62,17 @@ class PrePopControllerISpec extends ComponentSpecBase with FeatureSwitching {
         body = hipJson
       )
 
-      Seq(false, true).foreach { useHip =>
+      val res = IncomeTaxSubscription.getPrePop(testNino)
 
-        setState(UseHIPForPrePop, useHip)
+      val expectedJson = writeJson
 
-        val res = IncomeTaxSubscription.getPrePop(testNino)
+      res should have(
+        httpStatus(OK),
+        jsonBodyOf(expectedJson)
+      )
 
-        val expectedJson = if (useHip)
-          writeHipJson
-        else
-          writeJson
+      AuditStub.verifyAudit()
 
-        res should have(
-          httpStatus(OK),
-          jsonBodyOf(expectedJson)
-        )
-
-        AuditStub.verifyAudit()
-      }
     }
 
     "return an INTERNAL_SERVER_ERROR" when {
@@ -113,17 +80,11 @@ class PrePopControllerISpec extends ComponentSpecBase with FeatureSwitching {
         AuthStub.stubAuth(OK)
 
         val errorJson = Json.obj(
-          "selfEmployment" -> Json.arr(
-            Json.obj()
+          "selfEmp" -> Json.arr(
+            Json.obj(
+              "dateBusinessStarted" -> "invalid"
+            )
           )
-        )
-
-        PrePopStub.stubPrePop(testNino)(
-          appConfig.prePopAuthorisationToken,
-          appConfig.prePopEnvironment
-        )(
-          status = OK,
-          body = errorJson
         )
 
         PrePopStub.stubHipPrePop(testNino)(
@@ -133,23 +94,19 @@ class PrePopControllerISpec extends ComponentSpecBase with FeatureSwitching {
           body = errorJson
         )
 
-        Seq(false, true).foreach { useHip =>
 
-          setState(UseHIPForPrePop, useHip)
+        val res = IncomeTaxSubscription.getPrePop(testNino)
 
-          val res = IncomeTaxSubscription.getPrePop(testNino)
+        res should have(
+          httpStatus(INTERNAL_SERVER_ERROR)
+        )
 
-          res should have(
-            httpStatus(INTERNAL_SERVER_ERROR)
-          )
-        }
       }
       "there was an error returned from the pre-pop API" in {
         AuthStub.stubAuth(OK)
 
-        PrePopStub.stubPrePop(testNino)(
-          appConfig.prePopAuthorisationToken,
-          appConfig.prePopEnvironment
+        PrePopStub.stubHipPrePop(testNino)(
+          appConfig.hipPrePopAuthorisationToken,
         )(
           status = INTERNAL_SERVER_ERROR,
           body = Json.obj()
