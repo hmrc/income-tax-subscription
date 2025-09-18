@@ -59,8 +59,10 @@ trait AppConfig {
   val hipSignUpServiceAuthorisationToken: String
 
   val hipPrePopURL: String
-
   def hipPrePopAuthorisationToken: String
+
+  val hipItsaStatusURL: String
+  val hipItsaStatusAuthorisationToken: String
 }
 
 @Singleton
@@ -113,4 +115,12 @@ class MicroserviceAppConfig @Inject()(servicesConfig: ServicesConfig, val config
 
   override lazy val hipPrePopAuthorisationToken =
     s"Basic ${loadConfig(s"$hipPrePopBase.authorization-token")}"
+
+  private val hipItsaStatus = "hip-itsa-status"
+
+  override val hipItsaStatusURL =
+    servicesConfig.baseUrl(hipItsaStatus)
+
+  override val hipItsaStatusAuthorisationToken =
+    s"Basic ${loadConfig(s"microservice.services.$hipItsaStatus.authorization-token")}"
 }

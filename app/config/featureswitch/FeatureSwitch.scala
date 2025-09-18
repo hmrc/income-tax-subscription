@@ -31,7 +31,7 @@ object FeatureSwitch {
     StubDESFeature,
     SubmitUtrToSignUp,
     UseHIPSignUpTaxYearAPI,
-    NewGetITSAStatusAPI,
+    UseHIPForItsaStatus,
     GetNewITSABusinessDetails
   )
 
@@ -63,9 +63,9 @@ object UseHIPSignUpTaxYearAPI extends FeatureSwitch {
   val name = s"$prefix.use-hip-signup-tax-year-api"
 }
 
-object NewGetITSAStatusAPI extends FeatureSwitch {
+object UseHIPForItsaStatus extends FeatureSwitch {
   val displayName = "Use HIP Get ITSA Status API"
-  val name = s"$prefix.replace-get-itsa-status"
+  val name = s"$prefix.use-hip-for-itsa-status"
 }
 
 object GetNewITSABusinessDetails extends FeatureSwitch {

@@ -35,4 +35,19 @@ object GetITSAStatusStub extends WireMockMethods {
     ).thenReturn(status, body)
   }
 
+  def stubHip(nino: String, utr: String)(status: Int, body: JsValue): StubMapping = {
+    val url = s"/itsa-status/signup/$nino/$utr/${AccountingPeriodUtil.getCurrentTaxYear.toShortTaxYear}"
+    println(s"Stub URL: $url")
+    when(
+      method = GET,
+      uri = url,
+      headers = Map(
+        "correlationId" -> "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+      )
+    ).thenReturn(status, body)
+  }
+
 }
+
+// /itsa-status/signup/AA000000A/1234567890/25-26
+// /itsa-status/signup/AA000000A/1234567890/25-26
