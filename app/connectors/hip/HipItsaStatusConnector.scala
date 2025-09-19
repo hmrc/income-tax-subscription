@@ -56,7 +56,7 @@ class HipItsaStatusConnector @Inject()(
   }
 
   private def getItsaStatusUrl(nino: String, utr: String): String = {
-    s"${appConfig.hipItsaStatusURL}/itsa-status/signup/$nino/$utr/${AccountingPeriodUtil.getCurrentTaxYear.toShortTaxYear}"
+    s"${appConfig.hipItsaStatusURL}/itsd/itsa-status/signup/$nino/$utr/${AccountingPeriodUtil.getCurrentTaxYear.toItsaStatusShortTaxYear}"
   }
 
 }
