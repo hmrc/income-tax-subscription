@@ -17,7 +17,7 @@
 package controllers
 
 import config.AppConfig
-import config.featureswitch.{FeatureSwitching, NewGetITSAStatusAPI}
+import config.featureswitch.{FeatureSwitching, UseHIPForItsaStatus}
 import helpers.ComponentSpecBase
 import helpers.servicemocks.hip.GetITSAStatusStub
 import helpers.servicemocks.{AuthStub, GetItsaStatusStub}
@@ -33,7 +33,7 @@ class MandationStatusControllerISpec extends ComponentSpecBase with FeatureSwitc
 
   override def beforeEach(): Unit = {
     super.beforeEach()
-    disable(NewGetITSAStatusAPI)
+    disable(UseHIPForItsaStatus)
   }
 
   s"POST ${routes.MandationStatusController.mandationStatus.url}" when {
@@ -54,27 +54,19 @@ class MandationStatusControllerISpec extends ComponentSpecBase with FeatureSwitc
     "the new get itsa status api feature switch is enabled" should {
       "return OK" when {
         "the api call returns OK with valid json" in {
-          enable(NewGetITSAStatusAPI)
+          enable(UseHIPForItsaStatus)
 
           AuthStub.stubAuthSuccess()
-          GetITSAStatusStub.stub(testUtr)(
+          GetITSAStatusStub.stubHip(testNino, testUtr)(
             status = OK,
             body = Json.arr(
               Json.obj(
                 "taxYear" -> currentTaxYear.toItsaStatusShortTaxYear,
-                "itsaStatusDetails" -> Json.arr(
-                  Json.obj(
-                    "status" -> "02"
-                  )
-                )
+                "status" -> "02"
               ),
               Json.obj(
                 "taxYear" -> nextTaxYear.toItsaStatusShortTaxYear,
-                "itsaStatusDetails" -> Json.arr(
-                  Json.obj(
-                    "status" -> "01"
-                  )
-                )
+                "status" -> "01"
               )
             )
           )
@@ -91,7 +83,7 @@ class MandationStatusControllerISpec extends ComponentSpecBase with FeatureSwitc
       }
       "return BAD_REQUEST" when {
         "the request received does not have the correct payload" in {
-          enable(NewGetITSAStatusAPI)
+          enable(UseHIPForItsaStatus)
 
           AuthStub.stubAuthSuccess()
 
@@ -106,7 +98,7 @@ class MandationStatusControllerISpec extends ComponentSpecBase with FeatureSwitc
       }
       "return INTERNAL_SERVER_ERROR" when {
         "an error occurred calling the API" in {
-          enable(NewGetITSAStatusAPI)
+          enable(UseHIPForItsaStatus)
 
           AuthStub.stubAuthSuccess()
           GetITSAStatusStub.stub(testUtr)(
@@ -123,7 +115,7 @@ class MandationStatusControllerISpec extends ComponentSpecBase with FeatureSwitc
           )
         }
         "the current tax year could not be found in the api response" in {
-          enable(NewGetITSAStatusAPI)
+          enable(UseHIPForItsaStatus)
 
           AuthStub.stubAuthSuccess()
           GetITSAStatusStub.stub(testUtr)(
@@ -149,7 +141,7 @@ class MandationStatusControllerISpec extends ComponentSpecBase with FeatureSwitc
           )
         }
         "the current tax year status could not be found in the api response" in {
-          enable(NewGetITSAStatusAPI)
+          enable(UseHIPForItsaStatus)
 
           AuthStub.stubAuthSuccess()
           GetITSAStatusStub.stub(testUtr)(
@@ -179,7 +171,7 @@ class MandationStatusControllerISpec extends ComponentSpecBase with FeatureSwitc
           )
         }
         "the next tax year could not be found in the api response" in {
-          enable(NewGetITSAStatusAPI)
+          enable(UseHIPForItsaStatus)
 
           AuthStub.stubAuthSuccess()
           GetITSAStatusStub.stub(testUtr)(
@@ -205,7 +197,7 @@ class MandationStatusControllerISpec extends ComponentSpecBase with FeatureSwitc
           )
         }
         "the next tax year status could not be found in the api response" in {
-          enable(NewGetITSAStatusAPI)
+          enable(UseHIPForItsaStatus)
 
           AuthStub.stubAuthSuccess()
           GetITSAStatusStub.stub(testUtr)(
