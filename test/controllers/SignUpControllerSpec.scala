@@ -22,16 +22,15 @@ import config.MicroserviceAppConfig
 import models.SignUpResponse.SignUpSuccess
 import models.monitoring.{RegistrationFailureAudit, RegistrationSuccessAudit}
 import models.{ErrorModel, SignUpRequest, SignUpResponse}
-import play.api.Configuration
+import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.http.Status.{INTERNAL_SERVER_ERROR, OK, UNPROCESSABLE_ENTITY}
 import play.api.libs.json.Json
 import play.api.mvc.{ControllerComponents, Result}
 import play.api.test.FakeRequest
 import play.api.test.Helpers.{contentAsJson, contentAsString, defaultAwaitTimeout, status, stubControllerComponents}
 import services.mocks.monitoring.MockAuditService
-import services.mocks.{MockAuthService, MockHIPSignUpTaxYearConnector, MockSignUpTaxYearConnector}
+import services.mocks.{MockAuthService, MockHIPSignUpTaxYearConnector}
 import uk.gov.hmrc.auth.core.{Enrolment, EnrolmentIdentifier, Enrolments}
-import utils.MaterializerSupport
 import utils.TestConstants.{hmrcAsAgent, testNino, testTaxYear, testTaxYearSignUpSubmission, testUtr}
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -39,20 +38,16 @@ import scala.concurrent.Future
 
 class SignUpControllerSpec extends CommonSpec
   with MockAuthService
-  with MockSignUpTaxYearConnector
   with MockHIPSignUpTaxYearConnector
-  with MaterializerSupport
-  with MockAuditService {
+  with MockAuditService
+  with GuiceOneAppPerSuite {
 
   lazy val mockCC: ControllerComponents = stubControllerComponents()
-  private lazy val configuration: Configuration = app.injector.instanceOf[Configuration]
   lazy val mockAppConfig: MicroserviceAppConfig = app.injector.instanceOf[MicroserviceAppConfig]
 
   object TestController extends SignUpController(
     mockAuthService,
     mockAuditService,
-    configuration,
-    mockSignUpTaxYearConnector,
     mockHIPSignUpTaxYearConnector,
     mockCC,
     mockAppConfig
@@ -67,7 +62,7 @@ class SignUpControllerSpec extends CommonSpec
           val fakeRequest = FakeRequest().withBody(Json.toJson(testTaxYearSignUpSubmission(testNino, testUtr, testTaxYear)))
 
           mockRetrievalSuccess(Enrolments(Set()))
-          signUpTaxYear(testSignUpRequest)(Future.successful(Right(SignUpSuccess("XAIT000000"))))
+          hipSignUpTaxYear(testSignUpRequest)(Future.successful(Right(SignUpSuccess("XAIT000000"))))
 
           val result: Future[Result] = TestController.signUp(fakeRequest)
 
@@ -75,13 +70,13 @@ class SignUpControllerSpec extends CommonSpec
           contentAsJson(result) shouldBe Json.obj(
             "mtdbsa" -> "XAIT000000"
           )
-          verifyAudit(RegistrationSuccessAudit(None, testNino, "XAIT000000", "Bearer dev", None))
+          verifyAudit(RegistrationSuccessAudit(None, testNino, "XAIT000000", "Basic dev", None))
         }
         "an agent signs up their client" in {
           val fakeRequest = FakeRequest().withBody(Json.toJson(testTaxYearSignUpSubmission(testNino, testUtr, testTaxYear)))
 
           mockRetrievalSuccess(Enrolments(Set(Enrolment(hmrcAsAgent, Seq(EnrolmentIdentifier("AgentReferenceNumber", "123456789")), "Activated"))))
-          signUpTaxYear(testSignUpRequest)(Future.successful(Right(SignUpSuccess("XAIT000000"))))
+          hipSignUpTaxYear(testSignUpRequest)(Future.successful(Right(SignUpSuccess("XAIT000000"))))
 
           val result: Future[Result] = TestController.signUp(fakeRequest)
 
@@ -89,7 +84,7 @@ class SignUpControllerSpec extends CommonSpec
           contentAsJson(result) shouldBe Json.obj(
             "mtdbsa" -> "XAIT000000"
           )
-          verifyAudit(RegistrationSuccessAudit(Some("123456789"), testNino, "XAIT000000", "Bearer dev", None))
+          verifyAudit(RegistrationSuccessAudit(Some("123456789"), testNino, "XAIT000000", "Basic dev", None))
         }
       }
     }
@@ -98,7 +93,7 @@ class SignUpControllerSpec extends CommonSpec
         val fakeRequest = FakeRequest().withBody(Json.toJson(testTaxYearSignUpSubmission(testNino, testUtr, testTaxYear)))
 
         mockRetrievalSuccess(Enrolments(Set()))
-        signUpTaxYear(testSignUpRequest)(Future.successful(Right(SignUpResponse.AlreadySignedUp)))
+        hipSignUpTaxYear(testSignUpRequest)(Future.successful(Right(SignUpResponse.AlreadySignedUp)))
 
         val result: Future[Result] = TestController.signUp(fakeRequest)
 
@@ -111,7 +106,7 @@ class SignUpControllerSpec extends CommonSpec
         val fakeRequest = FakeRequest().withBody(Json.toJson(testTaxYearSignUpSubmission(testNino, testUtr, testTaxYear)))
 
         mockRetrievalSuccess(Enrolments(Set(Enrolment(hmrcAsAgent, Seq(EnrolmentIdentifier("AgentReferenceNumber", "123456789")), "Activated"))))
-        signUpTaxYear(testSignUpRequest)(Future.successful(Left(ErrorModel(INTERNAL_SERVER_ERROR, "Failure"))))
+        hipSignUpTaxYear(testSignUpRequest)(Future.successful(Left(ErrorModel(INTERNAL_SERVER_ERROR, "Failure"))))
 
         val result = TestController.signUp(fakeRequest)
 

@@ -17,7 +17,6 @@
 package connectors
 
 import config.MicroserviceAppConfig
-import config.featureswitch._
 import helpers.ComponentSpecBase
 import helpers.IntegrationTestConstants._
 import helpers.servicemocks.HIPSignUpTaxYearStub
@@ -29,17 +28,12 @@ import play.api.mvc.Request
 import play.api.test.FakeRequest
 import utils.TestConstants.{testNino, testTaxYear, testUtr}
 
-class HIPSignUpTaxYearConnectorISpec extends ComponentSpecBase with FeatureSwitching {
+class HIPSignUpTaxYearConnectorISpec extends ComponentSpecBase {
 
 
   private lazy val signUpConnector: HIPSignUpTaxYearConnector = app.injector.instanceOf[HIPSignUpTaxYearConnector]
   lazy val appConfig: MicroserviceAppConfig = app.injector.instanceOf[MicroserviceAppConfig]
   implicit val request: Request[_] = FakeRequest()
-
-  override def beforeEach(): Unit = {
-    super.beforeEach()
-    enable(UseHIPSignUpTaxYearAPI)
-  }
 
   lazy val testSignUpRequest: SignUpRequest = SignUpRequest(nino = testNino, utr = testUtr, taxYear = testTaxYear)
 
@@ -59,7 +53,6 @@ class HIPSignUpTaxYearConnectorISpec extends ComponentSpecBase with FeatureSwitc
       }
 
       "return a Json parse failure when invalid json is found" in {
-        enable(SubmitUtrToSignUp)
         HIPSignUpTaxYearStub.stubSignUp(
           hipTestTaxYearSignUpRequestBodyWithUtr(testNino, testUtr, testTaxYear),
           appConfig.hipSignUpServiceAuthorisationToken
@@ -104,43 +97,43 @@ class HIPSignUpTaxYearConnectorISpec extends ComponentSpecBase with FeatureSwitc
       }
     }
 
-      "receiving a 422 response without customer already signed up code" should {
-        "return the status and error received" in {
-          HIPSignUpTaxYearStub.stubSignUp(
-            hipTestTaxYearSignUpRequestBodyWithUtr(testNino, testUtr, testTaxYear),
-            appConfig.hipSignUpServiceAuthorisationToken
-          )(
-            status = UNPROCESSABLE_ENTITY,
-            body = Json.obj("errors" ->
-              Json.obj("code" -> "002", "text" -> "ID not found", "processingDate" -> "2022-01-31T09:26:17Z")
-            )
+    "receiving a 422 response without customer already signed up code" should {
+      "return the status and error received" in {
+        HIPSignUpTaxYearStub.stubSignUp(
+          hipTestTaxYearSignUpRequestBodyWithUtr(testNino, testUtr, testTaxYear),
+          appConfig.hipSignUpServiceAuthorisationToken
+        )(
+          status = UNPROCESSABLE_ENTITY,
+          body = Json.obj("errors" ->
+            Json.obj("code" -> "002", "text" -> "ID not found", "processingDate" -> "2022-01-31T09:26:17Z")
           )
+        )
 
-          val result = signUpConnector.signUp(testSignUpRequest)
+        val result = signUpConnector.signUp(testSignUpRequest)
 
-          result.futureValue shouldBe Left(ErrorModel(UNPROCESSABLE_ENTITY, "002"))
-        }
+        result.futureValue shouldBe Left(ErrorModel(UNPROCESSABLE_ENTITY, "002"))
       }
+    }
 
-      "receiving a 500 response" should {
-        "return the status and error received" in {
-          HIPSignUpTaxYearStub.stubSignUp(
-            hipTestTaxYearSignUpRequestBodyWithUtr(testNino, testUtr, testTaxYear),
-            appConfig.hipSignUpServiceAuthorisationToken
-          )(
-            status = INTERNAL_SERVER_ERROR,
-            body = Json.obj("error" ->
-              Json.obj("code" -> "500", "message" -> "Server Error", "logID" -> "C0000AB8190C8E1F000000C700006836")
-            )
+    "receiving a 500 response" should {
+      "return the status and error received" in {
+        HIPSignUpTaxYearStub.stubSignUp(
+          hipTestTaxYearSignUpRequestBodyWithUtr(testNino, testUtr, testTaxYear),
+          appConfig.hipSignUpServiceAuthorisationToken
+        )(
+          status = INTERNAL_SERVER_ERROR,
+          body = Json.obj("error" ->
+            Json.obj("code" -> "500", "message" -> "Server Error", "logID" -> "C0000AB8190C8E1F000000C700006836")
           )
+        )
 
-          val result = signUpConnector.signUp(testSignUpRequest)
+        val result = signUpConnector.signUp(testSignUpRequest)
 
-          result.futureValue shouldBe Left(
-            ErrorModel(INTERNAL_SERVER_ERROR, """{"error":{"code":"500","message":"Server Error","logID":"C0000AB8190C8E1F000000C700006836"}}""")
-          )
-        }
+        result.futureValue shouldBe Left(
+          ErrorModel(INTERNAL_SERVER_ERROR, """{"error":{"code":"500","message":"Server Error","logID":"C0000AB8190C8E1F000000C700006836"}}""")
+        )
       }
+    }
   }
 }
 

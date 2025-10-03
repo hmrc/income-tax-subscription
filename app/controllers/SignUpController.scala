@@ -19,14 +19,13 @@ package controllers
 
 import common.Extractors
 import config.AppConfig
-import config.featureswitch.{FeatureSwitching, UseHIPSignUpTaxYearAPI}
-import connectors.{HIPSignUpTaxYearConnector, SignUpTaxYearConnector}
+import connectors.HIPSignUpTaxYearConnector
 import models.SignUpRequest
 import models.SignUpResponse.{AlreadySignedUp, SignUpSuccess}
 import models.monitoring.{RegistrationFailureAudit, RegistrationSuccessAudit}
+import play.api.Logger
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc._
-import play.api.{Configuration, Logger}
 import services.AuthService
 import services.monitoring.AuditService
 import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals
@@ -38,11 +37,11 @@ import scala.concurrent.ExecutionContext
 @Singleton
 class SignUpController @Inject()(authService: AuthService,
                                  auditService: AuditService,
-                                 configuration: Configuration,
-                                 signUpTaxYearConnector: SignUpTaxYearConnector,
                                  hipSignUpTaxYearConnector: HIPSignUpTaxYearConnector,
-                                 cc: ControllerComponents, val appConfig: AppConfig)(implicit ec: ExecutionContext)
-  extends BackendController(cc) with Extractors with FeatureSwitching {
+                                 cc: ControllerComponents,
+                                 appConfig: AppConfig)
+                                (implicit ec: ExecutionContext)
+  extends BackendController(cc) with Extractors {
 
   val logger: Logger = Logger(this.getClass)
 
@@ -58,18 +57,11 @@ class SignUpController @Inject()(authService: AuthService,
   }
 
   private def signUp(signUpRequest: SignUpRequest, agentReferenceNumber: Option[String])(implicit request: Request[JsValue]) = {
-
-    val signUpResponse = if (isEnabled(UseHIPSignUpTaxYearAPI)) {
-      hipSignUpTaxYearConnector.signUp(signUpRequest)
-    } else {
-      signUpTaxYearConnector.signUp(signUpRequest)
-    }
-
-    signUpResponse.map {
+    hipSignUpTaxYearConnector.signUp(signUpRequest).map {
       case Right(response: SignUpSuccess) =>
         val path: Option[String] = request.headers.get(ITSASessionKeys.RequestURI)
         auditService.audit(RegistrationSuccessAudit(
-          agentReferenceNumber, signUpRequest.nino, response.mtdbsa, appConfig.signUpServiceAuthorisationToken, path
+          agentReferenceNumber, signUpRequest.nino, response.mtdbsa, appConfig.hipSignUpServiceAuthorisationToken, path
         ))
         Ok(Json.toJson(response))
       case Right(AlreadySignedUp) =>
