@@ -20,7 +20,7 @@ import common.Extractors
 import config.AppConfig
 import config.featureswitch.{FeatureSwitching, UseHIPForItsaStatus}
 import connectors.ItsaStatusConnector
-import connectors.hip.{GetITSAStatusConnector, HipItsaStatusConnector}
+import connectors.hip.HipItsaStatusConnector
 import models.monitoring.MandationStatusAuditModel
 import models.status.{ITSAStatus, MandationStatusRequest, MandationStatusResponse}
 import models.subscription.AccountingPeriodUtil

@@ -28,9 +28,6 @@ object FeatureSwitch {
   val prefix = "feature-switch"
 
   val switches: Set[FeatureSwitch] = Set(
-    StubDESFeature,
-    SubmitUtrToSignUp,
-    UseHIPSignUpTaxYearAPI,
     UseHIPForItsaStatus,
     GetNewITSABusinessDetails
   )
@@ -46,21 +43,6 @@ object FeatureSwitch {
       case Some(switch) => switch
       case None => throw new IllegalArgumentException("Invalid feature switch: " + setting.feature)
     }
-}
-
-object StubDESFeature extends FeatureSwitch {
-  val displayName = s"Use stub for DES connection"
-  val name = s"$prefix.stub-des"
-}
-
-object SubmitUtrToSignUp extends FeatureSwitch {
-  val displayName = "Submit UTR to API 1565"
-  val name = s"$prefix.submit-utr-to-api-1565"
-}
-
-object UseHIPSignUpTaxYearAPI extends FeatureSwitch {
-  val displayName = s"Use HIP SignUp Tax Year API "
-  val name = s"$prefix.use-hip-signup-tax-year-api"
 }
 
 object UseHIPForItsaStatus extends FeatureSwitch {

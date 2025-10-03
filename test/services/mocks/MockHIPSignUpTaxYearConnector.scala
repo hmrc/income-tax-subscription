@@ -16,20 +16,17 @@
 
 package services.mocks
 
-import config.AppConfig
 import connectors.HIPSignUpTaxYearConnector
-import connectors.mocks.MockHttp
 import models.SignUpRequest
 import org.mockito.ArgumentMatchers
 import org.mockito.Mockito.{reset, when}
-import org.scalatest.Suite
-import org.scalatestplus.play.guice.GuiceOneAppPerSuite
+import org.scalatest.{BeforeAndAfterEach, Suite}
+import org.scalatestplus.mockito.MockitoSugar
 import parsers.SignUpParser.PostSignUpResponse
 
-import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-trait MockHIPSignUpTaxYearConnector extends MockHttp with GuiceOneAppPerSuite {
+trait MockHIPSignUpTaxYearConnector extends MockitoSugar with BeforeAndAfterEach {
   this: Suite =>
 
   override def beforeEach(): Unit = {
@@ -38,9 +35,6 @@ trait MockHIPSignUpTaxYearConnector extends MockHttp with GuiceOneAppPerSuite {
   }
 
   val mockHIPSignUpTaxYearConnector: HIPSignUpTaxYearConnector = mock[HIPSignUpTaxYearConnector]
-  val appConfig: AppConfig
-  val connector = new HIPSignUpTaxYearConnector(mockHttpClient, appConfig)
-
 
   def hipSignUpTaxYear(signUpRequest: SignUpRequest)(response: Future[PostSignUpResponse]): Unit = {
     when(mockHIPSignUpTaxYearConnector.signUp(

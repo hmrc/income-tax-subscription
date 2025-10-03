@@ -21,7 +21,6 @@ import config.featureswitch.{FeatureSwitch, FeatureSwitching, GetNewITSABusiness
 import connectors.mocks.{MockBusinessDetailsConnector, MockGetITSABusinessDetailsConnector}
 import models.ErrorModel
 import models.frontend.FESuccessResponse
-import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito._
 import org.mockito._
 import org.scalatestplus.mockito.MockitoSugar
