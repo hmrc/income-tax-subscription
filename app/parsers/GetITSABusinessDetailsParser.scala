@@ -53,7 +53,7 @@ object GetITSABusinessDetailsParser {
       }
     }
 
-  private case class GetITSABusinessDetailsParserException(error: String, status: Int) extends InternalServerException(
+  case class GetITSABusinessDetailsParserException(error: String, status: Int) extends InternalServerException(
     s"[GetITSABusinessDetailsParser] - $error - $status"
   )
 

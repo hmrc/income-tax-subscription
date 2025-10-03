@@ -16,45 +16,54 @@
 
 package connectors
 
+import com.typesafe.config.Config
 import config.AppConfig
-import parsers.GetITSABusinessDetailsParser.GetITSABusinessDetailsResponse
-import play.api.mvc.Request
-import uk.gov.hmrc.http.{Authorization, HeaderCarrier, HeaderNames, HttpClient, HttpReads}
+import org.apache.pekko.actor.ActorSystem
+import parsers.GetITSABusinessDetailsParser.{GetITSABusinessDetailsParserException, GetITSABusinessDetailsResponse}
+import play.api.http.Status.FORBIDDEN
+import uk.gov.hmrc.http.{Authorization, HeaderCarrier, HeaderNames, HttpClient, HttpReads, Retries}
 
-import java.time.{Instant, ZoneId}
 import java.time.format.DateTimeFormatter
+import java.time.{Instant, ZoneId}
 import java.util.UUID
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class GetITSABusinessDetailsConnector @Inject()(httpClient: HttpClient,
-                                                appConfig: AppConfig)(implicit ec: ExecutionContext) {
+                                                appConfig: AppConfig,
+                                                val configuration: Config,
+                                                val actorSystem: ActorSystem)(implicit ec: ExecutionContext) extends Retries {
 
- def getHIPBusinessDetails(nino: String)(implicit hc: HeaderCarrier, request: Request[_]): Future[GetITSABusinessDetailsResponse] = {
+  private val formatter = DateTimeFormatter
+    .ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'")
+    .withZone(ZoneId.of("UTC"))
 
+  def getHIPBusinessDetails(nino: String)(implicit hc: HeaderCarrier): Future[GetITSABusinessDetailsResponse] = {
     val headerCarrier: HeaderCarrier = hc
       .copy(authorization = Some(Authorization(appConfig.getItsaBusinessDetailsEnvironmentToken)))
 
-   val formatter = DateTimeFormatter
-     .ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'")
-     .withZone(ZoneId.of("UTC"))
+    retryFor("HIP API #5266 - Get Business Details") {
+      case GetITSABusinessDetailsParserException(_, FORBIDDEN) => true
+      case _ => false
+    } {
+      val headers: Seq[(String, String)] = Seq(
+        HeaderNames.authorisation -> appConfig.getItsaBusinessDetailsEnvironmentToken,
+        "correlationid" -> UUID.randomUUID().toString,
+        "X-Message-Type" -> "TaxpayerDisplay",
+        "X-Originating-System" -> "MDTP",
+        "X-Receipt-Date" -> formatter.format(Instant.now()),
+        "X-Regime-Type" -> "ITSA",
+        "X-Transmitting-System" -> "HIP"
+      )
 
-    val headers: Seq[(String, String)] = Seq(
-      HeaderNames.authorisation -> appConfig.getItsaBusinessDetailsEnvironmentToken,
-      "correlationid" -> UUID.randomUUID().toString,
-      "X-Message-Type" -> "TaxpayerDisplay",
-      "X-Originating-System" -> "MDTP",
-      "X-Receipt-Date" -> formatter.format(Instant.now()),
-      "X-Regime-Type" -> "ITSA",
-      "X-Transmitting-System" -> "HIP"
-    )
-
-    httpClient.GET[GetITSABusinessDetailsResponse](url = getHIPBusinessDetailsUrl(nino), headers = headers)(
-      implicitly[HttpReads[GetITSABusinessDetailsResponse]],
-      headerCarrier,
-      implicitly
-    )}
+      httpClient.GET[GetITSABusinessDetailsResponse](url = getHIPBusinessDetailsUrl(nino), headers = headers)(
+        implicitly[HttpReads[GetITSABusinessDetailsResponse]],
+        headerCarrier,
+        implicitly
+      )
+    }
+  }
 
   private def getHIPBusinessDetailsUrl(nino: String) =
     s"${appConfig.hipBusinessDetailsURL}/etmp/RESTAdapter/itsa/taxpayer/business-details?nino=$nino"

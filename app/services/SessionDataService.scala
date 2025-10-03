@@ -16,8 +16,6 @@
 
 package services
 
-import config.AppConfig
-import config.featureswitch.FeatureSwitching
 import play.api.libs.json.JsValue
 import repositories.SessionDataRepository
 import uk.gov.hmrc.http.{HeaderCarrier, InternalServerException}
@@ -26,8 +24,7 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.Future
 
 @Singleton
-class SessionDataService @Inject()(sessionDataRepository: SessionDataRepository, val appConfig: AppConfig) extends FeatureSwitching {
-
+class SessionDataService @Inject()(sessionDataRepository: SessionDataRepository) {
 
   def getAllSessionData(implicit hc: HeaderCarrier): Future[Option[JsValue]] =
     sessionDataRepository.getSessionData(sessionId = sessionIdFromHC)
@@ -50,7 +47,6 @@ class SessionDataService @Inject()(sessionDataRepository: SessionDataRepository,
 
   def deleteAllSessionData(implicit hc: HeaderCarrier): Future[Option[JsValue]] =
     sessionDataRepository.deleteDataBySessionId(sessionId = sessionIdFromHC)
-
 
   private[services] def sessionIdFromHC(implicit hc: HeaderCarrier): String = {
     hc.sessionId.fold(

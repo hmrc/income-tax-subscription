@@ -25,15 +25,14 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class LockoutStatusService @Inject()(lockoutRepository: LockoutMongoRepository) {
+class LockoutStatusService @Inject()(lockoutRepository: LockoutMongoRepository)
+                                    (implicit ec: ExecutionContext) {
 
-  def lockoutAgent(arn: String, request: LockoutRequest)(implicit ec: ExecutionContext)
-  : Future[Either[ErrorModel, Option[LockoutResponse]]] = {
+  def lockoutAgent(arn: String, request: LockoutRequest): Future[Either[ErrorModel, Option[LockoutResponse]]] = {
     lockoutRepository.lockoutAgent(arn, request.timeoutSeconds).map(response => Right(response))
   }
 
-  def checkLockoutStatus(arn: String)(implicit ec: ExecutionContext)
-  : Future[Either[ErrorModel, Option[LockoutResponse]]] = {
+  def checkLockoutStatus(arn: String): Future[Either[ErrorModel, Option[LockoutResponse]]] = {
     lockoutRepository.getLockoutStatus(arn).map(response => Right(response))
   }
 

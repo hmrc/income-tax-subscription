@@ -17,7 +17,7 @@
 package testonly.controllers.throttle
 
 import play.api.i18n.MessagesApi
-import play.api.mvc.ControllerComponents
+import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import repositories.ThrottlingRepository
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
@@ -35,7 +35,7 @@ class ThrottleController @Inject()(
                                     implicit ec: ExecutionContext)
   extends BackendController(cc) {
 
-  lazy val get = Action.async { implicit req =>
+  lazy val get: Action[AnyContent] = Action.async { implicit req =>
     req.getQueryString("throttle") match {
       case Some(throttleId) =>
         val throttleKey = getThrottleKey(throttleId)
@@ -58,7 +58,7 @@ class ThrottleController @Inject()(
     s"throttle.$throttleId.max"
   }
 
-  lazy val update = Action.async { implicit req =>
+  lazy val update: Action[AnyContent] = Action.async { implicit req =>
     val throttleIdMaybe = req.getQueryString("throttle")
     val newThrottleValMaybe = req.getQueryString("value")
     Future.successful(
