@@ -52,11 +52,6 @@ class GetITSABusinessDetailsConnectorISpec extends ComponentSpecBase with Featur
     ).thenReturn(status, responseBody)
   }
 
-  override def beforeEach(): Unit = {
-    super.beforeEach()
-    enable(GetNewITSABusinessDetails)
-  }
-
   def successResponseJson = Json.obj("success" -> Json.obj("taxPayerDisplayResponse" -> Json.obj("mtdId" -> testMtditId)))
 
   "GetITSABusinessDetailsConnector" should {

@@ -41,15 +41,7 @@ class SubscriptionStatusServiceSpec extends CommonSpec with TestSubscriptionStat
 
   "SubscriptionStatusService.checkMtditsaSubscription" when {
     "return some mtditsa id" when {
-      "the feature switch is off and the old connector returns a successful response" in {
-        when(mockBusinessDetailsConnector.getBusinessDetails(ArgumentMatchers.eq(testNino))(ArgumentMatchers.any(), ArgumentMatchers.any()))
-          .thenReturn(Future.successful(Right(GetBusinessDetailsSuccessResponseModel(testMtditId))))
-
-        OldTestSubscriptionStatusService
-          .checkMtditsaSubscription(testNino)
-          .futureValue shouldBe Right(Some(FESuccessResponse(Some(testMtditId))))
-      }
-      "the feature switch is on and the new connector returns a successful response" in {
+      "he new connector returns a successful response" in {
         when(mockITSABusinessDetailsConnector.getHIPBusinessDetails(ArgumentMatchers.eq(testNino))(
           ArgumentMatchers.any[HeaderCarrier], ArgumentMatchers.any[Request[_]]
         )).thenReturn(Future.successful(AlreadySignedUp(testMtditId)))
@@ -60,33 +52,13 @@ class SubscriptionStatusServiceSpec extends CommonSpec with TestSubscriptionStat
       }
     }
     "return no identifier" when {
-      "the feature switch if off the old connector indicates that no subscription was found" in {
-        when(mockBusinessDetailsConnector.getBusinessDetails(ArgumentMatchers.eq(testNino))(ArgumentMatchers.any(), ArgumentMatchers.any()))
-          .thenReturn(Future.successful(Left(ErrorModel(NOT_FOUND, "NOT_FOUND"))))
-
-        OldTestSubscriptionStatusService
-          .checkMtditsaSubscription(testNino)
-          .futureValue shouldBe Right(None)
-      }
-      "the feature switch is on the new connector indicates that no subscription was found" in {
+      "the new connector indicates that no subscription was found" in {
         when(mockITSABusinessDetailsConnector.getHIPBusinessDetails(ArgumentMatchers.eq(testNino))(ArgumentMatchers.any(), ArgumentMatchers.any()))
           .thenReturn(Future.successful(NotSignedUp))
 
         NewTestSubscriptionStatusService
           .checkMtditsaSubscription(testNino)
           .futureValue shouldBe Right(None)
-      }
-    }
-    "return an error" when {
-      "the feature switch is off the old connector returns an internal server error" in {
-        val error: ErrorModel = ErrorModel(INTERNAL_SERVER_ERROR, "INTERNAL_SERVER_ERROR")
-
-        when(mockBusinessDetailsConnector.getBusinessDetails(ArgumentMatchers.eq(testNino))(ArgumentMatchers.any(), ArgumentMatchers.any()))
-          .thenReturn(Future.successful(Left(error)))
-
-        OldTestSubscriptionStatusService
-          .checkMtditsaSubscription(testNino)
-          .futureValue shouldBe Left(error)
       }
     }
   }

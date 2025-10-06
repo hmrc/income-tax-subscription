@@ -17,7 +17,7 @@
 package controllers.subscription
 
 import config.AppConfig
-import config.featureswitch.{FeatureSwitching, GetNewITSABusinessDetails}
+import config.featureswitch.FeatureSwitching
 import helpers.ComponentSpecBase
 import helpers.IntegrationTestConstants._
 import helpers.servicemocks.{AuthStub, BusinessDetailsStub, ITSABusinessDetailsStub}
@@ -27,32 +27,10 @@ import play.api.http.Status._
 class SubscriptionStatusControllerISpec extends ComponentSpecBase with FeatureSwitching {
 
   val appConfig: AppConfig = app.injector.instanceOf[AppConfig]
-
-  override def beforeEach(): Unit = {
-    super.beforeEach()
-    disable(GetNewITSABusinessDetails)
-  }
+  
 
   "subscribe" should {
-    "when the feature switch is off call the subscription service successfully when auth succeeds" in {
-      Given("I setup the wiremock stubs")
-      AuthStub.stubAuthSuccess()
-      BusinessDetailsStub.stubGetBusinessDetailsSuccess()
-
-      When("I call GET /subscription/:nino where nino is the test nino")
-      val res = IncomeTaxSubscription.getSubscriptionStatus(testNino)
-
-      Then("The result should have a HTTP status of OK and a body containing the MTDID")
-      res should have(
-        httpStatus(OK),
-        jsonBodyAs[FESuccessResponse](FESuccessResponse(Some(testMtditId)))
-      )
-
-      Then("Get business details should have been called")
-      BusinessDetailsStub.verifyGetBusinessDetails()
-    }
-
-    "when the feature switch is off return UNAUTHORIZED when auth fails" in {
+    "return UNAUTHORIZED when auth fails" in {
       Given("I setup the wiremock stubs")
       AuthStub.stubAuthFailure()
 
@@ -65,25 +43,8 @@ class SubscriptionStatusControllerISpec extends ComponentSpecBase with FeatureSw
       )
     }
 
-    "when the feature switch is off return BAD_REQUEST when getBusinessDetails returns BAD_REQUEST" in {
-      Given("I setup the wiremock stubs")
-      AuthStub.stubAuthSuccess()
-      BusinessDetailsStub.stubGetBusinessDetailsFailure()
-
-      When("I call GET /subscription/:nino where nino is the test nino")
-      val res = IncomeTaxSubscription.getSubscriptionStatus(testNino)
-
-      Then("The result should have a HTTP status of OK and a body containing the MTDID")
-      res should have(
-        httpStatus(BAD_REQUEST)
-      )
-
-      Then("Get business details should have been called")
-      BusinessDetailsStub.verifyGetBusinessDetails()
-    }
-
-    "when the feature switch is on and auth succeeds, return OK with mtditId" in {
-      enable(GetNewITSABusinessDetails)
+    "when auth succeeds, return OK with mtditId" in {
+      
       AuthStub.stubAuthSuccess()
       ITSABusinessDetailsStub.stubGetITSABusinessDetailsSuccess()
 
@@ -97,8 +58,8 @@ class SubscriptionStatusControllerISpec extends ComponentSpecBase with FeatureSw
       ITSABusinessDetailsStub.verifyGetITSABusinessDetails()
     }
 
-    "when the feature switch is on and auth fails, return UNAUTHORIZED" in {
-      enable(GetNewITSABusinessDetails)
+    "when auth fails, return UNAUTHORIZED" in {
+      
       AuthStub.stubAuthFailure()
 
       val res = IncomeTaxSubscription.getSubscriptionStatus(testNino)
@@ -108,8 +69,8 @@ class SubscriptionStatusControllerISpec extends ComponentSpecBase with FeatureSw
       )
     }
 
-    "when the feature switch is on returns a BAD_REQUEST" in {
-      enable(GetNewITSABusinessDetails)
+    "returns a BAD_REQUEST when appropriate" in {
+      
       AuthStub.stubAuthSuccess()
       ITSABusinessDetailsStub.stubGetITSABusinessDetailsBadRequest()
 
@@ -122,8 +83,8 @@ class SubscriptionStatusControllerISpec extends ComponentSpecBase with FeatureSw
       ITSABusinessDetailsStub.verifyGetITSABusinessDetails()
     }
 
-    "when the feature switch is on returns a INTERNAL_SERVER_ERROR" in {
-      enable(GetNewITSABusinessDetails)
+    "returns a INTERNAL_SERVER_ERROR when appropriate" in {
+      
       AuthStub.stubAuthSuccess()
       ITSABusinessDetailsStub.stubGetITSABusinessDetailsInternalServerError()
 
@@ -136,8 +97,7 @@ class SubscriptionStatusControllerISpec extends ComponentSpecBase with FeatureSw
       ITSABusinessDetailsStub.verifyGetITSABusinessDetails()
     }
 
-    "when the feature switch is on and connector returns NOT_FOUND" in {
-      enable(GetNewITSABusinessDetails)
+    "return an ok when the connector returns NOT_FOUND" in {
       AuthStub.stubAuthSuccess()
       ITSABusinessDetailsStub.stubGetITSABusinessDetailsNotFound()
 
@@ -150,8 +110,8 @@ class SubscriptionStatusControllerISpec extends ComponentSpecBase with FeatureSw
       ITSABusinessDetailsStub.verifyGetITSABusinessDetails()
     }
 
-    "when the feature switch is on and is invalid success missing mtdId" in {
-      enable(GetNewITSABusinessDetails)
+    "return INTERNAL_SERVER_ERROR when invalid success missing mtdId" in {
+      
       AuthStub.stubAuthSuccess()
       ITSABusinessDetailsStub.stubGetITSABusinessDetailsInvalidSuccess()
 

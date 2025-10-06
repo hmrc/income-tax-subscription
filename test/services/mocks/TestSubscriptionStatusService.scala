@@ -17,7 +17,7 @@
 package services.mocks
 
 import config.MicroserviceAppConfig
-import config.featureswitch.{FeatureSwitch, FeatureSwitching, GetNewITSABusinessDetails}
+import config.featureswitch.{FeatureSwitch, FeatureSwitching}
 import connectors.mocks.{MockBusinessDetailsConnector, MockGetITSABusinessDetailsConnector}
 import models.ErrorModel
 import models.frontend.FESuccessResponse
@@ -42,9 +42,7 @@ trait TestSubscriptionStatusService extends MockBusinessDetailsConnector with Mo
     mockConfig,
     mockBusinessDetailsConnector,
     mockITSABusinessDetailsConnector
-  ) with FeatureSwitching {
-    override def isEnabled(feature: FeatureSwitch): Boolean = feature == GetNewITSABusinessDetails
-  }
+  )
 
   object OldTestSubscriptionStatusService extends SubscriptionStatusService(
     mockConfig,
