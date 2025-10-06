@@ -50,15 +50,11 @@ trait AppConfig {
 
   def getITSAStatusAuthorisationToken: String
 
-  def signUpServiceURL: String
-
-  val signUpServiceAuthorisationToken: String
-  val signUpServiceEnvironment: String
-
   val hipSignUpServiceURL: String
   val hipSignUpServiceAuthorisationToken: String
 
   val hipPrePopURL: String
+
   def hipPrePopAuthorisationToken: String
 
   val hipItsaStatusURL: String
@@ -88,12 +84,6 @@ class MicroserviceAppConfig @Inject()(servicesConfig: ServicesConfig, val config
   override lazy val taxableEntityAPI: String = servicesConfig.baseUrl("taxable-entity-api")
   override lazy val getITSAStatusAuthorisationToken = s"Basic ${loadConfig("microservice.services.taxable-entity-api.get-itsa-status.authorization-token")}"
 
-  override lazy val signUpServiceURL: String = servicesConfig.baseUrl("signup-tax-year-service")
-
-  private val signUpServiceBase = "microservice.services.signup-tax-year-service"
-  override lazy val signUpServiceAuthorisationToken: String = s"Bearer ${loadConfig(s"$signUpServiceBase.authorization-token")}"
-  override lazy val signUpServiceEnvironment: String = loadConfig(s"$signUpServiceBase.environment")
-
   override lazy val hipSignUpServiceURL: String = servicesConfig.baseUrl("hip-signup-tax-year-service")
 
   override lazy val hipSignUpServiceAuthorisationToken: String =
@@ -118,7 +108,7 @@ class MicroserviceAppConfig @Inject()(servicesConfig: ServicesConfig, val config
 
   private val hipItsaStatus = "hip-itsa-status"
 
-  override val hipItsaStatusURL =
+  override val hipItsaStatusURL: String =
     servicesConfig.baseUrl(hipItsaStatus)
 
   override val hipItsaStatusAuthorisationToken =
