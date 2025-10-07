@@ -17,13 +17,11 @@
 package services
 
 import config.AppConfig
-import config.featureswitch.FeatureSwitching
-import connectors.{BusinessDetailsConnector, GetITSABusinessDetailsConnector}
+import connectors.GetITSABusinessDetailsConnector
 import models.ErrorModel
 import models.frontend.FESuccessResponse
 import parsers.GetITSABusinessDetailsParser
 import play.api.Logging
-import play.api.http.Status._
 import play.api.mvc.Request
 import uk.gov.hmrc.http.HeaderCarrier
 
@@ -32,7 +30,6 @@ import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class SubscriptionStatusService @Inject()(val appConfig: AppConfig,
-                                          businessDetailsConnector: BusinessDetailsConnector,
                                           itsaBusinessDetailsConnector: GetITSABusinessDetailsConnector)
   extends Logging {
 

@@ -28,7 +28,6 @@ object FeatureSwitch {
   val prefix = "feature-switch"
 
   val switches: Set[FeatureSwitch] = Set(
-    UseHIPForItsaStatus,
     UseHIPForItsaStatus
   )
 
