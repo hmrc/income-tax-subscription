@@ -137,7 +137,6 @@ object SessionDataRepository {
   object IndexType {
     def ascending: Int = 1
 
-    def descending: Int = -1
   }
 
   def asOption(o: JsObject): Option[JsValue] = o.result.toOption.flatMap(Option(_))

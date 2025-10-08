@@ -182,7 +182,6 @@ object SubscriptionDataRepository {
   object IndexType {
     def ascending: Int = 1
 
-    def descending: Int = -1
   }
 
   def asOption(o: JsObject): Option[JsValue] = o.result.toOption.flatMap(Option(_))
@@ -206,8 +205,6 @@ object SubscriptionDataRepository {
       .unique(true)
       .sparse(true)
   )
-
-  def referenceIndexMaybe(sandr: Boolean): Option[IndexModel] = if (sandr) Some(referenceIndex) else None
 
   def ttlIndex(ttlLengthSeconds: Long): IndexModel = new IndexModel(
     Json.obj(lastUpdatedTimestampKey -> IndexType.ascending),

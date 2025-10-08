@@ -28,8 +28,7 @@ object FeatureSwitch {
   val prefix = "feature-switch"
 
   val switches: Set[FeatureSwitch] = Set(
-    UseHIPForItsaStatus,
-    GetNewITSABusinessDetails
+    UseHIPForItsaStatus
   )
 
   def apply(str: String): FeatureSwitch =
@@ -48,10 +47,5 @@ object FeatureSwitch {
 object UseHIPForItsaStatus extends FeatureSwitch {
   val displayName = "Use HIP Get ITSA Status API"
   val name = s"$prefix.use-hip-for-itsa-status"
-}
-
-object GetNewITSABusinessDetails extends FeatureSwitch {
-  val displayName = s"Get Business Details from API 5266"
-  val name = s"$prefix.get-business-details-api-5266"
 }
 

@@ -131,7 +131,6 @@ object ThrottlingRepository {
   object IndexType {
     def ascending: Int = 1
 
-    def descending: Int = -1
   }
 
   implicit def asOption(o: JsObject): Option[JsValue] = o.result.toOption.flatMap(Option(_))

@@ -74,8 +74,6 @@ class LockoutMongoRepository @Inject()(val config: LockoutMongoRepositoryConfig)
   // If collection.drop() is executed without dropIndexes() first, a race condition appears to occur.
   def drop(implicit ec: ExecutionContext): Future[Any] = Future.sequence(Seq(collection.dropIndexes().toFuture(), collection.drop().toFuture()))
 
-  def recreate: Future[Any] = collection.createIndexes(config.indexes).toFuture()
-
   implicit def toBson(doc: JsObject): Bson = Document.parse(doc.toString())
 
   def find(selector: JsObject, projection: Option[JsObject]): Future[List[JsValue]] = {
@@ -112,7 +110,6 @@ object LockoutMongoRepository {
   object IndexType {
     def ascending: Int = 1
 
-    def descending: Int = -1
   }
 
   implicit def asOption(o: JsObject): Option[JsValue] = o.result.toOption.flatMap(Option(_))
