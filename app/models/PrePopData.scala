@@ -43,6 +43,14 @@ object PrePopSelfEmployment extends Logging {
   private val tradeMaxLength: Int = 35
   private val tradeMinLetters: Int = 2
 
+  private def isValidPostcode(postcode:Option[String]):Option[String]={
+    val isValidPostcodeRegex:Regex="^[A-Z]{1,2}[0-9][0-9A-Z]? [0-9][A-Z]{2}$".r
+    postcode.flatMap{
+      case isValidPostcodeRegex()=>postcode
+      case _=> None
+    }
+  }
+
   def fromApi(name: Option[String],
               trade: String,
               addressFirstLine: Option[String],
@@ -62,7 +70,7 @@ object PrePopSelfEmployment extends Logging {
         case value if value.length <= tradeMaxLength && value.count(_.isLetter) >= tradeMinLetters => Some(value)
         case _ => None
       },
-      address = (addressFirstLine, adjustedPostcode) match {
+      address = (addressFirstLine, isValidPostcode(adjustedPostcode)) match {
         case (Some(firstLine), Some(postcode)) => Some(Address(Seq(firstLine), Some(postcode)))
         case (Some(_), None) =>
           logger.warn("[PrePopSelfEmployment] - Did not receive a postcode from the api.")
