@@ -46,8 +46,8 @@ object PrePopSelfEmployment extends Logging {
   private def isValidPostcode(postcode:Option[String]):Option[String]={
     val isValidPostcodeRegex:Regex="^[A-Z]{1,2}[0-9][0-9A-Z]? [0-9][A-Z]{2}$".r
     postcode.flatMap{
-      case isValidPostcodeRegex()=>postcode
-      case _=> None
+      case isValidPostcodeRegex() => postcode
+      case _ => None
     }
   }
 
