@@ -16,14 +16,16 @@
 
 package connectors
 
+import com.typesafe.config.Config
 import config.AppConfig
 import models.monitoring.CompletedSignUpAudit
 import models.subscription.CreateIncomeSourcesModel
-import parsers.ITSAIncomeSourceParser.{PostITSAIncomeSourceResponse, itsaIncomeSourceResponseHttpReads}
+import org.apache.pekko.actor.ActorSystem
+import parsers.ITSAIncomeSourceParser.{ITSAIncomeSourceForbiddenException, PostITSAIncomeSourceResponse, itsaIncomeSourceResponseHttpReads}
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.Request
 import services.monitoring.AuditService
-import uk.gov.hmrc.http.{Authorization, HeaderCarrier, HeaderNames, HttpClient, HttpReads}
+import uk.gov.hmrc.http.{Authorization, HeaderCarrier, HeaderNames, HttpClient, HttpReads, Retries}
 
 import java.time.format.DateTimeFormatter
 import java.time.{Instant, ZoneId}
@@ -34,8 +36,10 @@ import scala.concurrent.{ExecutionContext, Future}
 @Singleton
 class ItsaIncomeSourceConnector @Inject()(http: HttpClient,
                                           appConfig: AppConfig,
-                                          auditService: AuditService
-                                         )(implicit ec: ExecutionContext) {
+                                          auditService: AuditService,
+                                          val configuration: Config,
+                                          val actorSystem: ActorSystem,
+                                         )(implicit ec: ExecutionContext) extends Retries {
 
   private def itsaIncomeSourceUrl: String = {
     s"${appConfig.itsaIncomeSourceURL}/etmp/RESTAdapter/itsa/taxpayer/income-source"
@@ -51,36 +55,40 @@ class ItsaIncomeSourceConnector @Inject()(http: HttpClient,
                           createIncomeSources: CreateIncomeSourcesModel)
                          (implicit hc: HeaderCarrier, request: Request[_]): Future[PostITSAIncomeSourceResponse] = {
 
-    val hipHeaders: Map[String, String] = Map(
-      HeaderNames.authorisation -> appConfig.itsaIncomeSourceAuthorisationToken,
-      "correlationid" -> UUID.randomUUID().toString,
-      "X-Message-Type" -> "CreateIncomeSource",
-      "X-Originating-System" -> "MDTP",
-      "X-Receipt-Date" -> isoDatePattern.format(Instant.now()),
-      "X-Regime" -> "ITSA",
-      "X-Transmitting-System" -> "HIP"
-    )
-
     val headerCarrier: HeaderCarrier = hc
       .copy(authorization = Some(Authorization(appConfig.itsaIncomeSourceAuthorisationToken)))
 
-    http.POST[JsValue, PostITSAIncomeSourceResponse](
-      url = itsaIncomeSourceUrl,
-      body = Json.toJson(createIncomeSources)(CreateIncomeSourcesModel.hipWrites(mtdbsaRef)),
-      headers = hipHeaders.toSeq
-    )(
-      implicitly,
-      implicitly[HttpReads[PostITSAIncomeSourceResponse]],
-      headerCarrier,
-      implicitly
-    ) flatMap {
-      case Left(error) =>
-        Future.successful(Left(error))
-      case Right(value) =>
-        auditService.extendedAudit(CompletedSignUpAudit(agentReferenceNumber, createIncomeSources, appConfig.itsaIncomeSourceAuthorisationToken)) map {
-          _ => Right(value)
-        }
+    retryFor("API #0000 , ITSA Income Source ") {
+      case ITSAIncomeSourceForbiddenException => true
+      case _ => false
+    } {
+      val hipHeaders: Map[String, String] = Map(
+        HeaderNames.authorisation -> appConfig.itsaIncomeSourceAuthorisationToken,
+        "correlationid" -> UUID.randomUUID().toString,
+        "X-Message-Type" -> "CreateIncomeSource",
+        "X-Originating-System" -> "MDTP",
+        "X-Receipt-Date" -> isoDatePattern.format(Instant.now()),
+        "X-Regime" -> "ITSA",
+        "X-Transmitting-System" -> "HIP"
+      )
+      http.POST[JsValue, PostITSAIncomeSourceResponse](
+        url = itsaIncomeSourceUrl,
+        body = Json.toJson(createIncomeSources)(CreateIncomeSourcesModel.hipWrites(mtdbsaRef)),
+        headers = hipHeaders.toSeq
+      )(
+        implicitly,
+        implicitly[HttpReads[PostITSAIncomeSourceResponse]],
+        headerCarrier,
+        implicitly
+      ) flatMap {
+        case Left(error) =>
+          Future.successful(Left(error))
+        case Right(value) =>
+          auditService.extendedAudit(CompletedSignUpAudit(agentReferenceNumber, createIncomeSources, appConfig.itsaIncomeSourceAuthorisationToken)) map {
+            _ => Right(value)
+          }
+      }
     }
-  }
 
+  }
 }
