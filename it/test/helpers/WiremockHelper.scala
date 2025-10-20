@@ -30,13 +30,13 @@ object WiremockHelper extends Eventually with IntegrationPatience {
   val wiremockPort = 11111
   val wiremockHost = "localhost"
 
-  def verifyPost(uri: String, optBody: Option[String] = None): Unit = {
+  def verifyPost(uri: String, optBody: Option[String] = None,times:Int=1): Unit = {
     val uriMapping = postRequestedFor(urlEqualTo(uri))
     val postRequest = optBody match {
       case Some(body) => uriMapping.withRequestBody(equalTo(body))
       case None => uriMapping
     }
-    verify(postRequest)
+    verify(times,postRequest)
   }
 
   def verifyGet(uri: String, times: Int = 1): Unit = {
@@ -67,6 +67,24 @@ object WiremockHelper extends Eventually with IntegrationPatience {
             )
             .whenScenarioStateIs(if (index == 0) Scenario.STARTED else s"State #$index")
             .willSetStateTo(s"State #${index + 1}")
+        )
+    }
+  }
+
+  def stubPostSequence(url: String)(responses: StubResponse*): Unit = {
+    responses.zipWithIndex.foreach {
+      case (stubResponse, index) =>
+        stubFor(
+          post(urlMatching(url))
+            .inScenario(url)
+            .willReturn(
+              aResponse()
+                .withStatus(stubResponse.status)
+                .withBody(stubResponse.body.toString)
+            )
+            .whenScenarioStateIs(if (index == 0) Scenario.STARTED else s"State #$index")
+            .willSetStateTo(s"State #${index + 1}")
+
         )
     }
   }
