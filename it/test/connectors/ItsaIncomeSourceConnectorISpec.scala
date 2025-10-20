@@ -19,7 +19,6 @@ package connectors
 import helpers.{ComponentSpecBase, WiremockHelper}
 import helpers.IntegrationTestConstants.{testArn, testCreateIncomeFailureBody, testCreateIncomeSources, testMtdbsaRef}
 import helpers.WiremockHelper.StubResponse
-import helpers.servicemocks.AuditStub.stubAuditing
 import helpers.servicemocks.{AuditStub, CreateIncomeSourceStub}
 import models.subscription._
 import models.subscription.business.{CreateIncomeSourceErrorModel, CreateIncomeSourceSuccessModel}
