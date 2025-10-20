@@ -73,6 +73,7 @@ class ItsaIncomeSourceConnectorISpec extends ComponentSpecBase{
         uri = s"/etmp/RESTAdapter/itsa/taxpayer/income-source",
         times = 3
       )
+      AuditStub.verifyAudit()
     }
 
     s"return a failure response when receiving a non-$CREATED response" in {
