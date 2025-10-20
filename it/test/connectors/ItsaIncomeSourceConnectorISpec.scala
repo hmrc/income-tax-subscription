@@ -55,8 +55,7 @@ class ItsaIncomeSourceConnectorISpec extends ComponentSpecBase{
       AuditStub.verifyAudit()
     }
 
-    // re-structure the test
-    s"call the API a defined number of times in the event it returns a $FORBIDDEN" in {
+    s"should retry 2 times and return a successful response when receiving a $FORBIDDEN status" in {
       WiremockHelper.stubPostSequence(s"/etmp/RESTAdapter/itsa/taxpayer/income-source")(
         StubResponse(FORBIDDEN),
         StubResponse(FORBIDDEN),
@@ -69,10 +68,7 @@ class ItsaIncomeSourceConnectorISpec extends ComponentSpecBase{
         createIncomeSources = testCreateIncomeSources
       )
 
-      result.futureValue shouldBe Left(CreateIncomeSourceErrorModel(
-        status = INTERNAL_SERVER_ERROR,
-        reason = testCreateIncomeFailureBody.toString()
-      ))
+      result.futureValue shouldBe Right(CreateIncomeSourceSuccessModel())
 
       WiremockHelper.verifyPost(
         uri = s"/etmp/RESTAdapter/itsa/taxpayer/income-source",
