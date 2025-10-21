@@ -71,7 +71,7 @@ class PrePopControllerISpec extends ComponentSpecBase with FeatureSwitching {
         jsonBodyOf(expectedJson)
       )
 
-      // Temporarily commented out this line as it causes a test failure.
+      // Temporarily commented out this line as it causes a test failure
 //      AuditStub.verifyAudit()
     }
 
