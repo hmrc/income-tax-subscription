@@ -32,7 +32,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 trait MockLockoutStatusService extends CommonSpec with MockitoSugar with BeforeAndAfterEach {
 
-  val mockLockoutStatusService = mock[LockoutStatusService]
+  val mockLockoutStatusService: LockoutStatusService = mock[LockoutStatusService]
 
   override def beforeEach(): Unit = {
     super.beforeEach()
