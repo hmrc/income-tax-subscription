@@ -27,7 +27,8 @@ import repositories.mocks.MockLockoutRepository
 import services.LockoutStatusService
 import utils.TestConstants._
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.Future
+import scala.concurrent.ExecutionContext.Implicits.global
 
 trait MockLockoutStatusService extends CommonSpec with MockitoSugar with BeforeAndAfterEach {
 
@@ -62,7 +63,7 @@ trait MockLockoutStatusService extends CommonSpec with MockitoSugar with BeforeA
 }
 
 trait TestLockoutStatusService extends MockLockoutRepository {
-  implicit val ec: scala.concurrent.ExecutionContext = scala.concurrent.ExecutionContext.global
+//  implicit val ec: scala.concurrent.ExecutionContext = scala.concurrent.ExecutionContext.global
   object TestLockoutStatusService extends LockoutStatusService(mockLockoutMongoRepository)
 
 }
