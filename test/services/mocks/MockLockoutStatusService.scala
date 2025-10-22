@@ -63,7 +63,6 @@ trait MockLockoutStatusService extends CommonSpec with MockitoSugar with BeforeA
 }
 
 trait TestLockoutStatusService extends MockLockoutRepository {
-//  implicit val ec: scala.concurrent.ExecutionContext = scala.concurrent.ExecutionContext.global
   object TestLockoutStatusService extends LockoutStatusService(mockLockoutMongoRepository)
 
 }
