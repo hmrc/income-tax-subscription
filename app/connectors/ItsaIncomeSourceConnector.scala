@@ -38,7 +38,7 @@ class ItsaIncomeSourceConnector @Inject()(http: HttpClient,
                                           appConfig: AppConfig,
                                           auditService: AuditService,
                                           val configuration: Config,
-                                          val actorSystem: ActorSystem,
+                                          val actorSystem: ActorSystem
                                          )(implicit ec: ExecutionContext) extends Retries {
 
   private def itsaIncomeSourceUrl: String = {
