@@ -27,7 +27,8 @@ import repositories.mocks.MockLockoutRepository
 import services.LockoutStatusService
 import utils.TestConstants._
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.Future
+import scala.concurrent.ExecutionContext.Implicits.global
 
 trait MockLockoutStatusService extends CommonSpec with MockitoSugar with BeforeAndAfterEach {
 
@@ -39,9 +40,7 @@ trait MockLockoutStatusService extends CommonSpec with MockitoSugar with BeforeA
   }
 
   private def mockLockoutAgent(arn: String)(result: Future[Either[ErrorModel, Option[LockoutResponse]]]): Unit =
-    when(mockLockoutStatusService.lockoutAgent(ArgumentMatchers.eq(arn), ArgumentMatchers.any())(
-      ArgumentMatchers.any[ExecutionContext]
-    )).thenReturn(result)
+    when(mockLockoutStatusService.lockoutAgent(ArgumentMatchers.eq(arn), ArgumentMatchers.any())).thenReturn(result)
 
   def mockLockCreated(arn: String): Unit =
     mockLockoutAgent(arn)(Future.successful(testLockoutSuccess))
@@ -50,9 +49,7 @@ trait MockLockoutStatusService extends CommonSpec with MockitoSugar with BeforeA
     mockLockoutAgent(arn)(Future.successful(testLockoutFailure))
 
   private def mockGetLockoutStatus(arn: String)(result: Future[Either[ErrorModel, Option[LockoutResponse]]]): Unit =
-    when(mockLockoutStatusService.checkLockoutStatus(ArgumentMatchers.eq(arn))(
-      ArgumentMatchers.any[ExecutionContext]
-    )).thenReturn(result)
+    when(mockLockoutStatusService.checkLockoutStatus(ArgumentMatchers.eq(arn))).thenReturn(result)
 
   def mockLockedOut(arn: String): Unit =
     mockGetLockoutStatus(arn)(Future.successful(testLockoutSuccess))
@@ -66,7 +63,6 @@ trait MockLockoutStatusService extends CommonSpec with MockitoSugar with BeforeA
 }
 
 trait TestLockoutStatusService extends MockLockoutRepository {
-
   object TestLockoutStatusService extends LockoutStatusService(mockLockoutMongoRepository)
 
 }

@@ -42,7 +42,7 @@ class SessionDataServiceSpec extends CommonSpec with MockitoSugar with FeatureSw
 
   trait Setup {
     val mockSessionDataRepository: SessionDataRepository = mock[SessionDataRepository]
-    val service = new SessionDataService(mockSessionDataRepository, appConfig)
+    val service = new SessionDataService(mockSessionDataRepository)
   }
 
   val testJson: JsObject = Json.obj(

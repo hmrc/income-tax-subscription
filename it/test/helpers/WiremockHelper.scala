@@ -20,9 +20,10 @@ import com.github.tomakehurst.wiremock.WireMockServer
 import com.github.tomakehurst.wiremock.client.WireMock
 import com.github.tomakehurst.wiremock.client.WireMock._
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration._
-import com.github.tomakehurst.wiremock.stubbing.StubMapping
+import com.github.tomakehurst.wiremock.stubbing.{Scenario, StubMapping}
 import org.scalatest.concurrent.{Eventually, IntegrationPatience}
 import org.scalatestplus.play.guice.GuiceOneServerPerSuite
+import play.api.libs.json.{JsValue, Json}
 import play.api.libs.ws.WSClient
 
 object WiremockHelper extends Eventually with IntegrationPatience {
@@ -38,8 +39,8 @@ object WiremockHelper extends Eventually with IntegrationPatience {
     verify(postRequest)
   }
 
-  def verifyGet(uri: String): Unit = {
-    verify(getRequestedFor(urlMatching(uri)))
+  def verifyGet(uri: String, times: Int = 1): Unit = {
+    verify(times, getRequestedFor(urlMatching(uri)))
   }
 
   def stubGet(url: String, status: Integer, body: String): StubMapping =
@@ -50,6 +51,25 @@ object WiremockHelper extends Eventually with IntegrationPatience {
           withBody(body)
       )
     )
+
+  case class StubResponse(status: Int, body: JsValue = Json.obj())
+
+  def stubGetSequence(url: String)(responses: StubResponse*): Unit = {
+    responses.zipWithIndex.foreach {
+      case (stubResponse, index) =>
+        stubFor(
+          get(urlMatching(url))
+            .inScenario(url)
+            .willReturn(
+              aResponse()
+                .withStatus(stubResponse.status)
+                .withBody(stubResponse.body.toString)
+            )
+            .whenScenarioStateIs(if (index == 0) Scenario.STARTED else s"State #$index")
+            .willSetStateTo(s"State #${index + 1}")
+        )
+    }
+  }
 
   def stubPost(url: String, status: Integer, responseBody: String): StubMapping =
     stubFor(post(urlMatching(url))

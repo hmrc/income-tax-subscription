@@ -18,10 +18,11 @@ package connectors
 
 import config.MicroserviceAppConfig
 import config.featureswitch._
-import helpers.ComponentSpecBase
+import helpers.WiremockHelper.StubResponse
+import helpers.{ComponentSpecBase, WiremockHelper}
 import parsers.GetITSABusinessDetailsParser.{AlreadySignedUp, NotSignedUp}
 import play.api.http.HeaderNames
-import play.api.http.Status.{BAD_REQUEST, INTERNAL_SERVER_ERROR, OK, UNPROCESSABLE_ENTITY}
+import play.api.http.Status._
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.Request
 import play.api.test.FakeRequest
@@ -79,6 +80,23 @@ class GetITSABusinessDetailsConnectorISpec extends ComponentSpecBase with Featur
       val result = getITSABusinessConnector.getHIPBusinessDetails(testNino).futureValue
 
       result shouldBe NotSignedUp
+    }
+
+    s"call the API a defined number of times in the event it returns a $FORBIDDEN" in {
+      WiremockHelper.stubGetSequence(s"/etmp/RESTAdapter/itsa/taxpayer/business-details\\?nino=$testNino")(
+        StubResponse(FORBIDDEN),
+        StubResponse(FORBIDDEN),
+        StubResponse(UNPROCESSABLE_ENTITY, Json.obj("errors" -> Json.obj("code" -> "006")))
+      )
+
+      val result = getITSABusinessConnector.getHIPBusinessDetails(testNino).futureValue
+
+      result shouldBe NotSignedUp
+
+      WiremockHelper.verifyGet(
+        uri = s"/etmp/RESTAdapter/itsa/taxpayer/business-details\\?nino=$testNino",
+        times = 3
+      )
     }
 
     "throw InternalServerException for unsupported status" in {

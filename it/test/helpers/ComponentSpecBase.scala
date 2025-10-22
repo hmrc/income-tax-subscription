@@ -74,7 +74,12 @@ trait ComponentSpecBase extends AnyWordSpecLike
     "microservice.services.hip-pre-pop.host" -> mockHost,
     "microservice.services.hip-pre-pop.port" -> mockPort,
     "microservice.services.hip-itsa-status.host" -> mockHost,
-    "microservice.services.hip-itsa-status.port" -> mockPort
+    "microservice.services.hip-itsa-status.port" -> mockPort,
+    "http-verbs.retries.intervals.0" -> "10.milliseconds",
+    "http-verbs.retries.intervals.1" -> "10.milliseconds",
+    "http-verbs.retries.intervals.2" -> "10.milliseconds",
+    "http-verbs.retries.intervals.3" -> "10.milliseconds",
+    "http-verbs.retries.intervals.4" -> "10.milliseconds"
   ) ++ overriddenConfig()
 
   def overriddenConfig(): Map[String, String] = Map.empty

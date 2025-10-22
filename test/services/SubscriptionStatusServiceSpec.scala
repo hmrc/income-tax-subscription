@@ -17,14 +17,11 @@
 package services
 
 import common.CommonSpec
-import models.ErrorModel
 import models.frontend.FESuccessResponse
-import models.registration.GetBusinessDetailsSuccessResponseModel
 import org.mockito.ArgumentMatchers
 import org.mockito.Mockito.when
 import org.scalatest.concurrent.ScalaFutures.convertScalaFuture
 import parsers.GetITSABusinessDetailsParser.{AlreadySignedUp, NotSignedUp}
-import play.api.http.Status._
 import play.api.mvc.Request
 import play.api.test.FakeRequest
 import services.mocks.TestSubscriptionStatusService
@@ -43,7 +40,7 @@ class SubscriptionStatusServiceSpec extends CommonSpec with TestSubscriptionStat
     "return some mtditsa id" when {
       "he new connector returns a successful response" in {
         when(mockITSABusinessDetailsConnector.getHIPBusinessDetails(ArgumentMatchers.eq(testNino))(
-          ArgumentMatchers.any[HeaderCarrier], ArgumentMatchers.any[Request[_]]
+          ArgumentMatchers.any[HeaderCarrier]
         )).thenReturn(Future.successful(AlreadySignedUp(testMtditId)))
 
         NewTestSubscriptionStatusService
@@ -53,7 +50,7 @@ class SubscriptionStatusServiceSpec extends CommonSpec with TestSubscriptionStat
     }
     "return no identifier" when {
       "the new connector indicates that no subscription was found" in {
-        when(mockITSABusinessDetailsConnector.getHIPBusinessDetails(ArgumentMatchers.eq(testNino))(ArgumentMatchers.any(), ArgumentMatchers.any()))
+        when(mockITSABusinessDetailsConnector.getHIPBusinessDetails(ArgumentMatchers.eq(testNino))(ArgumentMatchers.any()))
           .thenReturn(Future.successful(NotSignedUp))
 
         NewTestSubscriptionStatusService

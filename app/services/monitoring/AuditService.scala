@@ -56,7 +56,7 @@ class AuditService @Inject()(configuration: Configuration,
     )
   }
 
-  def toExtendedDataEvent(appName: String, extendedAuditModel: ExtendedAuditModel, path: String)(implicit hc: HeaderCarrier): ExtendedDataEvent = {
+  private def toExtendedDataEvent(appName: String, extendedAuditModel: ExtendedAuditModel, path: String)(implicit hc: HeaderCarrier): ExtendedDataEvent = {
     val auditType: String = extendedAuditModel.auditType
     val transactionName: Option[String] = extendedAuditModel.transactionName
     val detail: JsValue = extendedAuditModel.detail
