@@ -20,7 +20,7 @@ import models.SignUpResponse.SignUpSuccess
 import models.{ErrorModel, SignUpResponse}
 import play.api.http.Status._
 import play.api.libs.json.{JsError, JsSuccess}
-import uk.gov.hmrc.http.{HttpReads, HttpResponse}
+import uk.gov.hmrc.http.{HttpReads, HttpResponse, InternalServerException}
 
 
 object SignUpParser {
@@ -39,6 +39,7 @@ object SignUpParser {
           case Some(JsSuccess(code, _)) => Left(ErrorModel(UNPROCESSABLE_ENTITY, code))
           case _ => Left(ErrorModel(UNPROCESSABLE_ENTITY, s"Failed to read Json for MTD Sign Up Response"))
         }
+        case FORBIDDEN => throw SignUpParserException(s"Failed to read Json for MTD Sign Up Response", FORBIDDEN)
         case status => Left(ErrorModel(status, response.body))
       }
   }
@@ -61,10 +62,12 @@ object SignUpParser {
             case _ => Left(ErrorModel(UNPROCESSABLE_ENTITY, s"Failed to read Json for MTD Sign Up Response"))
           }
         case UNPROCESSABLE_ENTITY => Left(ErrorModel(UNPROCESSABLE_ENTITY, s"Failed to read Json for MTD Sign Up Response"))
+        case FORBIDDEN => throw SignUpParserException(s"Failed to read Json for MTD Sign Up Response", FORBIDDEN)
         case status => Left(ErrorModel(status, response.body))
       }
   }
 
+  case class SignUpParserException(error: String, status: Int) extends InternalServerException(s"[SignUpParserException] - $error - $status")
   private val CustomerAlreadySignedUpEnum: String = "820"
 
 
