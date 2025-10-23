@@ -58,7 +58,7 @@ class ItsaIncomeSourceConnector @Inject()(http: HttpClient,
     val headerCarrier: HeaderCarrier = hc
       .copy(authorization = Some(Authorization(appConfig.itsaIncomeSourceAuthorisationToken)))
 
-    retryFor("API #0000 , ITSA Income Source ") {
+    retryFor("# API #5265 - ITSA Income Source") {
       case ITSAIncomeSourceForbiddenException => true
       case _ => false
     } {
