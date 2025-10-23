@@ -16,53 +16,69 @@
 
 package connectors
 
+import com.typesafe.config.Config
 import config.AppConfig
 import models.SignUpRequest
-import parsers.SignUpParser.{PostSignUpResponse, hipSignUpResponseHttpReads}
+import org.apache.pekko.actor.ActorSystem
+import parsers.SignUpParser.{PostSignUpResponse, SignUpParserException, hipSignUpResponseHttpReads}
+import play.api.http.Status.FORBIDDEN
 import play.api.libs.json.{JsObject, JsValue, Json}
-import uk.gov.hmrc.http.{Authorization, HeaderCarrier, HeaderNames, HttpClient, HttpReads}
+import uk.gov.hmrc.http.{Authorization, HeaderCarrier, HeaderNames, HttpClient, HttpReads, Retries}
 
-import java.time.{Instant, ZoneId}
 import java.time.format.DateTimeFormatter
+import java.time.{Instant, ZoneId}
 import java.util.UUID
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class HIPSignUpTaxYearConnector @Inject()(http: HttpClient,
-                                          val appConfig: AppConfig)(implicit ec: ExecutionContext) {
+                                          val appConfig: AppConfig,
+                                          val configuration: Config,
+                                          val actorSystem: ActorSystem)(implicit ec: ExecutionContext) extends Retries {
 
   def signUpUrl: String = s"${appConfig.hipSignUpServiceURL}/etmp/RESTAdapter/itsa/taxpayer/signup-mtdfb"
 
+  private val formatter = DateTimeFormatter
+    .ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'")
+    .withZone(ZoneId.of("UTC"))
+
   def requestBody(signUpRequest: SignUpRequest): JsObject =
-      Json.obj(
-        "signUpMTDfB" -> Json.obj(
-          "nino" -> signUpRequest.nino,
-          "utr" -> signUpRequest.utr,
-          "signupTaxYear" -> signUpRequest.taxYear
-        )
+    Json.obj(
+      "signUpMTDfB" -> Json.obj(
+        "nino" -> signUpRequest.nino,
+        "utr" -> signUpRequest.utr,
+        "signupTaxYear" -> signUpRequest.taxYear
       )
+    )
 
   def signUp(signUpRequest: SignUpRequest)(implicit hc: HeaderCarrier): Future[PostSignUpResponse] = {
 
     val headerCarrier: HeaderCarrier = hc
       .copy(authorization = Some(Authorization(appConfig.hipSignUpServiceAuthorisationToken)))
 
-    val formatter = DateTimeFormatter
-      .ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'")
-      .withZone(ZoneId.of("UTC"))
-
-    val headers: Seq[(String, String)] = Seq(
-      HeaderNames.authorisation -> appConfig.hipSignUpServiceAuthorisationToken,
-      "correlationid" -> UUID.randomUUID().toString,
-      "X-Message-Type" -> "ITSASignUpMTDfB",
-      "X-Originating-System" -> "MDTP",
-      "X-Receipt-Date" -> formatter.format(Instant.now()),
-      "X-Regime-Type" -> "ITSA",
-      "X-Transmitting-System" -> "HIP"
-    )
-
-    http.POST[JsValue, PostSignUpResponse](signUpUrl, requestBody(signUpRequest), headers = headers)(
-      implicitly, implicitly[HttpReads[PostSignUpResponse]], headerCarrier, implicitly)
+    retryFor("HIP API #1565 - Sign Up") {
+      case SignUpParserException(_, FORBIDDEN) => true
+      case _ => false
+    } {
+      val headers: Seq[(String, String)] = Seq(
+        HeaderNames.authorisation -> appConfig.hipSignUpServiceAuthorisationToken,
+        "correlationid" -> UUID.randomUUID().toString,
+        "X-Message-Type" -> "ITSASignUpMTDfB",
+        "X-Originating-System" -> "MDTP",
+        "X-Receipt-Date" -> formatter.format(Instant.now()),
+        "X-Regime-Type" -> "ITSA",
+        "X-Transmitting-System" -> "HIP"
+      )
+      http.POST[JsValue, PostSignUpResponse](
+        signUpUrl,
+        requestBody(signUpRequest),
+        headers = headers
+      )(
+        implicitly, implicitly[HttpReads[PostSignUpResponse]],
+        headerCarrier,
+        implicitly
+      )
+    }
   }
 }

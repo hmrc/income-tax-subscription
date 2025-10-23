@@ -17,9 +17,10 @@
 package connectors
 
 import config.MicroserviceAppConfig
-import helpers.ComponentSpecBase
+import helpers.{ComponentSpecBase, WiremockHelper}
 import helpers.IntegrationTestConstants._
-import helpers.servicemocks.HIPSignUpTaxYearStub
+import helpers.WiremockHelper.StubResponse
+import helpers.servicemocks.{AuditStub, HIPSignUpTaxYearStub}
 import models.SignUpResponse.{AlreadySignedUp, SignUpSuccess}
 import models.{ErrorModel, SignUpRequest}
 import play.api.http.Status._
@@ -131,6 +132,25 @@ class HIPSignUpTaxYearConnectorISpec extends ComponentSpecBase {
 
         result.futureValue shouldBe Left(
           ErrorModel(INTERNAL_SERVER_ERROR, """{"error":{"code":"500","message":"Server Error","logID":"C0000AB8190C8E1F000000C700006836"}}""")
+        )
+      }
+    }
+
+    "receiving a 403 response" should {
+      s"handle consecutive $FORBIDDEN responses and then succeed" in {
+        WiremockHelper.stubPostSequence(s"/etmp/RESTAdapter/itsa/taxpayer/signup-mtdfb")(
+          StubResponse(FORBIDDEN),
+          StubResponse(FORBIDDEN),
+          StubResponse(CREATED, hipTestSignUpSuccessBody)
+        )
+
+        val result = signUpConnector.signUp(testSignUpRequest)
+
+        result.futureValue shouldBe Right(SignUpSuccess("XQIT00000000001"))
+
+        WiremockHelper.verifyPost(
+          uri = s"/etmp/RESTAdapter/itsa/taxpayer/signup-mtdfb",
+          times = 3
         )
       }
     }
