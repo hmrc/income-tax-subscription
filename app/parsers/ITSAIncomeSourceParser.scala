@@ -19,20 +19,31 @@ package parsers
 import models.subscription.business.{CreateIncomeSourceErrorModel, CreateIncomeSourceSuccessModel}
 import play.api.Logging
 import play.api.http.Status.CREATED
-import uk.gov.hmrc.http.{HttpReads, HttpResponse}
+import play.api.http.Status.FORBIDDEN
+import uk.gov.hmrc.http.{HttpReads, HttpResponse, InternalServerException}
 
 object ITSAIncomeSourceParser extends Logging {
   type PostITSAIncomeSourceResponse = Either[CreateIncomeSourceErrorModel, CreateIncomeSourceSuccessModel]
 
-  implicit val itsaIncomeSourceResponseHttpReads: HttpReads[PostITSAIncomeSourceResponse] = {
-    (_: String, _: String, response: HttpResponse) =>
-      response.status match {
-        case CREATED =>
-          logger.debug("[ItsaIncomeSourcesResponseHttpReads][read]: Status Created")
-          Right(CreateIncomeSourceSuccessModel())
-        case status =>
-          logger.warn(s"[ItsaIncomeSourcesResponseHttpReads][read]: Unexpected response, status $status returned. Body: ${response.body}")
-          Left(CreateIncomeSourceErrorModel(status, response.body))
-      }
-  }
+    implicit val itsaIncomeSourceResponseHttpReads: HttpReads[PostITSAIncomeSourceResponse] = {
+      (_: String, _: String, response: HttpResponse) =>
+        response.status match {
+          case CREATED =>
+            logger.debug("[ItsaIncomeSourcesResponseHttpReads][read]: Status Created")
+            Right(CreateIncomeSourceSuccessModel())
+
+          case FORBIDDEN =>
+            logger.warn(s"[ItsaIncomeSourcesResponseHttpReads][read]: Unexpected response, status $FORBIDDEN returned. Body: ${response.body}")
+            throw  ITSAIncomeSourceForbiddenException
+
+          case status =>
+            logger.warn(s"[ItsaIncomeSourcesResponseHttpReads][read]: Unexpected response, status $status returned. Body: ${response.body}")
+            Left(CreateIncomeSourceErrorModel(status, response.body))
+
+        }
+    }
+
+  case object ITSAIncomeSourceForbiddenException extends InternalServerException(
+    "[ITSAIncomeSourceParserException- Forbidden status received] "
+  )
 }

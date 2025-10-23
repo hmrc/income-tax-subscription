@@ -16,13 +16,13 @@
 
 package connectors
 
-import helpers.ComponentSpecBase
+import helpers.{ComponentSpecBase, WiremockHelper}
 import helpers.IntegrationTestConstants.{testArn, testCreateIncomeFailureBody, testCreateIncomeSources, testMtdbsaRef}
-import helpers.servicemocks.AuditStub.stubAuditing
+import helpers.WiremockHelper.StubResponse
 import helpers.servicemocks.{AuditStub, CreateIncomeSourceStub}
 import models.subscription._
 import models.subscription.business.{CreateIncomeSourceErrorModel, CreateIncomeSourceSuccessModel}
-import play.api.http.Status.{CREATED, INTERNAL_SERVER_ERROR}
+import play.api.http.Status.{CREATED, FORBIDDEN, INTERNAL_SERVER_ERROR}
 import play.api.libs.json.Json
 import play.api.mvc.Request
 import play.api.test.FakeRequest
@@ -51,6 +51,28 @@ class ItsaIncomeSourceConnectorISpec extends ComponentSpecBase{
       )
 
       result.futureValue shouldBe Right(CreateIncomeSourceSuccessModel())
+      AuditStub.verifyAudit()
+    }
+
+    s"should retry 2 times and return a successful response when receiving a $FORBIDDEN status" in {
+      WiremockHelper.stubPostSequence(s"/etmp/RESTAdapter/itsa/taxpayer/income-source")(
+        StubResponse(FORBIDDEN),
+        StubResponse(FORBIDDEN),
+        StubResponse(CREATED)
+      )
+
+      val result = connector.createIncomeSources(
+        agentReferenceNumber = Some(testArn),
+        mtdbsaRef = testMtdbsaRef,
+        createIncomeSources = testCreateIncomeSources
+      )
+
+      result.futureValue shouldBe Right(CreateIncomeSourceSuccessModel())
+
+      WiremockHelper.verifyPost(
+        uri = s"/etmp/RESTAdapter/itsa/taxpayer/income-source",
+        times = 3
+      )
       AuditStub.verifyAudit()
     }
 

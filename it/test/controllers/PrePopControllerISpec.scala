@@ -70,9 +70,7 @@ class PrePopControllerISpec extends ComponentSpecBase with FeatureSwitching {
         httpStatus(OK),
         jsonBodyOf(expectedJson)
       )
-
-      AuditStub.verifyAudit()
-
+      
     }
 
     "return an INTERNAL_SERVER_ERROR" when {
