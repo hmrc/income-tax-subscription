@@ -33,11 +33,6 @@ trait AppConfig {
   val itsaIncomeSourceURL: String
   val itsaIncomeSourceAuthorisationToken: String
 
-  def getBusinessDetailsURL: String
-
-  val getBusinessDetailsAuthorisationToken: String
-  val getBusinessDetailsEnvironment: String
-
   val hipBusinessDetailsURL: String
   val getItsaBusinessDetailsEnvironmentToken: String
 
@@ -65,12 +60,6 @@ trait AppConfig {
 class MicroserviceAppConfig @Inject()(servicesConfig: ServicesConfig, val configuration: Configuration) extends AppConfig {
 
   private def loadConfig(key: String) = servicesConfig.getString(key)
-
-  override lazy val getBusinessDetailsURL: String = servicesConfig.baseUrl("get-business-details")
-
-  private val getBusinessDetailsBase = "microservice.services.get-business-details"
-  override lazy val getBusinessDetailsAuthorisationToken: String = s"Bearer ${loadConfig(s"$getBusinessDetailsBase.authorization-token")}"
-  override lazy val getBusinessDetailsEnvironment: String = loadConfig(s"$getBusinessDetailsBase.environment")
 
   override lazy val hipBusinessDetailsURL: String = servicesConfig.baseUrl("get-itsa-business-details")
   override lazy val getItsaBusinessDetailsEnvironmentToken = s"Basic ${loadConfig("microservice.services.get-itsa-business-details.authorization-token")}"
