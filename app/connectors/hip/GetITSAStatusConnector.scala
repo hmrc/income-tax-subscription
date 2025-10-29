@@ -17,10 +17,10 @@
 package connectors.hip
 
 import config.AppConfig
-import parsers.hip.GetITSAStatusParser._
 import models.subscription.AccountingPeriodUtil
+import parsers.hip.GetITSAStatusParser._
 import uk.gov.hmrc.http.client.HttpClientV2
-import uk.gov.hmrc.http.{Authorization, HeaderCarrier, HeaderNames, StringContextOps}
+import uk.gov.hmrc.http.{HeaderCarrier, HeaderNames, StringContextOps}
 
 import java.net.URL
 import java.util.UUID
