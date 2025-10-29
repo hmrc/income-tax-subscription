@@ -59,8 +59,8 @@ class MandationStatusController @Inject()(
               val current = response.taxYearStatus.find(_.taxYear == AccountingPeriodUtil.getCurrentTaxYear.toItsaStatusShortTaxYear).map(_.status)
               val next = response.taxYearStatus.find(_.taxYear == AccountingPeriodUtil.getNextTaxYear.toItsaStatusShortTaxYear).map(_.status)
               (current, next)
-            case Left(error) =>
-              throw new InternalServerException(s"[MandationStatusController] - Failure response fetching mandation status. ${error.status}, ${error.reason}")
+            case Left(_) =>
+              throw new InternalServerException("[MandationStatusController] - Failure response fetching mandation status.")
           }
         } else {
           mandationStatusConnector.getItsaStatus(requestBody.nino, requestBody.utr) map {

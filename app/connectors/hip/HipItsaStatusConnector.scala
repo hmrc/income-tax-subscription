@@ -18,45 +18,36 @@ package connectors.hip
 
 import config.AppConfig
 import models.subscription.AccountingPeriodUtil
-import parsers.ItsaStatusParser.{GetItsaStatusResponse, itsaStatusResponseHttpReads}
-import uk.gov.hmrc.http.{Authorization, HeaderCarrier, HeaderNames, HttpClient, HttpReads}
+import parsers.hip.HipItsaStatusParser._
+import uk.gov.hmrc.http.client.HttpClientV2
+import uk.gov.hmrc.http.{HeaderCarrier, HeaderNames, StringContextOps}
 
+import java.net.URL
 import java.util.UUID
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class HipItsaStatusConnector @Inject()(
-  httpClient: HttpClient,
+  httpClient: HttpClientV2,
   appConfig: AppConfig
 )(implicit ec: ExecutionContext) {
 
   def getItsaStatus(
     nino: String,
     utr: String
-  )(implicit hc: HeaderCarrier): Future[GetItsaStatusResponse] = {
+  )(implicit hc: HeaderCarrier): Future[HipItsaStatusResponse] = {
 
     val headers: Map[String, String] = Map(
       HeaderNames.authorisation -> appConfig.hipItsaStatusAuthorisationToken,
       "correlationId" -> UUID.randomUUID().toString
     )
 
-    val headerCarrier: HeaderCarrier = hc
-      .copy(authorization = Some(Authorization(appConfig.getITSAStatusAuthorisationToken)))
-      .withExtraHeaders((headers - HeaderNames.authorisation).toSeq: _*)
-
-    httpClient.GET[GetItsaStatusResponse](
-      url = getItsaStatusUrl(nino, utr),
-      headers = headers.toSeq
-    )(
-      implicitly[HttpReads[GetItsaStatusResponse]],
-      headerCarrier,
-      implicitly
-    )
+    val call = httpClient.get(getItsaStatusUrl(nino, utr))
+    headers.foldLeft(call)((a, b) => a.setHeader(b)).execute
   }
 
-  private def getItsaStatusUrl(nino: String, utr: String): String = {
-    s"${appConfig.hipItsaStatusURL}/itsd/itsa-status/signup/$nino/$utr/${AccountingPeriodUtil.getCurrentTaxYear.toItsaStatusShortTaxYear}"
+  private def getItsaStatusUrl(nino: String, utr: String): URL = {
+    url"${appConfig.hipItsaStatusURL}/itsd/itsa-status/signup/$nino/$utr/${AccountingPeriodUtil.getCurrentTaxYear.toItsaStatusShortTaxYear}"
   }
-
 }

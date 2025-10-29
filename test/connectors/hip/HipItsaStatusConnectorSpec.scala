@@ -18,6 +18,7 @@ package connectors.hip
 
 import common.CommonSpec
 import config.AppConfig
+import connectors.{InvalidJson, UnexpectedStatus}
 import connectors.mocks.MockHttp
 import models.ErrorModel
 import models.status.ITSAStatus.MTDVoluntary
@@ -26,23 +27,18 @@ import models.subscription.AccountingPeriodUtil
 import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito.when
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
-import parsers.GetITSAStatusParser.{GetITSAStatusTaxYearResponse, ITSAStatusDetail}
-import parsers.ItsaStatusParser.GetItsaStatusResponse
-import play.api.http.Status.SERVICE_UNAVAILABLE
+import parsers.hip.HipItsaStatusParser.GetITSAStatusHttpReads
+import play.api.http.Status.{INTERNAL_SERVER_ERROR, OK, SERVICE_UNAVAILABLE}
+import play.api.libs.json.Json
 import play.api.mvc.Request
 import play.api.test.FakeRequest
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
-import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 class HipItsaStatusConnectorSpec extends CommonSpec with MockHttp with GuiceOneAppPerSuite {
-  implicit val hc: HeaderCarrier = HeaderCarrier()
-  implicit val request: Request[_] = FakeRequest()
-
-  val appConfig: AppConfig = app.injector.instanceOf[AppConfig]
-  val connector = new HipItsaStatusConnector(mockHttpClient, appConfig)
 
   "getItsaStatus" should {
     "retrieve iTSA status" when {
@@ -54,25 +50,30 @@ class HipItsaStatusConnectorSpec extends CommonSpec with MockHttp with GuiceOneA
           ))
         )
 
-        when(mockHttpClient.GET[GetItsaStatusResponse](any(), any(), any())(any(), any(), any())).thenReturn(
-          Future.successful(Right(data))
+        val response = HttpResponse(
+          OK,
+          Json.toJson(data.taxYearStatus).toString
         )
 
-        await(
-          connector.getItsaStatus("test-nino", "test-utr")
-        ) shouldBe Right(data)
+        GetITSAStatusHttpReads.read("", "", response) shouldBe Right(data)
       }
 
-      "the HIP API #5197 returns an error" in {
-        val error = ErrorModel(SERVICE_UNAVAILABLE, "")
-
-        when(mockHttpClient.GET[GetItsaStatusResponse](any(), any(), any())(any(), any(), any())).thenReturn(
-          Future.successful(Left(error))
+      "the HIP API #5197 returns invalid Json" in {
+        val response = HttpResponse(
+          OK,
+          Json.obj().toString
         )
 
-        await(
-          connector.getItsaStatus("test-nino", "test-utr")
-        ) shouldBe Left(error)
+        GetITSAStatusHttpReads.read("", "", response) shouldBe Left(InvalidJson)
+      }
+
+      "the HIP API #5197 returns unexpected status" in {
+        val response = HttpResponse(
+          INTERNAL_SERVER_ERROR,
+          Json.obj().toString
+        )
+
+        GetITSAStatusHttpReads.read("", "", response) shouldBe Left(UnexpectedStatus(INTERNAL_SERVER_ERROR))
       }
     }
   }
