@@ -20,7 +20,7 @@ import config.AppConfig
 import models.subscription.AccountingPeriodUtil
 import parsers.hip.GetITSAStatusParser._
 import uk.gov.hmrc.http.client.HttpClientV2
-import uk.gov.hmrc.http.{HeaderCarrier, HeaderNames, StringContextOps}
+import uk.gov.hmrc.http.{Authorization, HeaderCarrier, HeaderNames, StringContextOps}
 
 import java.net.URL
 import java.util.UUID
@@ -38,7 +38,11 @@ class GetITSAStatusConnector @Inject()(httpClient: HttpClientV2,
       "correlationId" -> UUID.randomUUID().toString
     )
 
-    val call = httpClient.get(getItsaStatusUrl(utr))
+    val headerCarrier: HeaderCarrier = hc
+      .copy(authorization = Some(Authorization(appConfig.getITSAStatusAuthorisationToken)))
+      .withExtraHeaders((headers - HeaderNames.authorisation).toSeq: _*)
+
+    val call = httpClient.get(getItsaStatusUrl(utr))(headerCarrier)
     headers.foldLeft(call)((a, b) => a.setHeader(b)).execute
   }
 
