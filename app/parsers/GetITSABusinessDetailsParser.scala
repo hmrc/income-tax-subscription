@@ -34,7 +34,7 @@ object GetITSABusinessDetailsParser {
 
   case object NotSignedUp extends GetITSABusinessDetailsResponse
 
-  implicit object getITSABusinessDetailsResponseHttpReads extends HttpReads[GetITSABusinessDetailsResponse] {
+  implicit object GetITSABusinessDetailsResponseHttpReads extends HttpReads[GetITSABusinessDetailsResponse] {
     override def read(method: String, url: String, response: HttpResponse): GetITSABusinessDetailsResponse = {
       response.status match {
         case OK =>

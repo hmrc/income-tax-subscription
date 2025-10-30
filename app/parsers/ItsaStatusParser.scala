@@ -23,17 +23,19 @@ import play.api.libs.json.{JsError, JsSuccess}
 import uk.gov.hmrc.http.{HttpReads, HttpResponse}
 
 object ItsaStatusParser {
+
   type GetItsaStatusResponse = Either[ErrorModel, ItsaStatusResponse]
 
-  implicit val itsaStatusResponseHttpReads: HttpReads[GetItsaStatusResponse] =
-    (_: String, _: String, response: HttpResponse) => {
+  implicit object ItsaStatusResponseHttpReads extends HttpReads[GetItsaStatusResponse] {
+    override def read(method: String, url: String, response: HttpResponse): GetItsaStatusResponse = {
       response.status match {
         case OK => response.json.validate[List[TaxYearStatus]] match {
           case JsSuccess(value, _) => Right(ItsaStatusResponse(value))
-          case JsError(errors) =>
-            Left(ErrorModel(OK, s"Invalid Json for itsaStatusResponseHttpReads: $errors"))
+          case JsError(_) =>
+            Left(ErrorModel(OK, "Invalid Json for ItsaStatusResponseHttpReads"))
         }
-        case status => Left(ErrorModel(status, response.body))
+        case status => Left(ErrorModel(status, "Invalid status received"))
       }
     }
+  }
 }

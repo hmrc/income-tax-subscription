@@ -59,7 +59,8 @@ class ItsaStatusConnectorISpec extends ComponentSpecBase {
 
         val result = connector.getItsaStatus("test-nino", "test-utr")
 
-        result.futureValue shouldBe Left(ErrorModel(OK, "Invalid Json for itsaStatusResponseHttpReads: List((,List(JsonValidationError(List(error.expected.jsarray),List()))))"))
+        result.futureValue shouldBe
+          Left(ErrorModel(OK, "Invalid Json for ItsaStatusResponseHttpReads"))
       }
     }
 
@@ -82,7 +83,7 @@ class ItsaStatusConnectorISpec extends ComponentSpecBase {
 
         result.futureValue shouldBe Left(ErrorModel(
           INTERNAL_SERVER_ERROR,
-          """{"failures":[{"code":"INVALID_TAX_YEAR","reason":"Submission has not passed validation. Invalid parameter taxYear."}]}"""
+          "Invalid status received"
         ))
       }
     }
