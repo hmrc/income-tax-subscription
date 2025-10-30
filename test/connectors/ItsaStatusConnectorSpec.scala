@@ -17,31 +17,17 @@
 package connectors
 
 import common.CommonSpec
-import config.AppConfig
 import connectors.mocks.MockHttp
 import models.ErrorModel
 import models.status.ITSAStatus.MTDVoluntary
 import models.status.{ItsaStatusResponse, TaxYearStatus}
-import models.subscription.AccountingPeriodUtil
-import org.mockito.ArgumentMatchers
-import org.mockito.Mockito.when
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
-import parsers.ItsaStatusParser.GetItsaStatusResponse
-import play.api.http.Status.INTERNAL_SERVER_ERROR
-import play.api.mvc.Request
-import play.api.test.FakeRequest
-import play.api.test.Helpers.{await, defaultAwaitTimeout}
-import uk.gov.hmrc.http.HeaderCarrier
-
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.{ExecutionContext, Future}
+import parsers.ItsaStatusParser.ItsaStatusResponseHttpReads
+import play.api.http.Status.{INTERNAL_SERVER_ERROR, OK}
+import play.api.libs.json.Json
+import uk.gov.hmrc.http.HttpResponse
 
 class ItsaStatusConnectorSpec extends CommonSpec with MockHttp with GuiceOneAppPerSuite {
-  implicit val hc: HeaderCarrier = HeaderCarrier()
-  implicit val request: Request[_] = FakeRequest()
-
-  val appConfig: AppConfig = app.injector.instanceOf[AppConfig]
-  val connector = new ItsaStatusConnector(mockHttpClient, appConfig)
 
   "getItsaStatus" should {
     "retrieve the user ITSA status" when {
@@ -53,36 +39,35 @@ class ItsaStatusConnectorSpec extends CommonSpec with MockHttp with GuiceOneAppP
           )
         )
 
-        mockItsaStatusResponse(Future.successful(Right(expectedResponse)))
+        val response = HttpResponse(
+          OK,
+          Json.toJson(expectedResponse.taxYearStatus).toString
+        )
 
-        await(
-          connector.getItsaStatus("test-nino", "test-utr")
-        ) shouldBe Right(expectedResponse)
+        ItsaStatusResponseHttpReads.read("", "", response) shouldBe
+          Right(expectedResponse)
       }
     }
 
     "return an error" when {
-      "the status-determination-service returns a failed response" in {
-        val expectedResponse = ErrorModel(INTERNAL_SERVER_ERROR, """{failures:[{"code":"code","reason":"reason"}]}""")
+      "the status-determination-service returns invalid Json" in {
+        val response = HttpResponse(
+          OK,
+          Json.obj().toString
+        )
 
-        mockItsaStatusResponse(Future.successful(Left(expectedResponse)))
+        ItsaStatusResponseHttpReads.read("", "", response) shouldBe
+          Left(ErrorModel(OK, "Invalid Json for ItsaStatusResponseHttpReads"))
+      }
+      "the status-determination-service returns an invalid status" in {
+        val response = HttpResponse(
+          INTERNAL_SERVER_ERROR,
+          Json.obj().toString
+        )
 
-        await(
-          connector.getItsaStatus("test-nino", "test-utr")
-        ) shouldBe Left(expectedResponse)
+        ItsaStatusResponseHttpReads.read("", "", response) shouldBe
+          Left(ErrorModel(INTERNAL_SERVER_ERROR, "Invalid status received"))
       }
     }
-  }
-
-  private def mockItsaStatusResponse(expectedResponse: Future[GetItsaStatusResponse]) = {
-    val years: String = AccountingPeriodUtil.getCurrentTaxYear.toItsaStatusShortTaxYear
-    val url = s"${appConfig.statusDeterminationServiceURL}/income-tax/itsa-status/test-nino/test-utr/$years"
-
-    when(mockHttpClient.GET[GetItsaStatusResponse](
-      ArgumentMatchers.eq(url),
-      ArgumentMatchers.any(),
-      ArgumentMatchers.any()
-    )(ArgumentMatchers.any(), ArgumentMatchers.any(), ArgumentMatchers.any[ExecutionContext])
-    ).thenReturn(expectedResponse)
   }
 }

@@ -17,21 +17,23 @@
 package connectors.hip
 
 import config.AppConfig
-import parsers.hip.HipPrePopParser.{GetHipPrePopResponse, GetHipPrePopResponseHttpReads}
-import uk.gov.hmrc.http.{Authorization, HeaderCarrier, HeaderNames, HttpClient, HttpReads}
+import parsers.hip.HipPrePopParser._
+import uk.gov.hmrc.http.client.HttpClientV2
+import uk.gov.hmrc.http.{Authorization, HeaderCarrier, HeaderNames, HttpClient, HttpReads, StringContextOps}
 
+import java.net.URL
 import java.util.UUID
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class HipPrePopConnector @Inject()(
-  http: HttpClient,
+  http: HttpClientV2,
   appConfig: AppConfig
 )(implicit ec: ExecutionContext) {
 
-  private def hipPrePopUrl(nino: String): String =
-    s"${appConfig.hipPrePopURL}/cesa/prepopulation/businessdata/$nino"
+  private def hipPrePopUrl(nino: String): URL =
+    url"${appConfig.hipPrePopURL}/cesa/prepopulation/businessdata/$nino"
 
   def getHipPrePopData(
     nino: String
@@ -45,13 +47,7 @@ class HipPrePopConnector @Inject()(
     val headerCarrier: HeaderCarrier = hc
       .copy(authorization = Some(Authorization(appConfig.hipPrePopAuthorisationToken)))
 
-    http.GET[GetHipPrePopResponse](
-      url = hipPrePopUrl(nino),
-      headers = headers.toSeq
-    )(
-      implicitly[HttpReads[GetHipPrePopResponse]],
-      headerCarrier,
-      implicitly
-    )
+    val call = http.get(hipPrePopUrl(nino))(headerCarrier)
+    headers.foldLeft(call)((a, b) => a.setHeader(b)).execute
   }
 }

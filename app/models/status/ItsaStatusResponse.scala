@@ -20,6 +20,10 @@ import play.api.libs.json.{Json, OFormat}
 
 case class ItsaStatusResponse(taxYearStatus: List[TaxYearStatus])
 
+object ItsaStatusResponse {
+  implicit val format: OFormat[ItsaStatusResponse] = Json.format[ItsaStatusResponse]
+}
+
 case class TaxYearStatus(taxYear: String, status: ITSAStatus)
 
 object TaxYearStatus {

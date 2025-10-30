@@ -40,7 +40,7 @@ class ItsaStatusParserSpec extends CommonSpec {
           body = Json.toJson(expectedResponse).toString()
         )
 
-        ItsaStatusParser.itsaStatusResponseHttpReads.read("POST", "test-url", response) shouldBe
+        ItsaStatusParser.ItsaStatusResponseHttpReads.read("POST", "test-url", response) shouldBe
           Right(ItsaStatusResponse(expectedResponse))
       }
     }
@@ -54,21 +54,15 @@ class ItsaStatusParserSpec extends CommonSpec {
             |]
           """.stripMargin)
 
-        val expectedError = "Invalid Json for itsaStatusResponseHttpReads: " +
-          "List(" +
-          "((0)/taxYear,List(JsonValidationError(List(error.path.missing),List()))), " +
-          "((0)/status,List(JsonValidationError(List(error.path.missing),List())))" +
-          ")"
-
-        ItsaStatusParser.itsaStatusResponseHttpReads.read("POST", "test-url", response) shouldBe
-          Left(ErrorModel(OK, expectedError))
+        ItsaStatusParser.ItsaStatusResponseHttpReads.read("POST", "test-url", response) shouldBe
+          Left(ErrorModel(OK, "Invalid Json for ItsaStatusResponseHttpReads"))
       }
 
       "supplied with a failed response" in {
         val response = HttpResponse(INTERNAL_SERVER_ERROR, body = "Error body")
 
-        ItsaStatusParser.itsaStatusResponseHttpReads.read("POST", "test-url", response) shouldBe
-          Left(ErrorModel(INTERNAL_SERVER_ERROR, "Error body"))
+        ItsaStatusParser.ItsaStatusResponseHttpReads.read("POST", "test-url", response) shouldBe
+          Left(ErrorModel(INTERNAL_SERVER_ERROR, "Invalid status received"))
       }
     }
   }

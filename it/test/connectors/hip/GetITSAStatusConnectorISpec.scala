@@ -18,13 +18,12 @@ package connectors.hip
 
 import helpers.ComponentSpecBase
 import helpers.servicemocks.hip.GetITSAStatusStub
+import models.ErrorModel
 import models.status.ITSAStatus.{MTDMandated, MTDVoluntary}
 import models.subscription.AccountingPeriodUtil
 import parsers.GetITSAStatusParser.{GetITSAStatusTaxYearResponse, ITSAStatusDetail}
 import play.api.http.Status.{INTERNAL_SERVER_ERROR, OK}
-import play.api.libs.json.{Json, JsonValidationError, __}
-import play.api.test.Helpers.{await, defaultAwaitTimeout}
-import uk.gov.hmrc.http.InternalServerException
+import play.api.libs.json.Json
 
 class GetITSAStatusConnectorISpec extends ComponentSpecBase {
 
@@ -62,7 +61,7 @@ class GetITSAStatusConnectorISpec extends ComponentSpecBase {
 
         val result = connector.getItsaStatus(testUtr)
 
-        result.futureValue shouldBe Seq(
+        result.futureValue shouldBe Right(Seq(
           GetITSAStatusTaxYearResponse(
             taxYear = currentTaxYear,
             itsaStatusDetails = Seq(
@@ -75,7 +74,7 @@ class GetITSAStatusConnectorISpec extends ComponentSpecBase {
               ITSAStatusDetail(MTDMandated)
             )
           )
-        )
+        ))
       }
     }
     "a successful response is returned with invalid json" should {
@@ -87,8 +86,8 @@ class GetITSAStatusConnectorISpec extends ComponentSpecBase {
 
         val result = connector.getItsaStatus(testUtr)
 
-        intercept[InternalServerException](await(result))
-          .message shouldBe s"[GetITSAStatusParser] - Failure parsing json. Errors: ${Seq(__ -> Seq(JsonValidationError("error.expected.jsarray")))}"
+        result.futureValue shouldBe
+          Left(ErrorModel(OK, "Failure parsing json response from itsa status api"))
       }
     }
     "an unexpected status is returned" should {
@@ -100,10 +99,9 @@ class GetITSAStatusConnectorISpec extends ComponentSpecBase {
 
         val result = connector.getItsaStatus(testUtr)
 
-        intercept[InternalServerException](await(result))
-          .message shouldBe "[GetITSAStatusParser] - Unsupported status received: 500"
+        result.futureValue shouldBe
+          Left(ErrorModel(INTERNAL_SERVER_ERROR, "Unexpected status returned from itsa status api"))
       }
     }
   }
-
 }

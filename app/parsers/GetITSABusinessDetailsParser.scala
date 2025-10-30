@@ -34,8 +34,8 @@ object GetITSABusinessDetailsParser {
 
   case object NotSignedUp extends GetITSABusinessDetailsResponse
 
-  implicit val getITSABusinessDetailsResponseHttpReads: HttpReads[GetITSABusinessDetailsResponse] =
-    (_: String, _: String, response: HttpResponse) => {
+  implicit object GetITSABusinessDetailsResponseHttpReads extends HttpReads[GetITSABusinessDetailsResponse] {
+    override def read(method: String, url: String, response: HttpResponse): GetITSABusinessDetailsResponse = {
       response.status match {
         case OK =>
           response.json.validate[AlreadySignedUp] match {
@@ -52,6 +52,7 @@ object GetITSABusinessDetailsParser {
           throw GetITSABusinessDetailsParserException("Unsupported status received", status)
       }
     }
+  }
 
   case class GetITSABusinessDetailsParserException(error: String, status: Int) extends InternalServerException(
     s"[GetITSABusinessDetailsParser] - $error - $status"

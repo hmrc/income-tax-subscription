@@ -19,9 +19,10 @@ package connectors
 import com.typesafe.config.Config
 import config.AppConfig
 import org.apache.pekko.actor.ActorSystem
-import parsers.GetITSABusinessDetailsParser.{GetITSABusinessDetailsParserException, GetITSABusinessDetailsResponse}
+import parsers.GetITSABusinessDetailsParser._
 import play.api.http.Status.FORBIDDEN
-import uk.gov.hmrc.http.{Authorization, HeaderCarrier, HeaderNames, HttpClient, HttpReads, Retries}
+import uk.gov.hmrc.http.client.HttpClientV2
+import uk.gov.hmrc.http.{Authorization, HeaderCarrier, HeaderNames, Retries, StringContextOps}
 
 import java.time.format.DateTimeFormatter
 import java.time.{Instant, ZoneId}
@@ -30,7 +31,7 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class GetITSABusinessDetailsConnector @Inject()(httpClient: HttpClient,
+class GetITSABusinessDetailsConnector @Inject()(httpClient: HttpClientV2,
                                                 appConfig: AppConfig,
                                                 val configuration: Config,
                                                 val actorSystem: ActorSystem)(implicit ec: ExecutionContext) extends Retries {
@@ -57,15 +58,12 @@ class GetITSABusinessDetailsConnector @Inject()(httpClient: HttpClient,
         "X-Transmitting-System" -> "HIP"
       )
 
-      httpClient.GET[GetITSABusinessDetailsResponse](url = getHIPBusinessDetailsUrl(nino), headers = headers)(
-        implicitly[HttpReads[GetITSABusinessDetailsResponse]],
-        headerCarrier,
-        implicitly
-      )
+      val call = httpClient.get(getHIPBusinessDetailsUrl(nino))(headerCarrier)
+      headers.foldLeft(call)((a, b) => a.setHeader(b)).execute
     }
   }
 
   private def getHIPBusinessDetailsUrl(nino: String) =
-    s"${appConfig.hipBusinessDetailsURL}/etmp/RESTAdapter/itsa/taxpayer/business-details?nino=$nino"
+    url"${appConfig.hipBusinessDetailsURL}/etmp/RESTAdapter/itsa/taxpayer/business-details?nino=$nino"
 
 }

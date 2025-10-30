@@ -21,12 +21,14 @@ import config.AppConfig
 import models.monitoring.CompletedSignUpAudit
 import models.subscription.CreateIncomeSourcesModel
 import org.apache.pekko.actor.ActorSystem
-import parsers.ITSAIncomeSourceParser.{ITSAIncomeSourceForbiddenException, PostITSAIncomeSourceResponse, itsaIncomeSourceResponseHttpReads}
-import play.api.libs.json.{JsValue, Json}
+import parsers.ITSAIncomeSourceParser._
+import play.api.libs.json.Json
 import play.api.mvc.Request
 import services.monitoring.AuditService
-import uk.gov.hmrc.http.{Authorization, HeaderCarrier, HeaderNames, HttpClient, HttpReads, Retries}
+import uk.gov.hmrc.http.client.HttpClientV2
+import uk.gov.hmrc.http.{Authorization, HeaderCarrier, HeaderNames, Retries, StringContextOps}
 
+import java.net.URL
 import java.time.format.DateTimeFormatter
 import java.time.{Instant, ZoneId}
 import java.util.UUID
@@ -34,16 +36,15 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class ItsaIncomeSourceConnector @Inject()(http: HttpClient,
+class ItsaIncomeSourceConnector @Inject()(http: HttpClientV2,
                                           appConfig: AppConfig,
                                           auditService: AuditService,
                                           val configuration: Config,
                                           val actorSystem: ActorSystem
                                          )(implicit ec: ExecutionContext) extends Retries {
 
-  private def itsaIncomeSourceUrl: String = {
-    s"${appConfig.itsaIncomeSourceURL}/etmp/RESTAdapter/itsa/taxpayer/income-source"
-  }
+  private def itsaIncomeSourceUrl: URL =
+    url"${appConfig.itsaIncomeSourceURL}/etmp/RESTAdapter/itsa/taxpayer/income-source"
 
   private val isoDatePattern: DateTimeFormatter = DateTimeFormatter
     .ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'")
@@ -71,16 +72,10 @@ class ItsaIncomeSourceConnector @Inject()(http: HttpClient,
         "X-Regime" -> "ITSA",
         "X-Transmitting-System" -> "HIP"
       )
-      http.POST[JsValue, PostITSAIncomeSourceResponse](
-        url = itsaIncomeSourceUrl,
-        body = Json.toJson(createIncomeSources)(CreateIncomeSourcesModel.hipWrites(mtdbsaRef)),
-        headers = hipHeaders.toSeq
-      )(
-        implicitly,
-        implicitly[HttpReads[PostITSAIncomeSourceResponse]],
-        headerCarrier,
-        implicitly
-      ) flatMap {
+
+      val call = http.post(itsaIncomeSourceUrl)(headerCarrier)
+        .withBody(Json.toJson(createIncomeSources)(CreateIncomeSourcesModel.hipWrites(mtdbsaRef)))
+      hipHeaders.foldLeft(call)((a, b) => a.setHeader(b)).execute flatMap {
         case Left(error) =>
           Future.successful(Left(error))
         case Right(value) =>
@@ -89,6 +84,5 @@ class ItsaIncomeSourceConnector @Inject()(http: HttpClient,
           }
       }
     }
-
   }
 }

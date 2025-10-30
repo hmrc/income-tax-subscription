@@ -24,22 +24,18 @@ import models.hip.{SelfEmp, SelfEmpHolder}
 import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito.when
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
-import parsers.hip.HipPrePopParser.GetHipPrePopResponse
-import play.api.http.Status.SERVICE_UNAVAILABLE
+import parsers.hip.HipPrePopParser.{GetHipPrePopResponse, GetHipPrePopResponseHttpReads}
+import play.api.http.Status.{INTERNAL_SERVER_ERROR, OK, SERVICE_UNAVAILABLE}
+import play.api.libs.json.Json
 import play.api.mvc.Request
 import play.api.test.FakeRequest
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
-import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 class HipPrePopConnectorSpec extends CommonSpec with MockHttp with GuiceOneAppPerSuite {
-  implicit val hc: HeaderCarrier = HeaderCarrier()
-  implicit val request: Request[_] = FakeRequest()
-
-  val appConfig: AppConfig = app.injector.instanceOf[AppConfig]
-  val connector = new HipPrePopConnector(mockHttpClient, appConfig)
 
   "getHipPrePopData" should {
     "retrieve prepop data" when {
@@ -54,25 +50,33 @@ class HipPrePopConnectorSpec extends CommonSpec with MockHttp with GuiceOneAppPe
           )))
         )
 
-        when(mockHttpClient.GET[GetHipPrePopResponse](any(), any(), any())(any(), any(), any())).thenReturn(
-          Future.successful(Right(data))
+        val response = HttpResponse(
+          OK,
+          Json.toJson(data).toString
         )
 
-        await(
-          connector.getHipPrePopData("test-nino")
-        ) shouldBe Right(data)
+        GetHipPrePopResponseHttpReads.read("", "", response) shouldBe
+          Right(data)
       }
 
-      "the HIP API #1933 returns an error" in {
-        val error = ErrorModel(SERVICE_UNAVAILABLE, "")
-
-        when(mockHttpClient.GET[GetHipPrePopResponse](any(), any(), any())(any(), any(), any())).thenReturn(
-          Future.successful(Left(error))
+      "the HIP API #1933 returns invalid Json" in {
+        val response = HttpResponse(
+          OK,
+          Json.obj("selfEmp" -> "").toString
         )
 
-        await(
-          connector.getHipPrePopData("test-nino")
-        ) shouldBe Left(error)
+        GetHipPrePopResponseHttpReads.read("", "", response) shouldBe
+          Left(ErrorModel(OK, "Failure parsing json response from prepop api"))
+      }
+
+      "the HIP API #1933 returns an unexpected status" in {
+        val response = HttpResponse(
+          INTERNAL_SERVER_ERROR,
+          Json.obj().toString
+        )
+
+        GetHipPrePopResponseHttpReads.read("", "", response) shouldBe
+          Left(ErrorModel(INTERNAL_SERVER_ERROR, "Unexpected status returned from pre-pop api"))
       }
     }
   }
