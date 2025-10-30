@@ -17,45 +17,34 @@
 package connectors.hip
 
 import common.CommonSpec
-import config.AppConfig
-import connectors.{InvalidJson, UnexpectedStatus}
 import connectors.mocks.MockHttp
 import models.ErrorModel
 import models.status.ITSAStatus.MTDVoluntary
-import models.status.{ItsaStatusResponse, TaxYearStatus}
 import models.subscription.AccountingPeriodUtil
-import org.mockito.ArgumentMatchers.any
-import org.mockito.Mockito.when
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
-import parsers.hip.HipItsaStatusParser.GetITSAStatusHttpReads
-import play.api.http.Status.{INTERNAL_SERVER_ERROR, OK, SERVICE_UNAVAILABLE}
+import parsers.GetITSAStatusParser.{GetITSAStatusTaxYearResponse, ITSAStatusDetail}
+import parsers.hip.GetITSAStatusParser.GetITSAStatusHttpReads
+import play.api.http.Status.{INTERNAL_SERVER_ERROR, OK}
 import play.api.libs.json.Json
-import play.api.mvc.Request
-import play.api.test.FakeRequest
-import play.api.test.Helpers.{await, defaultAwaitTimeout}
-import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
-
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
+import uk.gov.hmrc.http.HttpResponse
 
 class HipItsaStatusConnectorSpec extends CommonSpec with MockHttp with GuiceOneAppPerSuite {
 
   "getItsaStatus" should {
     "retrieve iTSA status" when {
       "the HIP API #5197 returns a successful response" in {
-        val data: ItsaStatusResponse = ItsaStatusResponse(
-          taxYearStatus = List(TaxYearStatus(
-            taxYear = AccountingPeriodUtil.getCurrentTaxYear.toShortTaxYear,
-            status = MTDVoluntary
-          ))
-        )
+        val data = Seq(GetITSAStatusTaxYearResponse(
+          taxYear = AccountingPeriodUtil.getCurrentTaxYear.toShortTaxYear,
+          itsaStatusDetails = Seq(ITSAStatusDetail(MTDVoluntary))
+        ))
 
         val response = HttpResponse(
           OK,
-          Json.toJson(data.taxYearStatus).toString
+          Json.toJson(data).toString
         )
 
-        GetITSAStatusHttpReads.read("", "", response) shouldBe Right(data)
+        GetITSAStatusHttpReads.read("", "", response) shouldBe
+          Right(data)
       }
 
       "the HIP API #5197 returns invalid Json" in {
@@ -64,7 +53,8 @@ class HipItsaStatusConnectorSpec extends CommonSpec with MockHttp with GuiceOneA
           Json.obj().toString
         )
 
-        GetITSAStatusHttpReads.read("", "", response) shouldBe Left(InvalidJson)
+        GetITSAStatusHttpReads.read("", "", response) shouldBe
+          Left(ErrorModel(OK, "Failure parsing json response from itsa status api"))
       }
 
       "the HIP API #5197 returns unexpected status" in {
@@ -73,7 +63,8 @@ class HipItsaStatusConnectorSpec extends CommonSpec with MockHttp with GuiceOneA
           Json.obj().toString
         )
 
-        GetITSAStatusHttpReads.read("", "", response) shouldBe Left(UnexpectedStatus(INTERNAL_SERVER_ERROR))
+        GetITSAStatusHttpReads.read("", "", response) shouldBe
+          Left(ErrorModel(INTERNAL_SERVER_ERROR, "Unexpected status returned from itsa status api"))
       }
     }
   }

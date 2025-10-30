@@ -16,24 +16,27 @@
 
 package parsers.hip
 
-import connectors.{ConnectorFailure, InvalidJson, UnexpectedStatus}
+import models.ErrorModel
 import parsers.GetITSAStatusParser.GetITSAStatusTaxYearResponse
+import play.api.Logging
 import play.api.http.Status.OK
-import play.api.libs.json.JsSuccess
+import play.api.libs.json.{JsError, JsSuccess}
 import uk.gov.hmrc.http.{HttpReads, HttpResponse}
 
-object GetITSAStatusParser {
+object GetITSAStatusParser extends Logging {
 
-  type GetITSAStatusResponse = Either[ConnectorFailure, Seq[GetITSAStatusTaxYearResponse]]
+  type GetITSAStatusResponse = Either[ErrorModel, Seq[GetITSAStatusTaxYearResponse]]
 
   implicit object GetITSAStatusHttpReads extends HttpReads[GetITSAStatusResponse] {
     override def read(method: String, url: String, response: HttpResponse): GetITSAStatusResponse =
       response.status match {
         case OK => response.json.validate[Seq[GetITSAStatusTaxYearResponse]] match {
           case JsSuccess(value, _) => Right(value)
-          case _ => Left(InvalidJson)
+          case JsError(_) => Left(ErrorModel(OK, "Failure parsing json response from itsa status api"))
         }
-        case status => Left(UnexpectedStatus(status))
+        case status =>
+          logger.error(s"[GetITSAStatusParser] - Unexpected status from itsa status API. Status: $status")
+          Left(ErrorModel(status, "Unexpected status returned from itsa status api"))
       }
   }
 }

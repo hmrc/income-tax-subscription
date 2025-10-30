@@ -16,9 +16,9 @@
 
 package connectors.hip
 
-import connectors.{InvalidJson, UnexpectedStatus}
 import helpers.ComponentSpecBase
 import helpers.servicemocks.hip.GetITSAStatusStub
+import models.ErrorModel
 import models.status.ITSAStatus.{MTDMandated, MTDVoluntary}
 import models.subscription.AccountingPeriodUtil
 import parsers.GetITSAStatusParser.{GetITSAStatusTaxYearResponse, ITSAStatusDetail}
@@ -86,7 +86,8 @@ class GetITSAStatusConnectorISpec extends ComponentSpecBase {
 
         val result = connector.getItsaStatus(testUtr)
 
-        result.futureValue shouldBe Left(InvalidJson)
+        result.futureValue shouldBe
+          Left(ErrorModel(OK, "Failure parsing json response from itsa status api"))
       }
     }
     "an unexpected status is returned" should {
@@ -98,7 +99,8 @@ class GetITSAStatusConnectorISpec extends ComponentSpecBase {
 
         val result = connector.getItsaStatus(testUtr)
 
-        result.futureValue shouldBe Left(UnexpectedStatus(INTERNAL_SERVER_ERROR))
+        result.futureValue shouldBe
+          Left(ErrorModel(INTERNAL_SERVER_ERROR, "Unexpected status returned from itsa status api"))
       }
     }
   }

@@ -18,7 +18,7 @@ package connectors.hip
 
 import config.AppConfig
 import models.subscription.AccountingPeriodUtil
-import parsers.hip.HipItsaStatusParser._
+import parsers.ItsaStatusParser._
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.{Authorization, HeaderCarrier, HeaderNames, StringContextOps}
 
@@ -36,7 +36,7 @@ class HipItsaStatusConnector @Inject()(
   def getItsaStatus(
     nino: String,
     utr: String
-  )(implicit hc: HeaderCarrier): Future[HipItsaStatusResponse] = {
+  )(implicit hc: HeaderCarrier): Future[GetItsaStatusResponse] = {
 
     val headers: Map[String, String] = Map(
       HeaderNames.authorisation -> appConfig.hipItsaStatusAuthorisationToken,

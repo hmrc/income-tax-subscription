@@ -39,13 +39,13 @@ object GetITSAStatusParser {
   case class GetITSAStatusTaxYearResponse(taxYear: String, itsaStatusDetails: Seq[ITSAStatusDetail])
 
   object GetITSAStatusTaxYearResponse {
-    implicit val reads: Reads[GetITSAStatusTaxYearResponse] = Json.reads[GetITSAStatusTaxYearResponse]
+    implicit val format: OFormat[GetITSAStatusTaxYearResponse] = Json.format[GetITSAStatusTaxYearResponse]
   }
 
   case class ITSAStatusDetail(status: ITSAStatus)
 
   object ITSAStatusDetail {
-    implicit val reads: Reads[ITSAStatusDetail] = Json.reads[ITSAStatusDetail]
+    implicit val format: OFormat[ITSAStatusDetail] = Json.format[ITSAStatusDetail]
   }
 
 }
