@@ -22,7 +22,7 @@ import org.apache.pekko.actor.ActorSystem
 import parsers.GetITSABusinessDetailsParser._
 import play.api.http.Status.FORBIDDEN
 import uk.gov.hmrc.http.client.HttpClientV2
-import uk.gov.hmrc.http.{Authorization, HeaderCarrier, HeaderNames, HttpClient, HttpReads, Retries, StringContextOps}
+import uk.gov.hmrc.http.{Authorization, HeaderCarrier, HeaderNames, Retries, StringContextOps}
 
 import java.time.format.DateTimeFormatter
 import java.time.{Instant, ZoneId}
