@@ -20,11 +20,13 @@ import com.typesafe.config.Config
 import config.AppConfig
 import models.SignUpRequest
 import org.apache.pekko.actor.ActorSystem
-import parsers.SignUpParser.{PostSignUpResponse, SignUpParserException, hipSignUpResponseHttpReads}
+import parsers.SignUpParser._
 import play.api.http.Status.FORBIDDEN
-import play.api.libs.json.{JsObject, JsValue, Json}
-import uk.gov.hmrc.http.{Authorization, HeaderCarrier, HeaderNames, HttpClient, HttpReads, Retries}
+import play.api.libs.json.{JsObject, Json}
+import uk.gov.hmrc.http.client.HttpClientV2
+import uk.gov.hmrc.http.{Authorization, HeaderCarrier, HeaderNames, Retries, StringContextOps}
 
+import java.net.URL
 import java.time.format.DateTimeFormatter
 import java.time.{Instant, ZoneId}
 import java.util.UUID
@@ -32,12 +34,13 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class HIPSignUpTaxYearConnector @Inject()(http: HttpClient,
+class HIPSignUpTaxYearConnector @Inject()(http: HttpClientV2,
                                           val appConfig: AppConfig,
                                           val configuration: Config,
                                           val actorSystem: ActorSystem)(implicit ec: ExecutionContext) extends Retries {
 
-  def signUpUrl: String = s"${appConfig.hipSignUpServiceURL}/etmp/RESTAdapter/itsa/taxpayer/signup-mtdfb"
+  def signUpUrl: URL =
+    url"${appConfig.hipSignUpServiceURL}/etmp/RESTAdapter/itsa/taxpayer/signup-mtdfb"
 
   private val formatter = DateTimeFormatter
     .ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'")
@@ -70,15 +73,9 @@ class HIPSignUpTaxYearConnector @Inject()(http: HttpClient,
         "X-Regime-Type" -> "ITSA",
         "X-Transmitting-System" -> "HIP"
       )
-      http.POST[JsValue, PostSignUpResponse](
-        signUpUrl,
-        requestBody(signUpRequest),
-        headers = headers
-      )(
-        implicitly, implicitly[HttpReads[PostSignUpResponse]],
-        headerCarrier,
-        implicitly
-      )
+
+      val call = http.post(signUpUrl)(headerCarrier).withBody(requestBody(signUpRequest))
+      headers.foldLeft(call)((a, b) => a.setHeader(b)).execute
     }
   }
 }

@@ -18,16 +18,18 @@ package connectors.hip
 
 import config.AppConfig
 import models.subscription.AccountingPeriodUtil
-import parsers.ItsaStatusParser.{GetItsaStatusResponse, itsaStatusResponseHttpReads}
-import uk.gov.hmrc.http.{Authorization, HeaderCarrier, HeaderNames, HttpClient, HttpReads}
+import parsers.ItsaStatusParser._
+import uk.gov.hmrc.http.client.HttpClientV2
+import uk.gov.hmrc.http.{Authorization, HeaderCarrier, HeaderNames, StringContextOps}
 
+import java.net.URL
 import java.util.UUID
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class HipItsaStatusConnector @Inject()(
-  httpClient: HttpClient,
+  httpClient: HttpClientV2,
   appConfig: AppConfig
 )(implicit ec: ExecutionContext) {
 
@@ -45,18 +47,11 @@ class HipItsaStatusConnector @Inject()(
       .copy(authorization = Some(Authorization(appConfig.getITSAStatusAuthorisationToken)))
       .withExtraHeaders((headers - HeaderNames.authorisation).toSeq: _*)
 
-    httpClient.GET[GetItsaStatusResponse](
-      url = getItsaStatusUrl(nino, utr),
-      headers = headers.toSeq
-    )(
-      implicitly[HttpReads[GetItsaStatusResponse]],
-      headerCarrier,
-      implicitly
-    )
+    val call = httpClient.get(getItsaStatusUrl(nino, utr))(headerCarrier)
+    headers.foldLeft(call)((a, b) => a.setHeader(b)).execute
   }
 
-  private def getItsaStatusUrl(nino: String, utr: String): String = {
-    s"${appConfig.hipItsaStatusURL}/itsd/itsa-status/signup/$nino/$utr/${AccountingPeriodUtil.getCurrentTaxYear.toItsaStatusShortTaxYear}"
+  private def getItsaStatusUrl(nino: String, utr: String): URL = {
+    url"${appConfig.hipItsaStatusURL}/itsd/itsa-status/signup/$nino/$utr/${AccountingPeriodUtil.getCurrentTaxYear.toItsaStatusShortTaxYear}"
   }
-
 }

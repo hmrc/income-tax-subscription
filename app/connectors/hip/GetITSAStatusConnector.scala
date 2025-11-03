@@ -18,18 +18,20 @@ package connectors.hip
 
 import config.AppConfig
 import models.subscription.AccountingPeriodUtil
-import parsers.GetITSAStatusParser.GetITSAStatusTaxYearResponse
-import uk.gov.hmrc.http.{Authorization, HeaderCarrier, HeaderNames, HttpClient}
+import parsers.hip.GetITSAStatusParser._
+import uk.gov.hmrc.http.client.HttpClientV2
+import uk.gov.hmrc.http.{Authorization, HeaderCarrier, HeaderNames, StringContextOps}
 
+import java.net.URL
 import java.util.UUID
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class GetITSAStatusConnector @Inject()(httpClient: HttpClient,
+class GetITSAStatusConnector @Inject()(httpClient: HttpClientV2,
                                        appConfig: AppConfig)(implicit ec: ExecutionContext) {
 
-  def getItsaStatus(utr: String)(implicit hc: HeaderCarrier): Future[Seq[GetITSAStatusTaxYearResponse]] = {
+  def getItsaStatus(utr: String)(implicit hc: HeaderCarrier): Future[GetITSAStatusResponse] = {
 
     val headers: Map[String, String] = Map(
       HeaderNames.authorisation -> appConfig.getITSAStatusAuthorisationToken,
@@ -40,18 +42,11 @@ class GetITSAStatusConnector @Inject()(httpClient: HttpClient,
       .copy(authorization = Some(Authorization(appConfig.getITSAStatusAuthorisationToken)))
       .withExtraHeaders((headers - HeaderNames.authorisation).toSeq: _*)
 
-    httpClient.GET[Seq[GetITSAStatusTaxYearResponse]](
-      url = getItsaStatusUrl(utr),
-      headers = headers.toSeq
-    )(
-      implicitly,
-      headerCarrier,
-      implicitly
-    )
+    val call = httpClient.get(getItsaStatusUrl(utr))(headerCarrier)
+    headers.foldLeft(call)((a, b) => a.setHeader(b)).execute
   }
 
-  private def getItsaStatusUrl(utr: String): String = {
-    s"${appConfig.taxableEntityAPI}/itsd/person-itd/itsa-status/$utr?taxYear=${AccountingPeriodUtil.getCurrentTaxYear.toShortTaxYear}&futureYears=true"
+  private def getItsaStatusUrl(utr: String): URL = {
+    url"${appConfig.taxableEntityAPI}/itsd/person-itd/itsa-status/$utr?taxYear=${AccountingPeriodUtil.getCurrentTaxYear.toShortTaxYear}&futureYears=true"
   }
-
 }
