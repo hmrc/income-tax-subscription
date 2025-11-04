@@ -17,10 +17,10 @@
 package connectors
 
 import config.MicroserviceAppConfig
-import helpers.{ComponentSpecBase, WiremockHelper}
 import helpers.IntegrationTestConstants._
 import helpers.WiremockHelper.StubResponse
-import helpers.servicemocks.{AuditStub, HIPSignUpTaxYearStub}
+import helpers.servicemocks.HIPSignUpTaxYearStub
+import helpers.{ComponentSpecBase, WiremockHelper}
 import models.SignUpResponse.{AlreadySignedUp, SignUpSuccess}
 import models.{ErrorModel, SignUpRequest}
 import play.api.http.Status._

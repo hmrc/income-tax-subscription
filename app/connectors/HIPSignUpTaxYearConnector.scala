@@ -18,6 +18,7 @@ package connectors
 
 import com.typesafe.config.Config
 import config.AppConfig
+import connectors.hip.BaseHIPConnector
 import models.SignUpRequest
 import org.apache.pekko.actor.ActorSystem
 import parsers.SignUpParser._
@@ -34,10 +35,15 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class HIPSignUpTaxYearConnector @Inject()(http: HttpClientV2,
-                                          val appConfig: AppConfig,
-                                          val configuration: Config,
-                                          val actorSystem: ActorSystem)(implicit ec: ExecutionContext) extends Retries {
+class HIPSignUpTaxYearConnector @Inject()(
+  httpClient: HttpClientV2,
+  appConfig: AppConfig,
+  val configuration: Config,
+  val actorSystem: ActorSystem
+)(implicit ec: ExecutionContext) extends BaseHIPConnector(
+  httpClient,
+  appConfig
+) with Retries {
 
   def signUpUrl: URL =
     url"${appConfig.hipSignUpServiceURL}/etmp/RESTAdapter/itsa/taxpayer/signup-mtdfb"
@@ -64,9 +70,7 @@ class HIPSignUpTaxYearConnector @Inject()(http: HttpClientV2,
       case SignUpParserException(_, FORBIDDEN) => true
       case _ => false
     } {
-      val headers: Seq[(String, String)] = Seq(
-        HeaderNames.authorisation -> appConfig.hipSignUpServiceAuthorisationToken,
-        "correlationid" -> UUID.randomUUID().toString,
+      val headers: Map[String, String] = Map(
         "X-Message-Type" -> "ITSASignUpMTDfB",
         "X-Originating-System" -> "MDTP",
         "X-Receipt-Date" -> formatter.format(Instant.now()),
@@ -74,8 +78,7 @@ class HIPSignUpTaxYearConnector @Inject()(http: HttpClientV2,
         "X-Transmitting-System" -> "HIP"
       )
 
-      val call = http.post(signUpUrl)(headerCarrier).withBody(requestBody(signUpRequest))
-      headers.foldLeft(call)((a, b) => a.setHeader(b)).execute
+      super.post(signUpUrl, requestBody(signUpRequest), HipSignUpResponseHttpReads, headers)
     }
   }
 }

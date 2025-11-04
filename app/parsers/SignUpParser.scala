@@ -18,17 +18,17 @@ package parsers
 
 import models.SignUpResponse.SignUpSuccess
 import models.{ErrorModel, SignUpResponse}
+import parsers.hip.Parser
 import play.api.http.Status._
 import play.api.libs.json.{JsError, JsSuccess}
 import uk.gov.hmrc.http.{HttpReads, HttpResponse, InternalServerException}
-
 
 object SignUpParser {
 
   type PostSignUpResponse = Either[ErrorModel, SignUpResponse]
 
-  implicit val hipSignUpResponseHttpReads: HttpReads[PostSignUpResponse] = {
-    (_: String, _: String, response: HttpResponse) =>
+  object HipSignUpResponseHttpReads extends Parser[PostSignUpResponse] {
+    override def read(response: HttpResponse): PostSignUpResponse = {
       response.status match {
         case CREATED => (response.json \ "success").validate[SignUpSuccess] match {
           case JsSuccess(value, _) => Right(value)
@@ -46,6 +46,7 @@ object SignUpParser {
         case FORBIDDEN => throw SignUpParserException(s"Failed to read Json for MTD Sign Up Response", FORBIDDEN)
         case status => Left(ErrorModel(status, response.body))
       }
+    }
   }
 
   case class SignUpParserException(error: String, status: Int) extends InternalServerException(s"[SignUpParserException] - $error - $status")

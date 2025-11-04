@@ -40,7 +40,7 @@ class SignUpParserSpec extends CommonSpec {
             |}
           """.stripMargin)
 
-        SignUpParser.hipSignUpResponseHttpReads.read("", "", response) shouldBe Right(SignUpSuccess("XAIT000000"))
+        SignUpParser.HipSignUpResponseHttpReads.read(response) shouldBe Right(SignUpSuccess("XAIT000000"))
       }
 
       "return a SignUpFailure when the response has invalid json" in {
@@ -51,7 +51,7 @@ class SignUpParserSpec extends CommonSpec {
             |}
           """.stripMargin)
 
-        SignUpParser.hipSignUpResponseHttpReads.read("", "", response) shouldBe Left(ErrorModel(CREATED, "Failed to read Json for MTD Sign Up Response"))
+        SignUpParser.HipSignUpResponseHttpReads.read(response) shouldBe Left(ErrorModel(CREATED, "Failed to read Json for MTD Sign Up Response"))
       }
     }
 
@@ -64,7 +64,7 @@ class SignUpParserSpec extends CommonSpec {
           ).toString()
         )
 
-        SignUpParser.hipSignUpResponseHttpReads.read("", "", response) shouldBe Right(AlreadySignedUp)
+        SignUpParser.HipSignUpResponseHttpReads.read(response) shouldBe Right(AlreadySignedUp)
       }
 
       "return a sign up failure when the response hs not got a customer already signed up code" in {
@@ -75,14 +75,14 @@ class SignUpParserSpec extends CommonSpec {
           ).toString()
         )
 
-        SignUpParser.hipSignUpResponseHttpReads.read("", "", response) shouldBe
+        SignUpParser.HipSignUpResponseHttpReads.read(response) shouldBe
           Left(ErrorModel(UNPROCESSABLE_ENTITY, "002"))
       }
 
       "return a sign up failure when the response json has no code" in {
         val response = HttpResponse(UNPROCESSABLE_ENTITY, body = Json.obj().toString())
 
-        SignUpParser.hipSignUpResponseHttpReads.read("", "", response) shouldBe
+        SignUpParser.HipSignUpResponseHttpReads.read(response) shouldBe
           Left(ErrorModel(UNPROCESSABLE_ENTITY, s"Failed to read Json for MTD Sign Up Response"))
       }
     }
@@ -92,7 +92,7 @@ class SignUpParserSpec extends CommonSpec {
       "return a SignUpFailure with the response message" in {
         val response = HttpResponse(INTERNAL_SERVER_ERROR, body = "Error body")
 
-        SignUpParser.hipSignUpResponseHttpReads.read("", "", response) shouldBe Left(ErrorModel(INTERNAL_SERVER_ERROR, "Error body"))
+        SignUpParser.HipSignUpResponseHttpReads.read(response) shouldBe Left(ErrorModel(INTERNAL_SERVER_ERROR, "Error body"))
       }
     }
   }

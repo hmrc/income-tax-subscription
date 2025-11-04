@@ -17,10 +17,10 @@
 package connectors.hip
 
 import config.AppConfig
-import uk.gov.hmrc.http.client.HttpClientV2
-import uk.gov.hmrc.http.{Authorization, HeaderCarrier, HeaderNames, HttpResponse}
 import parsers.hip.Parser
-import play.api.http.Status.INTERNAL_SERVER_ERROR
+import play.api.libs.json.JsObject
+import uk.gov.hmrc.http.client.{HttpClientV2, RequestBuilder}
+import uk.gov.hmrc.http.{Authorization, HeaderCarrier, HeaderNames, HttpReads, HttpResponse}
 
 import java.net.URL
 import java.util.UUID
@@ -31,24 +31,68 @@ abstract class BaseHIPConnector(
   appConfig: AppConfig
 )(implicit ec: ExecutionContext) {
 
+  private case class Env(
+    headers: Map[String, String],
+    headerCarrier: HeaderCarrier
+  )
+
   def get[T](
     url: URL,
-    parser: Parser[T]
+    parser: Parser[T],
+    custom: Map[String, String] = Map.empty
   )(implicit hc: HeaderCarrier): Future[T] = {
+    val env = getEnv(custom)
+
+    doCallWithHeaders(
+      httpClient.get(url)(env.headerCarrier),
+      env.headers,
+      parser
+    )
+  }
+
+  def post[T](
+    url: URL,
+    body: JsObject,
+    parser: Parser[T],
+    custom: Map[String, String] = Map.empty
+  )(implicit hc: HeaderCarrier): Future[T] = {
+    val env = getEnv(custom)
+
+    doCallWithHeaders(
+      httpClient.post(url)(env.headerCarrier).withBody(body),
+      env.headers,
+      parser
+    )
+  }
+
+  private def doCallWithHeaders[T](
+    call: RequestBuilder,
+    headers: Map[String, String],
+    parser: Parser[T]
+  ): Future[T] = {
+    implicit val reads: Reade[T] = new Reade[T](parser)
+    headers.foldLeft(call)((a, b) => a.setHeader(b)).execute
+  }
+
+  private def getEnv(
+    custom: Map[String, String]
+  )(implicit hc: HeaderCarrier): Env = {
     val headers: Map[String, String] = Map(
       HeaderNames.authorisation -> appConfig.getITSAStatusAuthorisationToken,
       "correlationId" -> UUID.randomUUID().toString
-    )
+    ) ++ custom
 
     val headerCarrier: HeaderCarrier = hc
       .copy(authorization = Some(Authorization(appConfig.getITSAStatusAuthorisationToken)))
       .withExtraHeaders((headers - HeaderNames.authorisation).toSeq: _*)
 
-    val call = httpClient.get(url)(headerCarrier)
-    headers.foldLeft(call)((a, b) => a.setHeader(b)).execute.map { r =>
-      parser.read(r)
-    }.recover { t =>
-      parser.read(HttpResponse(INTERNAL_SERVER_ERROR, t.toString))
-    }
+    Env(headers, headerCarrier)
   }
+}
+
+private class Reade[T](
+  parser: Parser[T]
+) extends HttpReads[T] {
+  override def read(method: String, url: String, response: HttpResponse): T =
+    parser.read(response)
 }
