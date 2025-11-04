@@ -22,7 +22,7 @@ import models.ErrorModel
 import models.status.ITSAStatus.MTDVoluntary
 import models.status.{ItsaStatusResponse, TaxYearStatus}
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
-import parsers.ItsaStatusParser.ItsaStatusResponseHttpReads
+import parsers.ItsaStatusParser.ImplicitItsaStatusResponseHttpReads
 import play.api.http.Status.{INTERNAL_SERVER_ERROR, OK}
 import play.api.libs.json.Json
 import uk.gov.hmrc.http.HttpResponse
@@ -44,7 +44,7 @@ class ItsaStatusConnectorSpec extends CommonSpec with MockHttp with GuiceOneAppP
           Json.toJson(expectedResponse.taxYearStatus).toString
         )
 
-        ItsaStatusResponseHttpReads.read("", "", response) shouldBe
+        ImplicitItsaStatusResponseHttpReads.read("", "", response) shouldBe
           Right(expectedResponse)
       }
     }
@@ -56,7 +56,7 @@ class ItsaStatusConnectorSpec extends CommonSpec with MockHttp with GuiceOneAppP
           Json.obj().toString
         )
 
-        ItsaStatusResponseHttpReads.read("", "", response) shouldBe
+        ImplicitItsaStatusResponseHttpReads.read("", "", response) shouldBe
           Left(ErrorModel(OK, "Invalid Json for ItsaStatusResponseHttpReads"))
       }
       "the status-determination-service returns an invalid status" in {
@@ -65,7 +65,7 @@ class ItsaStatusConnectorSpec extends CommonSpec with MockHttp with GuiceOneAppP
           Json.obj().toString
         )
 
-        ItsaStatusResponseHttpReads.read("", "", response) shouldBe
+        ImplicitItsaStatusResponseHttpReads.read("", "", response) shouldBe
           Left(ErrorModel(INTERNAL_SERVER_ERROR, "Invalid status received"))
       }
     }

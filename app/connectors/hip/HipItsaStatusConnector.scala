@@ -31,25 +31,16 @@ import scala.concurrent.{ExecutionContext, Future}
 class HipItsaStatusConnector @Inject()(
   httpClient: HttpClientV2,
   appConfig: AppConfig
-)(implicit ec: ExecutionContext) {
+)(implicit ec: ExecutionContext) extends BaseHIPConnector(
+  httpClient,
+  appConfig
+) {
 
   def getItsaStatus(
     nino: String,
     utr: String
-  )(implicit hc: HeaderCarrier): Future[GetItsaStatusResponse] = {
-
-    val headers: Map[String, String] = Map(
-      HeaderNames.authorisation -> appConfig.hipItsaStatusAuthorisationToken,
-      "correlationId" -> UUID.randomUUID().toString
-    )
-
-    val headerCarrier: HeaderCarrier = hc
-      .copy(authorization = Some(Authorization(appConfig.getITSAStatusAuthorisationToken)))
-      .withExtraHeaders((headers - HeaderNames.authorisation).toSeq: _*)
-
-    val call = httpClient.get(getItsaStatusUrl(nino, utr))(headerCarrier)
-    headers.foldLeft(call)((a, b) => a.setHeader(b)).execute
-  }
+  )(implicit hc: HeaderCarrier): Future[GetItsaStatusResponse] =
+    super.get[GetItsaStatusResponse](getItsaStatusUrl(nino, utr), ItsaStatusResponseHttpReads)
 
   private def getItsaStatusUrl(nino: String, utr: String): URL = {
     url"${appConfig.hipItsaStatusURL}/itsd/itsa-status/signup/$nino/$utr/${AccountingPeriodUtil.getCurrentTaxYear.toItsaStatusShortTaxYear}"
