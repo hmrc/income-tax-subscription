@@ -27,8 +27,8 @@ object GetITSAStatusParser extends Logging {
 
   type GetITSAStatusResponse = Either[ErrorModel, Seq[GetITSAStatusTaxYearResponse]]
 
-  implicit object GetITSAStatusHttpReads extends HttpReads[GetITSAStatusResponse] {
-    override def read(method: String, url: String, response: HttpResponse): GetITSAStatusResponse =
+  object GetITSAStatusHttpReads extends Parser[GetITSAStatusResponse] {
+    override def read(response: HttpResponse): GetITSAStatusResponse =
       response.status match {
         case OK => response.json.validate[Seq[GetITSAStatusTaxYearResponse]] match {
           case JsSuccess(value, _) => Right(value)

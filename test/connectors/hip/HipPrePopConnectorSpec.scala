@@ -17,23 +17,14 @@
 package connectors.hip
 
 import common.CommonSpec
-import config.AppConfig
 import connectors.mocks.MockHttp
 import models.ErrorModel
 import models.hip.{SelfEmp, SelfEmpHolder}
-import org.mockito.ArgumentMatchers.any
-import org.mockito.Mockito.when
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
-import parsers.hip.HipPrePopParser.{GetHipPrePopResponse, GetHipPrePopResponseHttpReads}
-import play.api.http.Status.{INTERNAL_SERVER_ERROR, OK, SERVICE_UNAVAILABLE}
+import parsers.hip.HipPrePopParser.GetHipPrePopResponseHttpReads
+import play.api.http.Status.{INTERNAL_SERVER_ERROR, OK}
 import play.api.libs.json.Json
-import play.api.mvc.Request
-import play.api.test.FakeRequest
-import play.api.test.Helpers.{await, defaultAwaitTimeout}
-import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
-
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
+import uk.gov.hmrc.http.HttpResponse
 
 class HipPrePopConnectorSpec extends CommonSpec with MockHttp with GuiceOneAppPerSuite {
 

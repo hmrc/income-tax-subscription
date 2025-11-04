@@ -43,7 +43,7 @@ class HipItsaStatusConnectorSpec extends CommonSpec with MockHttp with GuiceOneA
           Json.toJson(data).toString
         )
 
-        GetITSAStatusHttpReads.read("", "", response) shouldBe
+        GetITSAStatusHttpReads.read(response) shouldBe
           Right(data)
       }
 
@@ -53,7 +53,7 @@ class HipItsaStatusConnectorSpec extends CommonSpec with MockHttp with GuiceOneA
           Json.obj().toString
         )
 
-        GetITSAStatusHttpReads.read("", "", response) shouldBe
+        GetITSAStatusHttpReads.read(response) shouldBe
           Left(ErrorModel(OK, "Failure parsing json response from itsa status api"))
       }
 
@@ -63,7 +63,7 @@ class HipItsaStatusConnectorSpec extends CommonSpec with MockHttp with GuiceOneA
           Json.obj().toString
         )
 
-        GetITSAStatusHttpReads.read("", "", response) shouldBe
+        GetITSAStatusHttpReads.read(response) shouldBe
           Left(ErrorModel(INTERNAL_SERVER_ERROR, "Unexpected status returned from itsa status api"))
       }
     }

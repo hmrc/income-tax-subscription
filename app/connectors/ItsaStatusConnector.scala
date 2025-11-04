@@ -20,7 +20,7 @@ import config.AppConfig
 import models.subscription.AccountingPeriodUtil
 import parsers.ItsaStatusParser._
 import uk.gov.hmrc.http.client.HttpClientV2
-import uk.gov.hmrc.http.{Authorization, HeaderCarrier, HeaderNames, HttpReads, StringContextOps}
+import uk.gov.hmrc.http.{Authorization, HeaderCarrier, HeaderNames, StringContextOps}
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
