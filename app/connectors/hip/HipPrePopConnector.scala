@@ -19,35 +19,26 @@ package connectors.hip
 import config.AppConfig
 import parsers.hip.HipPrePopParser._
 import uk.gov.hmrc.http.client.HttpClientV2
-import uk.gov.hmrc.http.{Authorization, HeaderCarrier, HeaderNames, HttpClient, HttpReads, StringContextOps}
+import uk.gov.hmrc.http.{HeaderCarrier, StringContextOps}
 
 import java.net.URL
-import java.util.UUID
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class HipPrePopConnector @Inject()(
-  http: HttpClientV2,
+  httpClient: HttpClientV2,
   appConfig: AppConfig
-)(implicit ec: ExecutionContext) {
+)(implicit ec: ExecutionContext) extends BaseHIPConnector(
+  httpClient,
+  appConfig
+) {
 
   private def hipPrePopUrl(nino: String): URL =
     url"${appConfig.hipPrePopURL}/cesa/prepopulation/businessdata/$nino"
 
   def getHipPrePopData(
     nino: String
-  )(implicit hc: HeaderCarrier): Future[GetHipPrePopResponse] = {
-
-    val headers: Map[String, String] = Map(
-      HeaderNames.authorisation -> appConfig.hipPrePopAuthorisationToken,
-      "correlationId" -> UUID.randomUUID().toString
-    )
-
-    val headerCarrier: HeaderCarrier = hc
-      .copy(authorization = Some(Authorization(appConfig.hipPrePopAuthorisationToken)))
-
-    val call = http.get(hipPrePopUrl(nino))(headerCarrier)
-    headers.foldLeft(call)((a, b) => a.setHeader(b)).execute
-  }
+  )(implicit hc: HeaderCarrier): Future[GetHipPrePopResponse] =
+    super.get[GetHipPrePopResponse](hipPrePopUrl(nino), GetHipPrePopResponseHttpReads)
 }

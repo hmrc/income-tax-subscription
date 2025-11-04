@@ -46,7 +46,7 @@ class HipPrePopConnectorSpec extends CommonSpec with MockHttp with GuiceOneAppPe
           Json.toJson(data).toString
         )
 
-        GetHipPrePopResponseHttpReads.read("", "", response) shouldBe
+        GetHipPrePopResponseHttpReads.read(response) shouldBe
           Right(data)
       }
 
@@ -56,7 +56,7 @@ class HipPrePopConnectorSpec extends CommonSpec with MockHttp with GuiceOneAppPe
           Json.obj("selfEmp" -> "").toString
         )
 
-        GetHipPrePopResponseHttpReads.read("", "", response) shouldBe
+        GetHipPrePopResponseHttpReads.read(response) shouldBe
           Left(ErrorModel(OK, "Failure parsing json response from prepop api"))
       }
 
@@ -66,7 +66,7 @@ class HipPrePopConnectorSpec extends CommonSpec with MockHttp with GuiceOneAppPe
           Json.obj().toString
         )
 
-        GetHipPrePopResponseHttpReads.read("", "", response) shouldBe
+        GetHipPrePopResponseHttpReads.read(response) shouldBe
           Left(ErrorModel(INTERNAL_SERVER_ERROR, "Unexpected status returned from pre-pop api"))
       }
     }

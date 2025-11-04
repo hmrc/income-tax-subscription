@@ -27,8 +27,8 @@ object HipPrePopParser extends Logging {
 
   type GetHipPrePopResponse = Either[ErrorModel, SelfEmpHolder]
 
-  implicit object GetHipPrePopResponseHttpReads extends HttpReads[GetHipPrePopResponse] {
-    override def read(method: String, url: String, response: HttpResponse): GetHipPrePopResponse = {
+  implicit object GetHipPrePopResponseHttpReads extends Parser[GetHipPrePopResponse] {
+    override def read(response: HttpResponse): GetHipPrePopResponse = {
       response.status match {
         case OK =>
           response.json.validate[SelfEmpHolder] match {
