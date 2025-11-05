@@ -39,10 +39,6 @@ trait AppConfig {
   val statusDeterminationServiceAuthorisationToken: String
   val statusDeterminationServiceEnvironment: String
 
-  def taxableEntityAPI: String
-
-  def getITSAStatusAuthorisationToken: String
-
   val getHipBaseURL: String
   def getHipAuthToken: String
 }
@@ -57,9 +53,6 @@ class MicroserviceAppConfig @Inject()(servicesConfig: ServicesConfig, val config
   private val statusDeterminationServiceBase = "microservice.services.status-determination-service"
   override lazy val statusDeterminationServiceAuthorisationToken: String = s"Bearer ${loadConfig(s"$statusDeterminationServiceBase.authorization-token")}"
   override lazy val statusDeterminationServiceEnvironment: String = loadConfig(s"$statusDeterminationServiceBase.environment")
-
-  override lazy val taxableEntityAPI: String = servicesConfig.baseUrl("taxable-entity-api")
-  override lazy val getITSAStatusAuthorisationToken = s"Basic ${loadConfig("microservice.services.taxable-entity-api.get-itsa-status.authorization-token")}"
 
   lazy val itsaIncomeSourceURL: String = servicesConfig.baseUrl("itsa-income-source")
   lazy val itsaIncomeSourceAuthorisationToken: String = s"Basic ${loadConfig("microservice.services.itsa-income-source.authorization-token")}"

@@ -18,11 +18,13 @@ package connectors.hip
 
 import config.AppConfig
 import parsers.hip.Parser
-import play.api.libs.json.JsObject
+import play.api.libs.json.{JsObject, JsValue}
 import uk.gov.hmrc.http.client.{HttpClientV2, RequestBuilder}
 import uk.gov.hmrc.http.{Authorization, HeaderCarrier, HeaderNames, HttpReads, HttpResponse, StringContextOps}
 
 import java.net.URL
+import java.time.format.DateTimeFormatter
+import java.time.{Instant, ZoneId}
 import java.util.UUID
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -35,6 +37,10 @@ abstract class BaseHIPConnector(
     headers: Map[String, String],
     headerCarrier: HeaderCarrier
   )
+
+  private val isoDatePattern: DateTimeFormatter = DateTimeFormatter
+    .ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'")
+    .withZone(ZoneId.of("UTC"))
 
   def get[T](
     url: String,
@@ -52,7 +58,7 @@ abstract class BaseHIPConnector(
 
   def post[T](
     url: String,
-    body: JsObject,
+    body: JsValue,
     parser: Parser[T],
     custom: Map[String, String] = Map.empty
   )(implicit hc: HeaderCarrier): Future[T] = {
@@ -83,11 +89,16 @@ abstract class BaseHIPConnector(
 
     val headers: Map[String, String] = Map(
       HeaderNames.authorisation -> appConfig.getHipAuthToken,
-      "correlationId" -> UUID.randomUUID().toString
+      "correlationId" -> UUID.randomUUID().toString,
+      "X-Originating-System" -> "MDTP",
+      "X-Receipt-Date" -> isoDatePattern.format(Instant.now()),
+      "X-Regime" -> "ITSA",
+      "X-Regime-Type" -> "ITSA",
+      "X-Transmitting-System" -> "HIP"
     ) ++ custom
 
     val headerCarrier: HeaderCarrier = hc
-      .copy(authorization = Some(Authorization(appConfig.getITSAStatusAuthorisationToken)))
+      .copy(authorization = Some(Authorization(appConfig.getHipAuthToken)))
       .withExtraHeaders((headers - HeaderNames.authorisation).toSeq: _*)
 
     Env(headers, headerCarrier)

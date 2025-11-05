@@ -25,8 +25,6 @@ import play.api.http.Status.FORBIDDEN
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.{HeaderCarrier, Retries}
 
-import java.time.format.DateTimeFormatter
-import java.time.{Instant, ZoneId}
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -41,21 +39,13 @@ class GetITSABusinessDetailsConnector @Inject()(
   appConfig
 ) with Retries {
 
-  private val formatter = DateTimeFormatter
-    .ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'")
-    .withZone(ZoneId.of("UTC"))
-
   def getHIPBusinessDetails(nino: String)(implicit hc: HeaderCarrier): Future[GetITSABusinessDetailsResponse] = {
     retryFor("HIP API #5266 - Get Business Details") {
       case GetITSABusinessDetailsParserException(_, FORBIDDEN) => true
       case _ => false
     } {
       val headers: Map[String, String] = Map(
-        "X-Message-Type" -> "TaxpayerDisplay",
-        "X-Originating-System" -> "MDTP",
-        "X-Receipt-Date" -> formatter.format(Instant.now()),
-        "X-Regime-Type" -> "ITSA",
-        "X-Transmitting-System" -> "HIP"
+        "X-Message-Type" -> "TaxpayerDisplay"
       )
 
       super.get(getHIPBusinessDetailsUrl(nino), GetITSABusinessDetailsResponseHttpReads, headers)
