@@ -57,8 +57,6 @@ trait ComponentSpecBase extends AnyWordSpecLike
     "throttle.oneTestThrottle.max" -> "1",
     "microservice.services.status-determination-service.host" -> mockHost,
     "microservice.services.status-determination-service.port" -> mockPort,
-    "microservice.services.itsa-income-source.host" -> mockHost,
-    "microservice.services.itsa-income-source.port" -> mockPort,
     "http-verbs.retries.intervals.0" -> "10.milliseconds",
     "http-verbs.retries.intervals.1" -> "10.milliseconds",
     "http-verbs.retries.intervals.2" -> "10.milliseconds",

@@ -31,9 +31,6 @@ trait AppConfig {
 
   val mongoUri: String
 
-  val itsaIncomeSourceURL: String
-  val itsaIncomeSourceAuthorisationToken: String
-
   def statusDeterminationServiceURL: String
 
   val statusDeterminationServiceAuthorisationToken: String
@@ -53,9 +50,6 @@ class MicroserviceAppConfig @Inject()(servicesConfig: ServicesConfig, val config
   private val statusDeterminationServiceBase = "microservice.services.status-determination-service"
   override lazy val statusDeterminationServiceAuthorisationToken: String = s"Bearer ${loadConfig(s"$statusDeterminationServiceBase.authorization-token")}"
   override lazy val statusDeterminationServiceEnvironment: String = loadConfig(s"$statusDeterminationServiceBase.environment")
-
-  lazy val itsaIncomeSourceURL: String = servicesConfig.baseUrl("itsa-income-source")
-  lazy val itsaIncomeSourceAuthorisationToken: String = s"Basic ${loadConfig("microservice.services.itsa-income-source.authorization-token")}"
 
   lazy val mongoUri: String = loadConfig("mongodb.uri")
 

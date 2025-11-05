@@ -70,7 +70,7 @@ class ItsaIncomeSourceConnector @Inject()(
         case Left(error) =>
           Future.successful(Left(error))
         case Right(value) =>
-          auditService.extendedAudit(CompletedSignUpAudit(agentReferenceNumber, createIncomeSources, appConfig.itsaIncomeSourceAuthorisationToken)) map {
+          auditService.extendedAudit(CompletedSignUpAudit(agentReferenceNumber, createIncomeSources, appConfig.getHipAuthToken)) map {
             _ => Right(value)
           }
       }
