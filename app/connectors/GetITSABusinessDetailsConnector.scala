@@ -18,6 +18,7 @@ package connectors
 
 import com.typesafe.config.Config
 import config.AppConfig
+import connectors.hip.BaseHIPConnector
 import org.apache.pekko.actor.ActorSystem
 import parsers.GetITSABusinessDetailsParser._
 import play.api.http.Status.FORBIDDEN
@@ -31,26 +32,26 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class GetITSABusinessDetailsConnector @Inject()(httpClient: HttpClientV2,
-                                                appConfig: AppConfig,
-                                                val configuration: Config,
-                                                val actorSystem: ActorSystem)(implicit ec: ExecutionContext) extends Retries {
+class GetITSABusinessDetailsConnector @Inject()(
+  httpClient: HttpClientV2,
+  appConfig: AppConfig,
+  val configuration: Config,
+  val actorSystem: ActorSystem
+)(implicit ec: ExecutionContext) extends BaseHIPConnector(
+  httpClient,
+  appConfig
+) with Retries {
 
   private val formatter = DateTimeFormatter
     .ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'")
     .withZone(ZoneId.of("UTC"))
 
   def getHIPBusinessDetails(nino: String)(implicit hc: HeaderCarrier): Future[GetITSABusinessDetailsResponse] = {
-    val headerCarrier: HeaderCarrier = hc
-      .copy(authorization = Some(Authorization(appConfig.getItsaBusinessDetailsEnvironmentToken)))
-
     retryFor("HIP API #5266 - Get Business Details") {
       case GetITSABusinessDetailsParserException(_, FORBIDDEN) => true
       case _ => false
     } {
-      val headers: Seq[(String, String)] = Seq(
-        HeaderNames.authorisation -> appConfig.getItsaBusinessDetailsEnvironmentToken,
-        "correlationid" -> UUID.randomUUID().toString,
+      val headers: Map[String, String] = Map(
         "X-Message-Type" -> "TaxpayerDisplay",
         "X-Originating-System" -> "MDTP",
         "X-Receipt-Date" -> formatter.format(Instant.now()),
@@ -58,8 +59,7 @@ class GetITSABusinessDetailsConnector @Inject()(httpClient: HttpClientV2,
         "X-Transmitting-System" -> "HIP"
       )
 
-      val call = httpClient.get(getHIPBusinessDetailsUrl(nino))(headerCarrier)
-      headers.foldLeft(call)((a, b) => a.setHeader(b)).execute
+      super.get(getHIPBusinessDetailsUrl(nino), GetITSABusinessDetailsResponseHttpReads, headers)
     }
   }
 

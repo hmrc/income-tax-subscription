@@ -38,7 +38,7 @@ class ITSABusinessDetailsParserSpec extends CommonSpec {
   "GetITSABusinessDetailsParser" should {
     "return AlreadySignedUp when valid mtdId is present" in {
       val response = HttpResponse(OK, validJson, Map.empty)
-      GetITSABusinessDetailsResponseHttpReads.read("GET", "test-url", response) shouldBe AlreadySignedUp("XNIT00000068707")
+      GetITSABusinessDetailsResponseHttpReads.read(response) shouldBe AlreadySignedUp("XNIT00000068707")
     }
   }
 
@@ -46,13 +46,13 @@ class ITSABusinessDetailsParserSpec extends CommonSpec {
     "status is UNPROCESSABLE_ENTITY and has a code of 006" in {
       val json = Json.obj("errors" -> Json.obj("code" -> "006"))
       val response = HttpResponse(UNPROCESSABLE_ENTITY, json, Map.empty)
-      GetITSABusinessDetailsResponseHttpReads.read("GET", "test-url", response) shouldBe NotSignedUp
+      GetITSABusinessDetailsResponseHttpReads.read(response) shouldBe NotSignedUp
     }
 
     "status is UNPROCESSABLE_ENTITY and has a code of 008" in {
       val json = Json.obj("errors" -> Json.obj("code" -> "008"))
       val response = HttpResponse(UNPROCESSABLE_ENTITY, json, Map.empty)
-      GetITSABusinessDetailsResponseHttpReads.read("GET", "test-url", response) shouldBe NotSignedUp
+      GetITSABusinessDetailsResponseHttpReads.read(response) shouldBe NotSignedUp
     }
   }
 
@@ -62,7 +62,7 @@ class ITSABusinessDetailsParserSpec extends CommonSpec {
       val response = HttpResponse(OK, badJson, Map.empty)
 
       intercept[InternalServerException] {
-        GetITSABusinessDetailsResponseHttpReads.read("GET", "test-url", response)
+        GetITSABusinessDetailsResponseHttpReads.read(response)
       }.getMessage shouldBe s"[GetITSABusinessDetailsParser] - Failure parsing json - $OK"
     }
     "unable to retrieve code from the UNPROCESSABLE_ENTITY response json" in {
@@ -70,7 +70,7 @@ class ITSABusinessDetailsParserSpec extends CommonSpec {
       val response = HttpResponse(UNPROCESSABLE_ENTITY, json, Map.empty)
 
       intercept[InternalServerException] {
-        GetITSABusinessDetailsResponseHttpReads.read("GET", "/test-url", response)
+        GetITSABusinessDetailsResponseHttpReads.read(response)
       }.getMessage shouldBe s"[GetITSABusinessDetailsParser] - Failure parsing json - $UNPROCESSABLE_ENTITY"
     }
     "code in the UNPROCESSABLE_ENTITY response json is not 006 or 008" in {
@@ -78,14 +78,14 @@ class ITSABusinessDetailsParserSpec extends CommonSpec {
       val response = HttpResponse(UNPROCESSABLE_ENTITY, json, Map.empty)
 
       intercept[InternalServerException] {
-        GetITSABusinessDetailsResponseHttpReads.read("GET", "/test-url", response)
+        GetITSABusinessDetailsResponseHttpReads.read(response)
       }.getMessage shouldBe s"[GetITSABusinessDetailsParser] - Unsupported error code returned: 100 - $UNPROCESSABLE_ENTITY"
     }
     "an unsupported status is returned" in {
       val response = HttpResponse(INTERNAL_SERVER_ERROR, Json.obj(), Map.empty)
 
       intercept[InternalServerException] {
-        GetITSABusinessDetailsResponseHttpReads.read("GET", "test-url", response)
+        GetITSABusinessDetailsResponseHttpReads.read(response)
       }.getMessage shouldBe s"[GetITSABusinessDetailsParser] - Unsupported status received - $INTERNAL_SERVER_ERROR"
     }
   }

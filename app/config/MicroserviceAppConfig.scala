@@ -35,7 +35,6 @@ trait AppConfig {
   val itsaIncomeSourceAuthorisationToken: String
 
   val hipBusinessDetailsURL: String
-  val getItsaBusinessDetailsEnvironmentToken: String
 
   def statusDeterminationServiceURL: String
 
@@ -61,7 +60,6 @@ class MicroserviceAppConfig @Inject()(servicesConfig: ServicesConfig, val config
   private def loadConfig(key: String) = servicesConfig.getString(key)
 
   override lazy val hipBusinessDetailsURL: String = servicesConfig.baseUrl("get-itsa-business-details")
-  override lazy val getItsaBusinessDetailsEnvironmentToken = s"Basic ${loadConfig("microservice.services.get-itsa-business-details.authorization-token")}"
 
   override lazy val statusDeterminationServiceURL: String = servicesConfig.baseUrl("status-determination-service")
 
