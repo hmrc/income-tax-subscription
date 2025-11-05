@@ -34,8 +34,6 @@ trait AppConfig {
   val itsaIncomeSourceURL: String
   val itsaIncomeSourceAuthorisationToken: String
 
-  val hipBusinessDetailsURL: String
-
   def statusDeterminationServiceURL: String
 
   val statusDeterminationServiceAuthorisationToken: String
@@ -45,21 +43,14 @@ trait AppConfig {
 
   def getITSAStatusAuthorisationToken: String
 
-  val hipSignUpServiceURL: String
-
-  val hipPrePopURL: String
-
-  val hipItsaStatusURL: String
-
-  def getHipAuthToken(): String
+  val getHipBaseURL: String
+  def getHipAuthToken: String
 }
 
 @Singleton
 class MicroserviceAppConfig @Inject()(servicesConfig: ServicesConfig, val configuration: Configuration) extends AppConfig {
 
   private def loadConfig(key: String) = servicesConfig.getString(key)
-
-  override lazy val hipBusinessDetailsURL: String = servicesConfig.baseUrl("get-itsa-business-details")
 
   override lazy val statusDeterminationServiceURL: String = servicesConfig.baseUrl("status-determination-service")
 
@@ -70,8 +61,6 @@ class MicroserviceAppConfig @Inject()(servicesConfig: ServicesConfig, val config
   override lazy val taxableEntityAPI: String = servicesConfig.baseUrl("taxable-entity-api")
   override lazy val getITSAStatusAuthorisationToken = s"Basic ${loadConfig("microservice.services.taxable-entity-api.get-itsa-status.authorization-token")}"
 
-  override lazy val hipSignUpServiceURL: String = servicesConfig.baseUrl("hip-signup-tax-year-service")
-
   lazy val itsaIncomeSourceURL: String = servicesConfig.baseUrl("itsa-income-source")
   lazy val itsaIncomeSourceAuthorisationToken: String = s"Basic ${loadConfig("microservice.services.itsa-income-source.authorization-token")}"
 
@@ -81,19 +70,16 @@ class MicroserviceAppConfig @Inject()(servicesConfig: ServicesConfig, val config
   lazy val sessionTimeToLiveSeconds: Int = loadConfig("mongodb.sessionTimeToLiveSeconds").toInt
   lazy val throttleTimeToLiveSeconds: Int = loadConfig("mongodb.throttleTimeToLiveSeconds").toInt
 
-  override lazy val hipPrePopURL: String =
-    servicesConfig.baseUrl("hip-pre-pop")
-
-  override val hipItsaStatusURL: String =
-    servicesConfig.baseUrl("hip-itsa-status")
+  override val getHipBaseURL: String =
+    servicesConfig.baseUrl("hip")
 
   private val appClientIdForHip: String =
-    loadConfig("hip.clientId")
+    loadConfig("microservice.services.hip.creds.clientId")
 
   private val appClientSecretForHip: String =
-    loadConfig("hip.clientSecret")
+    loadConfig("microservice.services.hip.creds.clientSecret")
 
-  override def getHipAuthToken(): String = {
+  override def getHipAuthToken: String = {
     val parts = Seq(
       appClientIdForHip,
       appClientSecretForHip

@@ -18,10 +18,9 @@ package connectors.hip
 
 import config.AppConfig
 import parsers.hip.HipPrePopParser._
+import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.client.HttpClientV2
-import uk.gov.hmrc.http.{HeaderCarrier, StringContextOps}
 
-import java.net.URL
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -33,12 +32,11 @@ class HipPrePopConnector @Inject()(
   httpClient,
   appConfig
 ) {
-
-  private def hipPrePopUrl(nino: String): URL =
-    url"${appConfig.hipPrePopURL}/cesa/prepopulation/businessdata/$nino"
-
   def getHipPrePopData(
     nino: String
   )(implicit hc: HeaderCarrier): Future[GetHipPrePopResponse] =
     super.get[GetHipPrePopResponse](hipPrePopUrl(nino), GetHipPrePopResponseHttpReads)
+
+  private def hipPrePopUrl(nino: String) =
+    s"/cesa/prepopulation/businessdata/$nino"
 }

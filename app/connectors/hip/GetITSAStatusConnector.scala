@@ -19,10 +19,9 @@ package connectors.hip
 import config.AppConfig
 import models.subscription.AccountingPeriodUtil
 import parsers.hip.GetITSAStatusParser._
+import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.client.HttpClientV2
-import uk.gov.hmrc.http.{HeaderCarrier, StringContextOps}
 
-import java.net.URL
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -38,7 +37,7 @@ class GetITSAStatusConnector @Inject()(
   def getItsaStatus(utr: String)(implicit hc: HeaderCarrier): Future[GetITSAStatusResponse] =
     super.get(getItsaStatusUrl(utr), GetITSAStatusHttpReads)
 
-  private def getItsaStatusUrl(utr: String): URL = {
-    url"${appConfig.taxableEntityAPI}/itsd/person-itd/itsa-status/$utr?taxYear=${AccountingPeriodUtil.getCurrentTaxYear.toShortTaxYear}&futureYears=true"
+  private def getItsaStatusUrl(utr: String) = {
+    s"/itsd/person-itd/itsa-status/$utr?taxYear=${AccountingPeriodUtil.getCurrentTaxYear.toShortTaxYear}&futureYears=true"
   }
 }

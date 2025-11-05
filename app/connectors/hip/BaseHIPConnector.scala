@@ -20,10 +20,10 @@ import config.AppConfig
 import parsers.hip.Parser
 import play.api.libs.json.JsObject
 import uk.gov.hmrc.http.client.{HttpClientV2, RequestBuilder}
-import uk.gov.hmrc.http.{Authorization, HeaderCarrier, HeaderNames, HttpReads, HttpResponse}
+import uk.gov.hmrc.http.{Authorization, HeaderCarrier, HeaderNames, HttpReads, HttpResponse, StringContextOps}
 
 import java.net.URL
-import java.util.{Base64, UUID}
+import java.util.UUID
 import scala.concurrent.{ExecutionContext, Future}
 
 abstract class BaseHIPConnector(
@@ -37,21 +37,21 @@ abstract class BaseHIPConnector(
   )
 
   def get[T](
-    url: URL,
+    url: String,
     parser: Parser[T],
     custom: Map[String, String] = Map.empty
   )(implicit hc: HeaderCarrier): Future[T] = {
     val env = getEnv(custom)
 
     doCallWithHeaders(
-      httpClient.get(url)(env.headerCarrier),
+      httpClient.get(getFullUrl(url))(env.headerCarrier),
       env.headers,
       parser
     )
   }
 
   def post[T](
-    url: URL,
+    url: String,
     body: JsObject,
     parser: Parser[T],
     custom: Map[String, String] = Map.empty
@@ -59,11 +59,14 @@ abstract class BaseHIPConnector(
     val env = getEnv(custom)
 
     doCallWithHeaders(
-      httpClient.post(url)(env.headerCarrier).withBody(body),
+      httpClient.post(getFullUrl(url))(env.headerCarrier).withBody(body),
       env.headers,
       parser
     )
   }
+
+  private def getFullUrl(url: String) =
+    new URL(s"${appConfig.getHipBaseURL}$url")
 
   private def doCallWithHeaders[T](
     call: RequestBuilder,
@@ -79,7 +82,7 @@ abstract class BaseHIPConnector(
   )(implicit hc: HeaderCarrier): Env = {
 
     val headers: Map[String, String] = Map(
-      HeaderNames.authorisation -> appConfig.getHipAuthToken(),
+      HeaderNames.authorisation -> appConfig.getHipAuthToken,
       "correlationId" -> UUID.randomUUID().toString
     ) ++ custom
 

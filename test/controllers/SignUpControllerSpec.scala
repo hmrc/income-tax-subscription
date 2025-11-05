@@ -53,7 +53,7 @@ class SignUpControllerSpec extends CommonSpec
     mockCC,
     mockAppConfig
   ) {
-    when(mockAppConfig.getHipAuthToken()).thenReturn(
+    when(mockAppConfig.getHipAuthToken).thenReturn(
       auth
     )
   }

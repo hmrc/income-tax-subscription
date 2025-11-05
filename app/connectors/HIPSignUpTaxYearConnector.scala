@@ -25,9 +25,8 @@ import parsers.SignUpParser._
 import play.api.http.Status.FORBIDDEN
 import play.api.libs.json.{JsObject, Json}
 import uk.gov.hmrc.http.client.HttpClientV2
-import uk.gov.hmrc.http.{HeaderCarrier, Retries, StringContextOps}
+import uk.gov.hmrc.http.{HeaderCarrier, Retries}
 
-import java.net.URL
 import java.time.format.DateTimeFormatter
 import java.time.{Instant, ZoneId}
 import javax.inject.{Inject, Singleton}
@@ -44,8 +43,8 @@ class HIPSignUpTaxYearConnector @Inject()(
   appConfig
 ) with Retries {
 
-  private def signUpUrl: URL =
-    url"${appConfig.hipSignUpServiceURL}/etmp/RESTAdapter/itsa/taxpayer/signup-mtdfb"
+  private def signUpUrl =
+    s"/etmp/RESTAdapter/itsa/taxpayer/signup-mtdfb"
 
   private val formatter = DateTimeFormatter
     .ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'")

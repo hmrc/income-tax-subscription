@@ -23,11 +23,10 @@ import org.apache.pekko.actor.ActorSystem
 import parsers.GetITSABusinessDetailsParser._
 import play.api.http.Status.FORBIDDEN
 import uk.gov.hmrc.http.client.HttpClientV2
-import uk.gov.hmrc.http.{Authorization, HeaderCarrier, HeaderNames, Retries, StringContextOps}
+import uk.gov.hmrc.http.{HeaderCarrier, Retries}
 
 import java.time.format.DateTimeFormatter
 import java.time.{Instant, ZoneId}
-import java.util.UUID
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -64,6 +63,5 @@ class GetITSABusinessDetailsConnector @Inject()(
   }
 
   private def getHIPBusinessDetailsUrl(nino: String) =
-    url"${appConfig.hipBusinessDetailsURL}/etmp/RESTAdapter/itsa/taxpayer/business-details?nino=$nino"
-
+    s"/etmp/RESTAdapter/itsa/taxpayer/business-details?nino=$nino"
 }
