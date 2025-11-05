@@ -44,14 +44,12 @@ object PrePopStub extends WireMockMethods {
 
   def stubHipPrePop
     (nino: String)
-    (authorizationHeader: String)
     (status: Int, body: JsValue): StubMapping =
   {
     when(
       method = GET,
       uri = hipPrePopUri(nino),
       headers = Map[String, String](
-        "Authorization" -> authorizationHeader,
         "correlationid" -> "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
       )
     ).thenReturn(status, body)

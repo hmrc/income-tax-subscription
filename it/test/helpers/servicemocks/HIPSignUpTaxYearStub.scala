@@ -26,14 +26,13 @@ object HIPSignUpTaxYearStub extends WireMockMethods {
 
   private def signUpUri: String = s"/etmp/RESTAdapter/itsa/taxpayer/signup-mtdfb"
 
-  def stubSignUp(expectedBody: JsValue, authorizationHeader: String)
+  def stubSignUp(expectedBody: JsValue)
                 (status: Int, body: JsValue): StubMapping = {
     when(
       method = POST,
       uri = signUpUri,
       body = expectedBody,
       headers = Map[String, String](
-        "Authorization" -> authorizationHeader,
         "correlationid" -> "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
         "X-Message-Type" -> "ITSASignUpMTDfB",
         "X-Originating-System" -> "MDTP",

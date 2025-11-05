@@ -20,7 +20,7 @@ import config.MicroserviceAppConfig
 import config.featureswitch.FeatureSwitching
 import helpers.ComponentSpecBase
 import helpers.IntegrationTestConstants._
-import helpers.servicemocks.{AuditStub, AuthStub, PrePopStub}
+import helpers.servicemocks.{AuthStub, PrePopStub}
 import play.api.http.Status._
 import play.api.libs.json.OFormat.oFormatFromReadsAndOWrites
 import play.api.libs.json.{JsObject, Json}
@@ -56,8 +56,6 @@ class PrePopControllerISpec extends ComponentSpecBase with FeatureSwitching {
       AuthStub.stubAuth(OK)
 
       PrePopStub.stubHipPrePop(testNino)(
-        appConfig.hipPrePopAuthorisationToken,
-      )(
         status = OK,
         body = hipJson
       )
@@ -86,8 +84,6 @@ class PrePopControllerISpec extends ComponentSpecBase with FeatureSwitching {
         )
 
         PrePopStub.stubHipPrePop(testNino)(
-          appConfig.hipPrePopAuthorisationToken,
-        )(
           status = OK,
           body = errorJson
         )
@@ -104,8 +100,6 @@ class PrePopControllerISpec extends ComponentSpecBase with FeatureSwitching {
         AuthStub.stubAuth(OK)
 
         PrePopStub.stubHipPrePop(testNino)(
-          appConfig.hipPrePopAuthorisationToken,
-        )(
           status = INTERNAL_SERVER_ERROR,
           body = Json.obj()
         )

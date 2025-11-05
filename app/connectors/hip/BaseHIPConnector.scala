@@ -23,7 +23,7 @@ import uk.gov.hmrc.http.client.{HttpClientV2, RequestBuilder}
 import uk.gov.hmrc.http.{Authorization, HeaderCarrier, HeaderNames, HttpReads, HttpResponse}
 
 import java.net.URL
-import java.util.UUID
+import java.util.{Base64, UUID}
 import scala.concurrent.{ExecutionContext, Future}
 
 abstract class BaseHIPConnector(
@@ -77,8 +77,9 @@ abstract class BaseHIPConnector(
   private def getEnv(
     custom: Map[String, String]
   )(implicit hc: HeaderCarrier): Env = {
+
     val headers: Map[String, String] = Map(
-      HeaderNames.authorisation -> appConfig.getITSAStatusAuthorisationToken,
+      HeaderNames.authorisation -> appConfig.getHipAuthToken(),
       "correlationId" -> UUID.randomUUID().toString
     ) ++ custom
 

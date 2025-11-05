@@ -19,6 +19,7 @@ package config
 import play.api.Configuration
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
+import java.util.Base64
 import javax.inject.{Inject, Singleton}
 
 trait AppConfig {
@@ -46,14 +47,12 @@ trait AppConfig {
   def getITSAStatusAuthorisationToken: String
 
   val hipSignUpServiceURL: String
-  val hipSignUpServiceAuthorisationToken: String
 
   val hipPrePopURL: String
 
-  def hipPrePopAuthorisationToken: String
-
   val hipItsaStatusURL: String
-  val hipItsaStatusAuthorisationToken: String
+
+  def getHipAuthToken(): String
 }
 
 @Singleton
@@ -75,9 +74,6 @@ class MicroserviceAppConfig @Inject()(servicesConfig: ServicesConfig, val config
 
   override lazy val hipSignUpServiceURL: String = servicesConfig.baseUrl("hip-signup-tax-year-service")
 
-  override lazy val hipSignUpServiceAuthorisationToken: String =
-    s"Basic ${loadConfig("microservice.services.hip-signup-tax-year-service.authorization-token")}"
-
   lazy val itsaIncomeSourceURL: String = servicesConfig.baseUrl("itsa-income-source")
   lazy val itsaIncomeSourceAuthorisationToken: String = s"Basic ${loadConfig("microservice.services.itsa-income-source.authorization-token")}"
 
@@ -87,19 +83,24 @@ class MicroserviceAppConfig @Inject()(servicesConfig: ServicesConfig, val config
   lazy val sessionTimeToLiveSeconds: Int = loadConfig("mongodb.sessionTimeToLiveSeconds").toInt
   lazy val throttleTimeToLiveSeconds: Int = loadConfig("mongodb.throttleTimeToLiveSeconds").toInt
 
-  private val hipPrePopBase = "microservice.services.hip-pre-pop"
-
   override lazy val hipPrePopURL: String =
     servicesConfig.baseUrl("hip-pre-pop")
 
-  override lazy val hipPrePopAuthorisationToken =
-    s"Basic ${loadConfig(s"$hipPrePopBase.authorization-token")}"
-
-  private val hipItsaStatus = "hip-itsa-status"
-
   override val hipItsaStatusURL: String =
-    servicesConfig.baseUrl(hipItsaStatus)
+    servicesConfig.baseUrl("hip-itsa-status")
 
-  override val hipItsaStatusAuthorisationToken =
-    s"Basic ${loadConfig(s"microservice.services.$hipItsaStatus.authorization-token")}"
+  private val appClientIdForHip: String =
+    loadConfig("hip.clientId")
+
+  private val appClientSecretForHip: String =
+    loadConfig("hip.clientSecret")
+
+  override def getHipAuthToken(): String = {
+    val parts = Seq(
+      appClientIdForHip,
+      appClientSecretForHip
+    )
+
+    "Basic " + Base64.getEncoder.encodeToString(parts.mkString(":").getBytes())
+  }
 }

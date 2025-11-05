@@ -61,7 +61,7 @@ class SignUpController @Inject()(authService: AuthService,
       case Right(response: SignUpSuccess) =>
         val path: Option[String] = request.headers.get(ITSASessionKeys.RequestURI)
         auditService.audit(RegistrationSuccessAudit(
-          agentReferenceNumber, signUpRequest.nino, response.mtdbsa, appConfig.hipSignUpServiceAuthorisationToken, path
+          agentReferenceNumber, signUpRequest.nino, response.mtdbsa, appConfig.getHipAuthToken(), path
         ))
         Ok(Json.toJson(response))
       case Right(AlreadySignedUp) =>

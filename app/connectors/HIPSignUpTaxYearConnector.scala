@@ -25,12 +25,11 @@ import parsers.SignUpParser._
 import play.api.http.Status.FORBIDDEN
 import play.api.libs.json.{JsObject, Json}
 import uk.gov.hmrc.http.client.HttpClientV2
-import uk.gov.hmrc.http.{Authorization, HeaderCarrier, HeaderNames, Retries, StringContextOps}
+import uk.gov.hmrc.http.{HeaderCarrier, Retries, StringContextOps}
 
 import java.net.URL
 import java.time.format.DateTimeFormatter
 import java.time.{Instant, ZoneId}
-import java.util.UUID
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -45,7 +44,7 @@ class HIPSignUpTaxYearConnector @Inject()(
   appConfig
 ) with Retries {
 
-  def signUpUrl: URL =
+  private def signUpUrl: URL =
     url"${appConfig.hipSignUpServiceURL}/etmp/RESTAdapter/itsa/taxpayer/signup-mtdfb"
 
   private val formatter = DateTimeFormatter
@@ -62,9 +61,6 @@ class HIPSignUpTaxYearConnector @Inject()(
     )
 
   def signUp(signUpRequest: SignUpRequest)(implicit hc: HeaderCarrier): Future[PostSignUpResponse] = {
-
-    val headerCarrier: HeaderCarrier = hc
-      .copy(authorization = Some(Authorization(appConfig.hipSignUpServiceAuthorisationToken)))
 
     retryFor("HIP API #1565 - Sign Up") {
       case SignUpParserException(_, FORBIDDEN) => true
