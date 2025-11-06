@@ -72,6 +72,6 @@ class MicroserviceAppConfig @Inject()(servicesConfig: ServicesConfig, val config
       appClientSecretForHip
     )
 
-    "Basic " + Base64.getEncoder.encodeToString(parts.mkString(":").getBytes())
+    "Basic " + Base64.getEncoder.encodeToString(parts.mkString(":").getBytes("UTF-8"))
   }
 }
