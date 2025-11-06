@@ -19,34 +19,25 @@ package connectors.hip
 import config.AppConfig
 import models.subscription.AccountingPeriodUtil
 import parsers.hip.GetITSAStatusParser._
+import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.client.HttpClientV2
-import uk.gov.hmrc.http.{Authorization, HeaderCarrier, HeaderNames, StringContextOps}
 
-import java.net.URL
-import java.util.UUID
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class GetITSAStatusConnector @Inject()(httpClient: HttpClientV2,
-                                       appConfig: AppConfig)(implicit ec: ExecutionContext) {
+class GetITSAStatusConnector @Inject()(
+  httpClient: HttpClientV2,
+  appConfig: AppConfig
+)(implicit ec: ExecutionContext) extends BaseHIPConnector(
+  httpClient,
+  appConfig
+) {
 
-  def getItsaStatus(utr: String)(implicit hc: HeaderCarrier): Future[GetITSAStatusResponse] = {
+  def getItsaStatus(utr: String)(implicit hc: HeaderCarrier): Future[GetITSAStatusResponse] =
+    super.get(getItsaStatusUrl(utr), GetITSAStatusHttpReads)
 
-    val headers: Map[String, String] = Map(
-      HeaderNames.authorisation -> appConfig.getITSAStatusAuthorisationToken,
-      "correlationId" -> UUID.randomUUID().toString
-    )
-
-    val headerCarrier: HeaderCarrier = hc
-      .copy(authorization = Some(Authorization(appConfig.getITSAStatusAuthorisationToken)))
-      .withExtraHeaders((headers - HeaderNames.authorisation).toSeq: _*)
-
-    val call = httpClient.get(getItsaStatusUrl(utr))(headerCarrier)
-    headers.foldLeft(call)((a, b) => a.setHeader(b)).execute
-  }
-
-  private def getItsaStatusUrl(utr: String): URL = {
-    url"${appConfig.taxableEntityAPI}/itsd/person-itd/itsa-status/$utr?taxYear=${AccountingPeriodUtil.getCurrentTaxYear.toShortTaxYear}&futureYears=true"
+  private def getItsaStatusUrl(utr: String) = {
+    s"/itsd/person-itd/itsa-status/$utr?taxYear=${AccountingPeriodUtil.getCurrentTaxYear.toShortTaxYear}&futureYears=true"
   }
 }

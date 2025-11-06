@@ -19,6 +19,7 @@ package config
 import play.api.Configuration
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
+import java.util.Base64
 import javax.inject.{Inject, Singleton}
 
 trait AppConfig {
@@ -30,30 +31,13 @@ trait AppConfig {
 
   val mongoUri: String
 
-  val itsaIncomeSourceURL: String
-  val itsaIncomeSourceAuthorisationToken: String
-
-  val hipBusinessDetailsURL: String
-  val getItsaBusinessDetailsEnvironmentToken: String
-
   def statusDeterminationServiceURL: String
 
   val statusDeterminationServiceAuthorisationToken: String
   val statusDeterminationServiceEnvironment: String
 
-  def taxableEntityAPI: String
-
-  def getITSAStatusAuthorisationToken: String
-
-  val hipSignUpServiceURL: String
-  val hipSignUpServiceAuthorisationToken: String
-
-  val hipPrePopURL: String
-
-  def hipPrePopAuthorisationToken: String
-
-  val hipItsaStatusURL: String
-  val hipItsaStatusAuthorisationToken: String
+  val getHipBaseURL: String
+  def getHipAuthToken: String
 }
 
 @Singleton
@@ -61,25 +45,11 @@ class MicroserviceAppConfig @Inject()(servicesConfig: ServicesConfig, val config
 
   private def loadConfig(key: String) = servicesConfig.getString(key)
 
-  override lazy val hipBusinessDetailsURL: String = servicesConfig.baseUrl("get-itsa-business-details")
-  override lazy val getItsaBusinessDetailsEnvironmentToken = s"Basic ${loadConfig("microservice.services.get-itsa-business-details.authorization-token")}"
-
   override lazy val statusDeterminationServiceURL: String = servicesConfig.baseUrl("status-determination-service")
 
   private val statusDeterminationServiceBase = "microservice.services.status-determination-service"
   override lazy val statusDeterminationServiceAuthorisationToken: String = s"Bearer ${loadConfig(s"$statusDeterminationServiceBase.authorization-token")}"
   override lazy val statusDeterminationServiceEnvironment: String = loadConfig(s"$statusDeterminationServiceBase.environment")
-
-  override lazy val taxableEntityAPI: String = servicesConfig.baseUrl("taxable-entity-api")
-  override lazy val getITSAStatusAuthorisationToken = s"Basic ${loadConfig("microservice.services.taxable-entity-api.get-itsa-status.authorization-token")}"
-
-  override lazy val hipSignUpServiceURL: String = servicesConfig.baseUrl("hip-signup-tax-year-service")
-
-  override lazy val hipSignUpServiceAuthorisationToken: String =
-    s"Basic ${loadConfig("microservice.services.hip-signup-tax-year-service.authorization-token")}"
-
-  lazy val itsaIncomeSourceURL: String = servicesConfig.baseUrl("itsa-income-source")
-  lazy val itsaIncomeSourceAuthorisationToken: String = s"Basic ${loadConfig("microservice.services.itsa-income-source.authorization-token")}"
 
   lazy val mongoUri: String = loadConfig("mongodb.uri")
 
@@ -87,19 +57,21 @@ class MicroserviceAppConfig @Inject()(servicesConfig: ServicesConfig, val config
   lazy val sessionTimeToLiveSeconds: Int = loadConfig("mongodb.sessionTimeToLiveSeconds").toInt
   lazy val throttleTimeToLiveSeconds: Int = loadConfig("mongodb.throttleTimeToLiveSeconds").toInt
 
-  private val hipPrePopBase = "microservice.services.hip-pre-pop"
+  override val getHipBaseURL: String =
+    servicesConfig.baseUrl("hip")
 
-  override lazy val hipPrePopURL: String =
-    servicesConfig.baseUrl("hip-pre-pop")
+  private val appClientIdForHip: String =
+    loadConfig("microservice.services.hip.creds.clientId")
 
-  override lazy val hipPrePopAuthorisationToken =
-    s"Basic ${loadConfig(s"$hipPrePopBase.authorization-token")}"
+  private val appClientSecretForHip: String =
+    loadConfig("microservice.services.hip.creds.clientSecret")
 
-  private val hipItsaStatus = "hip-itsa-status"
+  override def getHipAuthToken: String = {
+    val parts = Seq(
+      appClientIdForHip,
+      appClientSecretForHip
+    )
 
-  override val hipItsaStatusURL: String =
-    servicesConfig.baseUrl(hipItsaStatus)
-
-  override val hipItsaStatusAuthorisationToken =
-    s"Basic ${loadConfig(s"microservice.services.$hipItsaStatus.authorization-token")}"
+    "Basic " + Base64.getEncoder.encodeToString(parts.mkString(":").getBytes("UTF-8"))
+  }
 }

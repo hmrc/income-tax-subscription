@@ -18,6 +18,7 @@ package parsers
 
 import models.ErrorModel
 import models.status.{ItsaStatusResponse, TaxYearStatus}
+import parsers.hip.Parser
 import play.api.http.Status.OK
 import play.api.libs.json.{JsError, JsSuccess}
 import uk.gov.hmrc.http.{HttpReads, HttpResponse}
@@ -26,8 +27,13 @@ object ItsaStatusParser {
 
   type GetItsaStatusResponse = Either[ErrorModel, ItsaStatusResponse]
 
-  implicit object ItsaStatusResponseHttpReads extends HttpReads[GetItsaStatusResponse] {
-    override def read(method: String, url: String, response: HttpResponse): GetItsaStatusResponse = {
+  implicit object ImplicitItsaStatusResponseHttpReads extends HttpReads[GetItsaStatusResponse] {
+    override def read(method: String, url: String, response: HttpResponse): GetItsaStatusResponse =
+      ItsaStatusResponseHttpReads.read(response)
+  }
+
+  object ItsaStatusResponseHttpReads extends Parser[GetItsaStatusResponse] {
+    override def read(response: HttpResponse): GetItsaStatusResponse = {
       response.status match {
         case OK => response.json.validate[List[TaxYearStatus]] match {
           case JsSuccess(value, _) => Right(ItsaStatusResponse(value))

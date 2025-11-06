@@ -18,33 +18,31 @@ package connectors
 
 import com.typesafe.config.Config
 import config.AppConfig
+import connectors.hip.BaseHIPConnector
 import models.SignUpRequest
 import org.apache.pekko.actor.ActorSystem
 import parsers.SignUpParser._
 import play.api.http.Status.FORBIDDEN
 import play.api.libs.json.{JsObject, Json}
 import uk.gov.hmrc.http.client.HttpClientV2
-import uk.gov.hmrc.http.{Authorization, HeaderCarrier, HeaderNames, Retries, StringContextOps}
+import uk.gov.hmrc.http.{HeaderCarrier, Retries}
 
-import java.net.URL
-import java.time.format.DateTimeFormatter
-import java.time.{Instant, ZoneId}
-import java.util.UUID
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class HIPSignUpTaxYearConnector @Inject()(http: HttpClientV2,
-                                          val appConfig: AppConfig,
-                                          val configuration: Config,
-                                          val actorSystem: ActorSystem)(implicit ec: ExecutionContext) extends Retries {
+class HIPSignUpTaxYearConnector @Inject()(
+  httpClient: HttpClientV2,
+  appConfig: AppConfig,
+  val configuration: Config,
+  val actorSystem: ActorSystem
+)(implicit ec: ExecutionContext) extends BaseHIPConnector(
+  httpClient,
+  appConfig
+) with Retries {
 
-  def signUpUrl: URL =
-    url"${appConfig.hipSignUpServiceURL}/etmp/RESTAdapter/itsa/taxpayer/signup-mtdfb"
-
-  private val formatter = DateTimeFormatter
-    .ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'")
-    .withZone(ZoneId.of("UTC"))
+  private def signUpUrl =
+    s"/etmp/RESTAdapter/itsa/taxpayer/signup-mtdfb"
 
   def requestBody(signUpRequest: SignUpRequest): JsObject =
     Json.obj(
@@ -57,25 +55,15 @@ class HIPSignUpTaxYearConnector @Inject()(http: HttpClientV2,
 
   def signUp(signUpRequest: SignUpRequest)(implicit hc: HeaderCarrier): Future[PostSignUpResponse] = {
 
-    val headerCarrier: HeaderCarrier = hc
-      .copy(authorization = Some(Authorization(appConfig.hipSignUpServiceAuthorisationToken)))
-
     retryFor("HIP API #1565 - Sign Up") {
       case SignUpParserException(_, FORBIDDEN) => true
       case _ => false
     } {
-      val headers: Seq[(String, String)] = Seq(
-        HeaderNames.authorisation -> appConfig.hipSignUpServiceAuthorisationToken,
-        "correlationid" -> UUID.randomUUID().toString,
-        "X-Message-Type" -> "ITSASignUpMTDfB",
-        "X-Originating-System" -> "MDTP",
-        "X-Receipt-Date" -> formatter.format(Instant.now()),
-        "X-Regime-Type" -> "ITSA",
-        "X-Transmitting-System" -> "HIP"
+      val headers: Map[String, String] = Map(
+        "X-Message-Type" -> "ITSASignUpMTDfB"
       )
 
-      val call = http.post(signUpUrl)(headerCarrier).withBody(requestBody(signUpRequest))
-      headers.foldLeft(call)((a, b) => a.setHeader(b)).execute
+      super.post(signUpUrl, requestBody(signUpRequest), HipSignUpResponseHttpReads, headers)
     }
   }
 }

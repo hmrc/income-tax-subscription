@@ -22,6 +22,7 @@ import config.MicroserviceAppConfig
 import models.SignUpResponse.SignUpSuccess
 import models.monitoring.{RegistrationFailureAudit, RegistrationSuccessAudit}
 import models.{ErrorModel, SignUpRequest, SignUpResponse}
+import org.mockito.Mockito.when
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.http.Status.{INTERNAL_SERVER_ERROR, OK, UNPROCESSABLE_ENTITY}
 import play.api.libs.json.Json
@@ -43,7 +44,7 @@ class SignUpControllerSpec extends CommonSpec
   with GuiceOneAppPerSuite {
 
   lazy val mockCC: ControllerComponents = stubControllerComponents()
-  lazy val mockAppConfig: MicroserviceAppConfig = app.injector.instanceOf[MicroserviceAppConfig]
+  lazy val mockAppConfig: MicroserviceAppConfig = mock[MicroserviceAppConfig]
 
   object TestController extends SignUpController(
     mockAuthService,
@@ -51,7 +52,13 @@ class SignUpControllerSpec extends CommonSpec
     mockHIPSignUpTaxYearConnector,
     mockCC,
     mockAppConfig
-  )
+  ) {
+    when(mockAppConfig.getHipAuthToken).thenReturn(
+      auth
+    )
+  }
+
+  val auth = "auth"
 
   lazy val testSignUpRequest: SignUpRequest = SignUpRequest(nino = testNino, utr = testUtr, taxYear = testTaxYear)
 
@@ -70,7 +77,7 @@ class SignUpControllerSpec extends CommonSpec
           contentAsJson(result) shouldBe Json.obj(
             "mtdbsa" -> "XAIT000000"
           )
-          verifyAudit(RegistrationSuccessAudit(None, testNino, "XAIT000000", "Basic dev", None))
+          verifyAudit(RegistrationSuccessAudit(None, testNino, "XAIT000000", auth, None))
         }
         "an agent signs up their client" in {
           val fakeRequest = FakeRequest().withBody(Json.toJson(testTaxYearSignUpSubmission(testNino, testUtr, testTaxYear)))
@@ -84,7 +91,7 @@ class SignUpControllerSpec extends CommonSpec
           contentAsJson(result) shouldBe Json.obj(
             "mtdbsa" -> "XAIT000000"
           )
-          verifyAudit(RegistrationSuccessAudit(Some("123456789"), testNino, "XAIT000000", "Basic dev", None))
+          verifyAudit(RegistrationSuccessAudit(Some("123456789"), testNino, "XAIT000000", auth, None))
         }
       }
     }

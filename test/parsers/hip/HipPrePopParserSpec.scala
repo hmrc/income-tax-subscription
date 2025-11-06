@@ -84,7 +84,7 @@ class HipPrePopParserSpec extends CommonSpec {
   }
 
   def read(status: Int, json: JsValue = Json.obj()): GetHipPrePopResponse = {
-    HipPrePopParser.GetHipPrePopResponseHttpReads.read("", "", HttpResponse(status, json.toString()))
+    HipPrePopParser.GetHipPrePopResponseHttpReads.read(HttpResponse(status, json.toString()))
   }
 
   lazy val selfEmpJson: JsObject = Json.obj(

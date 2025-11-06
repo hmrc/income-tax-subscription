@@ -17,10 +17,10 @@
 package connectors
 
 import config.MicroserviceAppConfig
-import helpers.{ComponentSpecBase, WiremockHelper}
 import helpers.IntegrationTestConstants._
 import helpers.WiremockHelper.StubResponse
-import helpers.servicemocks.{AuditStub, HIPSignUpTaxYearStub}
+import helpers.servicemocks.HIPSignUpTaxYearStub
+import helpers.{ComponentSpecBase, WiremockHelper}
 import models.SignUpResponse.{AlreadySignedUp, SignUpSuccess}
 import models.{ErrorModel, SignUpRequest}
 import play.api.http.Status._
@@ -42,8 +42,7 @@ class HIPSignUpTaxYearConnectorISpec extends ComponentSpecBase {
     "receiving a 201 response" should {
       "return a valid MTDBSA number when valid json is found and utr is submitted" in {
         HIPSignUpTaxYearStub.stubSignUp(
-          hipTestTaxYearSignUpRequestBodyWithUtr(testNino, testUtr, testTaxYear),
-          appConfig.hipSignUpServiceAuthorisationToken
+          hipTestTaxYearSignUpRequestBodyWithUtr(testNino, testUtr, testTaxYear)
         )(
           CREATED, hipTestSignUpSuccessBody
         )
@@ -55,8 +54,7 @@ class HIPSignUpTaxYearConnectorISpec extends ComponentSpecBase {
 
       "return a Json parse failure when invalid json is found" in {
         HIPSignUpTaxYearStub.stubSignUp(
-          hipTestTaxYearSignUpRequestBodyWithUtr(testNino, testUtr, testTaxYear),
-          appConfig.hipSignUpServiceAuthorisationToken
+          hipTestTaxYearSignUpRequestBodyWithUtr(testNino, testUtr, testTaxYear)
         )(
           CREATED, hipTestSignUpInvalidBody
         )
@@ -70,8 +68,7 @@ class HIPSignUpTaxYearConnectorISpec extends ComponentSpecBase {
     "receiving a 422 response with a customer already signed up code" should {
       "return a already signed up result" in {
         HIPSignUpTaxYearStub.stubSignUp(
-          hipTestTaxYearSignUpRequestBodyWithUtr(testNino, testUtr, testTaxYear),
-          appConfig.hipSignUpServiceAuthorisationToken
+          hipTestTaxYearSignUpRequestBodyWithUtr(testNino, testUtr, testTaxYear)
         )(
           status = UNPROCESSABLE_ENTITY,
           body = Json.obj("errors" ->
@@ -86,8 +83,7 @@ class HIPSignUpTaxYearConnectorISpec extends ComponentSpecBase {
 
       "return a Json parse failure when invalid json is found" in {
         HIPSignUpTaxYearStub.stubSignUp(
-          hipTestTaxYearSignUpRequestBodyWithUtr(testNino, testUtr, testTaxYear),
-          appConfig.hipSignUpServiceAuthorisationToken
+          hipTestTaxYearSignUpRequestBodyWithUtr(testNino, testUtr, testTaxYear)
         )(
           UNPROCESSABLE_ENTITY, testSignUpInvalidBody
         )
@@ -101,8 +97,7 @@ class HIPSignUpTaxYearConnectorISpec extends ComponentSpecBase {
     "receiving a 422 response without customer already signed up code" should {
       "return the status and error received" in {
         HIPSignUpTaxYearStub.stubSignUp(
-          hipTestTaxYearSignUpRequestBodyWithUtr(testNino, testUtr, testTaxYear),
-          appConfig.hipSignUpServiceAuthorisationToken
+          hipTestTaxYearSignUpRequestBodyWithUtr(testNino, testUtr, testTaxYear)
         )(
           status = UNPROCESSABLE_ENTITY,
           body = Json.obj("errors" ->
@@ -119,8 +114,7 @@ class HIPSignUpTaxYearConnectorISpec extends ComponentSpecBase {
     "receiving a 500 response" should {
       "return the status and error received" in {
         HIPSignUpTaxYearStub.stubSignUp(
-          hipTestTaxYearSignUpRequestBodyWithUtr(testNino, testUtr, testTaxYear),
-          appConfig.hipSignUpServiceAuthorisationToken
+          hipTestTaxYearSignUpRequestBodyWithUtr(testNino, testUtr, testTaxYear)
         )(
           status = INTERNAL_SERVER_ERROR,
           body = Json.obj("error" ->

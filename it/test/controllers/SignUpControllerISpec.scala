@@ -31,14 +31,14 @@ class SignUpControllerISpec extends ComponentSpecBase {
   val appConfig: MicroserviceAppConfig = app.injector.instanceOf[MicroserviceAppConfig]
   val signUpController: SignUpController = app.injector.instanceOf[SignUpController]
 
-  lazy val testSignUpRequest = SignUpRequest(testNino, testUtr, testTaxYear)
+  lazy val testSignUpRequest: SignUpRequest =
+    SignUpRequest(testNino, testUtr, testTaxYear)
 
   "signUp" when {
     "call sign up connector successfully when auth succeeds for a sign up submission 200" in {
       AuthStub.stubAuth(OK)
       HIPSignUpTaxYearStub.stubSignUp(
-        hipTestTaxYearSignUpRequestBodyWithUtr(testNino, testUtr, testTaxYear),
-        appConfig.hipSignUpServiceAuthorisationToken
+        hipTestTaxYearSignUpRequestBodyWithUtr(testNino, testUtr, testTaxYear)
       )(CREATED, hipTestSignUpSuccessBody)
 
       val res = IncomeTaxSubscription.signUp(testSignUpRequest)
@@ -54,8 +54,7 @@ class SignUpControllerISpec extends ComponentSpecBase {
     "return a Json parse failure when invalid json is found" in {
       AuthStub.stubAuthSuccess()
       HIPSignUpTaxYearStub.stubSignUp(
-        hipTestTaxYearSignUpRequestBodyWithUtr(testNino, testUtr, testTaxYear),
-        appConfig.hipSignUpServiceAuthorisationToken
+        hipTestTaxYearSignUpRequestBodyWithUtr(testNino, testUtr, testTaxYear)
       )(CREATED, hipTestSignUpInvalidBody)
 
       val res = IncomeTaxSubscription.signUp(testSignUpRequest)
@@ -68,8 +67,7 @@ class SignUpControllerISpec extends ComponentSpecBase {
     "Show error processing Sign up request with status Internal Server Error" in {
       AuthStub.stubAuthSuccess()
       HIPSignUpTaxYearStub.stubSignUp(
-        hipTestTaxYearSignUpRequestBodyWithUtr(testNino, testUtr, testTaxYear),
-        appConfig.hipSignUpServiceAuthorisationToken
+        hipTestTaxYearSignUpRequestBodyWithUtr(testNino, testUtr, testTaxYear)
       )(
         status = INTERNAL_SERVER_ERROR,
         body = Json.obj("error" ->

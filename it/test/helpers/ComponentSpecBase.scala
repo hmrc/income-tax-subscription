@@ -57,23 +57,13 @@ trait ComponentSpecBase extends AnyWordSpecLike
     "throttle.oneTestThrottle.max" -> "1",
     "microservice.services.status-determination-service.host" -> mockHost,
     "microservice.services.status-determination-service.port" -> mockPort,
-    "microservice.services.taxable-entity-api.host" -> mockHost,
-    "microservice.services.taxable-entity-api.port" -> mockPort,
-    "microservice.services.hip-signup-tax-year-service.host" -> mockHost,
-    "microservice.services.hip-signup-tax-year-service.port" -> mockPort,
-    "microservice.services.get-itsa-business-details.host" -> mockHost,
-    "microservice.services.get-itsa-business-details.port" -> mockPort,
-    "microservice.services.itsa-income-source.host" -> mockHost,
-    "microservice.services.itsa-income-source.port" -> mockPort,
-    "microservice.services.hip-pre-pop.host" -> mockHost,
-    "microservice.services.hip-pre-pop.port" -> mockPort,
-    "microservice.services.hip-itsa-status.host" -> mockHost,
-    "microservice.services.hip-itsa-status.port" -> mockPort,
     "http-verbs.retries.intervals.0" -> "10.milliseconds",
     "http-verbs.retries.intervals.1" -> "10.milliseconds",
     "http-verbs.retries.intervals.2" -> "10.milliseconds",
     "http-verbs.retries.intervals.3" -> "10.milliseconds",
-    "http-verbs.retries.intervals.4" -> "10.milliseconds"
+    "http-verbs.retries.intervals.4" -> "10.milliseconds",
+    "microservice.services.hip.host" -> mockHost,
+    "microservice.services.hip.port" -> mockPort
   ) ++ overriddenConfig()
 
   def overriddenConfig(): Map[String, String] = Map.empty
