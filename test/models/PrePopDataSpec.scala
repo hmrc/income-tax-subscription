@@ -87,21 +87,39 @@ class PrePopDataSpec extends PlaySpec with Matchers {
           startDate = None
         ))
       }
-      "a Valid Postcode contains characters which are not allowed and lowercase letters" in {
-        Json.fromJson[PrePopSelfEmployment](Json.obj(
-          "businessName" -> "AB 123",
-          "businessDescription" -> "Plumbing",
-          "businessAddressFirstLine" -> "1 long road",
-          "businessAddressPostcode" -> """$%*&^£#!-_ZZ1%^ 1zz""",
-        )) mustBe JsSuccess(PrePopSelfEmployment(
-          name = Some("AB 123"),
-          trade = Some("Plumbing"),
-          address = Some(Address(
-            lines = Seq("1 long road"),
-            postcode = Some("ZZ1 1ZZ")
-          )),
-          startDate = None
-        ))
+      "a Valid Postcode contains characters which are not allowed and lowercase letters" when {
+        "the postcode has no spaces" in {
+          Json.fromJson[PrePopSelfEmployment](Json.obj(
+            "businessName" -> "AB 123",
+            "businessDescription" -> "Plumbing",
+            "businessAddressFirstLine" -> "1 long road",
+            "businessAddressPostcode" -> """$%*&^£#!-_ZZ1%^1zz""",
+          )) mustBe JsSuccess(PrePopSelfEmployment(
+            name = Some("AB 123"),
+            trade = Some("Plumbing"),
+            address = Some(Address(
+              lines = Seq("1 long road"),
+              postcode = Some("ZZ11ZZ")
+            )),
+            startDate = None
+          ))
+        }
+        "the postcode has spaces" in {
+          Json.fromJson[PrePopSelfEmployment](Json.obj(
+            "businessName" -> "AB 123",
+            "businessDescription" -> "Plumbing",
+            "businessAddressFirstLine" -> "1 long road",
+            "businessAddressPostcode" -> """$%*&^£#!-_ZZ1%^ 1zz""",
+          )) mustBe JsSuccess(PrePopSelfEmployment(
+            name = Some("AB 123"),
+            trade = Some("Plumbing"),
+            address = Some(Address(
+              lines = Seq("1 long road"),
+              postcode = Some("ZZ1 1ZZ")
+            )),
+            startDate = None
+          ))
+        }
       }
       "a postcode in invalid format" in {
         Json.fromJson[PrePopSelfEmployment](Json.obj(
