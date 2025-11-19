@@ -20,7 +20,7 @@ import play.api.libs.json.{Json, OFormat}
 
 case class SignUpRequest(nino: String, utr: String, taxYear: String)
 
-  object SignUpRequest {
-    implicit val format: OFormat[SignUpRequest] = Json.format[SignUpRequest]
+object SignUpRequest {
+  implicit val format: OFormat[SignUpRequest] = Json.format[SignUpRequest]
 
 }
