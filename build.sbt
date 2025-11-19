@@ -27,6 +27,7 @@ lazy val microservice = Project(appName, file("."))
     libraryDependencies ++= AppDependencies.compile ++ AppDependencies.test,
     scalacOptions += "-feature",
     scalacOptions += "-Wconf:src=routes/.*:s",
+    scalacOptions += "-Wconf:msg=Flag.*repeatedly:s"
   )
   .settings(PlayKeys.playDefaultPort := 9560)
   .settings(CodeCoverageSettings.settings *)
