@@ -19,7 +19,6 @@ package helpers.servicemocks
 import com.github.tomakehurst.wiremock.stubbing.StubMapping
 import helpers.IntegrationTestConstants.Audit.{agentServiceEnrolmentName, agentServiceIdentifierKey}
 import helpers.IntegrationTestConstants.testArn
-import models.auth.UserIds
 import play.api.http.HeaderNames
 import play.api.http.Status._
 import play.api.libs.json.{JsObject, Json}
@@ -31,7 +30,7 @@ object AuthStub extends WireMockMethods {
   val gatewayID = "12345"
   val internalID = "internal"
   val externalID = "external"
-  val userIDs = UserIds(internalId = internalID, externalId = externalID)
+
 
   def stubAuthSuccess(): StubMapping = {
     when(method = POST, uri = authority)
