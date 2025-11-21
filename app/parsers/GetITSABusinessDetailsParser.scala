@@ -19,7 +19,7 @@ package parsers
 import parsers.hip.Parser
 import play.api.http.Status.{OK, UNPROCESSABLE_ENTITY}
 import play.api.libs.json.{JsError, JsSuccess, Reads}
-import uk.gov.hmrc.http.{HttpReads, HttpResponse, InternalServerException}
+import uk.gov.hmrc.http.{HttpResponse, InternalServerException}
 
 object GetITSABusinessDetailsParser {
 
@@ -36,7 +36,7 @@ object GetITSABusinessDetailsParser {
   case object NotSignedUp extends GetITSABusinessDetailsResponse
 
   object GetITSABusinessDetailsResponseHttpReads extends Parser[GetITSABusinessDetailsResponse] {
-    override def read(response: HttpResponse): GetITSABusinessDetailsResponse = {
+    override def read(correlationId: String, response: HttpResponse): GetITSABusinessDetailsResponse = {
       response.status match {
         case OK =>
           response.json.validate[AlreadySignedUp] match {

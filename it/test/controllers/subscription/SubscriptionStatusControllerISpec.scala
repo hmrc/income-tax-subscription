@@ -20,7 +20,7 @@ import config.AppConfig
 import config.featureswitch.FeatureSwitching
 import helpers.ComponentSpecBase
 import helpers.IntegrationTestConstants._
-import helpers.servicemocks.{AuthStub, BusinessDetailsStub, ITSABusinessDetailsStub}
+import helpers.servicemocks.{AuthStub, ITSABusinessDetailsStub}
 import models.frontend.FESuccessResponse
 import play.api.http.Status._
 

@@ -20,7 +20,6 @@ import common.CommonSpec
 import config.MicroserviceAppConfig
 import config.featureswitch.FeatureSwitching
 import org.mockito.ArgumentMatchers
-import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito._
 import org.scalatest.BeforeAndAfterEach
 import org.scalatestplus.mockito.MockitoSugar

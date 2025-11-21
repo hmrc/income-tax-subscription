@@ -19,9 +19,6 @@ package helpers.servicemocks
 import com.github.tomakehurst.wiremock.stubbing.StubMapping
 import play.api.libs.json.JsValue
 
-import java.time.Instant
-import java.util.UUID
-
 object HIPSignUpTaxYearStub extends WireMockMethods {
 
   private def signUpUri: String = s"/etmp/RESTAdapter/itsa/taxpayer/signup-mtdfb"

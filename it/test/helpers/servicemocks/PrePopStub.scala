@@ -19,8 +19,6 @@ package helpers.servicemocks
 import com.github.tomakehurst.wiremock.stubbing.StubMapping
 import play.api.libs.json.JsValue
 
-import java.util.UUID
-
 object PrePopStub extends WireMockMethods {
 
   private def prePopUri(nino: String): String = s"/income-tax/pre-prop/$nino"

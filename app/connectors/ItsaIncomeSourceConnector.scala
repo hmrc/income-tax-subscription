@@ -27,12 +27,8 @@ import play.api.libs.json.Json
 import play.api.mvc.Request
 import services.monitoring.AuditService
 import uk.gov.hmrc.http.client.HttpClientV2
-import uk.gov.hmrc.http.{Authorization, HeaderCarrier, HeaderNames, Retries, StringContextOps}
+import uk.gov.hmrc.http.{HeaderCarrier, Retries}
 
-import java.net.URL
-import java.time.format.DateTimeFormatter
-import java.time.{Instant, ZoneId}
-import java.util.UUID
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 

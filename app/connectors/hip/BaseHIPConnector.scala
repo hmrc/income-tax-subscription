@@ -18,9 +18,9 @@ package connectors.hip
 
 import config.AppConfig
 import parsers.hip.Parser
-import play.api.libs.json.{JsObject, JsValue}
+import play.api.libs.json.JsValue
 import uk.gov.hmrc.http.client.{HttpClientV2, RequestBuilder}
-import uk.gov.hmrc.http.{Authorization, HeaderCarrier, HeaderNames, HttpReads, HttpResponse, StringContextOps}
+import uk.gov.hmrc.http.{Authorization, HeaderCarrier, HeaderNames, HttpReads, HttpResponse}
 
 import java.net.URL
 import java.time.format.DateTimeFormatter
@@ -47,9 +47,11 @@ abstract class BaseHIPConnector(
     parser: Parser[T],
     custom: Map[String, String] = Map.empty
   )(implicit hc: HeaderCarrier): Future[T] = {
-    val env = getEnv(custom)
+    val correlationId = UUID.randomUUID().toString
+    val env = getEnv(correlationId, custom)
 
     doCallWithHeaders(
+      correlationId,
       httpClient.get(getFullUrl(url))(env.headerCarrier),
       env.headers,
       parser
@@ -62,9 +64,11 @@ abstract class BaseHIPConnector(
     parser: Parser[T],
     custom: Map[String, String] = Map.empty
   )(implicit hc: HeaderCarrier): Future[T] = {
-    val env = getEnv(custom)
+    val correlationId = UUID.randomUUID().toString
+    val env = getEnv(correlationId, custom)
 
     doCallWithHeaders(
+      correlationId,
       httpClient.post(getFullUrl(url))(env.headerCarrier).withBody(body),
       env.headers,
       parser
@@ -75,21 +79,23 @@ abstract class BaseHIPConnector(
     new URL(s"${appConfig.getHipBaseURL}$url")
 
   private def doCallWithHeaders[T](
+    correlationId: String,
     call: RequestBuilder,
     headers: Map[String, String],
     parser: Parser[T]
   ): Future[T] = {
-    implicit val reads: Reade[T] = new Reade[T](parser)
+    implicit val reads: Reade[T] = new Reade[T](correlationId, parser)
     headers.foldLeft(call)((a, b) => a.setHeader(b)).execute
   }
 
   private def getEnv(
+    correlationId: String,
     custom: Map[String, String]
   )(implicit hc: HeaderCarrier): Env = {
 
     val headers: Map[String, String] = Map(
       HeaderNames.authorisation -> appConfig.getHipAuthToken,
-      "correlationId" -> UUID.randomUUID().toString,
+      "correlationId" -> correlationId,
       "X-Originating-System" -> "MDTP",
       "X-Receipt-Date" -> isoDatePattern.format(Instant.now()),
       "X-Regime" -> "ITSA",
@@ -106,8 +112,9 @@ abstract class BaseHIPConnector(
 }
 
 private class Reade[T](
+  correlationId: String,
   parser: Parser[T]
 ) extends HttpReads[T] {
   override def read(method: String, url: String, response: HttpResponse): T =
-    parser.read(response)
+    parser.read(correlationId, response)
 }
