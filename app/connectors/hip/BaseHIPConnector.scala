@@ -28,6 +28,8 @@ import java.time.{Instant, ZoneId}
 import java.util.UUID
 import scala.concurrent.{ExecutionContext, Future}
 
+import play.api.libs.ws.JsonBodyWritables.writeableOf_JsValue
+
 abstract class BaseHIPConnector(
   httpClient: HttpClientV2,
   appConfig: AppConfig

@@ -35,6 +35,8 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 import scala.language.implicitConversions
 
+import org.mongodb.scala.gridfs.ObservableFuture
+
 @Singleton
 class LockoutMongoRepositoryConfig @Inject()(val appConfig: AppConfig) {
 
@@ -116,7 +118,7 @@ object LockoutMongoRepository {
 
   implicit def toBson(doc: JsObject): Bson = Document.parse(doc.toString())
 
-  implicit def toFuture[T](observable: SingleObservable[T]): Future[T] = observable.toFuture()
+  implicit def toFuture[T](observable: SingleObservable[T]): Future[Seq[T]] = observable.toFuture()
 
   implicit def toFuture[T](observable: Observable[T]): Future[Seq[T]] = observable.toFuture()
 

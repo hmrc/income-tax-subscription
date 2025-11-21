@@ -19,7 +19,7 @@ import uk.gov.hmrc.DefaultBuildSettings
 val appName = "income-tax-subscription"
 
 ThisBuild / majorVersion := 1
-ThisBuild / scalaVersion := "2.13.16"
+ThisBuild / scalaVersion := "3.3.6"
 
 lazy val microservice = Project(appName, file("."))
   .enablePlugins(play.sbt.PlayScala, SbtDistributablesPlugin)
@@ -27,6 +27,7 @@ lazy val microservice = Project(appName, file("."))
     libraryDependencies ++= AppDependencies.compile ++ AppDependencies.test,
     scalacOptions += "-feature",
     scalacOptions += "-Wconf:src=routes/.*:s",
+    scalacOptions += "-Wconf:msg=Flag.*repeatedly:s"
   )
   .settings(PlayKeys.playDefaultPort := 9560)
   .settings(CodeCoverageSettings.settings *)

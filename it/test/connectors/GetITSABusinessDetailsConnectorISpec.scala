@@ -33,7 +33,7 @@ import utils.TestConstants.{testMtditId, testNino}
 class GetITSABusinessDetailsConnectorISpec extends ComponentSpecBase with FeatureSwitching {
 
   private lazy val getITSABusinessConnector: GetITSABusinessDetailsConnector = app.injector.instanceOf[GetITSABusinessDetailsConnector]
-  lazy val appConfig: MicroserviceAppConfig = app.injector.instanceOf[MicroserviceAppConfig]
+  val appConfig: MicroserviceAppConfig = app.injector.instanceOf[MicroserviceAppConfig]
   implicit val request: Request[_] = FakeRequest()
   override implicit val hc: HeaderCarrier = HeaderCarrier()
 
