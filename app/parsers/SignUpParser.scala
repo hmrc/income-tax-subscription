@@ -21,14 +21,14 @@ import models.{ErrorModel, SignUpResponse}
 import parsers.hip.Parser
 import play.api.http.Status._
 import play.api.libs.json.{JsError, JsSuccess}
-import uk.gov.hmrc.http.{HttpReads, HttpResponse, InternalServerException}
+import uk.gov.hmrc.http.{HttpResponse, InternalServerException}
 
 object SignUpParser {
 
   type PostSignUpResponse = Either[ErrorModel, SignUpResponse]
 
   object HipSignUpResponseHttpReads extends Parser[PostSignUpResponse] {
-    override def read(response: HttpResponse): PostSignUpResponse = {
+    override def read(correlationId: String, response: HttpResponse): PostSignUpResponse = {
       response.status match {
         case CREATED => (response.json \ "success").validate[SignUpSuccess] match {
           case JsSuccess(value, _) => Right(value)

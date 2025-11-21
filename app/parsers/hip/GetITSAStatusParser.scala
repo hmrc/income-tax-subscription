@@ -21,14 +21,14 @@ import parsers.GetITSAStatusParser.GetITSAStatusTaxYearResponse
 import play.api.Logging
 import play.api.http.Status.OK
 import play.api.libs.json.{JsError, JsSuccess}
-import uk.gov.hmrc.http.{HttpReads, HttpResponse}
+import uk.gov.hmrc.http.HttpResponse
 
 object GetITSAStatusParser extends Logging {
 
   type GetITSAStatusResponse = Either[ErrorModel, Seq[GetITSAStatusTaxYearResponse]]
 
   object GetITSAStatusHttpReads extends Parser[GetITSAStatusResponse] {
-    override def read(response: HttpResponse): GetITSAStatusResponse =
+    override def read(correlationId: String, response: HttpResponse): GetITSAStatusResponse =
       response.status match {
         case OK => response.json.validate[Seq[GetITSAStatusTaxYearResponse]] match {
           case JsSuccess(value, _) => Right(value)
