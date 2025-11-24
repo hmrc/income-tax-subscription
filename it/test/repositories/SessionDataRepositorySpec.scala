@@ -17,6 +17,7 @@
 package repositories
 
 import org.scalatest.concurrent.ScalaFutures.convertScalaFuture
+
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
 import org.scalatest.{BeforeAndAfterEach, OptionValues}

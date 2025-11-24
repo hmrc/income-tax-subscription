@@ -14,14 +14,14 @@
  * limitations under the License.
  */
 
-import sbt._
-import play.sbt.PlayImport._
+import sbt.*
+import play.sbt.PlayImport.*
 
 object AppDependencies {
 
   private val domainVersion = "11.0.0"
-  private val hmrcMongoVersion = "2.6.0"
-  private val bootstrapBackendVersion = "8.6.0"
+  private val hmrcMongoVersion = "2.10.0"
+  private val bootstrapBackendVersion = "10.4.0"
 
   val compile: Seq[ModuleID] = Seq(
     ws,

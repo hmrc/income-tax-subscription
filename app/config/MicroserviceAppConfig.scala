@@ -23,20 +23,20 @@ import java.util.Base64
 import javax.inject.{Inject, Singleton}
 
 trait AppConfig {
-  val configuration: Configuration
+  def configuration: Configuration
 
-  val timeToLiveSeconds: Int
-  val sessionTimeToLiveSeconds: Int
-  val throttleTimeToLiveSeconds: Int
+  def timeToLiveSeconds: Int
+  def sessionTimeToLiveSeconds: Int
+  def throttleTimeToLiveSeconds: Int
 
-  val mongoUri: String
+  def mongoUri: String
 
   def statusDeterminationServiceURL: String
 
-  val statusDeterminationServiceAuthorisationToken: String
-  val statusDeterminationServiceEnvironment: String
+  def statusDeterminationServiceAuthorisationToken: String
+  def statusDeterminationServiceEnvironment: String
 
-  val getHipBaseURL: String
+  def getHipBaseURL: String
   def getHipAuthToken: String
 }
 

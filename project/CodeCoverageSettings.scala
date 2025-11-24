@@ -14,8 +14,7 @@
  * limitations under the License.
  */
 
-import play.sbt.PlayImport._
-import sbt._
+import sbt.*
 import scoverage.ScoverageKeys
 
 object CodeCoverageSettings {
@@ -32,7 +31,7 @@ object CodeCoverageSettings {
     ".*template.*"
   )
 
-  val settings: Seq[Setting[_]] = Seq(
+  val settings: Seq[Setting[?]] = Seq(
     ScoverageKeys.coverageExcludedPackages := excludedPackages.mkString(";"),
     ScoverageKeys.coverageExcludedFiles := excludedFiles.mkString(";"),
     ScoverageKeys.coverageMinimumStmtTotal := 82,

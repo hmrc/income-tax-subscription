@@ -68,7 +68,7 @@ class BusinessIncomeSourcesControllerSpec extends CommonSpec
 
   object TestController extends BusinessIncomeSourcesController(mockAuthService, mockItsaIncomeSourceConnector, mockCC)
 
-  lazy implicit val hc: HeaderCarrier = HeaderCarrier()
+  override lazy implicit val hc: HeaderCarrier = HeaderCarrier()
 
   lazy val mtditid: String = "XAIT0000006"
 

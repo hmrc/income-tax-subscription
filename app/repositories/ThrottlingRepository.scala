@@ -24,7 +24,7 @@ import org.mongodb.scala.model.IndexModel
 import org.mongodb.scala.result.InsertOneResult
 import org.mongodb.scala.{Observable, SingleObservable}
 import play.api.libs.json.{Format, JsObject, JsValue, Json}
-import repositories.ThrottlingRepository._
+
 import uk.gov.hmrc.mongo.MongoComponent
 import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
 
@@ -34,8 +34,13 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 import scala.language.implicitConversions
 
+
+import uk.gov.hmrc.mongo.logging.ObservableFutureImplicits.SingleObservableFuture
+
+import uk.gov.hmrc.mongo.logging.ObservableFutureImplicits.ObservableFuture
+
 @Singleton
-class InstantProvider @Inject()() {
+class InstantProvider @Inject() {
 
   def getInstantNowMilli: Long = Instant.now.toEpochMilli
 
@@ -43,7 +48,7 @@ class InstantProvider @Inject()() {
 
 @Singleton
 class ThrottlingRepositoryConfig @Inject()(val appConfig: AppConfig) {
-
+  import repositories.ThrottlingRepository._
   private val ttlLengthSeconds = appConfig.throttleTimeToLiveSeconds
 
   def mongoComponent: MongoComponent = MongoComponent(appConfig.mongoUri)
@@ -64,7 +69,7 @@ class ThrottlingRepository @Inject()(config: ThrottlingRepositoryConfig, instant
     indexes = config.indexes,
     replaceIndexes = false
   ) {
-
+  import repositories.ThrottlingRepository._
   private def timecode(time: Long) = time / 60000
 
   private def query(id: String, time: Long): JsObject = {
@@ -137,9 +142,9 @@ object ThrottlingRepository {
 
   implicit def toBson(doc: JsObject): Bson = Document.parse(doc.toString())
 
-  implicit def toFuture[T](observable: SingleObservable[T]): Future[T] = observable.toFuture()
+  implicit def toFuture[T](observable: SingleObservable[T])(implicit ec: ExecutionContext): Future[T] = observable.toFuture()
 
-  implicit def toFuture[T](observable: Observable[T]): Future[Seq[T]] = observable.toFuture()
+  implicit def toFuture[T](observable: Observable[T])(implicit ec: ExecutionContext): Future[Seq[T]] = observable.toFuture()
 
   val throttleIdKey = "throttleId"
   val timecodeKey = "timecode"

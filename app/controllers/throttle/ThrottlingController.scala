@@ -45,7 +45,7 @@ class ThrottlingController @Inject()(throttlingRepository: ThrottlingRepository,
         Future.successful(BadRequest)
       case Some(max) =>
         throttlingRepository.checkThrottle(throttleId).map {
-          int: Int => {
+          (int: Int) => {
             val body = Json.toJson(int)
             if (int <= max)
               Ok(body)

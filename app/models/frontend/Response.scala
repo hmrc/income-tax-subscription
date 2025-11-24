@@ -16,7 +16,7 @@
 
 package models.frontend
 
-import play.api.libs.json.{Json, OFormat}
+import play.api.libs.json.{Json, OFormat, OWrites, Reads}
 
 
 sealed trait FEResponse
