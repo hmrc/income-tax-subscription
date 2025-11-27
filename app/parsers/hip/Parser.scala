@@ -19,5 +19,5 @@ package parsers.hip
 import uk.gov.hmrc.http.HttpResponse
 
 trait Parser[T] {
-  def read(response: HttpResponse): T
+  def read(correlationId: String, response: HttpResponse): T
 }

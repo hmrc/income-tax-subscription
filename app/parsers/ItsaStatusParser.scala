@@ -28,12 +28,14 @@ object ItsaStatusParser {
   type GetItsaStatusResponse = Either[ErrorModel, ItsaStatusResponse]
 
   implicit object ImplicitItsaStatusResponseHttpReads extends HttpReads[GetItsaStatusResponse] {
-    override def read(method: String, url: String, response: HttpResponse): GetItsaStatusResponse =
-      ItsaStatusResponseHttpReads.read(response)
+    override def read(method: String, url: String, response: HttpResponse): GetItsaStatusResponse = {
+      val correlationId = response.headers.getOrElse("correlationId", Seq("")).head
+      ItsaStatusResponseHttpReads.read(correlationId, response)
+    }
   }
 
   object ItsaStatusResponseHttpReads extends Parser[GetItsaStatusResponse] {
-    override def read(response: HttpResponse): GetItsaStatusResponse = {
+    override def read(correlationId: String, response: HttpResponse): GetItsaStatusResponse = {
       response.status match {
         case OK => response.json.validate[List[TaxYearStatus]] match {
           case JsSuccess(value, _) => Right(ItsaStatusResponse(value))

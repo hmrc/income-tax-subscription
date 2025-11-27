@@ -21,14 +21,14 @@ import models.hip.SelfEmpHolder
 import play.api.Logging
 import play.api.http.Status.{NOT_FOUND, OK, SERVICE_UNAVAILABLE}
 import play.api.libs.json.{JsError, JsSuccess}
-import uk.gov.hmrc.http.{HttpReads, HttpResponse}
+import uk.gov.hmrc.http.HttpResponse
 
 object HipPrePopParser extends Logging {
 
   type GetHipPrePopResponse = Either[ErrorModel, SelfEmpHolder]
 
   implicit object GetHipPrePopResponseHttpReads extends Parser[GetHipPrePopResponse] {
-    override def read(response: HttpResponse): GetHipPrePopResponse = {
+    override def read(correlationId: String, response: HttpResponse): GetHipPrePopResponse = {
       response.status match {
         case OK =>
           response.json.validate[SelfEmpHolder] match {
