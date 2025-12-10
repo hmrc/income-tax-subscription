@@ -16,8 +16,41 @@
 
 package parsers.hip
 
+import play.api.Logging
 import uk.gov.hmrc.http.HttpResponse
 
-trait Parser[T] {
+abstract class Parser[T] extends Logging {
   def read(correlationId: String, response: HttpResponse): T
+
+  protected final def error(
+    apiNumber: Int,
+    apiDesc: String,
+    correlationId: String,
+    status: Int,
+    code: String = "",
+    reason: String
+  ): String = {
+    val start = s"API #$apiNumber: $apiDesc - Status: $status, "
+    val middle = code match {
+      case "" => s"Message: $reason"
+      case _ => s"Code: $code, Reason: $reason"
+    }
+    val error = s"$start$middle"
+    logger.error(s"$error, CorrelationId: $correlationId")
+    error
+  }
+
+  protected val statuses = Map(
+    400 -> "BAD_REQUEST",
+    401 -> "UNAUTHORIZED",
+    500 -> "INTERNAL_SERVER_ERROR",
+    501 -> "NOT_IMPLEMENTED",
+    502 -> "BAD_GATEWAY",
+    503 -> "SERVICE_UNAVAILABLE"
+  )
+
+  implicit class Desc(map: Map[Int, String]) {
+    def getDesc(status: Int): String =
+      map.getOrElse(status, s"$status")
+  }
 }

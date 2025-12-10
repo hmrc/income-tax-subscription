@@ -28,15 +28,33 @@ object GetITSAStatusParser extends Logging {
   type GetITSAStatusResponse = Either[ErrorModel, Seq[GetITSAStatusTaxYearResponse]]
 
   object GetITSAStatusHttpReads extends Parser[GetITSAStatusResponse] {
+    val apiNumber = 5197
+    val apiDesc = "Get ITSA Status"
+
     override def read(correlationId: String, response: HttpResponse): GetITSAStatusResponse =
       response.status match {
         case OK => response.json.validate[Seq[GetITSAStatusTaxYearResponse]] match {
           case JsSuccess(value, _) => Right(value)
-          case JsError(_) => Left(ErrorModel(OK, "Failure parsing json response from itsa status api"))
+          case JsError(_) => Left(ErrorModel(OK,
+            super.error(
+              apiNumber = apiNumber,
+              apiDesc = apiDesc,
+              correlationId = correlationId,
+              status = OK,
+              reason = "Failure parsing json response"
+            )
+          ))
         }
         case status =>
-          logger.error(s"[GetITSAStatusParser] - Unexpected status from itsa status API. Status: $status")
-          Left(ErrorModel(status, "Unexpected status returned from itsa status api"))
+          Left(ErrorModel(status,
+            super.error(
+              apiNumber = apiNumber,
+              apiDesc = apiDesc,
+              correlationId = correlationId,
+              status = status,
+              reason = s"Unexpected status returned: ${statuses.getDesc(status)}"
+            )
+          ))
       }
   }
 }

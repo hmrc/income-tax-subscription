@@ -44,7 +44,7 @@ abstract class BaseHIPConnector(
     .ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'")
     .withZone(ZoneId.of("UTC"))
 
-  def get[T](
+  protected final def get[T](
     url: String,
     parser: Parser[T],
     custom: Map[String, String] = Map.empty
@@ -60,7 +60,7 @@ abstract class BaseHIPConnector(
     )
   }
 
-  def post[T](
+  protected final def post[T](
     url: String,
     body: JsValue,
     parser: Parser[T],
