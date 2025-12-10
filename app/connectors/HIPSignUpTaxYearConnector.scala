@@ -55,7 +55,7 @@ class HIPSignUpTaxYearConnector @Inject()(
 
   def signUp(signUpRequest: SignUpRequest)(implicit hc: HeaderCarrier): Future[PostSignUpResponse] = {
 
-    retryFor("HIP API #1565 - Sign Up") {
+    retryFor("HIP API #5317 - Sign Up") {
       case SignUpParserException(_, FORBIDDEN) => true
       case _ => false
     } {
