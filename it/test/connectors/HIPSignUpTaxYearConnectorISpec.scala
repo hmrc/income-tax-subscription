@@ -31,7 +31,6 @@ import utils.TestConstants.{testNino, testTaxYear, testUtr}
 
 class HIPSignUpTaxYearConnectorISpec extends ComponentSpecBase {
 
-
   private lazy val signUpConnector: HIPSignUpTaxYearConnector = app.injector.instanceOf[HIPSignUpTaxYearConnector]
   lazy val appConfig: MicroserviceAppConfig = app.injector.instanceOf[MicroserviceAppConfig]
   implicit val request: Request[_] = FakeRequest()
@@ -61,7 +60,9 @@ class HIPSignUpTaxYearConnectorISpec extends ComponentSpecBase {
 
         val result = signUpConnector.signUp(testSignUpRequest)
 
-        result.futureValue shouldBe Left(ErrorModel(status = CREATED, "Failed to read Json for MTD Sign Up Response"))
+        result.futureValue shouldBe Left(
+          ErrorModel(status = CREATED, "API #5317: Sign-up - Status: 201, Message: Failure parsing json response")
+        )
       }
     }
 
@@ -90,7 +91,9 @@ class HIPSignUpTaxYearConnectorISpec extends ComponentSpecBase {
 
         val result = signUpConnector.signUp(testSignUpRequest)
 
-        result.futureValue shouldBe Left(ErrorModel(status = UNPROCESSABLE_ENTITY, "Failed to read Json for MTD Sign Up Response"))
+        result.futureValue shouldBe Left(
+          ErrorModel(status = UNPROCESSABLE_ENTITY, "API #5317: Sign-up - Status: 422, Message: Failure parsing json response")
+        )
       }
     }
 
@@ -107,7 +110,9 @@ class HIPSignUpTaxYearConnectorISpec extends ComponentSpecBase {
 
         val result = signUpConnector.signUp(testSignUpRequest)
 
-        result.futureValue shouldBe Left(ErrorModel(UNPROCESSABLE_ENTITY, "002"))
+        result.futureValue shouldBe Left(
+          ErrorModel(UNPROCESSABLE_ENTITY, "API #5317: Sign-up - Status: 422, Code: 002, Reason: ID not found")
+        )
       }
     }
 
@@ -125,7 +130,7 @@ class HIPSignUpTaxYearConnectorISpec extends ComponentSpecBase {
         val result = signUpConnector.signUp(testSignUpRequest)
 
         result.futureValue shouldBe Left(
-          ErrorModel(INTERNAL_SERVER_ERROR, """{"error":{"code":"500","message":"Server Error","logID":"C0000AB8190C8E1F000000C700006836"}}""")
+          ErrorModel(INTERNAL_SERVER_ERROR, "API #5317: Sign-up - Status: 500, Message: Unexpected status returned: INTERNAL_SERVER_ERROR")
         )
       }
     }
@@ -150,4 +155,3 @@ class HIPSignUpTaxYearConnectorISpec extends ComponentSpecBase {
     }
   }
 }
-
