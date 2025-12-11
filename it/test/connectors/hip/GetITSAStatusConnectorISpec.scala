@@ -87,7 +87,7 @@ class GetITSAStatusConnectorISpec extends ComponentSpecBase {
         val result = connector.getItsaStatus(testUtr)
 
         result.futureValue shouldBe
-          Left(ErrorModel(OK, "Failure parsing json response from itsa status api"))
+          Left(ErrorModel(OK, "API #5197: Get ITSA Status - Status: 200, Message: Failure parsing json response"))
       }
     }
     "an unexpected status is returned" should {
@@ -100,7 +100,7 @@ class GetITSAStatusConnectorISpec extends ComponentSpecBase {
         val result = connector.getItsaStatus(testUtr)
 
         result.futureValue shouldBe
-          Left(ErrorModel(INTERNAL_SERVER_ERROR, "Unexpected status returned from itsa status api"))
+          Left(ErrorModel(INTERNAL_SERVER_ERROR, "API #5197: Get ITSA Status - Status: 500, Message: Unexpected status returned: INTERNAL_SERVER_ERROR"))
       }
     }
   }
