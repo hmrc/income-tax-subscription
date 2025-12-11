@@ -18,6 +18,7 @@ package parsers.hip
 
 import models.ErrorModel
 import models.hip.SelfEmpHolder
+import parsers.hip.GetITSAStatusParser.GetITSAStatusHttpReads.statuses
 import play.api.Logging
 import play.api.http.Status.{NOT_FOUND, OK, SERVICE_UNAVAILABLE}
 import play.api.libs.json.{JsError, JsSuccess}
@@ -28,18 +29,36 @@ object HipPrePopParser extends Logging {
   type GetHipPrePopResponse = Either[ErrorModel, SelfEmpHolder]
 
   implicit object GetHipPrePopResponseHttpReads extends Parser[GetHipPrePopResponse] {
+    val apiNumber = 5646
+    val apiDesc = "Business Data"
+
     override def read(correlationId: String, response: HttpResponse): GetHipPrePopResponse = {
       response.status match {
         case OK =>
           response.json.validate[SelfEmpHolder] match {
             case JsSuccess(value, _) => Right(value)
-            case JsError(_) => Left(ErrorModel(OK, s"Failure parsing json response from prepop api"))
+            case JsError(_) => Left(ErrorModel(OK,
+              super.error(
+                apiNumber = apiNumber,
+                apiDesc = apiDesc,
+                correlationId = correlationId,
+                status = OK,
+                reason = "Failure parsing json response"
+              )
+            ))
           }
         case NOT_FOUND | SERVICE_UNAVAILABLE =>
           Right(SelfEmpHolder(None))
         case status =>
-          logger.error(s"[HipPrePopParser] - Unexpected status from pre-pop API. Status: $status")
-          Left(ErrorModel(status, "Unexpected status returned from pre-pop api"))
+          Left(ErrorModel(status,
+            super.error(
+              apiNumber = apiNumber,
+              apiDesc = apiDesc,
+              correlationId = correlationId,
+              status = status,
+              reason = s"Unexpected status returned: ${statuses.getDesc(status)}"
+            )
+          ))
       }
     }
   }
