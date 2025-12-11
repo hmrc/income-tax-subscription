@@ -53,7 +53,6 @@ class PrePopController @Inject()(authService: AuthService,
           ))
           Ok(Json.toJson(prePopData))
         case Left(error) =>
-          logger.error(s"[PrePopController][prePop] - Error when fetching pre-pop data. Status: ${error.status}, Reason: ${error.reason}")
           InternalServerError
       }
     }
