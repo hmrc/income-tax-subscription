@@ -23,13 +23,13 @@ abstract class Parser[T] extends Logging {
   def read(correlationId: String, response: HttpResponse): T
 
   protected final def error(
-    apiNumber: Int,
-    apiDesc: String,
-    correlationId: String,
-    status: Int,
-    code: String = "",
-    reason: String
-  ): String = {
+                             apiNumber: Int,
+                             apiDesc: String,
+                             correlationId: String,
+                             status: Int,
+                             code: String = "",
+                             reason: String
+                           ): String = {
     val start = s"API #$apiNumber: $apiDesc - Status: $status, "
     val middle = code match {
       case "" => s"Message: $reason"

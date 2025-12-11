@@ -68,7 +68,6 @@ class SignUpController @Inject()(authService: AuthService,
         logger.warn(s"[SignUpController][signUp] - sign up returned customer already signed up")
         UnprocessableEntity("Customer already signed up")
       case Left(error) =>
-        logger.error(s"Error processing Sign up request with status ${error.status} and message ${error.reason}")
         auditService.audit(RegistrationFailureAudit(signUpRequest.nino, error.status, error.reason))
         InternalServerError("Failed Sign up")
     }

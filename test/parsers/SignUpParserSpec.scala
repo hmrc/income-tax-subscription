@@ -51,7 +51,8 @@ class SignUpParserSpec extends CommonSpec {
             |}
           """.stripMargin)
 
-        SignUpParser.HipSignUpResponseHttpReads.read("", response) shouldBe Left(ErrorModel(CREATED, "Failed to read Json for MTD Sign Up Response"))
+        SignUpParser.HipSignUpResponseHttpReads.read("", response) shouldBe
+          Left(ErrorModel(CREATED, "API #5317: Sign-up - Status: 201, Message: Failure parsing json response"))
       }
     }
 
@@ -76,14 +77,14 @@ class SignUpParserSpec extends CommonSpec {
         )
 
         SignUpParser.HipSignUpResponseHttpReads.read("", response) shouldBe
-          Left(ErrorModel(UNPROCESSABLE_ENTITY, "002"))
+          Left(ErrorModel(UNPROCESSABLE_ENTITY, "API #5317: Sign-up - Status: 422, Code: 002, Reason: ID not found"))
       }
 
       "return a sign up failure when the response json has no code" in {
         val response = HttpResponse(UNPROCESSABLE_ENTITY, body = Json.obj().toString())
 
         SignUpParser.HipSignUpResponseHttpReads.read("", response) shouldBe
-          Left(ErrorModel(UNPROCESSABLE_ENTITY, s"Failed to read Json for MTD Sign Up Response"))
+          Left(ErrorModel(UNPROCESSABLE_ENTITY, "API #5317: Sign-up - Status: 422, Message: Failure parsing json response"))
       }
     }
 
@@ -92,7 +93,8 @@ class SignUpParserSpec extends CommonSpec {
       "return a SignUpFailure with the response message" in {
         val response = HttpResponse(INTERNAL_SERVER_ERROR, body = "Error body")
 
-        SignUpParser.HipSignUpResponseHttpReads.read("", response) shouldBe Left(ErrorModel(INTERNAL_SERVER_ERROR, "Error body"))
+        SignUpParser.HipSignUpResponseHttpReads.read("", response) shouldBe
+          Left(ErrorModel(INTERNAL_SERVER_ERROR, "API #5317: Sign-up - Status: 500, Message: Unexpected status returned: INTERNAL_SERVER_ERROR"))
       }
     }
   }
