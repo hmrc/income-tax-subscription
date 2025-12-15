@@ -24,7 +24,11 @@ import play.api.http.Status.{INTERNAL_SERVER_ERROR, NOT_FOUND, OK, SERVICE_UNAVA
 import play.api.libs.json.{JsObject, JsValue, Json}
 import uk.gov.hmrc.http.HttpResponse
 
+import java.util.UUID
+
 class HipPrePopParserSpec extends CommonSpec {
+
+  val correlationId: String = UUID.randomUUID().toString
 
   "HipPrePopParser" when {
     "an OK (200) status is returned" should {
@@ -79,14 +83,14 @@ class HipPrePopParserSpec extends CommonSpec {
     "a different status is returned" should {
       "return an unexpected status error model" in {
         read(INTERNAL_SERVER_ERROR) shouldBe Left(ErrorModel(
-          INTERNAL_SERVER_ERROR, "API #5646: Business Data - Status: 500, Message: Unexpected status returned: INTERNAL_SERVER_ERROR"
+          INTERNAL_SERVER_ERROR, s"API #5646: Business Data, Status: 500, Message: Unexpected status returned"
         ))
       }
     }
   }
 
   def read(status: Int, json: JsValue = Json.obj()): GetHipPrePopResponse = {
-    HipPrePopParser.GetHipPrePopResponseHttpReads.read("", HttpResponse(status, json.toString()))
+    HipPrePopParser.GetHipPrePopResponseHttpReads.httpReads(correlationId).read("", "", HttpResponse(status, json.toString()))
   }
 
   lazy val selfEmpJson: JsObject = Json.obj(

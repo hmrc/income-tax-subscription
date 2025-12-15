@@ -54,7 +54,7 @@ class MandationStatusController @Inject()(
       withJsonBody[MandationStatusRequest] { requestBody =>
 
         val statusResult: Future[(Option[ITSAStatus], Option[ITSAStatus])] = if (isEnabled(UseHIPForItsaStatus)) {
-          hipItsaStatusConnector.getItsaStatus(requestBody.nino, requestBody.utr) map {
+          hipItsaStatusConnector.determineItsaStatus(requestBody.nino, requestBody.utr) map {
             case Right(response) =>
               val current = response.taxYearStatus.find(_.taxYear == AccountingPeriodUtil.getCurrentTaxYear.toItsaStatusShortTaxYear).map(_.status)
               val next = response.taxYearStatus.find(_.taxYear == AccountingPeriodUtil.getNextTaxYear.toItsaStatusShortTaxYear).map(_.status)

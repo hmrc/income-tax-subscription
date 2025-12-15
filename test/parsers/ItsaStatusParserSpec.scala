@@ -24,13 +24,18 @@ import play.api.http.Status.{INTERNAL_SERVER_ERROR, OK}
 import play.api.libs.json.Json
 import uk.gov.hmrc.http.HttpResponse
 
+import java.util.UUID
+
 class ItsaStatusParserSpec extends CommonSpec {
 
-  private val expectedResponse =
+  private val expectedResponse = {
     List(
       TaxYearStatus("2022-23", MTDVoluntary),
       TaxYearStatus("2023-24", MTDVoluntary)
     )
+  }
+
+  val testCorrelationId: String = UUID.randomUUID().toString
 
   "ItsaStatusParser" should {
     "return ItsaStatusResponse" when {
@@ -40,7 +45,7 @@ class ItsaStatusParserSpec extends CommonSpec {
           body = Json.toJson(expectedResponse).toString()
         )
 
-        ItsaStatusParser.ImplicitItsaStatusResponseHttpReads.read("POST", "test-url", response) shouldBe
+        ItsaStatusParser.ItsaStatusResponseHttpReads.httpReads("").read("POST", "test-url", response) shouldBe
           Right(ItsaStatusResponse(expectedResponse))
       }
     }
@@ -54,15 +59,15 @@ class ItsaStatusParserSpec extends CommonSpec {
             |]
           """.stripMargin)
 
-        ItsaStatusParser.ImplicitItsaStatusResponseHttpReads.read("POST", "test-url", response) shouldBe
-          Left(ErrorModel(OK, "Invalid Json for ItsaStatusResponseHttpReads"))
+        ItsaStatusParser.ItsaStatusResponseHttpReads.httpReads(testCorrelationId).read("POST", "test-url", response) shouldBe
+          Left(ErrorModel(OK, s"API #5197: Determine ITSA Status for Sign Up, Status: $OK, Message: Failure parsing json response"))
       }
 
       "supplied with a failed response" in {
         val response = HttpResponse(INTERNAL_SERVER_ERROR, body = "Error body")
 
-        ItsaStatusParser.ImplicitItsaStatusResponseHttpReads.read("POST", "test-url", response) shouldBe
-          Left(ErrorModel(INTERNAL_SERVER_ERROR, "Invalid status received"))
+        ItsaStatusParser.ItsaStatusResponseHttpReads.httpReads(testCorrelationId).read("POST", "test-url", response) shouldBe
+          Left(ErrorModel(INTERNAL_SERVER_ERROR, s"API #5197: Determine ITSA Status for Sign Up, Status: $INTERNAL_SERVER_ERROR, Message: Unexpected status returned"))
       }
     }
   }

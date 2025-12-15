@@ -22,38 +22,34 @@ import connectors.hip.BaseHIPConnector
 import models.monitoring.CompletedSignUpAudit
 import models.subscription.CreateIncomeSourcesModel
 import org.apache.pekko.actor.ActorSystem
-import parsers.ITSAIncomeSourceParser._
+import parsers.ITSAIncomeSourceParser.*
 import play.api.libs.json.Json
 import play.api.mvc.Request
 import services.monitoring.AuditService
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.{HeaderCarrier, Retries}
 
+import java.util.UUID
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class ItsaIncomeSourceConnector @Inject()(
-  httpClient: HttpClientV2,
-  appConfig: AppConfig,
-  auditService: AuditService,
-  val configuration: Config,
-  val actorSystem: ActorSystem
-)(implicit ec: ExecutionContext) extends BaseHIPConnector(
-  httpClient,
-  appConfig
-) with Retries {
+class ItsaIncomeSourceConnector @Inject()(val httpClient: HttpClientV2,
+                                          val appConfig: AppConfig,
+                                          val configuration: Config,
+                                          val actorSystem: ActorSystem,
+                                          auditService: AuditService)
+                                         (implicit val ec: ExecutionContext) extends BaseHIPConnector with Retries {
 
   private def itsaIncomeSourceUrl =
     "/etmp/RESTAdapter/itsa/taxpayer/income-source"
 
-  def createIncomeSources(
-    agentReferenceNumber: Option[String],
-    mtdbsaRef: String,
-    createIncomeSources: CreateIncomeSourcesModel)
-  (implicit hc: HeaderCarrier, request: Request[_]): Future[PostITSAIncomeSourceResponse] = {
+  def createIncomeSources(agentReferenceNumber: Option[String],
+                          mtdbsaRef: String,
+                          createIncomeSources: CreateIncomeSourcesModel)
+                         (implicit hc: HeaderCarrier, request: Request[_]): Future[PostITSAIncomeSourceResponse] = {
     retryFor("# API #5265 - ITSA Income Source") {
-      case ITSAIncomeSourceForbiddenException => true
+      case ITSAIncomeSourceForbiddenException(_) => true
       case _ => false
     } {
       val headers: Map[String, String] = Map(
@@ -62,7 +58,12 @@ class ItsaIncomeSourceConnector @Inject()(
 
       val body = Json.toJson(createIncomeSources)(CreateIncomeSourcesModel.hipWrites(mtdbsaRef))
 
-      super.post(itsaIncomeSourceUrl, body, itsaIncomeSourceResponseHttpReads, headers) flatMap {
+      super.post(
+        uri = itsaIncomeSourceUrl,
+        body = body,
+        parser = ITSAIncomeSourceResponseHttpReads,
+        additionalHeaders = headers
+      ) flatMap {
         case Left(error) =>
           Future.successful(Left(error))
         case Right(value) =>

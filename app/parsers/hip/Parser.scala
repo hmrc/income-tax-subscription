@@ -17,41 +17,30 @@
 package parsers.hip
 
 import play.api.Logging
-import uk.gov.hmrc.http.HttpResponse
+import uk.gov.hmrc.http.HttpReads
 
-abstract class Parser[T] extends Logging {
-  def read(correlationId: String, response: HttpResponse): T
+trait Parser[T] extends Logging {
 
-  protected final def error(
-                             apiNumber: Int,
-                             apiDesc: String,
-                             correlationId: String,
-                             status: Int,
-                             code: String = "",
-                             reason: String
-                           ): String = {
-    val start = s"API #$apiNumber: $apiDesc - Status: $status, "
-    val middle = code match {
-      case "" => s"Message: $reason"
-      case _ => s"Code: $code, Reason: $reason"
-    }
-    val error = s"$start$middle"
-    logger.error(s"$error, CorrelationId: $correlationId")
-    error
-  }
+  val apiNumber: Int
+  val apiName: String
+  
+  def httpReads(correlationId: String): HttpReads[T]
 
-  protected val statuses = Map(
-    400 -> "BAD_REQUEST",
-    401 -> "UNAUTHORIZED",
-    422 -> "UNPROCESSABLE_ENTITY",
-    500 -> "INTERNAL_SERVER_ERROR",
-    501 -> "NOT_IMPLEMENTED",
-    502 -> "BAD_GATEWAY",
-    503 -> "SERVICE_UNAVAILABLE"
-  )
+  protected def error(correlationId: String,
+                      status: Int,
+                      maybeCode: Option[String] = None,
+                      reason: String): String = {
 
-  implicit class Desc(map: Map[Int, String]) {
-    def getDesc(status: Int): String =
-      map.getOrElse(status, s"$status")
+    val errorMessage = Seq(
+      s"API #$apiNumber: $apiName",
+      s"Status: $status",
+      maybeCode match {
+        case Some(code) => s"Code: $code, Reason: $reason"
+        case None => s"Message: $reason"
+      }
+    ).mkString(", ")
+
+    logger.error(s"$errorMessage, CorrelationId: $correlationId")
+    errorMessage
   }
 }
