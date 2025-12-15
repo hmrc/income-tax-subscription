@@ -78,7 +78,9 @@ class HipPrePopParserSpec extends CommonSpec {
 
     "a different status is returned" should {
       "return an unexpected status error model" in {
-        read(INTERNAL_SERVER_ERROR) shouldBe Left(ErrorModel(INTERNAL_SERVER_ERROR, "Unexpected status returned from pre-pop api"))
+        read(INTERNAL_SERVER_ERROR) shouldBe Left(ErrorModel(
+          INTERNAL_SERVER_ERROR, "API #5646: Business Data - Status: 500, Message: Unexpected status returned: INTERNAL_SERVER_ERROR"
+        ))
       }
     }
   }

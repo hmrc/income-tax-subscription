@@ -30,7 +30,7 @@ class HipPrePopConnectorSpec extends CommonSpec with MockHttp with GuiceOneAppPe
 
   "getHipPrePopData" should {
     "retrieve prepop data" when {
-      "the HIP API #1933 returns a successful response" in {
+      "the HIP API #5646 returns a successful response" in {
         val data: SelfEmpHolder = SelfEmpHolder(
           selfEmp = Some(Seq(SelfEmp(
             businessName = Some("ABC Plumbers"),
@@ -50,24 +50,24 @@ class HipPrePopConnectorSpec extends CommonSpec with MockHttp with GuiceOneAppPe
           Right(data)
       }
 
-      "the HIP API #1933 returns invalid Json" in {
+      "the HIP API #5646 returns invalid Json" in {
         val response = HttpResponse(
           OK,
           Json.obj("selfEmp" -> "").toString
         )
 
         GetHipPrePopResponseHttpReads.read("", response) shouldBe
-          Left(ErrorModel(OK, "Failure parsing json response from prepop api"))
+          Left(ErrorModel(OK, "API #5646: Business Data - Status: 200, Message: Failure parsing json response"))
       }
 
-      "the HIP API #1933 returns an unexpected status" in {
+      "the HIP API #5646 returns an unexpected status" in {
         val response = HttpResponse(
           INTERNAL_SERVER_ERROR,
           Json.obj().toString
         )
 
         GetHipPrePopResponseHttpReads.read("", response) shouldBe
-          Left(ErrorModel(INTERNAL_SERVER_ERROR, "Unexpected status returned from pre-pop api"))
+          Left(ErrorModel(INTERNAL_SERVER_ERROR, "API #5646: Business Data - Status: 500, Message: Unexpected status returned: INTERNAL_SERVER_ERROR"))
       }
     }
   }

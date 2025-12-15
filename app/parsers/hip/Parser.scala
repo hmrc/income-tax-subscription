@@ -43,6 +43,7 @@ abstract class Parser[T] extends Logging {
   protected val statuses = Map(
     400 -> "BAD_REQUEST",
     401 -> "UNAUTHORIZED",
+    422 -> "UNPROCESSABLE_ENTITY",
     500 -> "INTERNAL_SERVER_ERROR",
     501 -> "NOT_IMPLEMENTED",
     502 -> "BAD_GATEWAY",
