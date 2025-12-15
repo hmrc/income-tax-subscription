@@ -16,9 +16,11 @@
 
 package parsers
 
+import models.ErrorModel
+import parsers.SignUpParser.Error
 import parsers.hip.Parser
 import play.api.http.Status.{OK, UNPROCESSABLE_ENTITY}
-import play.api.libs.json.{JsError, JsSuccess, Reads}
+import play.api.libs.json.{JsError, JsSuccess, Json, Reads}
 import uk.gov.hmrc.http.{HttpResponse, InternalServerException}
 
 object GetITSABusinessDetailsParser {
@@ -36,29 +38,75 @@ object GetITSABusinessDetailsParser {
   case object NotSignedUp extends GetITSABusinessDetailsResponse
 
   object GetITSABusinessDetailsResponseHttpReads extends Parser[GetITSABusinessDetailsResponse] {
-    override def read(correlationId: String, response: HttpResponse): GetITSABusinessDetailsResponse = {
+
+    val apiNumber = 5266
+    val apiDesc = "Business-Details"
+    
+    override def read(correlationId: String, response: HttpResponse): Either[ErrorModel,GetITSABusinessDetailsResponse] = {
       response.status match {
-        case OK =>
-          response.json.validate[AlreadySignedUp] match {
-            case JsSuccess(value, _) => value
-            case JsError(_) => throw GetITSABusinessDetailsParserException("Failure parsing json", OK)
-          }
+        case OK => (response.json \ "success").validate[AlreadySignedUp] match {
+          case JsSuccess(value, _) => Right(value)
+          case JsError(_) => jsonError(OK, correlationId)
+        }
         case UNPROCESSABLE_ENTITY =>
-          (response.json \ "errors" \ "code").validate[String] match {
-            case JsSuccess(SubscriptionDataNotFound | IdNotFound, _) => NotSignedUp
-            case JsSuccess(code, _) => throw GetITSABusinessDetailsParserException(s"Unsupported error code returned: $code", UNPROCESSABLE_ENTITY)
-            case JsError(_) => throw GetITSABusinessDetailsParserException("Failure parsing json", UNPROCESSABLE_ENTITY)
-          }
+            unprocessableEntity(response, correlationId)
         case status =>
-          throw GetITSABusinessDetailsParserException("Unsupported status received", status)
+        generalError(status, s"Unexpected status returned: ${statuses.getDesc(status)}", correlationId)
       }
     }
-  }
 
+    private def unprocessableEntity(response: HttpResponse, correlationId: String) =
+      (response.json \\ "errors").map(_.validate[Error]).headOption match {
+        case Some(JsSuccess(e, _)) => e.code match {
+          case SubscriptionDataNotFound | IdNotFound => Right(NotSignedUp)
+          case _ => responseError(UNPROCESSABLE_ENTITY, e, correlationId)
+        }
+        case _ => jsonError(UNPROCESSABLE_ENTITY, correlationId)
+      }
+      
+    private def jsonError(status: Int, correlationId: String) =
+        generalError(status, "Failure parsing json response", correlationId)
+
+    
+    private def generalError(status: Int, message: String, correlationId: String) =
+        Left(ErrorModel(status,
+          super.error(
+            apiNumber = apiNumber,
+            apiDesc = apiDesc,
+            correlationId = correlationId,
+            status = status,
+            reason = message
+          )
+        ))
+    
+    private def responseError(status: Int, e: Error, correlationId: String): Left[ErrorModel, Nothing] =
+      Left(ErrorModel(status,
+        super.error(
+          apiNumber = apiNumber,
+          apiDesc = apiDesc,
+          correlationId = correlationId,
+          status = status,
+          code = e.code,
+          reason = e.text
+            )
+      ))
+      
+  }
+  
   case class GetITSABusinessDetailsParserException(error: String, status: Int) extends InternalServerException(
     s"[GetITSABusinessDetailsParser] - $error - $status"
   )
 
+  case class Error(
+                    processingDate: String,
+                    code: String,
+                    text: String
+                  )
+
+  object Error {
+    implicit val reads: Reads[Error] = Json.reads[Error]
+  }
+  
   private val SubscriptionDataNotFound: String = "006"
   private val IdNotFound: String = "008"
 
