@@ -44,14 +44,14 @@ object GetITSABusinessDetailsParser {
     
     override def read(correlationId: String, response: HttpResponse): Either[ErrorModel,GetITSABusinessDetailsResponse] = {
       response.status match {
-        case OK => (response.json \ "success").validate[AlreadySignedUp] match {
+        case OK => response.json.validate[AlreadySignedUp] match {
           case JsSuccess(value, _) => Right(value)
           case JsError(_) => jsonError(OK, correlationId)
         }
         case UNPROCESSABLE_ENTITY =>
-            unprocessableEntity(response, correlationId)
+          unprocessableEntity(response, correlationId)
         case status =>
-        generalError(status, s"Unexpected status returned: ${statuses.getDesc(status)}", correlationId)
+          generalError(status, s"Unexpected status returned: ${statuses.getDesc(status)}", correlationId)
       }
     }
 
@@ -65,19 +65,18 @@ object GetITSABusinessDetailsParser {
       }
       
     private def jsonError(status: Int, correlationId: String) =
-        generalError(status, "Failure parsing json response", correlationId)
+      generalError(status, "Failure parsing json response", correlationId)
 
-    
     private def generalError(status: Int, message: String, correlationId: String) =
-        Left(ErrorModel(status,
-          super.error(
-            apiNumber = apiNumber,
-            apiDesc = apiDesc,
-            correlationId = correlationId,
-            status = status,
-            reason = message
-          )
-        ))
+      Left(ErrorModel(status,
+        super.error(
+          apiNumber = apiNumber,
+          apiDesc = apiDesc,
+          correlationId = correlationId,
+          status = status,
+          reason = message
+        )
+      ))
     
     private def responseError(status: Int, e: Error, correlationId: String): Left[ErrorModel, Nothing] =
       Left(ErrorModel(status,
@@ -88,9 +87,8 @@ object GetITSABusinessDetailsParser {
           status = status,
           code = e.code,
           reason = e.text
-            )
+        )
       ))
-      
   }
   
   case class GetITSABusinessDetailsParserException(error: String, status: Int) extends InternalServerException(
