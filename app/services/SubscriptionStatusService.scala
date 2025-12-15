@@ -44,7 +44,7 @@ class SubscriptionStatusService @Inject()(val appConfig: AppConfig,
       itsaBusinessDetailsConnector.getHIPBusinessDetails(nino).map {
         case Right(GetITSABusinessDetailsParser.AlreadySignedUp(mtdId)) => Right(Some(FESuccessResponse(Some(mtdId))))
         case Right(GetITSABusinessDetailsParser.NotSignedUp) => Right(None)
-        case Left(error)=>Left(error)
+        case Left(error) => Left(error)
       }
   }
 }
