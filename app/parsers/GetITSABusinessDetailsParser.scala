@@ -37,7 +37,7 @@ object GetITSABusinessDetailsParser {
 
   case object NotSignedUp extends GetITSABusinessDetailsResponse
 
-  object GetITSABusinessDetailsResponseHttpReads extends Parser[GetITSABusinessDetailsResponse] {
+  object GetITSABusinessDetailsResponseHttpReads extends Parser[Either[ErrorModel,GetITSABusinessDetailsResponse]] {
 
     val apiNumber = 5266
     val apiDesc = "Business-Details"

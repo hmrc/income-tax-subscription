@@ -19,8 +19,9 @@ package connectors
 import com.typesafe.config.Config
 import config.AppConfig
 import connectors.hip.BaseHIPConnector
+import models.ErrorModel
 import org.apache.pekko.actor.ActorSystem
-import parsers.GetITSABusinessDetailsParser._
+import parsers.GetITSABusinessDetailsParser.*
 import play.api.http.Status.FORBIDDEN
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.{HeaderCarrier, Retries}
@@ -39,7 +40,7 @@ class GetITSABusinessDetailsConnector @Inject()(
   appConfig
 ) with Retries {
 
-  def getHIPBusinessDetails(nino: String)(implicit hc: HeaderCarrier): Future[GetITSABusinessDetailsResponse] = {
+  def getHIPBusinessDetails(nino: String)(implicit hc: HeaderCarrier): Future[Either[ErrorModel,GetITSABusinessDetailsResponse]] = {
     retryFor("HIP API #5266 - Get Business Details") {
       case GetITSABusinessDetailsParserException(_, FORBIDDEN) => true
       case _ => false

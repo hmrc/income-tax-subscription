@@ -41,7 +41,7 @@ class SubscriptionStatusServiceSpec extends CommonSpec with TestSubscriptionStat
       "he new connector returns a successful response" in {
         when(mockITSABusinessDetailsConnector.getHIPBusinessDetails(ArgumentMatchers.eq(testNino))(
           ArgumentMatchers.any[HeaderCarrier]
-        )).thenReturn(Future.successful(AlreadySignedUp(testMtditId)))
+        )).thenReturn(Future.successful(Right(AlreadySignedUp(testMtditId))))
 
         NewTestSubscriptionStatusService
           .checkMtditsaSubscription(testNino)
@@ -51,7 +51,7 @@ class SubscriptionStatusServiceSpec extends CommonSpec with TestSubscriptionStat
     "return no identifier" when {
       "the new connector indicates that no subscription was found" in {
         when(mockITSABusinessDetailsConnector.getHIPBusinessDetails(ArgumentMatchers.eq(testNino))(ArgumentMatchers.any()))
-          .thenReturn(Future.successful(NotSignedUp))
+          .thenReturn(Future.successful(Right(NotSignedUp)))
 
         NewTestSubscriptionStatusService
           .checkMtditsaSubscription(testNino)

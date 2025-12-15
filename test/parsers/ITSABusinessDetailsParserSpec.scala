@@ -17,6 +17,7 @@
 package parsers
 
 import common.CommonSpec
+import models.ErrorModel
 import parsers.GetITSABusinessDetailsParser.{AlreadySignedUp, GetITSABusinessDetailsResponseHttpReads, NotSignedUp}
 import play.api.http.Status.{INTERNAL_SERVER_ERROR, OK, UNPROCESSABLE_ENTITY}
 import play.api.libs.json.{JsValue, Json}
@@ -38,7 +39,7 @@ class ITSABusinessDetailsParserSpec extends CommonSpec {
   "GetITSABusinessDetailsParser" should {
     "return AlreadySignedUp when valid mtdId is present" in {
       val response = HttpResponse(OK, validJson, Map.empty)
-      GetITSABusinessDetailsResponseHttpReads.read("", response) shouldBe AlreadySignedUp("XNIT00000068707")
+      GetITSABusinessDetailsResponseHttpReads.read("", response) shouldBe Right(AlreadySignedUp("XNIT00000068707"))
     }
   }
 
@@ -46,7 +47,8 @@ class ITSABusinessDetailsParserSpec extends CommonSpec {
     "status is UNPROCESSABLE_ENTITY and has a code of 006" in {
       val json = Json.obj("errors" -> Json.obj("code" -> "006"))
       val response = HttpResponse(UNPROCESSABLE_ENTITY, json, Map.empty)
-      GetITSABusinessDetailsResponseHttpReads.read("", response) shouldBe NotSignedUp
+      GetITSABusinessDetailsResponseHttpReads.read("", response) shouldBe
+        Left(ErrorModel(UNPROCESSABLE_ENTITY, None, "API #5266: Business-Details - Status: 422, Message: Failure parsing json response"))
     }
 
     "status is UNPROCESSABLE_ENTITY and has a code of 008" in {
