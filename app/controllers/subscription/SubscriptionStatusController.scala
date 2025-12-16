@@ -39,9 +39,8 @@ class SubscriptionStatusController @Inject()(authService: AuthService,
         case Right(success) =>
           logger.debug(s"SubscriptionStatusController.checkSubscriptionStatus - successful, responding with\n$success")
           Ok(toJsValue(success))
-        case Left(failure) =>
-          logger.error(s"SubscriptionStatusController.checkSubscriptionStatus - failed, responding with\nstatus=${failure.status}\nreason=${failure.reason}")
-          Status(failure.status)(toJsValue(FEFailureResponse(failure.reason)))
+        case Left(_) =>
+          InternalServerError
       }
     }
   }

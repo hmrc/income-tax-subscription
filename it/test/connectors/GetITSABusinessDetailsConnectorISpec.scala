@@ -17,12 +17,13 @@
 package connectors
 
 import config.MicroserviceAppConfig
-import config.featureswitch._
+import config.featureswitch.*
 import helpers.WiremockHelper.StubResponse
 import helpers.{ComponentSpecBase, WiremockHelper}
+import models.ErrorModel
 import parsers.GetITSABusinessDetailsParser.{AlreadySignedUp, NotSignedUp}
 import play.api.http.HeaderNames
-import play.api.http.Status._
+import play.api.http.Status.*
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.Request
 import play.api.test.FakeRequest
@@ -61,37 +62,37 @@ class GetITSABusinessDetailsConnectorISpec extends ComponentSpecBase with Featur
 
       val result = getITSABusinessConnector.getHIPBusinessDetails(testNino).futureValue
 
-      result shouldBe AlreadySignedUp(testMtditId)
+      result shouldBe Right(AlreadySignedUp(testMtditId))
     }
 
     "return NotSignedUp when response is UNPROCESSABLE_ENTITY and code 006" in {
-      val errorResponse = Json.obj("errors" -> Json.obj("code" -> "006"))
+      val errorResponse = Json.obj("errors" -> Json.obj("code" -> "006", "text" -> "", "processingDate" -> ""))
       stubGetITSABusinessDetails(testNino)(UNPROCESSABLE_ENTITY, errorResponse)
 
       val result = getITSABusinessConnector.getHIPBusinessDetails(testNino).futureValue
 
-      result shouldBe NotSignedUp
+      result shouldBe Right(NotSignedUp)
     }
 
     "return NotSignedUp when response is UNPROCESSABLE_ENTITY and code 008" in {
-      val errorResponse = Json.obj("errors" -> Json.obj("code" -> "008"))
+      val errorResponse = Json.obj("errors" -> Json.obj("code" -> "008", "text" -> "", "processingDate" -> ""))
       stubGetITSABusinessDetails(testNino)(UNPROCESSABLE_ENTITY, errorResponse)
 
       val result = getITSABusinessConnector.getHIPBusinessDetails(testNino).futureValue
 
-      result shouldBe NotSignedUp
+      result shouldBe Right(NotSignedUp)
     }
 
     s"call the API a defined number of times in the event it returns a $FORBIDDEN" in {
       WiremockHelper.stubGetSequence(s"/etmp/RESTAdapter/itsa/taxpayer/business-details\\?nino=$testNino")(
         StubResponse(FORBIDDEN),
         StubResponse(FORBIDDEN),
-        StubResponse(UNPROCESSABLE_ENTITY, Json.obj("errors" -> Json.obj("code" -> "006")))
+        StubResponse(UNPROCESSABLE_ENTITY, Json.obj("errors" -> Json.obj("code" -> "006", "text" -> "", "processingDate" -> "")))
       )
 
       val result = getITSABusinessConnector.getHIPBusinessDetails(testNino).futureValue
 
-      result shouldBe NotSignedUp
+      result shouldBe Right(NotSignedUp)
 
       WiremockHelper.verifyGet(
         uri = s"/etmp/RESTAdapter/itsa/taxpayer/business-details\\?nino=$testNino",
@@ -99,40 +100,48 @@ class GetITSABusinessDetailsConnectorISpec extends ComponentSpecBase with Featur
       )
     }
 
-    "throw InternalServerException for unsupported status" in {
+    "return an error for unsupported status" in {
       val errorResponse = Json.obj("error" -> "Unsupported status")
       stubGetITSABusinessDetails(testNino)(INTERNAL_SERVER_ERROR, errorResponse)
 
-      val result = getITSABusinessConnector.getHIPBusinessDetails(testNino)
+      val result = getITSABusinessConnector.getHIPBusinessDetails(testNino).futureValue
 
-      intercept[InternalServerException](await(result)).getMessage should include("Unsupported status received")
+      result shouldBe Left(ErrorModel(
+        INTERNAL_SERVER_ERROR, "API #5266: Business-Details - Status: 500, Message: Unexpected status returned: INTERNAL_SERVER_ERROR"
+      ))
     }
 
-    "throw InternalServerException when mtdId is missing in response" in {
+    "Return an error when mtdId is missing in response" in {
       val badJson = Json.obj("success" -> Json.obj("taxPayerDisplayResponse" -> Json.obj()))
       stubGetITSABusinessDetails(testNino)(OK, badJson)
 
-      val result = getITSABusinessConnector.getHIPBusinessDetails(testNino)
+      val result = getITSABusinessConnector.getHIPBusinessDetails(testNino).futureValue
 
-      intercept[InternalServerException](await(result)).getMessage should include("Failure parsing json")
+      result shouldBe Left(ErrorModel(
+        OK, "API #5266: Business-Details - Status: 200, Message: Failure parsing json response"
+      ))
     }
 
-    "throw InternalServerException for BAD_REQUEST response" in {
+    "Return an error for BAD_REQUEST response" in {
       val errorResponse = Json.obj("error" -> "Invalid request")
       stubGetITSABusinessDetails(testNino)(BAD_REQUEST, errorResponse)
 
-      val result = getITSABusinessConnector.getHIPBusinessDetails(testNino)
+      val result = getITSABusinessConnector.getHIPBusinessDetails(testNino).futureValue
 
-      intercept[InternalServerException](await(result)).getMessage should include("Unsupported status received")
+      result shouldBe Left(ErrorModel(
+        BAD_REQUEST, "API #5266: Business-Details - Status: 400, Message: Unexpected status returned: BAD_REQUEST"
+      ))
     }
 
-    "throw InternalServerException for INTERNAL_SERVER_ERROR response" in {
+    "Return an error INTERNAL_SERVER_ERROR response" in {
       val errorResponse = Json.obj("error" -> "Internal server error")
       stubGetITSABusinessDetails(testNino)(INTERNAL_SERVER_ERROR, errorResponse)
 
-      val result = getITSABusinessConnector.getHIPBusinessDetails(testNino)
+      val result = getITSABusinessConnector.getHIPBusinessDetails(testNino).futureValue
 
-      intercept[InternalServerException](await(result)).getMessage should include("Unsupported status received")
+      result shouldBe Left(ErrorModel(
+        INTERNAL_SERVER_ERROR, "API #5266: Business-Details - Status: 500, Message: Unexpected status returned: INTERNAL_SERVER_ERROR"
+      ))
     }
   }
 }
