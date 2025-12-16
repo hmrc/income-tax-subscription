@@ -19,7 +19,7 @@ package parsers
 import models.ErrorModel
 import parsers.SignUpParser.Error
 import parsers.hip.Parser
-import play.api.http.Status.{OK, UNPROCESSABLE_ENTITY}
+import play.api.http.Status.{FORBIDDEN, OK, UNPROCESSABLE_ENTITY}
 import play.api.libs.json.{JsError, JsSuccess, Json, Reads}
 import uk.gov.hmrc.http.{HttpResponse, InternalServerException}
 
@@ -48,6 +48,8 @@ object GetITSABusinessDetailsParser {
           case JsSuccess(value, _) => Right(value)
           case JsError(_) => jsonError(OK, correlationId)
         }
+        case FORBIDDEN =>
+          throw GetITSABusinessDetailsParserException("", FORBIDDEN)
         case UNPROCESSABLE_ENTITY =>
           unprocessableEntity(response, correlationId)
         case status =>
@@ -61,6 +63,7 @@ object GetITSABusinessDetailsParser {
           case SubscriptionDataNotFound | IdNotFound => Right(NotSignedUp)
           case _ => responseError(UNPROCESSABLE_ENTITY, e, correlationId)
         }
+          
         case _ => jsonError(UNPROCESSABLE_ENTITY, correlationId)
       }
       

@@ -87,7 +87,7 @@ class GetITSABusinessDetailsConnectorISpec extends ComponentSpecBase with Featur
       WiremockHelper.stubGetSequence(s"/etmp/RESTAdapter/itsa/taxpayer/business-details\\?nino=$testNino")(
         StubResponse(FORBIDDEN),
         StubResponse(FORBIDDEN),
-        StubResponse(UNPROCESSABLE_ENTITY, Json.obj("errors" -> Json.obj("code" -> "006")))
+        StubResponse(UNPROCESSABLE_ENTITY, Json.obj("errors" -> Json.obj("code" -> "006","text"->"","processingDate"->"")))
       )
 
       val result = getITSABusinessConnector.getHIPBusinessDetails(testNino).futureValue
