@@ -66,7 +66,7 @@ class GetITSABusinessDetailsConnectorISpec extends ComponentSpecBase with Featur
     }
 
     "return NotSignedUp when response is UNPROCESSABLE_ENTITY and code 006" in {
-      val errorResponse = Json.obj("errors" -> Json.obj("code" -> "006","text"->"","processingDate"->""))
+      val errorResponse = Json.obj("errors" -> Json.obj("code" -> "006","text" -> "","processingDate" -> ""))
       stubGetITSABusinessDetails(testNino)(UNPROCESSABLE_ENTITY, errorResponse)
 
       val result = getITSABusinessConnector.getHIPBusinessDetails(testNino).futureValue
@@ -75,7 +75,7 @@ class GetITSABusinessDetailsConnectorISpec extends ComponentSpecBase with Featur
     }
 
     "return NotSignedUp when response is UNPROCESSABLE_ENTITY and code 008" in {
-      val errorResponse = Json.obj("errors" -> Json.obj("code" -> "008","text"->"","processingDate"->""))
+      val errorResponse = Json.obj("errors" -> Json.obj("code" -> "008","text" -> "","processingDate" -> ""))
       stubGetITSABusinessDetails(testNino)(UNPROCESSABLE_ENTITY, errorResponse)
 
       val result = getITSABusinessConnector.getHIPBusinessDetails(testNino).futureValue
@@ -87,7 +87,7 @@ class GetITSABusinessDetailsConnectorISpec extends ComponentSpecBase with Featur
       WiremockHelper.stubGetSequence(s"/etmp/RESTAdapter/itsa/taxpayer/business-details\\?nino=$testNino")(
         StubResponse(FORBIDDEN),
         StubResponse(FORBIDDEN),
-        StubResponse(UNPROCESSABLE_ENTITY, Json.obj("errors" -> Json.obj("code" -> "006","text"->"","processingDate"->"")))
+        StubResponse(UNPROCESSABLE_ENTITY, Json.obj("errors" -> Json.obj("code" -> "006","text" -> "","processingDate" -> "")))
       )
 
       val result = getITSABusinessConnector.getHIPBusinessDetails(testNino).futureValue

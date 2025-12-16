@@ -40,7 +40,7 @@ class GetITSABusinessDetailsConnector @Inject()(
   appConfig
 ) with Retries {
 
-  def getHIPBusinessDetails(nino: String)(implicit hc: HeaderCarrier): Future[Either[ErrorModel,GetITSABusinessDetailsResponse]] = {
+  def getHIPBusinessDetails(nino: String)(implicit hc: HeaderCarrier): Future[Either[ErrorModel, GetITSABusinessDetailsResponse]] = {
     retryFor("HIP API #5266 - Get Business Details") {
       case GetITSABusinessDetailsParserException(_, FORBIDDEN) => true
       case _ => false
