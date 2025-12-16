@@ -66,21 +66,21 @@ class GetITSABusinessDetailsConnectorISpec extends ComponentSpecBase with Featur
     }
 
     "return NotSignedUp when response is UNPROCESSABLE_ENTITY and code 006" in {
-      val errorResponse = Json.obj("errors" -> Json.obj("code" -> "006"))
+      val errorResponse = Json.obj("errors" -> Json.obj("code" -> "006","text"->"","processingDate"->""))
       stubGetITSABusinessDetails(testNino)(UNPROCESSABLE_ENTITY, errorResponse)
 
       val result = getITSABusinessConnector.getHIPBusinessDetails(testNino).futureValue
 
-      result shouldBe Left(ErrorModel(UNPROCESSABLE_ENTITY, None, "API #5266: Business-Details - Status: 422, Message: Failure parsing json response"))
+      result shouldBe Right(NotSignedUp)
     }
 
     "return NotSignedUp when response is UNPROCESSABLE_ENTITY and code 008" in {
-      val errorResponse = Json.obj("errors" -> Json.obj("code" -> "008"))
+      val errorResponse = Json.obj("errors" -> Json.obj("code" -> "008","text"->"","processingDate"->""))
       stubGetITSABusinessDetails(testNino)(UNPROCESSABLE_ENTITY, errorResponse)
 
       val result = getITSABusinessConnector.getHIPBusinessDetails(testNino).futureValue
 
-      result shouldBe Left(ErrorModel(UNPROCESSABLE_ENTITY, None, "API #5266: Business-Details - Status: 422, Message: Failure parsing json response"))
+      result shouldBe Right(NotSignedUp)
     }
 
     s"call the API a defined number of times in the event it returns a $FORBIDDEN" in {
@@ -93,8 +93,6 @@ class GetITSABusinessDetailsConnectorISpec extends ComponentSpecBase with Featur
       val result = getITSABusinessConnector.getHIPBusinessDetails(testNino).futureValue
 
       result shouldBe Right(NotSignedUp)
-//      result shouldBe Left(ErrorModel(FORBIDDEN, None, "API #5266: Business-Details - Status: 403, Message: Unexpected status returned: 403"))
-
 
       WiremockHelper.verifyGet(
         uri = s"/etmp/RESTAdapter/itsa/taxpayer/business-details\\?nino=$testNino",
