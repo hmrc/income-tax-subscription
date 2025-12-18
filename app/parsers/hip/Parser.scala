@@ -19,11 +19,18 @@ package parsers.hip
 import play.api.Logging
 import uk.gov.hmrc.http.HttpReads
 
+import java.time.{Instant, ZoneId}
+import java.time.format.DateTimeFormatter
+
 trait Parser[T] extends Logging {
 
   val apiNumber: Int
   val apiName: String
   
+  private val timePattern: DateTimeFormatter = DateTimeFormatter
+    .ofPattern("HH:mm")
+    .withZone(ZoneId.of("UTC"))
+
   def httpReads(correlationId: String): HttpReads[T]
 
   protected def error(correlationId: String,
@@ -40,7 +47,7 @@ trait Parser[T] extends Logging {
       }
     ).mkString(", ")
 
-    logger.error(s"$errorMessage, CorrelationId: $correlationId")
+    logger.error(s"${timePattern.format(Instant.now())} -> $errorMessage, CorrelationId: $correlationId")
     errorMessage
   }
 }
