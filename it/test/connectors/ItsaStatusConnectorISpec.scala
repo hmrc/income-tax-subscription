@@ -60,7 +60,7 @@ class ItsaStatusConnectorISpec extends ComponentSpecBase {
         val result = connector.getItsaStatus("test-nino", "test-utr")
 
         result.futureValue shouldBe
-          Left(ErrorModel(OK, "Invalid Json for ItsaStatusResponseHttpReads"))
+          Left(ErrorModel(OK, s"API #5197: Determine ITSA Status for Sign Up, Status: $OK, Message: Failure parsing json response"))
       }
     }
 
@@ -83,7 +83,7 @@ class ItsaStatusConnectorISpec extends ComponentSpecBase {
 
         result.futureValue shouldBe Left(ErrorModel(
           INTERNAL_SERVER_ERROR,
-          "Invalid status received"
+          "API #5197: Determine ITSA Status for Sign Up, Status: 500, Message: Unexpected status returned"
         ))
       }
     }

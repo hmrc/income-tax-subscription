@@ -61,7 +61,7 @@ class HIPSignUpTaxYearConnectorISpec extends ComponentSpecBase {
         val result = signUpConnector.signUp(testSignUpRequest)
 
         result.futureValue shouldBe Left(
-          ErrorModel(status = CREATED, "API #5317: Sign-up - Status: 201, Message: Failure parsing json response")
+          ErrorModel(status = CREATED, "API #5317: ITSA Sign Up, Status: 201, Message: Failure parsing json response")
         )
       }
     }
@@ -92,7 +92,7 @@ class HIPSignUpTaxYearConnectorISpec extends ComponentSpecBase {
         val result = signUpConnector.signUp(testSignUpRequest)
 
         result.futureValue shouldBe Left(
-          ErrorModel(status = UNPROCESSABLE_ENTITY, "API #5317: Sign-up - Status: 422, Message: Failure parsing json response")
+          ErrorModel(status = UNPROCESSABLE_ENTITY, "API #5317: ITSA Sign Up, Status: 422, Message: Failure parsing json response")
         )
       }
     }
@@ -111,7 +111,7 @@ class HIPSignUpTaxYearConnectorISpec extends ComponentSpecBase {
         val result = signUpConnector.signUp(testSignUpRequest)
 
         result.futureValue shouldBe Left(
-          ErrorModel(UNPROCESSABLE_ENTITY, "API #5317: Sign-up - Status: 422, Code: 002, Reason: ID not found")
+          ErrorModel(UNPROCESSABLE_ENTITY, "API #5317: ITSA Sign Up, Status: 422, Code: 002, Reason: ID not found")
         )
       }
     }
@@ -130,7 +130,7 @@ class HIPSignUpTaxYearConnectorISpec extends ComponentSpecBase {
         val result = signUpConnector.signUp(testSignUpRequest)
 
         result.futureValue shouldBe Left(
-          ErrorModel(INTERNAL_SERVER_ERROR, "API #5317: Sign-up - Status: 500, Message: Unexpected status returned: INTERNAL_SERVER_ERROR")
+          ErrorModel(INTERNAL_SERVER_ERROR, "API #5317: ITSA Sign Up, Status: 500, Message: Unexpected status returned")
         )
       }
     }

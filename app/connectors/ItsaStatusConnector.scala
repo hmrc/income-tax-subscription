@@ -18,10 +18,11 @@ package connectors
 
 import config.AppConfig
 import models.subscription.AccountingPeriodUtil
-import parsers.ItsaStatusParser._
+import parsers.ItsaStatusParser.*
 import uk.gov.hmrc.http.client.HttpClientV2
-import uk.gov.hmrc.http.{Authorization, HeaderCarrier, HeaderNames, StringContextOps}
+import uk.gov.hmrc.http.{Authorization, HeaderCarrier, HeaderNames, HttpReads, StringContextOps}
 
+import java.util.UUID
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -39,6 +40,8 @@ class ItsaStatusConnector @Inject()(httpClient: HttpClientV2,
       HeaderNames.authorisation -> appConfig.statusDeterminationServiceAuthorisationToken,
       "Environment" -> appConfig.statusDeterminationServiceEnvironment
     )
+
+    implicit val httpReads: HttpReads[GetItsaStatusResponse] = ItsaStatusResponseHttpReads.httpReads(correlationId = UUID.randomUUID().toString)
 
     val call = httpClient.get(getItsaStatusUrl(nino, utr))(headerCarrier)
     headers.foldLeft(call)((a, b) => a.setHeader(b)).execute

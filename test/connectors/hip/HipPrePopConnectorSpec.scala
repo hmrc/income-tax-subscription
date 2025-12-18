@@ -26,7 +26,11 @@ import play.api.http.Status.{INTERNAL_SERVER_ERROR, OK}
 import play.api.libs.json.Json
 import uk.gov.hmrc.http.HttpResponse
 
+import java.util.UUID
+
 class HipPrePopConnectorSpec extends CommonSpec with MockHttp with GuiceOneAppPerSuite {
+
+  val testCorrelationId: String = UUID.randomUUID().toString
 
   "getHipPrePopData" should {
     "retrieve prepop data" when {
@@ -46,7 +50,7 @@ class HipPrePopConnectorSpec extends CommonSpec with MockHttp with GuiceOneAppPe
           Json.toJson(data).toString
         )
 
-        GetHipPrePopResponseHttpReads.read("", response) shouldBe
+        GetHipPrePopResponseHttpReads.httpReads(testCorrelationId).read("", "", response) shouldBe
           Right(data)
       }
 
@@ -56,8 +60,8 @@ class HipPrePopConnectorSpec extends CommonSpec with MockHttp with GuiceOneAppPe
           Json.obj("selfEmp" -> "").toString
         )
 
-        GetHipPrePopResponseHttpReads.read("", response) shouldBe
-          Left(ErrorModel(OK, "API #5646: Business Data - Status: 200, Message: Failure parsing json response"))
+        GetHipPrePopResponseHttpReads.httpReads(testCorrelationId).read("", "", response) shouldBe
+          Left(ErrorModel(OK, s"API #5646: Business Data, Status: 200, Message: Failure parsing json response"))
       }
 
       "the HIP API #5646 returns an unexpected status" in {
@@ -66,8 +70,8 @@ class HipPrePopConnectorSpec extends CommonSpec with MockHttp with GuiceOneAppPe
           Json.obj().toString
         )
 
-        GetHipPrePopResponseHttpReads.read("", response) shouldBe
-          Left(ErrorModel(INTERNAL_SERVER_ERROR, "API #5646: Business Data - Status: 500, Message: Unexpected status returned: INTERNAL_SERVER_ERROR"))
+        GetHipPrePopResponseHttpReads.httpReads(testCorrelationId).read("", "", response) shouldBe
+          Left(ErrorModel(INTERNAL_SERVER_ERROR, s"API #5646: Business Data, Status: 500, Message: Unexpected status returned"))
       }
     }
   }

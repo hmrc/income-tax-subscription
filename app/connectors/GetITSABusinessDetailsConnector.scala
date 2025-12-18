@@ -26,19 +26,16 @@ import play.api.http.Status.FORBIDDEN
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.{HeaderCarrier, Retries}
 
+import java.util.UUID
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class GetITSABusinessDetailsConnector @Inject()(
-  httpClient: HttpClientV2,
-  appConfig: AppConfig,
-  val configuration: Config,
-  val actorSystem: ActorSystem
-)(implicit ec: ExecutionContext) extends BaseHIPConnector(
-  httpClient,
-  appConfig
-) with Retries {
+class GetITSABusinessDetailsConnector @Inject()(val httpClient: HttpClientV2,
+                                                val appConfig: AppConfig,
+                                                val configuration: Config,
+                                                val actorSystem: ActorSystem)
+                                               (implicit val ec: ExecutionContext) extends BaseHIPConnector with Retries {
 
   def getHIPBusinessDetails(nino: String)(implicit hc: HeaderCarrier): Future[Either[ErrorModel, GetITSABusinessDetailsResponse]] = {
     retryFor("HIP API #5266 - Get Business Details") {
@@ -49,7 +46,11 @@ class GetITSABusinessDetailsConnector @Inject()(
         "X-Message-Type" -> "TaxpayerDisplay"
       )
 
-      super.get(getHIPBusinessDetailsUrl(nino), GetITSABusinessDetailsResponseHttpReads, headers)
+      super.get(
+        uri = getHIPBusinessDetailsUrl(nino),
+        parser = GetITSABusinessDetailsResponseHttpReads,
+        additionalHeaders = headers
+      )
     }
   }
 

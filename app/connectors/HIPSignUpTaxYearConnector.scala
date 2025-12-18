@@ -21,25 +21,22 @@ import config.AppConfig
 import connectors.hip.BaseHIPConnector
 import models.SignUpRequest
 import org.apache.pekko.actor.ActorSystem
-import parsers.SignUpParser._
-import play.api.http.Status.FORBIDDEN
+import parsers.SignUpParser.*
+import play.api.http.Status.{FORBIDDEN, OK}
 import play.api.libs.json.{JsObject, Json}
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.{HeaderCarrier, Retries}
 
+import java.util.UUID
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class HIPSignUpTaxYearConnector @Inject()(
-  httpClient: HttpClientV2,
-  appConfig: AppConfig,
-  val configuration: Config,
-  val actorSystem: ActorSystem
-)(implicit ec: ExecutionContext) extends BaseHIPConnector(
-  httpClient,
-  appConfig
-) with Retries {
+class HIPSignUpTaxYearConnector @Inject()(val httpClient: HttpClientV2,
+                                          val appConfig: AppConfig,
+                                          val configuration: Config,
+                                          val actorSystem: ActorSystem)
+                                         (implicit val ec: ExecutionContext) extends BaseHIPConnector with Retries {
 
   private def signUpUrl =
     s"/etmp/RESTAdapter/itsa/taxpayer/signup-mtdfb"
@@ -63,7 +60,12 @@ class HIPSignUpTaxYearConnector @Inject()(
         "X-Message-Type" -> "ITSASignUpMTDfB"
       )
 
-      super.post(signUpUrl, requestBody(signUpRequest), HipSignUpResponseHttpReads, headers)
+      super.post(
+        uri = signUpUrl,
+        body = requestBody(signUpRequest),
+        parser = HIPSignUpResponseParser,
+        additionalHeaders = headers
+      )
     }
   }
 }

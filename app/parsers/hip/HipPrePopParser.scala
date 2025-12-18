@@ -18,11 +18,10 @@ package parsers.hip
 
 import models.ErrorModel
 import models.hip.SelfEmpHolder
-import parsers.hip.GetITSAStatusParser.GetITSAStatusHttpReads.statuses
 import play.api.Logging
 import play.api.http.Status.{NOT_FOUND, OK, SERVICE_UNAVAILABLE}
-import play.api.libs.json.{JsError, JsSuccess}
-import uk.gov.hmrc.http.HttpResponse
+import play.api.libs.json.{JsError, JsSuccess, JsValue}
+import uk.gov.hmrc.http.{HttpReads, HttpResponse}
 
 object HipPrePopParser extends Logging {
 
@@ -30,36 +29,41 @@ object HipPrePopParser extends Logging {
 
   implicit object GetHipPrePopResponseHttpReads extends Parser[GetHipPrePopResponse] {
     val apiNumber = 5646
-    val apiDesc = "Business Data"
+    val apiName = "Business Data"
 
-    override def read(correlationId: String, response: HttpResponse): GetHipPrePopResponse = {
-      response.status match {
-        case OK =>
-          response.json.validate[SelfEmpHolder] match {
-            case JsSuccess(value, _) => Right(value)
-            case JsError(_) => Left(ErrorModel(OK,
-              super.error(
-                apiNumber = apiNumber,
-                apiDesc = apiDesc,
-                correlationId = correlationId,
-                status = OK,
-                reason = "Failure parsing json response"
-              )
-            ))
-          }
-        case NOT_FOUND | SERVICE_UNAVAILABLE =>
-          Right(SelfEmpHolder(None))
-        case status =>
-          Left(ErrorModel(status,
-            super.error(
-              apiNumber = apiNumber,
-              apiDesc = apiDesc,
-              correlationId = correlationId,
-              status = status,
-              reason = s"Unexpected status returned: ${statuses.getDesc(status)}"
-            )
-          ))
+    override def httpReads(correlationId: String): HttpReads[GetHipPrePopResponse] = {
+      (_: String, _: String, response: HttpResponse) => {
+        response.status match {
+          case OK => handleOkResponse(response.json, correlationId)
+          case NOT_FOUND | SERVICE_UNAVAILABLE => Right(SelfEmpHolder(None))
+          case status => handleOtherResponse(status, correlationId)
+        }
       }
+    }
+
+    private def handleOkResponse(json: JsValue, correlationId: String) = {
+      json.validate[SelfEmpHolder] match {
+        case JsSuccess(value, _) => Right(value)
+        case JsError(_) => Left(ErrorModel(
+          status = OK,
+          message = super.error(
+            correlationId = correlationId,
+            status = OK,
+            reason = "Failure parsing json response"
+          )
+        ))
+      }
+    }
+
+    private def handleOtherResponse(status: Int, correlationId: String) = {
+      Left(ErrorModel(
+        status = status,
+        message = super.error(
+          correlationId = correlationId,
+          status = status,
+          reason = "Unexpected status returned"
+        )
+      ))
     }
   }
 

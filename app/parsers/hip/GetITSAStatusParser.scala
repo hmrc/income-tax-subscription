@@ -20,8 +20,8 @@ import models.ErrorModel
 import parsers.GetITSAStatusParser.GetITSAStatusTaxYearResponse
 import play.api.Logging
 import play.api.http.Status.OK
-import play.api.libs.json.{JsError, JsSuccess}
-import uk.gov.hmrc.http.HttpResponse
+import play.api.libs.json.{JsError, JsSuccess, JsValue}
+import uk.gov.hmrc.http.{HttpReads, HttpResponse}
 
 object GetITSAStatusParser extends Logging {
 
@@ -29,32 +29,39 @@ object GetITSAStatusParser extends Logging {
 
   object GetITSAStatusHttpReads extends Parser[GetITSAStatusResponse] {
     val apiNumber = 5197
-    val apiDesc = "Get ITSA Status"
+    val apiName = "Get ITSA Status"
 
-    override def read(correlationId: String, response: HttpResponse): GetITSAStatusResponse =
-      response.status match {
-        case OK => response.json.validate[Seq[GetITSAStatusTaxYearResponse]] match {
-          case JsSuccess(value, _) => Right(value)
-          case JsError(_) => Left(ErrorModel(OK,
-            super.error(
-              apiNumber = apiNumber,
-              apiDesc = apiDesc,
-              correlationId = correlationId,
-              status = OK,
-              reason = "Failure parsing json response"
-            )
-          ))
+    override def httpReads(correlationId: String): HttpReads[GetITSAStatusResponse] = {
+      (_: String, _: String, response: HttpResponse) => {
+        response.status match {
+          case OK => handleOkResponse(response.json, correlationId)
+          case status => handleOtherResponse(status, correlationId)
         }
-        case status =>
-          Left(ErrorModel(status,
-            super.error(
-              apiNumber = apiNumber,
-              apiDesc = apiDesc,
-              correlationId = correlationId,
-              status = status,
-              reason = s"Unexpected status returned: ${statuses.getDesc(status)}"
-            )
-          ))
       }
+    }
+
+    private def handleOkResponse(json: JsValue, correlationId: String) = {
+      json.validate[Seq[GetITSAStatusTaxYearResponse]] match {
+        case JsSuccess(value, _) => Right(value)
+        case JsError(_) => Left(ErrorModel(OK,
+          super.error(
+            correlationId = correlationId,
+            status = OK,
+            reason = "Failure parsing json response"
+          )
+        ))
+      }
+    }
+
+    private def handleOtherResponse(status: Int, correlationId: String) = {
+      Left(ErrorModel(status,
+        super.error(
+          correlationId = correlationId,
+          status = status,
+          reason = s"Unexpected status returned"
+        )
+      ))
+    }
   }
+
 }

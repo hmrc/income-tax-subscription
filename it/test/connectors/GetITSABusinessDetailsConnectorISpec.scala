@@ -107,7 +107,7 @@ class GetITSABusinessDetailsConnectorISpec extends ComponentSpecBase with Featur
       val result = getITSABusinessConnector.getHIPBusinessDetails(testNino).futureValue
 
       result shouldBe Left(ErrorModel(
-        INTERNAL_SERVER_ERROR, "API #5266: Business-Details - Status: 500, Message: Unexpected status returned: INTERNAL_SERVER_ERROR"
+        INTERNAL_SERVER_ERROR, "API #5266: Get Business Details, Status: 500, Message: Unexpected status returned"
       ))
     }
 
@@ -118,7 +118,7 @@ class GetITSABusinessDetailsConnectorISpec extends ComponentSpecBase with Featur
       val result = getITSABusinessConnector.getHIPBusinessDetails(testNino).futureValue
 
       result shouldBe Left(ErrorModel(
-        OK, "API #5266: Business-Details - Status: 200, Message: Failure parsing json response"
+        OK, "API #5266: Get Business Details, Status: 200, Message: Failure parsing json response"
       ))
     }
 
@@ -129,7 +129,7 @@ class GetITSABusinessDetailsConnectorISpec extends ComponentSpecBase with Featur
       val result = getITSABusinessConnector.getHIPBusinessDetails(testNino).futureValue
 
       result shouldBe Left(ErrorModel(
-        BAD_REQUEST, "API #5266: Business-Details - Status: 400, Message: Unexpected status returned: BAD_REQUEST"
+        BAD_REQUEST, "API #5266: Get Business Details, Status: 400, Message: Unexpected status returned"
       ))
     }
 
@@ -140,7 +140,7 @@ class GetITSABusinessDetailsConnectorISpec extends ComponentSpecBase with Featur
       val result = getITSABusinessConnector.getHIPBusinessDetails(testNino).futureValue
 
       result shouldBe Left(ErrorModel(
-        INTERNAL_SERVER_ERROR, "API #5266: Business-Details - Status: 500, Message: Unexpected status returned: INTERNAL_SERVER_ERROR"
+        INTERNAL_SERVER_ERROR, "API #5266: Get Business Details, Status: 500, Message: Unexpected status returned"
       ))
     }
   }

@@ -19,29 +19,87 @@ package parsers
 import models.subscription.business.{CreateIncomeSourceErrorModel, CreateIncomeSourceSuccessModel}
 import parsers.hip.Parser
 import play.api.Logging
-import play.api.http.Status.{CREATED, FORBIDDEN}
-import uk.gov.hmrc.http.{HttpResponse, InternalServerException}
+import play.api.http.Status.{CREATED, FORBIDDEN, UNPROCESSABLE_ENTITY}
+import play.api.libs.json.{JsSuccess, JsValue, Json, Reads}
+import uk.gov.hmrc.http.{HttpReads, HttpResponse, InternalServerException}
 
 object ITSAIncomeSourceParser extends Logging {
+
   type PostITSAIncomeSourceResponse = Either[CreateIncomeSourceErrorModel, CreateIncomeSourceSuccessModel]
 
-    object itsaIncomeSourceResponseHttpReads extends Parser[PostITSAIncomeSourceResponse] {
-      override def read(correlationId: String, response: HttpResponse): PostITSAIncomeSourceResponse = {
+  object ITSAIncomeSourceResponseHttpReads extends Parser[PostITSAIncomeSourceResponse] {
+
+    val apiNumber: Int = 5265
+    val apiName: String = "Create income sources"
+
+    override def httpReads(correlationId: String): HttpReads[PostITSAIncomeSourceResponse] = {
+      (_: String, _: String, response: HttpResponse) => {
         response.status match {
-          case CREATED =>
-            logger.debug("[ItsaIncomeSourcesResponseHttpReads][read]: Status Created")
-            Right(CreateIncomeSourceSuccessModel())
-          case FORBIDDEN =>
-            logger.warn(s"[ItsaIncomeSourcesResponseHttpReads][read]: Unexpected response, status $FORBIDDEN returned. Body: ${response.body}")
-            throw  ITSAIncomeSourceForbiddenException
-          case status =>
-            logger.warn(s"[ItsaIncomeSourcesResponseHttpReads][read]: Unexpected response, status $status returned. Body: ${response.body}")
-            Left(CreateIncomeSourceErrorModel(status, response.body))
+          case CREATED => handleCreatedResponse()
+          case FORBIDDEN => handleForbiddenResponse(correlationId)
+          case UNPROCESSABLE_ENTITY => handleUnprocessableEntityResponse(response.json, correlationId)
+          case status => handleOtherResponse(status, correlationId)
         }
       }
+    }
+
+    private def handleCreatedResponse() = {
+      Right(CreateIncomeSourceSuccessModel())
+    }
+
+    private def handleForbiddenResponse(correlationId: String): Nothing = {
+      throw ITSAIncomeSourceForbiddenException(super.error(
+        correlationId = correlationId,
+        status = FORBIDDEN,
+        reason = "Unexpected status received"
+      ))
+    }
+
+    private def handleUnprocessableEntityResponse(json: JsValue, correlationId: String) = {
+      (json \ "errors").validate[Error] match {
+        case JsSuccess(error, _) =>
+          Left(CreateIncomeSourceErrorModel(
+            status = UNPROCESSABLE_ENTITY,
+            reason = super.error(
+              correlationId = correlationId,
+              status = UNPROCESSABLE_ENTITY,
+              maybeCode = Some(error.code),
+              reason = error.text
+            )
+          ))
+        case _ =>
+          Left(CreateIncomeSourceErrorModel(
+            status = UNPROCESSABLE_ENTITY,
+            reason = super.error(
+              correlationId = correlationId,
+              status = UNPROCESSABLE_ENTITY,
+              reason = "Failure parsing json response"
+            )
+          ))
+      }
+
+    }
+
+    private def handleOtherResponse(status: Int, correlationId: String) = {
+      Left(CreateIncomeSourceErrorModel(
+        status = status,
+        reason = super.error(
+          correlationId = correlationId,
+          status = status,
+          reason = "Unexpected status received"
+        )
+      ))
+    }
+
+    case class Error(processingDate: String,
+                     code: String,
+                     text: String)
+
+    object Error {
+      implicit val reads: Reads[Error] = Json.reads[Error]
+    }
+
   }
 
-  case object ITSAIncomeSourceForbiddenException extends InternalServerException(
-    "[ITSAIncomeSourceParserException- Forbidden status received] "
-  )
+  case class ITSAIncomeSourceForbiddenException(text: String) extends InternalServerException(text)
 }

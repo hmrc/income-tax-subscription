@@ -16,19 +16,19 @@
 
 package connectors
 
-import helpers.{ComponentSpecBase, WiremockHelper}
 import helpers.IntegrationTestConstants.{testArn, testCreateIncomeFailureBody, testCreateIncomeSources, testMtdbsaRef}
 import helpers.WiremockHelper.StubResponse
 import helpers.servicemocks.{AuditStub, CreateIncomeSourceStub}
-import models.subscription._
+import helpers.{ComponentSpecBase, WiremockHelper}
+import models.subscription.*
 import models.subscription.business.{CreateIncomeSourceErrorModel, CreateIncomeSourceSuccessModel}
-import play.api.http.Status.{CREATED, FORBIDDEN, INTERNAL_SERVER_ERROR}
-import play.api.libs.json.Json
+import play.api.http.Status.{CREATED, FORBIDDEN, INTERNAL_SERVER_ERROR, UNPROCESSABLE_ENTITY}
+import play.api.libs.json.{JsObject, Json}
 import play.api.mvc.Request
 import play.api.test.FakeRequest
 import utils.TestConstants.testCreateIncomeSuccessBody
 
-class ItsaIncomeSourceConnectorISpec extends ComponentSpecBase{
+class ItsaIncomeSourceConnectorISpec extends ComponentSpecBase {
 
   private lazy val connector: ItsaIncomeSourceConnector = app.injector.instanceOf[ItsaIncomeSourceConnector]
   implicit val request: Request[_] = FakeRequest()
@@ -76,6 +76,43 @@ class ItsaIncomeSourceConnectorISpec extends ComponentSpecBase{
       AuditStub.verifyAudit()
     }
 
+    s"retuern a failure response" when {
+      s"receiving a $UNPROCESSABLE_ENTITY status response" which {
+        "has a valid error json" in {
+          CreateIncomeSourceStub.stubItsaIncomeSource(
+            expectedBody = Json.toJson(testCreateIncomeSources)(CreateIncomeSourcesModel.hipWrites(testMtdbsaRef))
+          )(status = UNPROCESSABLE_ENTITY, body = errorsJson)
+
+          val result = connector.createIncomeSources(
+            agentReferenceNumber = Some(testArn),
+            mtdbsaRef = testMtdbsaRef,
+            createIncomeSources = testCreateIncomeSources
+          )
+
+          result.futureValue shouldBe Left(CreateIncomeSourceErrorModel(
+            status = UNPROCESSABLE_ENTITY,
+            reason = s"API #5265: Create income sources, Status: $UNPROCESSABLE_ENTITY, Code: 000, Reason: error text"
+          ))
+        }
+        "has an invalid error json" in {
+          CreateIncomeSourceStub.stubItsaIncomeSource(
+            expectedBody = Json.toJson(testCreateIncomeSources)(CreateIncomeSourcesModel.hipWrites(testMtdbsaRef))
+          )(status = UNPROCESSABLE_ENTITY, body = Json.obj())
+
+          val result = connector.createIncomeSources(
+            agentReferenceNumber = Some(testArn),
+            mtdbsaRef = testMtdbsaRef,
+            createIncomeSources = testCreateIncomeSources
+          )
+
+          result.futureValue shouldBe Left(CreateIncomeSourceErrorModel(
+            status = UNPROCESSABLE_ENTITY,
+            reason = s"API #5265: Create income sources, Status: $UNPROCESSABLE_ENTITY, Message: Failure parsing json response"
+          ))
+        }
+      }
+    }
+
     s"return a failure response when receiving a non-$CREATED response" in {
       CreateIncomeSourceStub.stubItsaIncomeSource(
         expectedBody = Json.toJson(testCreateIncomeSources)(CreateIncomeSourcesModel.hipWrites(testMtdbsaRef))
@@ -89,9 +126,13 @@ class ItsaIncomeSourceConnectorISpec extends ComponentSpecBase{
 
       result.futureValue shouldBe Left(CreateIncomeSourceErrorModel(
         status = INTERNAL_SERVER_ERROR,
-        reason = testCreateIncomeFailureBody.toString()
+        reason = s"API #5265: Create income sources, Status: $INTERNAL_SERVER_ERROR, Message: Unexpected status received"
       ))
     }
   }
+
+  lazy val errorsJson: JsObject = Json.obj(
+    "errors" -> Json.obj("code" -> "000", "text" -> "error text", "processingDate" -> "")
+  )
 
 }

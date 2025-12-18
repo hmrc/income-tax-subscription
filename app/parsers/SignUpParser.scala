@@ -20,40 +20,59 @@ import models.SignUpResponse.SignUpSuccess
 import models.{ErrorModel, SignUpResponse}
 import parsers.hip.Parser
 import play.api.http.Status.*
-import play.api.libs.json.{JsError, JsSuccess, Json, Reads}
-import uk.gov.hmrc.http.{HttpResponse, InternalServerException}
+import play.api.libs.json.*
+import uk.gov.hmrc.http.{HttpReads, HttpResponse, InternalServerException}
 
 object SignUpParser {
 
   type PostSignUpResponse = Either[ErrorModel, SignUpResponse]
 
-  object HipSignUpResponseHttpReads extends Parser[PostSignUpResponse] {
-    val apiNumber = 5317
-    val apiDesc = "Sign-up"
+  implicit object HIPSignUpResponseParser extends Parser[PostSignUpResponse] {
+    val apiNumber: Int = 5317
+    val apiName: String = "ITSA Sign Up"
 
-    override def read(correlationId: String, response: HttpResponse): PostSignUpResponse = {
-      response.status match {
-        case CREATED => (response.json \ "success").validate[SignUpSuccess] match {
-          case JsSuccess(value, _) => Right(value)
-          case JsError(_) => jsonError(CREATED, correlationId)
+    override def httpReads(correlationId: String): HttpReads[PostSignUpResponse] = {
+      (_: String, _: String, response: HttpResponse) => {
+        response.status match {
+          case CREATED => handleCreatedResponse(response.json, correlationId)
+          case UNPROCESSABLE_ENTITY => handleUnprocessableEntity(response.json, correlationId)
+          case FORBIDDEN => handleForbidden(response, correlationId)
+          case status => handleOther(status, correlationId)
         }
-        case UNPROCESSABLE_ENTITY =>
-          unprocessableEntity(response, correlationId)
-        case FORBIDDEN =>
-          throw SignUpParserException(s"Failed to read Json for MTD Sign Up Response", FORBIDDEN)
-        case status =>
-          generalError(status, s"Unexpected status returned: ${statuses.getDesc(status)}", correlationId)
       }
     }
-    
-    private def unprocessableEntity(response: HttpResponse, correlationId: String) =
-      (response.json \\ "errors").map(_.validate[Error]).headOption match {
-        case Some(JsSuccess(e, _)) => e.code match {
+
+    private def handleCreatedResponse(json: JsValue, correlationId: String) = {
+      (json \ "success").validate[SignUpSuccess] match {
+        case JsSuccess(value, _) => Right(value)
+        case JsError(_) => jsonError(CREATED, correlationId)
+      }
+    }
+
+    private def handleUnprocessableEntity(json: JsValue, correlationId: String) = {
+      (json \ "errors").validate[Error] match {
+        case JsSuccess(error, _) => error.code match {
           case CustomerAlreadySignedUpEnum => Right(SignUpResponse.AlreadySignedUp)
-          case _ => responseError(UNPROCESSABLE_ENTITY, e, correlationId)
+          case _ => responseError(UNPROCESSABLE_ENTITY, error, correlationId)
         }
         case _ => jsonError(UNPROCESSABLE_ENTITY, correlationId)
       }
+    }
+
+    private def handleForbidden(response: HttpResponse, correlationId: String): Nothing = {
+      throw SignUpParserException(
+        error = super.error(
+          correlationId = correlationId,
+          status = response.status,
+          reason = response.body
+        ),
+        status = response.status
+      )
+    }
+
+    private def handleOther(status: Int, correlationId: String) = {
+      generalError(status, "Unexpected status returned", correlationId)
+    }
 
     private def jsonError(status: Int, correlationId: String) =
       generalError(status, "Failure parsing json response", correlationId)
@@ -61,37 +80,34 @@ object SignUpParser {
     private def generalError(status: Int, message: String, correlationId: String) =
       Left(ErrorModel(status,
         super.error(
-          apiNumber = apiNumber,
-          apiDesc = apiDesc,
           correlationId = correlationId,
           status = status,
           reason = message
         )
       ))
 
-    private def responseError(status: Int, e: Error, correlationId: String) =
+    private def responseError(status: Int, error: Error, correlationId: String) =
       Left(ErrorModel(status,
         super.error(
-          apiNumber = apiNumber,
-          apiDesc = apiDesc,
           correlationId = correlationId,
           status = status,
-          code = e.code,
-          reason = e.text
+          maybeCode = Some(error.code),
+          reason = error.text
         )
       ))
+
   }
 
   case class SignUpParserException(error: String, status: Int) extends InternalServerException(s"[SignUpParserException] - $error - $status")
+
   private val CustomerAlreadySignedUpEnum: String = "820"
 
-  case class Error(
-    processingDate: String,
-    code: String,
-    text: String
-  )
+  case class Error(processingDate: String,
+                   code: String,
+                   text: String)
 
   object Error {
     implicit val reads: Reads[Error] = Json.reads[Error]
   }
+
 }
