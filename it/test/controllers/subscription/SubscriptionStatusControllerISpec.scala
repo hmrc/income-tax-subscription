@@ -52,7 +52,7 @@ class SubscriptionStatusControllerISpec extends ComponentSpecBase with FeatureSw
 
       res should have(
         httpStatus(OK),
-        jsonBodyAs[FESuccessResponse](FESuccessResponse(Some(testMtditId)))
+        jsonBodyAs[FESuccessResponse](FESuccessResponse(Some(testMtditId), None))
       )
 
       ITSABusinessDetailsStub.verifyGetITSABusinessDetails()

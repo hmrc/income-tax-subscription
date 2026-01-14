@@ -29,21 +29,38 @@ class ITSABusinessDetailsParserSpec extends CommonSpec {
 
   val testCorrelationId: String = UUID.randomUUID().toString
 
-  val validJson: JsValue = Json.parse(
+  val validJsonWithChannel: JsValue = Json.parse(
+    """
+      |{
+      |   "success": {
+      |     "taxPayerDisplayResponse" : {
+      |       "mtdId": "XNIT00000068707",
+      |       "channel": "1"
+      |     }
+      |   }
+      |}
+    """.stripMargin)
+
+  val validJsonNoChannel: JsValue = Json.parse(
     """
       |{
       |   "success": {
       |     "taxPayerDisplayResponse" : {
       |       "mtdId": "XNIT00000068707"
-      |       }
       |     }
+      |   }
       |}
-          """.stripMargin)
+    """.stripMargin)
 
   "GetITSABusinessDetailsParser" should {
-    "return AlreadySignedUp when valid mtdId is present" in {
-      val response = HttpResponse(OK, validJson, Map.empty)
-      GetITSABusinessDetailsResponseHttpReads.httpReads(testCorrelationId).read("", "", response) shouldBe Right(AlreadySignedUp("XNIT00000068707"))
+    "return AlreadySignedUp when valid mtdId and channel are present" in {
+      val response = HttpResponse(OK, validJsonWithChannel, Map.empty)
+      GetITSABusinessDetailsResponseHttpReads.httpReads(testCorrelationId).read("", "", response) shouldBe Right(AlreadySignedUp("XNIT00000068707", Some("1")))
+    }
+
+    "return AlreadySignedUp when valid mtdId only is present" in {
+      val response = HttpResponse(OK, validJsonNoChannel, Map.empty)
+      GetITSABusinessDetailsResponseHttpReads.httpReads(testCorrelationId).read("", "", response) shouldBe Right(AlreadySignedUp("XNIT00000068707", None))
     }
   }
 

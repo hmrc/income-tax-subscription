@@ -26,11 +26,27 @@ object GetITSABusinessDetailsParser {
 
   sealed trait GetITSABusinessDetailsResponse
 
-  case class AlreadySignedUp(mtdId: String) extends GetITSABusinessDetailsResponse
+  case class AlreadySignedUp(
+    mtdId: String,
+    channel: Option[String]
+  ) extends GetITSABusinessDetailsResponse
 
   object AlreadySignedUp {
     implicit val reads: Reads[AlreadySignedUp] = Reads[AlreadySignedUp](json =>
-      (json \ "success" \ "taxPayerDisplayResponse" \ "mtdId").validate[String].map(AlreadySignedUp.apply)
+      val mtdId = (json \ "success" \ "taxPayerDisplayResponse" \ "mtdId").validate[String]
+      val channel = (json \ "success" \ "taxPayerDisplayResponse" \ "channel").validate[String]
+      mtdId match {
+        case JsSuccess(mtdId, _) =>
+          JsSuccess(AlreadySignedUp(
+            mtdId,
+            channel match {
+              case JsSuccess(channel, _) => Some(channel)
+              case JsError(_) => None
+            }
+          ))
+        case JsError(errors) =>
+          JsError(errors)
+      }
     )
   }
 

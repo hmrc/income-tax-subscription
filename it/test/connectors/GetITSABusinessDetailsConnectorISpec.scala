@@ -62,7 +62,7 @@ class GetITSABusinessDetailsConnectorISpec extends ComponentSpecBase with Featur
 
       val result = getITSABusinessConnector.getHIPBusinessDetails(testNino).futureValue
 
-      result shouldBe Right(AlreadySignedUp(testMtditId))
+      result shouldBe Right(AlreadySignedUp(testMtditId, None))
     }
 
     "return NotSignedUp when response is UNPROCESSABLE_ENTITY and code 006" in {

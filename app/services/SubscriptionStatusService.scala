@@ -42,7 +42,7 @@ class SubscriptionStatusService @Inject()(val appConfig: AppConfig,
   def checkMtditsaSubscription(nino: String)
                               (implicit hc: HeaderCarrier, ec: ExecutionContext, request: Request[_]): Future[Either[ErrorModel, Option[FESuccessResponse]]] = {
       itsaBusinessDetailsConnector.getHIPBusinessDetails(nino).map {
-        case Right(GetITSABusinessDetailsParser.AlreadySignedUp(mtdId)) => Right(Some(FESuccessResponse(Some(mtdId))))
+        case Right(GetITSABusinessDetailsParser.AlreadySignedUp(mtdId, channel)) => Right(Some(FESuccessResponse(Some(mtdId), channel)))
         case Right(GetITSABusinessDetailsParser.NotSignedUp) => Right(None)
         case Left(error) => Left(error)
       }

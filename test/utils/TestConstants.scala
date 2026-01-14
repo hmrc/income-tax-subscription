@@ -80,7 +80,7 @@ object TestConstants extends JsonUtils {
 
   val hmrcAsAgent = Constants.hmrcAsAgent
 
-  val feSuccessResponse = FESuccessResponse(Some(testMtditId))
+  val feSuccessResponse = FESuccessResponse(Some(testMtditId), None)
 
   val testStartDate = LocalDate.now()
 
