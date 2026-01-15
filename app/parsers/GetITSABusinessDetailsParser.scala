@@ -50,6 +50,7 @@ object GetITSABusinessDetailsParser {
     )
   }
 
+
   case object NotSignedUp extends GetITSABusinessDetailsResponse
 
   object GetITSABusinessDetailsResponseHttpReads extends Parser[Either[ErrorModel, GetITSABusinessDetailsResponse]] {
