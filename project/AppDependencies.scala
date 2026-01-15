@@ -20,7 +20,7 @@ import play.sbt.PlayImport.*
 object AppDependencies {
 
   private val domainVersion = "11.0.0"
-  private val hmrcMongoVersion = "2.30.0"
+  private val hmrcMongoVersion = "2.11.0"
   private val bootstrapBackendVersion = "10.5.0"
 
   val compile: Seq[ModuleID] = Seq(
