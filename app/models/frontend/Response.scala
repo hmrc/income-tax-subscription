@@ -23,7 +23,7 @@ sealed trait FEResponse
 
 case class FESuccessResponse(
   mtditId: Option[String],
-  channel: Option[String],
+  channel: Option[String]
 ) extends FEResponse
 
 case class FEFailureResponse(reason: String) extends FEResponse
