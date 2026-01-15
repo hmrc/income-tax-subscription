@@ -32,7 +32,7 @@ object GetITSABusinessDetailsParser {
   ) extends GetITSABusinessDetailsResponse
 
   object AlreadySignedUp {
-    implicit val reads: Reads[AlreadySignedUp] = Reads[AlreadySignedUp](json =>
+    implicit val reads: Reads[AlreadySignedUp] = Reads[AlreadySignedUp] { json =>
       val mtdId = (json \ "success" \ "taxPayerDisplayResponse" \ "mtdId").validate[String]
       val channel = (json \ "success" \ "taxPayerDisplayResponse" \ "channel").validate[String]
       mtdId match {
@@ -47,7 +47,7 @@ object GetITSABusinessDetailsParser {
         case JsError(errors) =>
           JsError(errors)
       }
-    )
+    }
   }
 
   case object NotSignedUp extends GetITSABusinessDetailsResponse
