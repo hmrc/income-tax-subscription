@@ -22,7 +22,6 @@ import parsers.ItsaStatusParser.*
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.client.HttpClientV2
 
-import java.util.UUID
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -31,8 +30,8 @@ class HipItsaStatusConnector @Inject()(val httpClient: HttpClientV2, val appConf
                                       (implicit val ec: ExecutionContext) extends BaseHIPConnector {
 
   def determineItsaStatus(nino: String,
-                    utr: String)(implicit hc: HeaderCarrier): Future[GetItsaStatusResponse] = {
-    super.get[GetItsaStatusResponse](
+                          utr: String)(implicit hc: HeaderCarrier): Future[DetermineItsaStatusResponse] = {
+    super.get[DetermineItsaStatusResponse](
       uri = getItsaStatusUrl(nino, utr),
       parser = ItsaStatusResponseHttpReads
     )
@@ -41,4 +40,5 @@ class HipItsaStatusConnector @Inject()(val httpClient: HttpClientV2, val appConf
   private def getItsaStatusUrl(nino: String, utr: String) = {
     s"/itsd/itsa-status/signup/$nino/$utr/${AccountingPeriodUtil.getCurrentTaxYear.toItsaStatusShortTaxYear}"
   }
+
 }

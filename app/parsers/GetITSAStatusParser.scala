@@ -16,25 +16,60 @@
 
 package parsers
 
-import models.status.ITSAStatus
+import models.ErrorModel
+import models.status.GetITSAStatus
+import parsers.hip.Parser
 import play.api.http.Status.OK
 import play.api.libs.json.*
-import uk.gov.hmrc.http.{HttpReads, HttpResponse, InternalServerException}
+import uk.gov.hmrc.http.{HttpReads, HttpResponse}
 
 object GetITSAStatusParser {
-  implicit val getITSAStatusResponseHttpReads: HttpReads[Seq[GetITSAStatusTaxYearResponse]] =
-    (_: String, _: String, response: HttpResponse) => {
-      response.status match {
-        case OK => response.json.validate[Seq[GetITSAStatusTaxYearResponse]] match {
-          case JsSuccess(value, _) =>
-            value
-          case JsError(errors) =>
-            throw new InternalServerException(s"[GetITSAStatusParser] - Failure parsing json. Errors: $errors")
+
+  type GetItsaStatusResponse = Either[ErrorModel, Seq[GetITSAStatusTaxYearResponse]]
+
+  object GetItsaStatusResponseHttpReads extends Parser[GetItsaStatusResponse] {
+
+    override val apiNumber: Int = 5197
+    override val apiName: String = "Get ITSA Status"
+
+    override def httpReads(correlationId: String): HttpReads[GetItsaStatusResponse] = {
+      (_: String, _: String, response: HttpResponse) => {
+        response.status match {
+          case OK => handleOkResponse(response.json, correlationId)
+          case status => handleOtherResponse(status, correlationId)
         }
-        case status =>
-          throw new InternalServerException(s"[GetITSAStatusParser] - Unsupported status received: $status")
       }
     }
+
+    private def handleOkResponse(json: JsValue, correlationId: String) = {
+
+      json.validate[Seq[GetITSAStatusTaxYearResponse]] match {
+        case JsSuccess(value, _) =>
+          Right(value)
+        case JsError(errors) =>
+          Left(ErrorModel(
+            status = OK,
+            message = super.error(
+              correlationId = correlationId,
+              status = OK,
+              reason = "Failure parsing json response"
+            )
+          ))
+      }
+    }
+
+    private def handleOtherResponse(status: Int, correlationId: String) = {
+      Left(ErrorModel(
+        status = status,
+        message = super.error(
+          correlationId = correlationId,
+          status = status,
+          reason = "Unexpected status returned"
+        )
+      ))
+    }
+  }
+
 
   case class GetITSAStatusTaxYearResponse(taxYear: String, itsaStatusDetails: Seq[ITSAStatusDetail])
 
@@ -42,7 +77,7 @@ object GetITSAStatusParser {
     implicit val format: OFormat[GetITSAStatusTaxYearResponse] = Json.format[GetITSAStatusTaxYearResponse]
   }
 
-  case class ITSAStatusDetail(status: ITSAStatus)
+  case class ITSAStatusDetail(status: GetITSAStatus)
 
   object ITSAStatusDetail {
     implicit val format: OFormat[ITSAStatusDetail] = Json.format[ITSAStatusDetail]

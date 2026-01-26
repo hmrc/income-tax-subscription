@@ -29,3 +29,4 @@ GET         /pre-pop/:nino                              controllers.PrePopContro
 POST        /throttled                                  controllers.throttle.ThrottlingController.throttled(throttleId: String)
 
 POST        /itsa-status                                controllers.MandationStatusController.mandationStatus
+POST        /get-itsa-status                            controllers.GetITSAStatusController.getITSAStatus

@@ -45,7 +45,11 @@ object GetITSAStatusStub extends WireMockMethods {
     ).thenReturn(status, body)
   }
 
-}
+  def getITSAStatusStub(nino: String)(status: Int, body: JsValue): StubMapping = {
+    when(
+      method = GET,
+      uri = s"/itsd/person-itd/itsa-status/$nino\\?taxYear=${AccountingPeriodUtil.getCurrentTaxYear.toShortTaxYear}"
+    ).thenReturn(status, body)
+  }
 
-// /itsa-status/signup/AA000000A/1234567890/25-26
-// /itsa-status/signup/AA000000A/1234567890/25-26
+}

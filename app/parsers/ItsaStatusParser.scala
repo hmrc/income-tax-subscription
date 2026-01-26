@@ -25,13 +25,13 @@ import uk.gov.hmrc.http.{HttpReads, HttpResponse}
 
 object ItsaStatusParser {
 
-  type GetItsaStatusResponse = Either[ErrorModel, ItsaStatusResponse]
+  type DetermineItsaStatusResponse = Either[ErrorModel, ItsaStatusResponse]
 
-  object ItsaStatusResponseHttpReads extends Parser[GetItsaStatusResponse] {
+  object ItsaStatusResponseHttpReads extends Parser[DetermineItsaStatusResponse] {
     val apiNumber: Int = 5197
     val apiName: String = "Determine ITSA Status for Sign Up"
 
-    override def httpReads(correlationId: String): HttpReads[GetItsaStatusResponse] = {
+    override def httpReads(correlationId: String): HttpReads[DetermineItsaStatusResponse] = {
       (_: String, _: String, response: HttpResponse) => {
         response.status match {
           case OK => handleOkResponse(response.json, correlationId)

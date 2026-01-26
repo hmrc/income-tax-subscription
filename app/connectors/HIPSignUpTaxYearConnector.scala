@@ -22,12 +22,11 @@ import connectors.hip.BaseHIPConnector
 import models.SignUpRequest
 import org.apache.pekko.actor.ActorSystem
 import parsers.SignUpParser.*
-import play.api.http.Status.{FORBIDDEN, OK}
+import play.api.http.Status.FORBIDDEN
 import play.api.libs.json.{JsObject, Json}
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.{HeaderCarrier, Retries}
 
-import java.util.UUID
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
