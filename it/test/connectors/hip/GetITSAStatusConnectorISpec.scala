@@ -19,72 +19,75 @@ package connectors.hip
 import helpers.ComponentSpecBase
 import helpers.servicemocks.hip.GetITSAStatusStub
 import models.ErrorModel
-import models.status.ITSAStatus.{MTDMandated, MTDVoluntary}
+import models.status.GetITSAStatus
 import models.subscription.AccountingPeriodUtil
 import parsers.GetITSAStatusParser.{GetITSAStatusTaxYearResponse, ITSAStatusDetail}
 import play.api.http.Status.{INTERNAL_SERVER_ERROR, OK}
-import play.api.libs.json.Json
+import play.api.libs.json.{JsObject, JsValue, Json}
 
 class GetITSAStatusConnectorISpec extends ComponentSpecBase {
 
   private lazy val connector: GetITSAStatusConnector = app.injector.instanceOf[GetITSAStatusConnector]
 
-  val testUtr: String = "1234567890"
+  val testNino: String = "test-nino"
 
   val currentTaxYear: String = AccountingPeriodUtil.getCurrentTaxYear.toItsaStatusShortTaxYear
-  val nextTaxYear: String = AccountingPeriodUtil.getNextTaxYear.toItsaStatusShortTaxYear
+
+  def taxYearResponseJson(status: String): JsValue = Json.obj(
+    "taxYear" -> currentTaxYear,
+    "itsaStatusDetails" -> Json.arr(
+      Json.obj(
+        "status" -> status
+      )
+    )
+  )
+
+  def taxYearResponse(status: GetITSAStatus): GetITSAStatusTaxYearResponse = {
+    GetITSAStatusTaxYearResponse(
+      taxYear = currentTaxYear,
+      itsaStatusDetails = Seq(
+        ITSAStatusDetail(status)
+      )
+    )
+  }
 
   "getItsaStatus" when {
     "a successful response is returned with valid json" should {
       "return the parsed sequence of tax year status responses" in {
-        GetITSAStatusStub.stub(testUtr)(
+        GetITSAStatusStub.getITSAStatusStub(testNino)(
           status = OK,
           body = Json.arr(
-            Json.obj(
-              "taxYear" -> currentTaxYear,
-              "itsaStatusDetails" -> Json.arr(
-                Json.obj(
-                  "status" -> "02"
-                )
-              )
-            ),
-            Json.obj(
-              "taxYear" -> nextTaxYear,
-              "itsaStatusDetails" -> Json.arr(
-                Json.obj(
-                  "status" -> "01"
-                )
-              )
-            )
+            taxYearResponseJson("00"),
+            taxYearResponseJson("01"),
+            taxYearResponseJson("02"),
+            taxYearResponseJson("03"),
+            taxYearResponseJson("04"),
+            taxYearResponseJson("05"),
+            taxYearResponseJson("99")
           )
         )
 
-        val result = connector.getItsaStatus(testUtr)
+        val result = connector.getItsaStatus(testNino)
 
         result.futureValue shouldBe Right(Seq(
-          GetITSAStatusTaxYearResponse(
-            taxYear = currentTaxYear,
-            itsaStatusDetails = Seq(
-              ITSAStatusDetail(MTDVoluntary)
-            )
-          ),
-          GetITSAStatusTaxYearResponse(
-            taxYear = nextTaxYear,
-            itsaStatusDetails = Seq(
-              ITSAStatusDetail(MTDMandated)
-            )
-          )
+          taxYearResponse(GetITSAStatus.NoStatus),
+          taxYearResponse(GetITSAStatus.MTDMandated),
+          taxYearResponse(GetITSAStatus.MTDVoluntary),
+          taxYearResponse(GetITSAStatus.Annual),
+          taxYearResponse(GetITSAStatus.DigitallyExempt),
+          taxYearResponse(GetITSAStatus.Dormant),
+          taxYearResponse(GetITSAStatus.MTDExempt)
         ))
       }
     }
     "a successful response is returned with invalid json" should {
       "throw an exception with the error details" in {
-        GetITSAStatusStub.stub(testUtr)(
+        GetITSAStatusStub.getITSAStatusStub(testNino)(
           status = OK,
           body = Json.obj()
         )
 
-        val result = connector.getItsaStatus(testUtr)
+        val result = connector.getItsaStatus(testNino)
 
         result.futureValue shouldBe
           Left(ErrorModel(OK, "API #5197: Get ITSA Status, Status: 200, Message: Failure parsing json response"))
@@ -92,12 +95,12 @@ class GetITSAStatusConnectorISpec extends ComponentSpecBase {
     }
     "an unexpected status is returned" should {
       "throw an exception with the status received" in {
-        GetITSAStatusStub.stub(testUtr)(
+        GetITSAStatusStub.getITSAStatusStub(testNino)(
           status = INTERNAL_SERVER_ERROR,
           body = Json.obj()
         )
 
-        val result = connector.getItsaStatus(testUtr)
+        val result = connector.getItsaStatus(testNino)
 
         result.futureValue shouldBe
           Left(ErrorModel(INTERNAL_SERVER_ERROR, "API #5197: Get ITSA Status, Status: 500, Message: Unexpected status returned"))

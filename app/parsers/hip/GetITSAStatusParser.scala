@@ -43,7 +43,8 @@ object GetITSAStatusParser extends Logging {
     private def handleOkResponse(json: JsValue, correlationId: String) = {
       json.validate[Seq[GetITSAStatusTaxYearResponse]] match {
         case JsSuccess(value, _) => Right(value)
-        case JsError(_) => Left(ErrorModel(OK,
+        case JsError(error) =>
+          Left(ErrorModel(OK,
           super.error(
             correlationId = correlationId,
             status = OK,

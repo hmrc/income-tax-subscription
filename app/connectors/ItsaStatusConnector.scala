@@ -30,7 +30,7 @@ import scala.concurrent.{ExecutionContext, Future}
 class ItsaStatusConnector @Inject()(httpClient: HttpClientV2,
                                     appConfig: AppConfig)(implicit ec: ExecutionContext) {
   def getItsaStatus(nino: String, utr: String)
-                   (implicit hc: HeaderCarrier): Future[GetItsaStatusResponse] = {
+                   (implicit hc: HeaderCarrier): Future[DetermineItsaStatusResponse] = {
 
     val headerCarrier: HeaderCarrier = hc
       .copy(authorization = Some(Authorization(appConfig.statusDeterminationServiceAuthorisationToken)))
@@ -41,7 +41,7 @@ class ItsaStatusConnector @Inject()(httpClient: HttpClientV2,
       "Environment" -> appConfig.statusDeterminationServiceEnvironment
     )
 
-    implicit val httpReads: HttpReads[GetItsaStatusResponse] = ItsaStatusResponseHttpReads.httpReads(correlationId = UUID.randomUUID().toString)
+    implicit val httpReads: HttpReads[DetermineItsaStatusResponse] = ItsaStatusResponseHttpReads.httpReads(correlationId = UUID.randomUUID().toString)
 
     val call = httpClient.get(getItsaStatusUrl(nino, utr))(headerCarrier)
     headers.foldLeft(call)((a, b) => a.setHeader(b)).execute
