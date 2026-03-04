@@ -19,7 +19,7 @@ package parsers.hip
 import models.ErrorModel
 import models.hip.SelfEmpHolder
 import play.api.Logging
-import play.api.http.Status.{NOT_FOUND, OK, SERVICE_UNAVAILABLE}
+import play.api.http.Status.{BAD_GATEWAY, NOT_FOUND, OK, SERVICE_UNAVAILABLE}
 import play.api.libs.json.{JsError, JsSuccess, JsValue}
 import uk.gov.hmrc.http.{HttpReads, HttpResponse}
 
@@ -35,7 +35,7 @@ object HipPrePopParser extends Logging {
       (_: String, _: String, response: HttpResponse) => {
         response.status match {
           case OK => handleOkResponse(response.json, correlationId)
-          case NOT_FOUND | SERVICE_UNAVAILABLE => Right(SelfEmpHolder(None))
+          case NOT_FOUND | SERVICE_UNAVAILABLE | BAD_GATEWAY => Right(SelfEmpHolder(None))
           case status => handleOtherResponse(status, correlationId)
         }
       }
