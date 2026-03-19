@@ -43,14 +43,15 @@ object CreateIncomeSourcesModel {
   }
 
   private def addressDetailsJson(businessAddressModel: BusinessAddressModel): JsObject = {
+    val address = businessAddressModel.address
     Json.obj(
-      "addressLine1" -> businessAddressModel.address.lines.headOption.getOrElse(throwError("addressLine1")),
-      "countryCode" -> "GB"
+      "addressLine1" -> address.lines.headOption.getOrElse(throwError("addressLine1")),
+      "countryCode" -> address.country.map(_.code).getOrElse("GB")
     ) ++
-      businessAddressModel.address.postcode.map(value => Json.obj("postcode" -> value)) ++
-      businessAddressModel.address.lines.lift(1).map(value => Json.obj("addressLine2" -> value)) ++
-      businessAddressModel.address.lines.lift(2).map(value => Json.obj("addressLine3" -> value)) ++
-      businessAddressModel.address.lines.lift(3).map(value => Json.obj("addressLine4" -> value))
+      address.postcode.map(value => Json.obj("postcode" -> value)) ++
+      address.lines.lift(1).map(value => Json.obj("addressLine2" -> value)) ++
+      address.lines.lift(2).map(value => Json.obj("addressLine3" -> value)) ++
+      address.lines.lift(3).map(value => Json.obj("addressLine4" -> value))
   }
 
   private def businessDetailsJson(soleTraderBusinesses: SoleTraderBusinesses): JsObject = {

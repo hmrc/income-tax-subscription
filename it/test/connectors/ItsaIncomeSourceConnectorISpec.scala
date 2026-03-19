@@ -20,6 +20,7 @@ import helpers.IntegrationTestConstants.{testArn, testCreateIncomeFailureBody, t
 import helpers.WiremockHelper.StubResponse
 import helpers.servicemocks.{AuditStub, CreateIncomeSourceStub}
 import helpers.{ComponentSpecBase, WiremockHelper}
+import models.DateModel
 import models.subscription.*
 import models.subscription.business.{CreateIncomeSourceErrorModel, CreateIncomeSourceSuccessModel}
 import play.api.http.Status.{CREATED, FORBIDDEN, INTERNAL_SERVER_ERROR, UNPROCESSABLE_ENTITY}
@@ -38,6 +39,36 @@ class ItsaIncomeSourceConnectorISpec extends ComponentSpecBase {
   )
 
   "createIncomeSources" must {
+    "submit the country code if specified and GB if not" in {
+      Map(
+        None       -> "GB",
+        Some("FR") -> "FR"
+      ).foreach { entry =>
+        val country = entry._1.map(Country(_, ""))
+        val date = DateModel("1", "1", "2001")
+        val data = CreateIncomeSourcesModel(
+          nino = "",
+          soleTraderBusinesses = Some(SoleTraderBusinesses(
+            AccountingPeriodModel(date, date),
+            Seq(SelfEmploymentData(
+              id = "",
+              businessName = Some(BusinessNameModel("")),
+              businessTradeName = Some(BusinessTradeNameModel("")),
+              startDateBeforeLimit = true,
+              businessStartDate = Some(BusinessStartDate(date)),
+              businessAddress = Some(BusinessAddressModel(Address(
+                lines = Seq(""),
+                postcode = None,
+                country = country
+              )))
+            ))
+          ))
+        )
+        val json = Json.toJson(data)(CreateIncomeSourcesModel.hipWrites("")).toString.replace(" ", "")
+        json.contains(s"""countryCode":"${entry._2}""") shouldBe true
+      }
+    }
+
     s"return a successful response when receiving a $CREATED response" in {
 
       CreateIncomeSourceStub.stubItsaIncomeSource(
@@ -76,7 +107,7 @@ class ItsaIncomeSourceConnectorISpec extends ComponentSpecBase {
       AuditStub.verifyAudit()
     }
 
-    s"retuern a failure response" when {
+    s"return a failure response" when {
       s"receiving a $UNPROCESSABLE_ENTITY status response" which {
         "has a valid error json" in {
           CreateIncomeSourceStub.stubItsaIncomeSource(

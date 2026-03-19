@@ -17,7 +17,7 @@
 package models.subscription
 
 import models.DateModel
-import play.api.libs.json._
+import play.api.libs.json.*
 
 case class AccountingPeriodModel(startDate: DateModel, endDate: DateModel) {
   lazy val taxEndYear: Int = AccountingPeriodUtil.getTaxEndYear(this)
@@ -48,8 +48,8 @@ object BusinessTradeNameModel {
   implicit val format: OFormat[BusinessTradeNameModel] = Json.format[BusinessTradeNameModel]
 }
 
-case class Address(lines: Seq[String], postcode: Option[String]) {
-  override def toString: String = s"${lines.mkString(", ")}, $postcode"
+case class Address(lines: Seq[String], postcode: Option[String], country: Option[Country] = None) {
+  override def toString: String = s"${lines.mkString(", ")}, $postcode, ${country.map(_.name)}"
 }
 
 case class BusinessAddressModel(address: Address)
@@ -73,4 +73,9 @@ object SelfEmploymentData {
   implicit val format: Format[SelfEmploymentData] = Json.format[SelfEmploymentData]
 }
 
+case class Country(code: String, name: String)
+
+object Country {
+  implicit val format: OFormat[Country] = Json.format[Country]
+}
 
