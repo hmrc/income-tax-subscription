@@ -18,8 +18,6 @@ package models.subscription
 
 import models.DateModel
 import play.api.libs.json.*
-import uk.gov.hmrc.crypto.Sensitive.SensitiveString
-import uk.gov.hmrc.crypto.{Decrypter, Encrypter}
 
 case class AccountingPeriodModel(startDate: DateModel, endDate: DateModel) {
   lazy val taxEndYear: Int = AccountingPeriodUtil.getTaxEndYear(this)
