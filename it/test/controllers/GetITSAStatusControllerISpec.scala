@@ -21,7 +21,7 @@ import helpers.servicemocks.AuthStub
 import helpers.servicemocks.hip.GetITSAStatusStub
 import models.status.GetITSAStatusRequest
 import models.subscription.{AccountingPeriodModel, AccountingPeriodUtil}
-import play.api.http.Status.{INTERNAL_SERVER_ERROR, OK, UNAUTHORIZED}
+import play.api.http.Status.{INTERNAL_SERVER_ERROR, NOT_FOUND, NO_CONTENT, OK, UNAUTHORIZED}
 import play.api.libs.json.Json
 
 class GetITSAStatusControllerISpec extends ComponentSpecBase {
@@ -97,6 +97,23 @@ class GetITSAStatusControllerISpec extends ComponentSpecBase {
           jsonBodyOf(Json.obj(
             "status" -> "No Status"
           ))
+        )
+      }
+    }
+    "return NO_STATUS" when {
+      "the api responds with a NOT_FOUND status" in {
+        AuthStub.stubAuthSuccess()
+        GetITSAStatusStub.getITSAStatusStub(testNino)(
+          status = NOT_FOUND,
+          body = Json.obj()
+        )
+
+        val result = IncomeTaxSubscription.getITSAStatus(
+          body = Json.toJson(GetITSAStatusRequest(testNino))
+        )
+
+        result should have(
+          httpStatus(NO_CONTENT)
         )
       }
     }
