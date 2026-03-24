@@ -22,7 +22,7 @@ import models.ErrorModel
 import models.status.GetITSAStatus
 import models.subscription.AccountingPeriodUtil
 import parsers.GetITSAStatusParser.{GetITSAStatusTaxYearResponse, ITSAStatusDetail}
-import play.api.http.Status.{INTERNAL_SERVER_ERROR, OK}
+import play.api.http.Status.{INTERNAL_SERVER_ERROR, NOT_FOUND, OK}
 import play.api.libs.json.{JsObject, JsValue, Json}
 
 class GetITSAStatusConnectorISpec extends ComponentSpecBase {
@@ -52,7 +52,7 @@ class GetITSAStatusConnectorISpec extends ComponentSpecBase {
   }
 
   "getItsaStatus" when {
-    "a successful response is returned with valid json" should {
+    "an OK response is returned with valid json" should {
       "return the parsed sequence of tax year status responses" in {
         GetITSAStatusStub.getITSAStatusStub(testNino)(
           status = OK,
@@ -69,7 +69,7 @@ class GetITSAStatusConnectorISpec extends ComponentSpecBase {
 
         val result = connector.getItsaStatus(testNino)
 
-        result.futureValue shouldBe Right(Seq(
+        result.futureValue shouldBe Right(Some(Seq(
           taxYearResponse(GetITSAStatus.NoStatus),
           taxYearResponse(GetITSAStatus.MTDMandated),
           taxYearResponse(GetITSAStatus.MTDVoluntary),
@@ -77,10 +77,10 @@ class GetITSAStatusConnectorISpec extends ComponentSpecBase {
           taxYearResponse(GetITSAStatus.DigitallyExempt),
           taxYearResponse(GetITSAStatus.Dormant),
           taxYearResponse(GetITSAStatus.MTDExempt)
-        ))
+        )))
       }
     }
-    "a successful response is returned with invalid json" should {
+    "an OK response is returned with invalid json" should {
       "throw an exception with the error details" in {
         GetITSAStatusStub.getITSAStatusStub(testNino)(
           status = OK,
@@ -91,6 +91,18 @@ class GetITSAStatusConnectorISpec extends ComponentSpecBase {
 
         result.futureValue shouldBe
           Left(ErrorModel(OK, "API #5197: Get ITSA Status, Status: 200, Message: Failure parsing json response"))
+      }
+    }
+    "a NOT FOUND response is returned" should {
+      "return none" in {
+        GetITSAStatusStub.getITSAStatusStub(testNino)(
+          status = NOT_FOUND,
+          body = Json.obj()
+        )
+
+        val result = connector.getItsaStatus(testNino)
+
+        result.futureValue shouldBe Right(None)
       }
     }
     "an unexpected status is returned" should {

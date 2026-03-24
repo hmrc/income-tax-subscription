@@ -40,10 +40,14 @@ class GetITSAStatusController @Inject()(authService: AuthService,
     authService.authorised().retrieve(Retrievals.allEnrolments) { enrolments =>
       withJsonBody[GetITSAStatusRequest] { requestBody =>
         getITSAStatusConnector.getItsaStatus(requestBody.nino) map {
-          case Right(response) => response.headOption.flatMap(_.itsaStatusDetails.headOption) match {
-            case Some(value) => Ok(Json.toJson(value))
-            case None => InternalServerError("Unable to get ITSA status for tax year")
-          }
+          case Right(response) =>
+            response match {
+              case Some(statuses) => statuses.headOption.flatMap(_.itsaStatusDetails.headOption) match {
+                case Some(value) => Ok(Json.toJson(value))
+                case None => InternalServerError("Unable to get ITSA status for tax year")
+              }
+              case None => NoContent
+            }
           case Left(_) => InternalServerError("Unexpected error received")
         }
       }

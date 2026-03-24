@@ -19,13 +19,13 @@ package parsers.hip
 import models.ErrorModel
 import parsers.GetITSAStatusParser.GetITSAStatusTaxYearResponse
 import play.api.Logging
-import play.api.http.Status.OK
+import play.api.http.Status.{NOT_FOUND, OK}
 import play.api.libs.json.{JsError, JsSuccess, JsValue}
 import uk.gov.hmrc.http.{HttpReads, HttpResponse}
 
 object GetITSAStatusParser extends Logging {
 
-  type GetITSAStatusResponse = Either[ErrorModel, Seq[GetITSAStatusTaxYearResponse]]
+  type GetITSAStatusResponse = Either[ErrorModel, Option[Seq[GetITSAStatusTaxYearResponse]]]
 
   object GetITSAStatusHttpReads extends Parser[GetITSAStatusResponse] {
     val apiNumber = 5197
@@ -35,6 +35,7 @@ object GetITSAStatusParser extends Logging {
       (_: String, _: String, response: HttpResponse) => {
         response.status match {
           case OK => handleOkResponse(response.json, correlationId)
+          case NOT_FOUND => handleNotFoundResponse()
           case status => handleOtherResponse(status, correlationId)
         }
       }
@@ -42,7 +43,7 @@ object GetITSAStatusParser extends Logging {
 
     private def handleOkResponse(json: JsValue, correlationId: String) = {
       json.validate[Seq[GetITSAStatusTaxYearResponse]] match {
-        case JsSuccess(value, _) => Right(value)
+        case JsSuccess(value, _) => Right(Some(value))
         case JsError(error) =>
           Left(ErrorModel(OK,
           super.error(
@@ -52,6 +53,10 @@ object GetITSAStatusParser extends Logging {
           )
         ))
       }
+    }
+    
+    private def handleNotFoundResponse() = {
+      Right(None)
     }
 
     private def handleOtherResponse(status: Int, correlationId: String) = {
