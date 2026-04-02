@@ -69,7 +69,15 @@ class SignUpController @Inject()(authService: AuthService,
         UnprocessableEntity("Customer already signed up")
       case Left(error) =>
         auditService.audit(RegistrationFailureAudit(signUpRequest.nino, error.status, error.reason))
-        InternalServerError("Failed Sign up")
+        (error.status, error.code) match {
+          case (UNPROCESSABLE_ENTITY, Some(code)) =>
+            UnprocessableEntity(Json.obj(
+              "code" -> code,
+              "reason" -> error.reason
+            ))
+          case _ =>
+            InternalServerError("Failed Sign up")
+        }
     }
   }
 

@@ -87,7 +87,7 @@ object SignUpParser {
       ))
 
     private def responseError(status: Int, error: Error, correlationId: String) =
-      Left(ErrorModel(status,
+      Left(ErrorModel(status, error.code,
         super.error(
           correlationId = correlationId,
           status = status,
