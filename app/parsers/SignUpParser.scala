@@ -51,11 +51,10 @@ object SignUpParser {
 
     private def handleUnprocessableEntity(json: JsValue, correlationId: String) = {
       (json \ "errors").validate[Error] match {
-        case JsSuccess(error, _) => error.code match {
-          case CustomerAlreadySignedUpEnum => Right(SignUpResponse.AlreadySignedUp)
-          case _ => responseError(UNPROCESSABLE_ENTITY, error, correlationId)
-        }
-        case _ => jsonError(UNPROCESSABLE_ENTITY, correlationId)
+        case JsSuccess(error, _) =>
+          responseError(UNPROCESSABLE_ENTITY, error, correlationId)
+        case _ =>
+          jsonError(UNPROCESSABLE_ENTITY, correlationId)
       }
     }
 

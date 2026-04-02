@@ -24,8 +24,6 @@ object SignUpResponse {
 
   case class SignUpSuccess(mtdbsa: String) extends SignUpResponse
 
-  case object AlreadySignedUp extends SignUpResponse
-
   implicit val format: OFormat[SignUpSuccess] = Json.format[SignUpSuccess]
 
 }

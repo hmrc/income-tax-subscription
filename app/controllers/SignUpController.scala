@@ -21,7 +21,7 @@ import common.Extractors
 import config.AppConfig
 import connectors.HIPSignUpTaxYearConnector
 import models.SignUpRequest
-import models.SignUpResponse.{AlreadySignedUp, SignUpSuccess}
+import models.SignUpResponse.SignUpSuccess
 import models.monitoring.{RegistrationFailureAudit, RegistrationSuccessAudit}
 import play.api.Logger
 import play.api.libs.json.{JsValue, Json}
@@ -64,9 +64,6 @@ class SignUpController @Inject()(authService: AuthService,
           agentReferenceNumber, signUpRequest.nino, response.mtdbsa, appConfig.getHipAuthToken, path
         ))
         Ok(Json.toJson(response))
-      case Right(AlreadySignedUp) =>
-        logger.warn(s"[SignUpController][signUp] - sign up returned customer already signed up")
-        UnprocessableEntity("Customer already signed up")
       case Left(error) =>
         auditService.audit(RegistrationFailureAudit(signUpRequest.nino, error.status, error.reason))
         (error.status, error.code) match {
