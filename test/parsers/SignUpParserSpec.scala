@@ -18,7 +18,7 @@ package parsers
 
 import common.CommonSpec
 import models.ErrorModel
-import models.SignUpResponse.{AlreadySignedUp, SignUpSuccess}
+import models.SignUpResponse.SignUpSuccess
 import play.api.http.Status.*
 import play.api.libs.json.Json
 import uk.gov.hmrc.http.HttpResponse
@@ -69,7 +69,11 @@ class SignUpParserSpec extends CommonSpec {
           ).toString()
         )
 
-        SignUpParser.HIPSignUpResponseParser.httpReads(correlationId).read("", "", response) shouldBe Right(AlreadySignedUp)
+        SignUpParser.HIPSignUpResponseParser.httpReads(correlationId).read("", "", response) shouldBe Left(ErrorModel(
+          status = UNPROCESSABLE_ENTITY,
+          code = Some("820"),
+          reason = "API #5317: ITSA Sign Up, Status: 422, Code: 820, Reason: CUSTOMER ALREADY SIGNED UP"
+        ))
       }
 
       "return a sign up failure when the response hs not got a customer already signed up code" in {
@@ -81,7 +85,7 @@ class SignUpParserSpec extends CommonSpec {
         )
 
         SignUpParser.HIPSignUpResponseParser.httpReads(correlationId).read("", "", response) shouldBe
-          Left(ErrorModel(UNPROCESSABLE_ENTITY, s"API #5317: ITSA Sign Up, Status: 422, Code: 002, Reason: ID not found"))
+          Left(ErrorModel(UNPROCESSABLE_ENTITY, Some("002"), "API #5317: ITSA Sign Up, Status: 422, Code: 002, Reason: ID not found"))
       }
 
       "return a sign up failure when the response json has no code" in {

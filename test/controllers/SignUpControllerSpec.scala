@@ -100,12 +100,19 @@ class SignUpControllerSpec extends CommonSpec
         val fakeRequest = FakeRequest().withBody(Json.toJson(testTaxYearSignUpSubmission(testNino, testUtr, testTaxYear)))
 
         mockRetrievalSuccess(Enrolments(Set()))
-        hipSignUpTaxYear(testSignUpRequest)(Future.successful(Right(SignUpResponse.AlreadySignedUp)))
+        hipSignUpTaxYear(testSignUpRequest)(Future.successful(Left(ErrorModel(
+          status = UNPROCESSABLE_ENTITY,
+          code = Some("820"),
+          reason = "API #5317: ITSA Sign Up, Status: 422, Code: 820, Reason: CUSTOMER ALREADY SIGNED UP"
+        ))))
 
         val result: Future[Result] = TestController.signUp(fakeRequest)
 
         status(result) shouldBe UNPROCESSABLE_ENTITY
-        contentAsString(result) shouldBe "Customer already signed up"
+        contentAsJson(result) shouldBe Json.obj(
+          "code" -> "820",
+          "reason" -> "API #5317: ITSA Sign Up, Status: 422, Code: 820, Reason: CUSTOMER ALREADY SIGNED UP"
+        )
       }
     }
     "return InternalServerError" when {
