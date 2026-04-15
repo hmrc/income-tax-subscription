@@ -19,7 +19,7 @@ package connectors
 import com.typesafe.config.Config
 import config.AppConfig
 import connectors.hip.BaseHIPConnector
-import models.monitoring.CompletedSignUpAudit
+import models.monitoring.SignUpAudit
 import models.subscription.CreateIncomeSourcesModel
 import org.apache.pekko.actor.ActorSystem
 import parsers.ITSAIncomeSourceParser.*
@@ -47,6 +47,14 @@ class ItsaIncomeSourceConnector @Inject()(val httpClient: HttpClientV2,
                           mtdbsaRef: String,
                           createIncomeSources: CreateIncomeSourcesModel)
                          (implicit hc: HeaderCarrier, request: Request[_]): Future[PostITSAIncomeSourceResponse] = {
+    auditService.extendedAudit(SignUpAudit(agentReferenceNumber, createIncomeSources, appConfig.getHipAuthToken)) flatMap {
+      _ => updateETMP(mtdbsaRef, createIncomeSources)
+    }
+  }
+
+  private def updateETMP(mtdbsaRef: String,
+                         createIncomeSources: CreateIncomeSourcesModel)
+                        (implicit hc: HeaderCarrier): Future[PostITSAIncomeSourceResponse] = {
     retryFor("# API #5265 - ITSA Income Source") {
       case ITSAIncomeSourceForbiddenException(_) => true
       case _ => false
@@ -62,14 +70,7 @@ class ItsaIncomeSourceConnector @Inject()(val httpClient: HttpClientV2,
         body = body,
         parser = ITSAIncomeSourceResponseHttpReads,
         additionalHeaders = headers
-      ) flatMap {
-        case Left(error) =>
-          Future.successful(Left(error))
-        case Right(value) =>
-          auditService.extendedAudit(CompletedSignUpAudit(agentReferenceNumber, createIncomeSources, appConfig.getHipAuthToken)) map {
-            _ => Right(value)
-          }
-      }
+      )
     }
   }
 }

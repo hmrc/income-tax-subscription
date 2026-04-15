@@ -21,9 +21,9 @@ import play.api.libs.json.{JsArray, JsObject, JsValue, Json}
 import services.monitoring.ExtendedAuditModel
 import utils.JsonUtils.JsObjectUtil
 
-case class CompletedSignUpAudit(agentReferenceNumber: Option[String],
-                                createIncomeSourcesModel: CreateIncomeSourcesModel,
-                                urlHeaderAuthorization: String) extends ExtendedAuditModel {
+case class SignUpAudit(agentReferenceNumber: Option[String],
+                       createIncomeSourcesModel: CreateIncomeSourcesModel,
+                       urlHeaderAuthorization: String) extends ExtendedAuditModel {
 
   implicit class JsArrayUtil(jsArray: JsArray) {
     def ++(optJson: Option[JsObject]): JsArray = {

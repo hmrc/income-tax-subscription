@@ -124,6 +124,7 @@ class ItsaIncomeSourceConnectorISpec extends ComponentSpecBase {
             status = UNPROCESSABLE_ENTITY,
             reason = s"API #5265: Create income sources, Status: $UNPROCESSABLE_ENTITY, Code: 000, Reason: error text"
           ))
+          AuditStub.verifyAudit()
         }
         "has an invalid error json" in {
           CreateIncomeSourceStub.stubItsaIncomeSource(
@@ -140,6 +141,7 @@ class ItsaIncomeSourceConnectorISpec extends ComponentSpecBase {
             status = UNPROCESSABLE_ENTITY,
             reason = s"API #5265: Create income sources, Status: $UNPROCESSABLE_ENTITY, Message: Failure parsing json response"
           ))
+          AuditStub.verifyAudit()
         }
       }
     }
@@ -159,6 +161,7 @@ class ItsaIncomeSourceConnectorISpec extends ComponentSpecBase {
         status = INTERNAL_SERVER_ERROR,
         reason = s"API #5265: Create income sources, Status: $INTERNAL_SERVER_ERROR, Message: Unexpected status received"
       ))
+      AuditStub.verifyAudit()
     }
   }
 
