@@ -23,7 +23,7 @@ import play.api.libs.json.Json
 
 import java.time.LocalDate
 
-class CompletedSignUpAuditSpec extends CommonSpec with Matchers {
+class SignUpAuditSpec extends CommonSpec with Matchers {
   private val now: LocalDate = LocalDate.of(2021, 11, 26)
 
   private val testNino = "testNino"
@@ -204,7 +204,7 @@ class CompletedSignUpAuditSpec extends CommonSpec with Matchers {
 
   private def getCompletedSignUpAudit(testCreateIncomeSources: CreateIncomeSourcesModel = CreateIncomeSourcesModel(nino = testNino),
                                       agentReferenceNumber: Option[String] = None) = {
-    CompletedSignUpAudit(
+    SignUpAudit(
       agentReferenceNumber = agentReferenceNumber,
       createIncomeSourcesModel = testCreateIncomeSources,
       urlHeaderAuthorization = "test"
