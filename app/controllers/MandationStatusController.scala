@@ -18,8 +18,6 @@ package controllers
 
 import common.Extractors
 import config.AppConfig
-import config.featureswitch.{FeatureSwitching, UseHIPForItsaStatus}
-import connectors.ItsaStatusConnector
 import connectors.hip.HipItsaStatusConnector
 import models.monitoring.MandationStatusAuditModel
 import models.status.{ITSAStatus, MandationStatusRequest, MandationStatusResponse}
@@ -37,15 +35,13 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class MandationStatusController @Inject()(
-                                           authService: AuthService,
-                                           auditService: AuditService,
-                                           mandationStatusConnector: ItsaStatusConnector,
-                                           hipItsaStatusConnector: HipItsaStatusConnector,
-                                           cc: ControllerComponents,
-                                           val appConfig: AppConfig
+class MandationStatusController @Inject()(authService: AuthService,
+                                          auditService: AuditService,
+                                          hipItsaStatusConnector: HipItsaStatusConnector,
+                                          cc: ControllerComponents,
+                                          val appConfig: AppConfig
                                          )(implicit ec: ExecutionContext)
-  extends BackendController(cc) with Extractors with FeatureSwitching {
+  extends BackendController(cc) with Extractors {
 
   val logger: Logger = Logger(this.getClass)
 
@@ -53,7 +49,7 @@ class MandationStatusController @Inject()(
     authService.authorised().retrieve(Retrievals.allEnrolments) { enrolments =>
       withJsonBody[MandationStatusRequest] { requestBody =>
 
-        val statusResult: Future[(Option[ITSAStatus], Option[ITSAStatus])] = if (isEnabled(UseHIPForItsaStatus)) {
+        val statusResult: Future[(Option[ITSAStatus], Option[ITSAStatus])] =
           hipItsaStatusConnector.determineItsaStatus(requestBody.nino, requestBody.utr) map {
             case Right(response) =>
               val current = response.taxYearStatus.find(_.taxYear == AccountingPeriodUtil.getCurrentTaxYear.toItsaStatusShortTaxYear).map(_.status)
@@ -62,16 +58,6 @@ class MandationStatusController @Inject()(
             case Left(error) =>
               throw new InternalServerException(s"[MandationStatusController] - Failure response fetching mandation status. ${error.status}, ${error.reason}")
           }
-        } else {
-          mandationStatusConnector.getItsaStatus(requestBody.nino, requestBody.utr) map {
-            case Right(response) =>
-              val current = response.taxYearStatus.find(_.taxYear == AccountingPeriodUtil.getCurrentTaxYear.toItsaStatusShortTaxYear).map(_.status)
-              val next = response.taxYearStatus.find(_.taxYear == AccountingPeriodUtil.getNextTaxYear.toItsaStatusShortTaxYear).map(_.status)
-              (current, next)
-            case Left(error) =>
-              throw new InternalServerException(s"[MandationStatusController] - Failure response fetching mandation status. ${error.status}, ${error.reason}")
-          }
-        }
 
         statusResult flatMap {
           case (maybeCurrentYearStatus, maybeNextYearStatus) =>
