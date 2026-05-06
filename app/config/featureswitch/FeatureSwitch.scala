@@ -28,7 +28,6 @@ object FeatureSwitch {
   val prefix = "feature-switch"
 
   val switches: Set[FeatureSwitch] = Set(
-    UseHIPForItsaStatus
   )
 
   def apply(str: String): FeatureSwitch =
@@ -42,10 +41,5 @@ object FeatureSwitch {
       case Some(switch) => switch
       case None => throw new IllegalArgumentException("Invalid feature switch: " + setting.feature)
     }
-}
-
-object UseHIPForItsaStatus extends FeatureSwitch {
-  val displayName = "Use HIP Get ITSA Status API"
-  val name = s"$prefix.use-hip-for-itsa-status"
 }
 
