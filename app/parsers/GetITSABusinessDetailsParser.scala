@@ -27,9 +27,9 @@ object GetITSABusinessDetailsParser {
   sealed trait GetITSABusinessDetailsResponse
 
   case class AlreadySignedUp(
-    mtdId: String,
-    channel: Option[String]
-  ) extends GetITSABusinessDetailsResponse
+                              mtdId: String,
+                              channel: Option[String]
+                            ) extends GetITSABusinessDetailsResponse
 
   object AlreadySignedUp {
     implicit val reads: Reads[AlreadySignedUp] = Reads[AlreadySignedUp] { json =>
@@ -60,7 +60,6 @@ object GetITSABusinessDetailsParser {
       (_: String, _: String, response: HttpResponse) => {
         response.status match {
           case OK => handleOkResponse(response.json, correlationId)
-          case FORBIDDEN => handleForbiddenResponse(response.body, correlationId)
           case UNPROCESSABLE_ENTITY => handleUnprocessableEntityResponse(response.json, correlationId)
           case status => handleOtherResponse(status, correlationId)
         }
@@ -72,17 +71,6 @@ object GetITSABusinessDetailsParser {
         case JsSuccess(value, _) => Right(value)
         case JsError(_) => jsonError(OK, correlationId)
       }
-    }
-
-    private def handleForbiddenResponse(responseBody: String, correlationId: String): Nothing = {
-      throw GetITSABusinessDetailsParserException(
-        error = super.error(
-          correlationId = correlationId,
-          status = FORBIDDEN,
-          reason = responseBody
-        ),
-        status = FORBIDDEN
-      )
     }
 
     private def handleUnprocessableEntityResponse(json: JsValue, correlationId: String) = {
