@@ -17,9 +17,11 @@
 package connectors
 
 import com.typesafe.config.Config
+import models.ErrorModel
 import org.apache.pekko.actor.ActorSystem
 import org.apache.pekko.pattern.after
 import play.api.Logging
+import play.api.http.Status.FORBIDDEN
 import uk.gov.hmrc.mdc.Mdc
 
 import java.util.concurrent.TimeUnit
@@ -34,14 +36,28 @@ trait ConnectorRetries extends Logging {
   protected def configuration: Config
 
   def retryFor[A](label: String)
+                 (block: => Future[A])
+                 (implicit ec: ExecutionContext): Future[A] =
+    retryFor(label)(None)(block)
+
+  def retryFor[A](label: String)
                  (condition: PartialFunction[A, Boolean])
+                 (block: => Future[A])
+                 (implicit ec: ExecutionContext): Future[A] =
+    retryFor(label)(Some(condition))(block)
+
+  private def retryFor[A](label: String)
+                 (condition: Option[PartialFunction[A, Boolean]])
                  (block: => Future[A])
                  (implicit ec: ExecutionContext): Future[A] = {
 
     def loop(remainingIntervals: Seq[FiniteDuration]): Future[A] = {
-      // scheduling will loose MDC data. Here we explicitly ensure it is available on block.
+      // scheduling will lose MDC data. Here we explicitly ensure it is available on block.
       block.flatMap { result =>
-        val conditionMet: Boolean = condition.lift(result).getOrElse(false)
+        val conditionMet: Boolean = result match {
+          case Left(ErrorModel(FORBIDDEN, _, _)) => true
+          case _ => condition.exists(_.lift(result).getOrElse(false))
+        }
         if (conditionMet && remainingIntervals.nonEmpty) {
           val delay = remainingIntervals.head
           logger.warn(s"Retrying $label in $delay due to error")
