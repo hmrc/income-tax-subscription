@@ -42,8 +42,8 @@ trait ConnectorRetries extends Logging {
     def loop(remainingIntervals: Seq[FiniteDuration]): Future[A] = {
       // scheduling will loose MDC data. Here we explicitly ensure it is available on block.
       block.flatMap { result =>
-        val conditionMet: Boolean = condition.lift(result).getOrElse(false)
-        if (conditionMet && remainingIntervals.nonEmpty) {
+        val mustRetry: Boolean = condition.lift(result).getOrElse(false)
+        if (mustRetry && remainingIntervals.nonEmpty) {
           val delay = remainingIntervals.head
           logger.warn(s"Retrying [API #$apiNumber - $desc] in $delay due to error")
           val mdcData = Mdc.mdcData
