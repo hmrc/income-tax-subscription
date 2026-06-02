@@ -26,6 +26,7 @@ import java.util.concurrent.TimeUnit
 import scala.concurrent.duration.*
 import scala.concurrent.{ExecutionContext, Future}
 import scala.jdk.CollectionConverters.*
+import scala.util.{Try, Success}
 
 trait ConnectorRetries extends Logging {
 
@@ -33,7 +34,7 @@ trait ConnectorRetries extends Logging {
 
   protected def configuration: Config
 
-  def retryFor[A](label: String)
+  def retryFor[A](apiNumber: Int, desc: String)
                  (condition: PartialFunction[A, Boolean])
                  (block: => Future[A])
                  (implicit ec: ExecutionContext): Future[A] = {
@@ -44,7 +45,7 @@ trait ConnectorRetries extends Logging {
         val conditionMet: Boolean = condition.lift(result).getOrElse(false)
         if (conditionMet && remainingIntervals.nonEmpty) {
           val delay = remainingIntervals.head
-          logger.warn(s"Retrying $label in $delay due to error")
+          logger.warn(s"Retrying [API #$apiNumber - $desc] in $delay due to error")
           val mdcData = Mdc.mdcData
           after(delay, actorSystem.scheduler) {
             Mdc.putMdc(mdcData)
@@ -56,15 +57,21 @@ trait ConnectorRetries extends Logging {
       }
     }
 
-    loop(intervals)
+    loop(intervals(apiNumber))
   }
 
-  lazy val intervals: Seq[FiniteDuration] = {
-    configuration.getDurationList("retries.intervals").asScala.toSeq.map { d =>
+  private def intervals(apiNumber: Int): Seq[FiniteDuration] = {
+    val root = "retries.intervals"
+    val durations = Try {
+      configuration.getDurationList(s"$root.$apiNumber").asScala.toSeq
+    } match {
+      case Success(list) if list.nonEmpty => list
+      case _ => configuration.getDurationList(root).asScala.toSeq
+    }
+    durations.map { d =>
       FiniteDuration(d.toMillis, TimeUnit.MILLISECONDS)
     }
   }
-
 }
 
 

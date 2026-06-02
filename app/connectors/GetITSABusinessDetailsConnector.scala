@@ -37,7 +37,7 @@ class GetITSABusinessDetailsConnector @Inject()(val httpClient: HttpClientV2,
                                                (implicit val ec: ExecutionContext) extends BaseHIPConnector with ConnectorRetries {
 
   def getHIPBusinessDetails(nino: String)(implicit hc: HeaderCarrier): Future[Either[ErrorModel, GetITSABusinessDetailsResponse]] = {
-    retryFor[Either[ErrorModel, GetITSABusinessDetailsResponse]]("API #5266 - Get Business Details") {
+    retryFor[Either[ErrorModel, GetITSABusinessDetailsResponse]](5266, "Get Business Details") {
       case Left(ErrorModel(FORBIDDEN, _, _)) => true
     } {
       val headers: Map[String, String] = Map(
