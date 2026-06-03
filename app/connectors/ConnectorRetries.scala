@@ -1,0 +1,77 @@
+/*
+ * Copyright 2026 HM Revenue & Customs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package connectors
+
+import com.typesafe.config.Config
+import org.apache.pekko.actor.ActorSystem
+import org.apache.pekko.pattern.after
+import play.api.Logging
+import uk.gov.hmrc.mdc.Mdc
+
+import java.util.concurrent.TimeUnit
+import scala.concurrent.duration.*
+import scala.concurrent.{ExecutionContext, Future}
+import scala.jdk.CollectionConverters.*
+import scala.util.{Try, Success}
+
+trait ConnectorRetries extends Logging {
+
+  protected def actorSystem: ActorSystem
+
+  protected def configuration: Config
+
+  def retryFor[A](apiNumber: Int, desc: String)
+                 (condition: PartialFunction[A, Boolean])
+                 (block: => Future[A])
+                 (implicit ec: ExecutionContext): Future[A] = {
+
+    def loop(remainingIntervals: Seq[FiniteDuration]): Future[A] = {
+      // scheduling will loose MDC data. Here we explicitly ensure it is available on block.
+      block.flatMap { result =>
+        val mustRetry: Boolean = condition.lift(result).getOrElse(false)
+        if (mustRetry && remainingIntervals.nonEmpty) {
+          val delay = remainingIntervals.head
+          logger.warn(s"Retrying [API #$apiNumber - $desc] in $delay due to error")
+          val mdcData = Mdc.mdcData
+          after(delay, actorSystem.scheduler) {
+            Mdc.putMdc(mdcData)
+            loop(remainingIntervals.tail)
+          }
+        } else {
+          Future.successful(result)
+        }
+      }
+    }
+
+    loop(intervals(apiNumber))
+  }
+
+  private def intervals(apiNumber: Int): Seq[FiniteDuration] = {
+    val root = "retries.intervals"
+    val durations = Try {
+      configuration.getDurationList(s"$root.$apiNumber").asScala.toSeq
+    } match {
+      case Success(list) if list.nonEmpty => list
+      case _ => configuration.getDurationList(root).asScala.toSeq
+    }
+    durations.map { d =>
+      FiniteDuration(d.toMillis, TimeUnit.MILLISECONDS)
+    }
+  }
+}
+
+

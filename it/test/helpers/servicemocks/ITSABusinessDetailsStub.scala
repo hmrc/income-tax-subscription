@@ -29,8 +29,8 @@ object ITSABusinessDetailsStub extends WireMockMethods {
 
   def getITSABusinessDetailsUri(nino: String): String = s"/etmp/RESTAdapter/itsa/taxpayer/business-details\\?nino=$nino"
 
-  def verifyGetITSABusinessDetails(): Unit = {
-    verify(method = GET, uri = getITSABusinessDetailsUri(testNino))
+  def verifyGetITSABusinessDetails(times: Int = 1): Unit = {
+    verify(method = GET, uri = getITSABusinessDetailsUri(testNino), times)
   }
 
   def stubGetITSABusinessDetailsSuccess(): StubMapping = when(method = GET, uri = getITSABusinessDetailsUri(testNino))

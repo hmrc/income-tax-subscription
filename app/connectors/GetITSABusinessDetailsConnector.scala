@@ -23,10 +23,9 @@ import models.ErrorModel
 import org.apache.pekko.actor.ActorSystem
 import parsers.GetITSABusinessDetailsParser.*
 import play.api.http.Status.FORBIDDEN
+import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.client.HttpClientV2
-import uk.gov.hmrc.http.{HeaderCarrier, Retries}
 
-import java.util.UUID
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -35,12 +34,11 @@ class GetITSABusinessDetailsConnector @Inject()(val httpClient: HttpClientV2,
                                                 val appConfig: AppConfig,
                                                 val configuration: Config,
                                                 val actorSystem: ActorSystem)
-                                               (implicit val ec: ExecutionContext) extends BaseHIPConnector with Retries {
+                                               (implicit val ec: ExecutionContext) extends BaseHIPConnector with ConnectorRetries {
 
   def getHIPBusinessDetails(nino: String)(implicit hc: HeaderCarrier): Future[Either[ErrorModel, GetITSABusinessDetailsResponse]] = {
-    retryFor("HIP API #5266 - Get Business Details") {
-      case GetITSABusinessDetailsParserException(_, FORBIDDEN) => true
-      case _ => false
+    retryFor[Either[ErrorModel, GetITSABusinessDetailsResponse]](5266, "Get Business Details") {
+      case Left(ErrorModel(FORBIDDEN, _, _)) => true
     } {
       val headers: Map[String, String] = Map(
         "X-Message-Type" -> "TaxpayerDisplay"
