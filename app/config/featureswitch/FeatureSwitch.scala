@@ -16,7 +16,6 @@
 
 package config.featureswitch
 
-import config.featureswitch.FeatureSwitch.prefix
 import testonly.controllers.featureswitch.FeatureSwitchSetting
 
 sealed trait FeatureSwitch {
@@ -28,6 +27,7 @@ object FeatureSwitch {
   val prefix = "feature-switch"
 
   val switches: Set[FeatureSwitch] = Set(
+    SubmissionAuditUpdate
   )
 
   def apply(str: String): FeatureSwitch =
@@ -36,10 +36,17 @@ object FeatureSwitch {
       case None => throw new IllegalArgumentException("Invalid feature switch: " + str)
     }
 
-  def apply(setting: FeatureSwitchSetting): FeatureSwitch =
+  def apply(setting: FeatureSwitchSetting): FeatureSwitch = {
     switches find (_.displayName == setting.feature) match {
       case Some(switch) => switch
       case None => throw new IllegalArgumentException("Invalid feature switch: " + setting.feature)
     }
+  }
+
+  case object SubmissionAuditUpdate extends FeatureSwitch {
+    override val name: String = s"$prefix.submission-audit-update"
+    override val displayName: String = "Update submission audits"
+  }
+
 }
 
