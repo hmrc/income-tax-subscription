@@ -20,6 +20,7 @@ import config.AppConfig
 import play.api.Configuration
 
 trait FeatureSwitching {
+
   val appConfig: AppConfig
 
   protected def isEnabled(featureSwitch: FeatureSwitch): Boolean =

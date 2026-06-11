@@ -19,13 +19,14 @@ package controllers
 
 import common.Extractors
 import config.AppConfig
+import config.featureswitch.FeatureSwitch.SubmissionAuditUpdate
+import config.featureswitch.FeatureSwitching
 import connectors.HIPSignUpTaxYearConnector
 import models.SignUpRequest
 import models.SignUpResponse.SignUpSuccess
 import models.monitoring.{RegistrationFailureAudit, RegistrationSuccessAudit}
-import play.api.Logger
 import play.api.libs.json.{JsValue, Json}
-import play.api.mvc._
+import play.api.mvc.*
 import services.AuthService
 import services.monitoring.AuditService
 import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals
@@ -39,11 +40,9 @@ class SignUpController @Inject()(authService: AuthService,
                                  auditService: AuditService,
                                  hipSignUpTaxYearConnector: HIPSignUpTaxYearConnector,
                                  cc: ControllerComponents,
-                                 appConfig: AppConfig)
+                                 override val appConfig: AppConfig)
                                 (implicit ec: ExecutionContext)
-  extends BackendController(cc) with Extractors {
-
-  val logger: Logger = Logger(this.getClass)
+  extends BackendController(cc) with Extractors with FeatureSwitching {
 
   def signUp: Action[JsValue] = Action.async(parse.json) { implicit request =>
     authService.authorised().retrieve(Retrievals.allEnrolments) { enrolments =>
@@ -57,15 +56,36 @@ class SignUpController @Inject()(authService: AuthService,
   }
 
   private def signUp(signUpRequest: SignUpRequest, agentReferenceNumber: Option[String])(implicit request: Request[JsValue]) = {
+    val path: Option[String] = request.headers.get(ITSASessionKeys.RequestURI)
+    val submissionAuditUpdateEnabled = isEnabled(SubmissionAuditUpdate)
+
     hipSignUpTaxYearConnector.signUp(signUpRequest).map {
       case Right(response: SignUpSuccess) =>
-        val path: Option[String] = request.headers.get(ITSASessionKeys.RequestURI)
         auditService.audit(RegistrationSuccessAudit(
-          agentReferenceNumber, signUpRequest.nino, response.mtdbsa, appConfig.getHipAuthToken, path
+          agentReferenceNumber = agentReferenceNumber,
+          nino = signUpRequest.nino,
+          utr = signUpRequest.utr,
+          postSignUpResponse = Right(response),
+          authToken = appConfig.getHipAuthToken,
+          path = path,
+          submissionAuditUpdateEnabled = submissionAuditUpdateEnabled
         ))
         Ok(Json.toJson(response))
       case Left(error) =>
         auditService.audit(RegistrationFailureAudit(signUpRequest.nino, error.status, error.reason))
+
+        if(submissionAuditUpdateEnabled) {
+          auditService.audit(RegistrationSuccessAudit(
+            agentReferenceNumber = agentReferenceNumber,
+            nino = signUpRequest.nino,
+            utr = signUpRequest.utr,
+            postSignUpResponse = Left(error),
+            authToken = appConfig.getHipAuthToken,
+            path = path,
+            submissionAuditUpdateEnabled = true
+          ))
+        }
+
         (error.status, error.code) match {
           case (UNPROCESSABLE_ENTITY, Some(code)) =>
             UnprocessableEntity(Json.obj(

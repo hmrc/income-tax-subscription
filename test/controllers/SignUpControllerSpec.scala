@@ -19,10 +19,13 @@ package controllers
 
 import common.CommonSpec
 import config.MicroserviceAppConfig
+import config.featureswitch.FeatureSwitch.SubmissionAuditUpdate
+import config.featureswitch.FeatureSwitching
 import models.SignUpResponse.SignUpSuccess
 import models.monitoring.{RegistrationFailureAudit, RegistrationSuccessAudit}
 import models.{ErrorModel, SignUpRequest, SignUpResponse}
 import org.mockito.Mockito.when
+import org.scalatest.BeforeAndAfterEach
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.http.Status.{INTERNAL_SERVER_ERROR, OK, UNPROCESSABLE_ENTITY}
 import play.api.libs.json.Json
@@ -41,21 +44,28 @@ class SignUpControllerSpec extends CommonSpec
   with MockAuthService
   with MockHIPSignUpTaxYearConnector
   with MockAuditService
+  with BeforeAndAfterEach
+  with FeatureSwitching
   with GuiceOneAppPerSuite {
 
   lazy val mockCC: ControllerComponents = stubControllerComponents()
-  lazy val mockAppConfig: MicroserviceAppConfig = mock[MicroserviceAppConfig]
+  override val appConfig: MicroserviceAppConfig = mock[MicroserviceAppConfig]
 
   object TestController extends SignUpController(
     mockAuthService,
     mockAuditService,
     mockHIPSignUpTaxYearConnector,
     mockCC,
-    mockAppConfig
+    appConfig
   ) {
-    when(mockAppConfig.getHipAuthToken).thenReturn(
+    when(SignUpControllerSpec.this.appConfig.getHipAuthToken).thenReturn(
       auth
     )
+  }
+
+  override def beforeEach(): Unit = {
+    super.beforeEach()
+    disable(SubmissionAuditUpdate)
   }
 
   val auth = "auth"
@@ -77,7 +87,15 @@ class SignUpControllerSpec extends CommonSpec
           contentAsJson(result) shouldBe Json.obj(
             "mtdbsa" -> "XAIT000000"
           )
-          verifyAudit(RegistrationSuccessAudit(None, testNino, "XAIT000000", auth, None))
+          verifyAudit(RegistrationSuccessAudit(
+            agentReferenceNumber = None,
+            nino = testNino,
+            utr = testUtr,
+            postSignUpResponse = Right(SignUpSuccess("XAIT000000")),
+            authToken = auth,
+            path = None,
+            submissionAuditUpdateEnabled = false
+          ))
         }
         "an agent signs up their client" in {
           val fakeRequest = FakeRequest().withBody(Json.toJson(testTaxYearSignUpSubmission(testNino, testUtr, testTaxYear)))
@@ -91,7 +109,15 @@ class SignUpControllerSpec extends CommonSpec
           contentAsJson(result) shouldBe Json.obj(
             "mtdbsa" -> "XAIT000000"
           )
-          verifyAudit(RegistrationSuccessAudit(Some("123456789"), testNino, "XAIT000000", auth, None))
+          verifyAudit(RegistrationSuccessAudit(
+            agentReferenceNumber = Some("123456789"),
+            nino = testNino,
+            utr = testUtr,
+            postSignUpResponse = Right(SignUpSuccess("XAIT000000")),
+            authToken = auth,
+            path = None,
+            submissionAuditUpdateEnabled = false
+          ))
         }
       }
     }
@@ -113,6 +139,41 @@ class SignUpControllerSpec extends CommonSpec
           "code" -> "820",
           "reason" -> "API #5317: ITSA Sign Up, Status: 422, Code: 820, Reason: CUSTOMER ALREADY SIGNED UP"
         )
+        verifyAudit(RegistrationFailureAudit(testNino, UNPROCESSABLE_ENTITY, "API #5317: ITSA Sign Up, Status: 422, Code: 820, Reason: CUSTOMER ALREADY SIGNED UP"))
+      }
+
+      "the customer is already signed up and the submission audit update feature switch is enabled" in {
+        enable(SubmissionAuditUpdate)
+        val fakeRequest = FakeRequest().withBody(Json.toJson(testTaxYearSignUpSubmission(testNino, testUtr, testTaxYear)))
+
+        mockRetrievalSuccess(Enrolments(Set()))
+        hipSignUpTaxYear(testSignUpRequest)(Future.successful(Left(ErrorModel(
+          status = UNPROCESSABLE_ENTITY,
+          code = Some("820"),
+          reason = "API #5317: ITSA Sign Up, Status: 422, Code: 820, Reason: CUSTOMER ALREADY SIGNED UP"
+        ))))
+
+        val result: Future[Result] = TestController.signUp(fakeRequest)
+
+        status(result) shouldBe UNPROCESSABLE_ENTITY
+        contentAsJson(result) shouldBe Json.obj(
+          "code" -> "820",
+          "reason" -> "API #5317: ITSA Sign Up, Status: 422, Code: 820, Reason: CUSTOMER ALREADY SIGNED UP"
+        )
+        verifyAudit(RegistrationFailureAudit(testNino, UNPROCESSABLE_ENTITY, "API #5317: ITSA Sign Up, Status: 422, Code: 820, Reason: CUSTOMER ALREADY SIGNED UP"))
+        verifyAudit(RegistrationSuccessAudit(
+          agentReferenceNumber = None,
+          nino = testNino,
+          utr = testUtr,
+          postSignUpResponse = Left(ErrorModel(
+            status = UNPROCESSABLE_ENTITY,
+            code = Some("820"),
+            reason = "API #5317: ITSA Sign Up, Status: 422, Code: 820, Reason: CUSTOMER ALREADY SIGNED UP"
+          )),
+          authToken = auth,
+          path = None,
+          submissionAuditUpdateEnabled = true
+        ))
       }
     }
     "return InternalServerError" when {
@@ -127,6 +188,29 @@ class SignUpControllerSpec extends CommonSpec
         status(result) shouldBe INTERNAL_SERVER_ERROR
         contentAsString(result) shouldBe "Failed Sign up"
         verifyAudit(RegistrationFailureAudit(testNino, INTERNAL_SERVER_ERROR, "Failure"))
+      }
+
+      "sign up was unsuccessful and an error was returned and the submission audit update feature switch is enabled" in {
+        enable(SubmissionAuditUpdate)
+        val fakeRequest = FakeRequest().withBody(Json.toJson(testTaxYearSignUpSubmission(testNino, testUtr, testTaxYear)))
+
+        mockRetrievalSuccess(Enrolments(Set(Enrolment(hmrcAsAgent, Seq(EnrolmentIdentifier("AgentReferenceNumber", "123456789")), "Activated"))))
+        hipSignUpTaxYear(testSignUpRequest)(Future.successful(Left(ErrorModel(INTERNAL_SERVER_ERROR, "Failure"))))
+
+        val result = TestController.signUp(fakeRequest)
+
+        status(result) shouldBe INTERNAL_SERVER_ERROR
+        contentAsString(result) shouldBe "Failed Sign up"
+        verifyAudit(RegistrationFailureAudit(testNino, INTERNAL_SERVER_ERROR, "Failure"))
+        verifyAudit(RegistrationSuccessAudit(
+          agentReferenceNumber = Some("123456789"),
+          nino = testNino,
+          utr = testUtr,
+          postSignUpResponse = Left(ErrorModel(INTERNAL_SERVER_ERROR, "Failure")),
+          authToken = auth,
+          path = None,
+          submissionAuditUpdateEnabled = true
+        ))
       }
     }
   }
