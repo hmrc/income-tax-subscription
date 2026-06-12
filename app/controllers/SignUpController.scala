@@ -72,8 +72,6 @@ class SignUpController @Inject()(authService: AuthService,
         ))
         Ok(Json.toJson(response))
       case Left(error) =>
-        auditService.audit(RegistrationFailureAudit(signUpRequest.nino, error.status, error.reason))
-
         if(submissionAuditUpdateEnabled) {
           auditService.audit(RegistrationSuccessAudit(
             agentReferenceNumber = agentReferenceNumber,
@@ -84,8 +82,9 @@ class SignUpController @Inject()(authService: AuthService,
             path = path,
             submissionAuditUpdateEnabled = true
           ))
+        } else {
+          auditService.audit(RegistrationFailureAudit(signUpRequest.nino, error.status, error.reason))
         }
-
         (error.status, error.code) match {
           case (UNPROCESSABLE_ENTITY, Some(code)) =>
             UnprocessableEntity(Json.obj(

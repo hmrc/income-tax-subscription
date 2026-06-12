@@ -160,7 +160,6 @@ class SignUpControllerSpec extends CommonSpec
           "code" -> "820",
           "reason" -> "API #5317: ITSA Sign Up, Status: 422, Code: 820, Reason: CUSTOMER ALREADY SIGNED UP"
         )
-        verifyAudit(RegistrationFailureAudit(testNino, UNPROCESSABLE_ENTITY, "API #5317: ITSA Sign Up, Status: 422, Code: 820, Reason: CUSTOMER ALREADY SIGNED UP"))
         verifyAudit(RegistrationSuccessAudit(
           agentReferenceNumber = None,
           nino = testNino,
@@ -201,7 +200,6 @@ class SignUpControllerSpec extends CommonSpec
 
         status(result) shouldBe INTERNAL_SERVER_ERROR
         contentAsString(result) shouldBe "Failed Sign up"
-        verifyAudit(RegistrationFailureAudit(testNino, INTERNAL_SERVER_ERROR, "Failure"))
         verifyAudit(RegistrationSuccessAudit(
           agentReferenceNumber = Some("123456789"),
           nino = testNino,
