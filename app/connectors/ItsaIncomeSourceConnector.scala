@@ -48,9 +48,9 @@ class ItsaIncomeSourceConnector @Inject()(val httpClient: HttpClientV2,
                           mtdbsaRef: String,
                           createIncomeSources: CreateIncomeSourcesModel)
                          (implicit hc: HeaderCarrier, request: Request[_]): Future[PostITSAIncomeSourceResponse] = {
-    auditService.extendedAudit(SignUpAudit(agentReferenceNumber, createIncomeSources, appConfig.getHipAuthToken)) flatMap {
-      _ => updateETMP(mtdbsaRef, createIncomeSources)
-    } map { result =>
+    auditService.extendedAudit(SignUpAudit(agentReferenceNumber, createIncomeSources, appConfig.getHipAuthToken))
+
+    updateETMP(mtdbsaRef, createIncomeSources) map { result =>
       auditService.extendedAudit(CreateIncomeSourcesAudit(
         agentReferenceNumber   = agentReferenceNumber,
         nino                   = createIncomeSources.nino,
