@@ -34,4 +34,8 @@ object AuditStub extends WireMockMethods {
     //It is tested in more detail at unit level
     verify(method = POST, uri = "/write/audit")
   }
+
+  def verifyAuditCount(times: Int): Unit = {
+    verify(method = POST, uri = "/write/audit", times = times)
+  }
 }

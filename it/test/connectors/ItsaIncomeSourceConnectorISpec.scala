@@ -82,7 +82,7 @@ class ItsaIncomeSourceConnectorISpec extends ComponentSpecBase {
       )
 
       result.futureValue shouldBe Right(CreateIncomeSourceSuccessModel())
-      AuditStub.verifyAudit()
+      AuditStub.verifyAuditCount(2)
     }
 
     s"should retry 2 times and return a successful response when receiving a $FORBIDDEN status" in {
@@ -104,7 +104,7 @@ class ItsaIncomeSourceConnectorISpec extends ComponentSpecBase {
         uri = s"/etmp/RESTAdapter/itsa/taxpayer/income-source",
         times = 3
       )
-      AuditStub.verifyAudit()
+      AuditStub.verifyAuditCount(2)
     }
 
     s"return a failure response" when {
@@ -124,7 +124,7 @@ class ItsaIncomeSourceConnectorISpec extends ComponentSpecBase {
             status = UNPROCESSABLE_ENTITY,
             reason = s"API #5265: Create income sources, Status: $UNPROCESSABLE_ENTITY, Code: 000, Reason: error text"
           ))
-          AuditStub.verifyAudit()
+          AuditStub.verifyAuditCount(2)
         }
         "has an invalid error json" in {
           CreateIncomeSourceStub.stubItsaIncomeSource(
@@ -141,7 +141,7 @@ class ItsaIncomeSourceConnectorISpec extends ComponentSpecBase {
             status = UNPROCESSABLE_ENTITY,
             reason = s"API #5265: Create income sources, Status: $UNPROCESSABLE_ENTITY, Message: Failure parsing json response"
           ))
-          AuditStub.verifyAudit()
+          AuditStub.verifyAuditCount(2)
         }
       }
     }
@@ -161,7 +161,7 @@ class ItsaIncomeSourceConnectorISpec extends ComponentSpecBase {
         status = INTERNAL_SERVER_ERROR,
         reason = s"API #5265: Create income sources, Status: $INTERNAL_SERVER_ERROR, Message: Unexpected status received"
       ))
-      AuditStub.verifyAudit()
+      AuditStub.verifyAuditCount(2)
     }
   }
 
