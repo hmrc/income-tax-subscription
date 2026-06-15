@@ -26,6 +26,7 @@ import parsers.ITSAIncomeSourceParser.*
 import play.api.libs.json.Json
 import play.api.mvc.Request
 import services.monitoring.AuditService
+import services.monitoring.CreateIncomeSourcesAudit
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.{HeaderCarrier, Retries}
 
@@ -47,8 +48,16 @@ class ItsaIncomeSourceConnector @Inject()(val httpClient: HttpClientV2,
                           mtdbsaRef: String,
                           createIncomeSources: CreateIncomeSourcesModel)
                          (implicit hc: HeaderCarrier, request: Request[_]): Future[PostITSAIncomeSourceResponse] = {
-    auditService.extendedAudit(SignUpAudit(agentReferenceNumber, createIncomeSources, appConfig.getHipAuthToken)) flatMap {
-      _ => updateETMP(mtdbsaRef, createIncomeSources)
+    auditService.extendedAudit(SignUpAudit(agentReferenceNumber, createIncomeSources, appConfig.getHipAuthToken))
+
+    updateETMP(mtdbsaRef, createIncomeSources) map { result =>
+      auditService.extendedAudit(CreateIncomeSourcesAudit(
+        agentReferenceNumber   = agentReferenceNumber,
+        nino                   = createIncomeSources.nino,
+        mtdItsaReferenceNumber = mtdbsaRef,
+        result                 = result.map(_ => ())
+      ))
+      result
     }
   }
 
