@@ -35,7 +35,8 @@ class ItsaIncomeSourceConnectorISpec extends ComponentSpecBase {
   implicit val request: Request[_] = FakeRequest()
 
   override def overriddenConfig(): Map[String, String] = Map(
-    "auditing.enabled" -> "true"
+    "auditing.enabled" -> "true",
+    "feature-switch.submission-audit-update" -> "true"
   )
 
   "createIncomeSources" must {

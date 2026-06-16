@@ -18,6 +18,8 @@ package connectors
 
 import com.typesafe.config.Config
 import config.AppConfig
+import config.featureswitch.FeatureSwitch.SubmissionAuditUpdate
+import config.featureswitch.FeatureSwitching
 import connectors.hip.BaseHIPConnector
 import models.monitoring.SignUpAudit
 import models.subscription.CreateIncomeSourcesModel
@@ -26,7 +28,7 @@ import parsers.ITSAIncomeSourceParser.*
 import play.api.libs.json.Json
 import play.api.mvc.Request
 import services.monitoring.AuditService
-import services.monitoring.CreateIncomeSourcesAudit
+import models.monitoring.CreateIncomeSourcesAudit
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.{HeaderCarrier, Retries}
 
@@ -39,7 +41,7 @@ class ItsaIncomeSourceConnector @Inject()(val httpClient: HttpClientV2,
                                           val configuration: Config,
                                           val actorSystem: ActorSystem,
                                           auditService: AuditService)
-                                         (implicit val ec: ExecutionContext) extends BaseHIPConnector with Retries {
+                                         (implicit val ec: ExecutionContext) extends BaseHIPConnector with Retries with FeatureSwitching {
 
   private def itsaIncomeSourceUrl =
     "/etmp/RESTAdapter/itsa/taxpayer/income-source"
@@ -50,14 +52,18 @@ class ItsaIncomeSourceConnector @Inject()(val httpClient: HttpClientV2,
                          (implicit hc: HeaderCarrier, request: Request[_]): Future[PostITSAIncomeSourceResponse] = {
     auditService.extendedAudit(SignUpAudit(agentReferenceNumber, createIncomeSources, appConfig.getHipAuthToken))
 
-    updateETMP(mtdbsaRef, createIncomeSources) map { result =>
-      auditService.extendedAudit(CreateIncomeSourcesAudit(
-        agentReferenceNumber   = agentReferenceNumber,
-        nino                   = createIncomeSources.nino,
-        mtdItsaReferenceNumber = mtdbsaRef,
-        result                 = result.map(_ => ())
-      ))
-      result
+    updateETMP(mtdbsaRef, createIncomeSources) flatMap { result =>
+      if (isEnabled(SubmissionAuditUpdate)) {
+        auditService.extendedAudit(CreateIncomeSourcesAudit(
+          agentReferenceNumber   = agentReferenceNumber,
+          nino                   = createIncomeSources.nino,
+          mtdItsaReferenceNumber = mtdbsaRef,
+          isSuccess              = result.isRight,
+          errorReason            = result.left.toOption.map(_.reason)
+        )) map { _ => result }
+      } else {
+        Future.successful(result)
+      }
     }
   }
 
