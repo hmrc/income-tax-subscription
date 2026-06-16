@@ -18,6 +18,8 @@ package connectors
 
 import helpers.IntegrationTestConstants.{testArn, testCreateIncomeFailureBody, testCreateIncomeSources, testMtdbsaRef}
 import helpers.WiremockHelper.StubResponse
+import config.featureswitch.FeatureSwitch.SubmissionAuditUpdate
+import config.featureswitch.FeatureSwitching
 import helpers.servicemocks.{AuditStub, CreateIncomeSourceStub}
 import helpers.{ComponentSpecBase, WiremockHelper}
 import models.DateModel
@@ -27,17 +29,23 @@ import play.api.http.Status.{CREATED, FORBIDDEN, INTERNAL_SERVER_ERROR, UNPROCES
 import play.api.libs.json.{JsObject, Json}
 import play.api.mvc.Request
 import play.api.test.FakeRequest
+import config.MicroserviceAppConfig
 import utils.TestConstants.testCreateIncomeSuccessBody
 
-class ItsaIncomeSourceConnectorISpec extends ComponentSpecBase {
+class ItsaIncomeSourceConnectorISpec extends ComponentSpecBase with FeatureSwitching {
 
   private lazy val connector: ItsaIncomeSourceConnector = app.injector.instanceOf[ItsaIncomeSourceConnector]
+  val appConfig: MicroserviceAppConfig = app.injector.instanceOf[MicroserviceAppConfig]
   implicit val request: Request[_] = FakeRequest()
 
   override def overriddenConfig(): Map[String, String] = Map(
-    "auditing.enabled" -> "true",
-    "feature-switch.submission-audit-update" -> "true"
+    "auditing.enabled" -> "true"
   )
+
+  override def beforeEach(): Unit = {
+    super.beforeEach()
+    disable(SubmissionAuditUpdate)
+  }
 
   "createIncomeSources" must {
     "submit the country code if specified and GB if not" in {
@@ -71,7 +79,22 @@ class ItsaIncomeSourceConnectorISpec extends ComponentSpecBase {
     }
 
     s"return a successful response when receiving a $CREATED response" in {
+      CreateIncomeSourceStub.stubItsaIncomeSource(
+        expectedBody = Json.toJson(testCreateIncomeSources)(CreateIncomeSourcesModel.hipWrites(testMtdbsaRef))
+      )(status = CREATED, body = testCreateIncomeSuccessBody)
 
+      val result = connector.createIncomeSources(
+        agentReferenceNumber = Some(testArn),
+        mtdbsaRef = testMtdbsaRef,
+        createIncomeSources = testCreateIncomeSources
+      )
+
+      result.futureValue shouldBe Right(CreateIncomeSourceSuccessModel())
+      AuditStub.verifyAudit()
+    }
+
+    s"return a successful response when receiving a $CREATED response and SubmissionAuditUpdate is enabled" in {
+      enable(SubmissionAuditUpdate)
       CreateIncomeSourceStub.stubItsaIncomeSource(
         expectedBody = Json.toJson(testCreateIncomeSources)(CreateIncomeSourcesModel.hipWrites(testMtdbsaRef))
       )(status = CREATED, body = testCreateIncomeSuccessBody)
@@ -100,7 +123,28 @@ class ItsaIncomeSourceConnectorISpec extends ComponentSpecBase {
       )
 
       result.futureValue shouldBe Right(CreateIncomeSourceSuccessModel())
+      WiremockHelper.verifyPost(
+        uri = s"/etmp/RESTAdapter/itsa/taxpayer/income-source",
+        times = 3
+      )
+      AuditStub.verifyAudit()
+    }
 
+    s"should retry 2 times and return a successful response when receiving a $FORBIDDEN status and SubmissionAuditUpdate is enabled" in {
+      enable(SubmissionAuditUpdate)
+      WiremockHelper.stubPostSequence(s"/etmp/RESTAdapter/itsa/taxpayer/income-source")(
+        StubResponse(FORBIDDEN),
+        StubResponse(FORBIDDEN),
+        StubResponse(CREATED)
+      )
+
+      val result = connector.createIncomeSources(
+        agentReferenceNumber = Some(testArn),
+        mtdbsaRef = testMtdbsaRef,
+        createIncomeSources = testCreateIncomeSources
+      )
+
+      result.futureValue shouldBe Right(CreateIncomeSourceSuccessModel())
       WiremockHelper.verifyPost(
         uri = s"/etmp/RESTAdapter/itsa/taxpayer/income-source",
         times = 3
@@ -125,9 +169,45 @@ class ItsaIncomeSourceConnectorISpec extends ComponentSpecBase {
             status = UNPROCESSABLE_ENTITY,
             reason = s"API #5265: Create income sources, Status: $UNPROCESSABLE_ENTITY, Code: 000, Reason: error text"
           ))
+          AuditStub.verifyAudit()
+        }
+        "has a valid error json and SubmissionAuditUpdate is enabled" in {
+          enable(SubmissionAuditUpdate)
+          CreateIncomeSourceStub.stubItsaIncomeSource(
+            expectedBody = Json.toJson(testCreateIncomeSources)(CreateIncomeSourcesModel.hipWrites(testMtdbsaRef))
+          )(status = UNPROCESSABLE_ENTITY, body = errorsJson)
+
+          val result = connector.createIncomeSources(
+            agentReferenceNumber = Some(testArn),
+            mtdbsaRef = testMtdbsaRef,
+            createIncomeSources = testCreateIncomeSources
+          )
+
+          result.futureValue shouldBe Left(CreateIncomeSourceErrorModel(
+            status = UNPROCESSABLE_ENTITY,
+            reason = s"API #5265: Create income sources, Status: $UNPROCESSABLE_ENTITY, Code: 000, Reason: error text"
+          ))
           AuditStub.verifyAuditCount(2)
         }
         "has an invalid error json" in {
+          CreateIncomeSourceStub.stubItsaIncomeSource(
+            expectedBody = Json.toJson(testCreateIncomeSources)(CreateIncomeSourcesModel.hipWrites(testMtdbsaRef))
+          )(status = UNPROCESSABLE_ENTITY, body = Json.obj())
+
+          val result = connector.createIncomeSources(
+            agentReferenceNumber = Some(testArn),
+            mtdbsaRef = testMtdbsaRef,
+            createIncomeSources = testCreateIncomeSources
+          )
+
+          result.futureValue shouldBe Left(CreateIncomeSourceErrorModel(
+            status = UNPROCESSABLE_ENTITY,
+            reason = s"API #5265: Create income sources, Status: $UNPROCESSABLE_ENTITY, Message: Failure parsing json response"
+          ))
+          AuditStub.verifyAudit()
+        }
+        "has an invalid error json and SubmissionAuditUpdate is enabled" in {
+          enable(SubmissionAuditUpdate)
           CreateIncomeSourceStub.stubItsaIncomeSource(
             expectedBody = Json.toJson(testCreateIncomeSources)(CreateIncomeSourcesModel.hipWrites(testMtdbsaRef))
           )(status = UNPROCESSABLE_ENTITY, body = Json.obj())
@@ -162,6 +242,25 @@ class ItsaIncomeSourceConnectorISpec extends ComponentSpecBase {
         status = INTERNAL_SERVER_ERROR,
         reason = s"API #5265: Create income sources, Status: $INTERNAL_SERVER_ERROR, Message: Unexpected status received"
       ))
+      AuditStub.verifyAudit()
+    }
+
+    s"return a failure response when receiving a non-$CREATED response and SubmissionAuditUpdate is enabled" in {
+      enable(SubmissionAuditUpdate)
+      CreateIncomeSourceStub.stubItsaIncomeSource(
+        expectedBody = Json.toJson(testCreateIncomeSources)(CreateIncomeSourcesModel.hipWrites(testMtdbsaRef))
+      )(status = INTERNAL_SERVER_ERROR, body = testCreateIncomeFailureBody)
+
+      val result = connector.createIncomeSources(
+        agentReferenceNumber = Some(testArn),
+        mtdbsaRef = testMtdbsaRef,
+        createIncomeSources = testCreateIncomeSources
+      )
+
+      result.futureValue shouldBe Left(CreateIncomeSourceErrorModel(
+        status = INTERNAL_SERVER_ERROR,
+        reason = s"API #5265: Create income sources, Status: $INTERNAL_SERVER_ERROR, Message: Unexpected status received"
+      ))
       AuditStub.verifyAuditCount(2)
     }
   }
@@ -169,5 +268,4 @@ class ItsaIncomeSourceConnectorISpec extends ComponentSpecBase {
   lazy val errorsJson: JsObject = Json.obj(
     "errors" -> Json.obj("code" -> "000", "text" -> "error text", "processingDate" -> "")
   )
-
 }
