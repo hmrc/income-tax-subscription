@@ -78,6 +78,16 @@ class BaseHIPConnectorSpec extends PlaySpec
           parser = TestParser
         )
     }
+
+    def testGet: Future[Either[ErrorModel, String]] =
+      retryFor[Either[ErrorModel, String]](TestParser.apiNumber, TestParser.apiName) {
+        case Left(ErrorModel(GATEWAY_TIMEOUT, _, _)) => true
+      } {
+        super.get[String](
+          uri = testUrl,
+          parser = TestParser
+        )
+      }
   }
 
   object TestParser extends Parser[Either[ErrorModel, String]] {
@@ -99,15 +109,29 @@ class BaseHIPConnectorSpec extends PlaySpec
     when(appConf.getHipAuthToken).thenReturn("")
   }
 
-  "should retry 2 times and return a successful response when receiving a timeout" in {
-    when(builder.execute(any(), any()))
-      .thenThrow(new TimeoutException)
-      .thenThrow(new TimeoutException)
-      .thenReturn(Future.successful(Right(testUrl)))
+  "should retry 2 times and return a successful response when receiving a timeout" when {
+    "POST" in {
+      when(builder.execute(any(), any()))
+        .thenThrow(new TimeoutException)
+        .thenThrow(new TimeoutException)
+        .thenReturn(Future.successful(Right(testUrl)))
 
-    val result = TestConnector.testPost
+      val result = TestConnector.testPost
 
-    result.futureValue shouldBe Right(testUrl)
-    verify(http, times(3)).post(any())(any())
+      result.futureValue shouldBe Right(testUrl)
+      verify(http, times(3)).post(any())(any())
+    }
+    
+    "GET" in {
+      when(builder.execute(any(), any()))
+        .thenThrow(new TimeoutException)
+        .thenThrow(new TimeoutException)
+        .thenReturn(Future.successful(Right(testUrl)))
+
+      val result = TestConnector.testGet
+
+      result.futureValue shouldBe Right(testUrl)
+      verify(http, times(3)).get(any())(any())
+    }
   }
 }
