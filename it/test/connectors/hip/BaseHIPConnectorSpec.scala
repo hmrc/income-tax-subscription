@@ -103,6 +103,7 @@ class BaseHIPConnectorSpec extends PlaySpec
     super.beforeEach()
     when(config.getDurationList(ArgumentMatchers.eq(s"retries.intervals.${TestParser.apiNumber}"))).thenReturn(specific)
     when(http.post(any())(any())).thenReturn(builder)
+    when(http.get(any())(any())).thenReturn(builder)
     when(builder.setHeader(any())).thenReturn(builder)
     when(builder.withBody(any())(any(), any(), any())).thenReturn(builder)
     when(appConf.getHipBaseURL).thenReturn("")
@@ -121,7 +122,7 @@ class BaseHIPConnectorSpec extends PlaySpec
       result.futureValue shouldBe Right(testUrl)
       verify(http, times(3)).post(any())(any())
     }
-    
+
     "GET" in {
       when(builder.execute(any(), any()))
         .thenThrow(new TimeoutException)
