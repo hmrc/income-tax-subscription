@@ -17,9 +17,10 @@
 package controllers
 
 import common.CommonSpec
-import models.subscription._
+import models.ErrorModel
+import models.subscription.*
 import models.subscription.business.{CreateIncomeSourceErrorModel, CreateIncomeSourceSuccessModel}
-import play.api.http.Status._
+import play.api.http.Status.*
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.{ControllerComponents, Request, Result}
 import play.api.test.FakeRequest
@@ -53,7 +54,7 @@ class BusinessIncomeSourcesControllerSpec extends CommonSpec
       "there was an error submitting" in {
         mockAgentAuthSuccess()
         mockCreateIncomeSources(Some(testArn), mtditid, testCreateIncomeSources)(
-          Left(CreateIncomeSourceErrorModel(INTERNAL_SERVER_ERROR, "error"))
+          Left(ErrorModel(INTERNAL_SERVER_ERROR, "error"))
         )
 
         val result: Future[Result] = TestController.createIncomeSource(mtditid)(postSaveAndRetrieveRequest)

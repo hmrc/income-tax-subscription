@@ -31,6 +31,7 @@ import play.api.mvc.Request
 import services.monitoring.AuditService
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.client.HttpClientV2
+import models.ErrorModel
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
@@ -71,7 +72,7 @@ class ItsaIncomeSourceConnector @Inject()(val httpClient: HttpClientV2,
                          createIncomeSources: CreateIncomeSourcesModel)
                         (implicit hc: HeaderCarrier): Future[PostITSAIncomeSourceResponse] = {
     retryFor[PostITSAIncomeSourceResponse](ITSAIncomeSourceResponseHttpReads.apiNumber, ITSAIncomeSourceResponseHttpReads.apiName) {
-      case Left(CreateIncomeSourceErrorModel(ITSAIncomeSourceResponseHttpReads.retryStatus, _)) => true
+      case Left(ErrorModel(ITSAIncomeSourceResponseHttpReads.retryStatus, _, _)) => true
     } {
       val headers: Map[String, String] = Map(
         "X-Message-Type" -> "CreateIncomeSource"

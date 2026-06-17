@@ -17,6 +17,7 @@
 package connectors.hip
 
 import config.AppConfig
+import models.status.ItsaStatusResponse
 import models.subscription.AccountingPeriodUtil
 import parsers.ItsaStatusParser.*
 import uk.gov.hmrc.http.HeaderCarrier
@@ -31,7 +32,7 @@ class HipItsaStatusConnector @Inject()(val httpClient: HttpClientV2, val appConf
 
   def determineItsaStatus(nino: String,
                           utr: String)(implicit hc: HeaderCarrier): Future[DetermineItsaStatusResponse] = {
-    super.get[DetermineItsaStatusResponse](
+    super.get[ItsaStatusResponse](
       uri = getItsaStatusUrl(nino, utr),
       parser = ItsaStatusResponseHttpReads
     )

@@ -17,11 +17,11 @@
 package connectors.hip
 
 import config.AppConfig
+import models.hip.SelfEmpHolder
 import parsers.hip.HipPrePopParser.*
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.client.HttpClientV2
 
-import java.util.UUID
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -32,7 +32,7 @@ class HipPrePopConnector @Inject()(val httpClient: HttpClientV2, val appConfig: 
   def getHipPrePopData(
                         nino: String
                       )(implicit hc: HeaderCarrier): Future[GetHipPrePopResponse] = {
-    super.get[GetHipPrePopResponse](
+    super.get[SelfEmpHolder](
       uri = hipPrePopUrl(nino),
       parser = GetHipPrePopResponseHttpReads
     )
