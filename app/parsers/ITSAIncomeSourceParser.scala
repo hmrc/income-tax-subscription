@@ -32,6 +32,8 @@ object ITSAIncomeSourceParser extends Logging {
     val apiNumber: Int = 5265
     val apiName: String = "Create income sources"
 
+    val retryStatus = 429
+    
     override def httpReads(correlationId: String): HttpReads[PostITSAIncomeSourceResponse] = {
       (_: String, _: String, response: HttpResponse) => {
         response.status match {

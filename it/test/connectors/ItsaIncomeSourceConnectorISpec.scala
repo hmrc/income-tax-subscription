@@ -30,6 +30,7 @@ import play.api.libs.json.{JsObject, Json}
 import play.api.mvc.Request
 import play.api.test.FakeRequest
 import config.MicroserviceAppConfig
+import parsers.ITSAIncomeSourceParser.ITSAIncomeSourceResponseHttpReads
 import utils.TestConstants.testCreateIncomeSuccessBody
 
 class ItsaIncomeSourceConnectorISpec extends ComponentSpecBase with FeatureSwitching {
@@ -97,10 +98,12 @@ class ItsaIncomeSourceConnectorISpec extends ComponentSpecBase with FeatureSwitc
       }
     }
 
-    s"should retry 2 times and return a successful response when receiving a $FORBIDDEN status" in {
+    val retryStatus = ITSAIncomeSourceResponseHttpReads.retryStatus
+    
+    s"should retry 2 times and return a successful response when receiving a $retryStatus retryStatus" in {
       WiremockHelper.stubPostSequence(s"/etmp/RESTAdapter/itsa/taxpayer/income-source")(
-        StubResponse(FORBIDDEN),
-        StubResponse(FORBIDDEN),
+        StubResponse(retryStatus),
+        StubResponse(retryStatus),
         StubResponse(CREATED)
       )
 
@@ -119,7 +122,7 @@ class ItsaIncomeSourceConnectorISpec extends ComponentSpecBase with FeatureSwitc
     }
 
     s"return a failure response" when {
-      s"receiving a $UNPROCESSABLE_ENTITY status response" which {
+      s"receiving a $UNPROCESSABLE_ENTITY retryStatus response" which {
         "has a valid error json" in {
           CreateIncomeSourceStub.stubItsaIncomeSource(
             expectedBody = Json.toJson(testCreateIncomeSources)(CreateIncomeSourcesModel.hipWrites(testMtdbsaRef))
@@ -171,7 +174,7 @@ class ItsaIncomeSourceConnectorISpec extends ComponentSpecBase with FeatureSwitc
 
       result.futureValue shouldBe Left(CreateIncomeSourceErrorModel(
         status = INTERNAL_SERVER_ERROR,
-        reason = s"API #5265: Create income sources, Status: $INTERNAL_SERVER_ERROR, Message: Unexpected status received"
+        reason = s"API #5265: Create income sources, Status: $INTERNAL_SERVER_ERROR, Message: Unexpected retryStatus received"
       ))
       AuditStub.verifyAudit()
     }
