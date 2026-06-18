@@ -26,6 +26,7 @@ import models.subscription.CreateIncomeSourcesModel
 import models.subscription.business.CreateIncomeSourceErrorModel
 import org.apache.pekko.actor.ActorSystem
 import parsers.ITSAIncomeSourceParser.*
+import play.api.http.Status.TOO_MANY_REQUESTS
 import play.api.libs.json.Json
 import play.api.mvc.Request
 import services.monitoring.AuditService
@@ -71,7 +72,7 @@ class ItsaIncomeSourceConnector @Inject()(val httpClient: HttpClientV2,
                          createIncomeSources: CreateIncomeSourcesModel)
                         (implicit hc: HeaderCarrier): Future[PostITSAIncomeSourceResponse] = {
     retryFor[PostITSAIncomeSourceResponse](ITSAIncomeSourceResponseHttpReads.apiNumber, ITSAIncomeSourceResponseHttpReads.apiName) {
-      case Left(CreateIncomeSourceErrorModel(ITSAIncomeSourceResponseHttpReads.retryStatus, _)) => true
+      case Left(CreateIncomeSourceErrorModel(TOO_MANY_REQUESTS, _)) => true
     } {
       val headers: Map[String, String] = Map(
         "X-Message-Type" -> "CreateIncomeSource"
