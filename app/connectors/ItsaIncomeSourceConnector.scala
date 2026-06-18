@@ -21,17 +21,17 @@ import config.AppConfig
 import config.featureswitch.FeatureSwitch.SubmissionAuditUpdate
 import config.featureswitch.FeatureSwitching
 import connectors.hip.BaseHIPConnector
+import models.ErrorModel
 import models.monitoring.{CreateIncomeSourcesAudit, SignUpAudit}
 import models.subscription.CreateIncomeSourcesModel
-import models.subscription.business.CreateIncomeSourceErrorModel
 import org.apache.pekko.actor.ActorSystem
 import parsers.ITSAIncomeSourceParser.*
+import play.api.http.Status.TOO_MANY_REQUESTS
 import play.api.libs.json.Json
 import play.api.mvc.Request
 import services.monitoring.AuditService
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.client.HttpClientV2
-import models.ErrorModel
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
@@ -72,7 +72,7 @@ class ItsaIncomeSourceConnector @Inject()(val httpClient: HttpClientV2,
                          createIncomeSources: CreateIncomeSourcesModel)
                         (implicit hc: HeaderCarrier): Future[PostITSAIncomeSourceResponse] = {
     retryFor[PostITSAIncomeSourceResponse](ITSAIncomeSourceResponseHttpReads.apiNumber, ITSAIncomeSourceResponseHttpReads.apiName) {
-      case Left(ErrorModel(ITSAIncomeSourceResponseHttpReads.retryStatus, _, _)) => true
+      case Left(ErrorModel(TOO_MANY_REQUESTS, _, _)) => true
     } {
       val headers: Map[String, String] = Map(
         "X-Message-Type" -> "CreateIncomeSource"

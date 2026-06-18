@@ -16,21 +16,20 @@
 
 package connectors
 
-import helpers.IntegrationTestConstants.{testArn, testCreateIncomeFailureBody, testCreateIncomeSources, testMtdbsaRef}
-import helpers.WiremockHelper.StubResponse
+import config.MicroserviceAppConfig
 import config.featureswitch.FeatureSwitch.SubmissionAuditUpdate
 import config.featureswitch.FeatureSwitching
+import helpers.IntegrationTestConstants.{testArn, testCreateIncomeFailureBody, testCreateIncomeSources, testMtdbsaRef}
+import helpers.WiremockHelper.StubResponse
 import helpers.servicemocks.{AuditStub, CreateIncomeSourceStub}
 import helpers.{ComponentSpecBase, WiremockHelper}
 import models.DateModel
 import models.subscription.*
 import models.subscription.business.{CreateIncomeSourceErrorModel, CreateIncomeSourceSuccessModel}
-import play.api.http.Status.{CREATED, FORBIDDEN, INTERNAL_SERVER_ERROR, UNPROCESSABLE_ENTITY}
+import play.api.http.Status.{CREATED, INTERNAL_SERVER_ERROR, TOO_MANY_REQUESTS, UNPROCESSABLE_ENTITY}
 import play.api.libs.json.{JsObject, Json}
 import play.api.mvc.Request
 import play.api.test.FakeRequest
-import config.MicroserviceAppConfig
-import parsers.ITSAIncomeSourceParser.ITSAIncomeSourceResponseHttpReads
 import utils.TestConstants.testCreateIncomeSuccessBody
 
 class ItsaIncomeSourceConnectorISpec extends ComponentSpecBase with FeatureSwitching {
@@ -97,13 +96,11 @@ class ItsaIncomeSourceConnectorISpec extends ComponentSpecBase with FeatureSwitc
         AuditStub.verifyAuditCount(1 + (if (submissionAuditUpdateEnabled) 1 else 0))
       }
     }
-
-    val retryStatus = ITSAIncomeSourceResponseHttpReads.retryStatus
     
-    s"should retry 2 times and return a successful response when receiving a $retryStatus retryStatus" in {
+    s"should retry 2 times and return a successful response when receiving a $TOO_MANY_REQUESTS retryStatus" in {
       WiremockHelper.stubPostSequence(s"/etmp/RESTAdapter/itsa/taxpayer/income-source")(
-        StubResponse(retryStatus),
-        StubResponse(retryStatus),
+        StubResponse(TOO_MANY_REQUESTS),
+        StubResponse(TOO_MANY_REQUESTS),
         StubResponse(CREATED)
       )
 

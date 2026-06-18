@@ -17,7 +17,7 @@
 package parsers
 
 import models.ErrorModel
-import models.subscription.business.{CreateIncomeSourceErrorModel, CreateIncomeSourceSuccessModel}
+import models.subscription.business.CreateIncomeSourceSuccessModel
 import parsers.hip.Parser
 import play.api.Logging
 import play.api.http.Status.{CREATED, FORBIDDEN, UNPROCESSABLE_ENTITY}
@@ -33,8 +33,6 @@ object ITSAIncomeSourceParser extends Logging {
     val apiNumber: Int = 5265
     val apiName: String = "Create income sources"
 
-    val retryStatus = 429
-    
     override def httpReads(correlationId: String): HttpReads[PostITSAIncomeSourceResponse] = {
       (_: String, _: String, response: HttpResponse) => {
         response.status match {
