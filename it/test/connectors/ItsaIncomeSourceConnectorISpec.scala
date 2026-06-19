@@ -16,20 +16,20 @@
 
 package connectors
 
-import helpers.IntegrationTestConstants.{testArn, testCreateIncomeFailureBody, testCreateIncomeSources, testMtdbsaRef}
-import helpers.WiremockHelper.StubResponse
+import config.MicroserviceAppConfig
 import config.featureswitch.FeatureSwitch.SubmissionAuditUpdate
 import config.featureswitch.FeatureSwitching
+import helpers.IntegrationTestConstants.{testArn, testCreateIncomeFailureBody, testCreateIncomeSources, testMtdbsaRef}
+import helpers.WiremockHelper.StubResponse
 import helpers.servicemocks.{AuditStub, CreateIncomeSourceStub}
 import helpers.{ComponentSpecBase, WiremockHelper}
 import models.DateModel
 import models.subscription.*
 import models.subscription.business.{CreateIncomeSourceErrorModel, CreateIncomeSourceSuccessModel}
-import play.api.http.Status.{CREATED, FORBIDDEN, INTERNAL_SERVER_ERROR, UNPROCESSABLE_ENTITY}
+import play.api.http.Status.{CREATED, INTERNAL_SERVER_ERROR, TOO_MANY_REQUESTS, UNPROCESSABLE_ENTITY}
 import play.api.libs.json.{JsObject, Json}
 import play.api.mvc.Request
 import play.api.test.FakeRequest
-import config.MicroserviceAppConfig
 import utils.TestConstants.testCreateIncomeSuccessBody
 
 class ItsaIncomeSourceConnectorISpec extends ComponentSpecBase with FeatureSwitching {
@@ -97,10 +97,10 @@ class ItsaIncomeSourceConnectorISpec extends ComponentSpecBase with FeatureSwitc
       }
     }
 
-    s"should retry 2 times and return a successful response when receiving a $FORBIDDEN status" in {
+    s"should retry 2 times and return a successful response when receiving a $TOO_MANY_REQUESTS retryStatus" in {
       WiremockHelper.stubPostSequence(s"/etmp/RESTAdapter/itsa/taxpayer/income-source")(
-        StubResponse(FORBIDDEN),
-        StubResponse(FORBIDDEN),
+        StubResponse(TOO_MANY_REQUESTS),
+        StubResponse(TOO_MANY_REQUESTS),
         StubResponse(CREATED)
       )
 
@@ -119,7 +119,7 @@ class ItsaIncomeSourceConnectorISpec extends ComponentSpecBase with FeatureSwitc
     }
 
     s"return a failure response" when {
-      s"receiving a $UNPROCESSABLE_ENTITY status response" which {
+      s"receiving a $UNPROCESSABLE_ENTITY retryStatus response" which {
         "has a valid error json" in {
           CreateIncomeSourceStub.stubItsaIncomeSource(
             expectedBody = Json.toJson(testCreateIncomeSources)(CreateIncomeSourcesModel.hipWrites(testMtdbsaRef))
