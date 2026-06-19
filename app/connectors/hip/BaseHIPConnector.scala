@@ -76,10 +76,12 @@ trait BaseHIPConnector {
       .setHeader(headers.toSeq: _*)
       .execute[Either[ErrorModel, A]]
       .recover {
-        case t: UpstreamErrorResponse => if (t.statusCode == REQUEST_TIMEOUT) {
-          Left(ErrorModel(REQUEST_TIMEOUT, t.getMessage))
-        } else {
-          throw t
+        case t: UpstreamErrorResponse => {
+          if (t.statusCode == REQUEST_TIMEOUT) {
+            Left(ErrorModel(REQUEST_TIMEOUT, t.getMessage))
+          } else {
+            throw t
+          }
         }
       }
   }

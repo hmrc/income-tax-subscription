@@ -69,10 +69,13 @@ class BaseHIPConnectorSpec extends PlaySpec
 
     override protected def configuration: Config = config
 
+    var count = 0
+
     def testPost: Future[Either[ErrorModel, String]] =
       retryFor[Either[ErrorModel, String]](TestParser.apiNumber, TestParser.apiName) {
         case Left(ErrorModel(REQUEST_TIMEOUT, _, _)) => true
       } {
+        count += 1
         super.post[String](
           uri = testUrl,
           body = JsString(testUrl),
@@ -120,6 +123,7 @@ class BaseHIPConnectorSpec extends PlaySpec
 
       val result = TestConnector.testPost
 
+      println(TestConnector.count)
       result.futureValue shouldBe Right(testUrl)
       verify(http, times(3)).post(any())(any())
     }
