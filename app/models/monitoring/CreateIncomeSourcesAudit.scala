@@ -16,7 +16,6 @@
 
 package models.monitoring
 
-import models.subscription.business.CreateIncomeSourceErrorModel
 import play.api.libs.json.{JsValue, Json}
 import services.monitoring.ExtendedAuditModel
 import utils.JsonUtils.JsObjectUtil

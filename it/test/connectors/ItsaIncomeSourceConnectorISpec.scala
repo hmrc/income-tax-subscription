@@ -25,7 +25,7 @@ import helpers.servicemocks.{AuditStub, CreateIncomeSourceStub}
 import helpers.{ComponentSpecBase, WiremockHelper}
 import models.{DateModel, ErrorModel}
 import models.subscription.*
-import models.subscription.business.{CreateIncomeSourceErrorModel, CreateIncomeSourceSuccessModel}
+import models.subscription.business.{CreateIncomeSourceSuccessModel}
 import play.api.http.Status.{CREATED, INTERNAL_SERVER_ERROR, TOO_MANY_REQUESTS, UNPROCESSABLE_ENTITY}
 import play.api.libs.json.{JsObject, Json}
 import play.api.mvc.Request

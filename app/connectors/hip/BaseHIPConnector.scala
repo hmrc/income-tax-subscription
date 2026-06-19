@@ -24,7 +24,7 @@ import play.api.http.Status.REQUEST_TIMEOUT
 import play.api.libs.json.JsValue
 import play.api.libs.ws.JsonBodyWritables.writeableOf_JsValue
 import uk.gov.hmrc.http.client.HttpClientV2
-import uk.gov.hmrc.http.{Authorization, HeaderCarrier, HeaderNames, HttpReads, UpstreamErrorResponse}
+import uk.gov.hmrc.http.{Authorization, GatewayTimeoutException, HeaderCarrier, HeaderNames, HttpReads, UpstreamErrorResponse}
 
 import java.net.URL
 import java.time.format.DateTimeFormatter
@@ -53,11 +53,8 @@ trait BaseHIPConnector {
       .setHeader(headers.toSeq: _*)
       .execute[Either[ErrorModel, A]]
       .recover {
-        case t: UpstreamErrorResponse => if (t.statusCode == REQUEST_TIMEOUT) {
+        case t: GatewayTimeoutException =>
           Left(ErrorModel(REQUEST_TIMEOUT, t.getMessage))
-        } else {
-          throw t
-        }
       }
   }
   
@@ -76,13 +73,8 @@ trait BaseHIPConnector {
       .setHeader(headers.toSeq: _*)
       .execute[Either[ErrorModel, A]]
       .recover {
-        case t: UpstreamErrorResponse => {
-          if (t.statusCode == REQUEST_TIMEOUT) {
-            Left(ErrorModel(REQUEST_TIMEOUT, t.getMessage))
-          } else {
-            throw t
-          }
-        }
+        case t: GatewayTimeoutException =>
+          Left(ErrorModel(REQUEST_TIMEOUT, t.getMessage))
       }
   }
 

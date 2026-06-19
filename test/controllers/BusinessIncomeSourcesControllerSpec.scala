@@ -19,7 +19,7 @@ package controllers
 import common.CommonSpec
 import models.ErrorModel
 import models.subscription.*
-import models.subscription.business.{CreateIncomeSourceErrorModel, CreateIncomeSourceSuccessModel}
+import models.subscription.business.{CreateIncomeSourceSuccessModel}
 import play.api.http.Status.*
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.{ControllerComponents, Request, Result}
