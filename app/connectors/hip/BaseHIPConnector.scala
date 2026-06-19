@@ -20,17 +20,17 @@ import config.AppConfig
 import models.ErrorModel
 import parsers.hip.Parser
 import play.api.http.Status
-import play.api.http.Status.GATEWAY_TIMEOUT
+import play.api.http.Status.REQUEST_TIMEOUT
 import play.api.libs.json.JsValue
 import play.api.libs.ws.JsonBodyWritables.writeableOf_JsValue
 import uk.gov.hmrc.http.client.HttpClientV2
-import uk.gov.hmrc.http.{Authorization, HeaderCarrier, HeaderNames, HttpReads, HttpResponse}
+import uk.gov.hmrc.http.{Authorization, HeaderCarrier, HeaderNames, HttpReads, UpstreamErrorResponse}
 
 import java.net.URL
 import java.time.format.DateTimeFormatter
 import java.time.{Instant, ZoneId}
 import java.util.UUID
-import scala.concurrent.{ExecutionContext, Future, TimeoutException}
+import scala.concurrent.{ExecutionContext, Future}
 
 trait BaseHIPConnector {
 
@@ -53,8 +53,11 @@ trait BaseHIPConnector {
       .setHeader(headers.toSeq: _*)
       .execute[Either[ErrorModel, A]]
       .recover {
-        case t: TimeoutException =>
-          Left(ErrorModel(GATEWAY_TIMEOUT, t.getMessage))
+        case t: UpstreamErrorResponse => if (t.statusCode == REQUEST_TIMEOUT) {
+          Left(ErrorModel(REQUEST_TIMEOUT, t.getMessage))
+        } else {
+          throw t
+        }
       }
   }
   
@@ -73,8 +76,11 @@ trait BaseHIPConnector {
       .setHeader(headers.toSeq: _*)
       .execute[Either[ErrorModel, A]]
       .recover {
-        case t: TimeoutException =>
-          Left(ErrorModel(GATEWAY_TIMEOUT, t.getMessage))
+        case t: UpstreamErrorResponse => if (t.statusCode == REQUEST_TIMEOUT) {
+          Left(ErrorModel(REQUEST_TIMEOUT, t.getMessage))
+        } else {
+          throw t
+        }
       }
   }
 

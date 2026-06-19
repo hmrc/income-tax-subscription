@@ -30,14 +30,14 @@ import org.scalatest.matchers.should.Matchers.shouldBe
 import org.scalatestplus.mockito.MockitoSugar.mock
 import org.scalatestplus.play.PlaySpec
 import parsers.hip.Parser
-import play.api.http.Status.GATEWAY_TIMEOUT
+import play.api.http.Status.REQUEST_TIMEOUT
 import play.api.libs.json.JsString
 import uk.gov.hmrc.http.client.{HttpClientV2, RequestBuilder}
-import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, HttpResponse}
+import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, HttpResponse, UpstreamErrorResponse}
 
 import java.time.Duration
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.{ExecutionContext, Future, TimeoutException}
+import scala.concurrent.{ExecutionContext, Future}
 
 class BaseHIPConnectorSpec extends PlaySpec
   with ScalaFutures
@@ -56,6 +56,7 @@ class BaseHIPConnectorSpec extends PlaySpec
   private val config = mock[Config]
   private val testUrl = "http://localhost:8080/"
   private val builder = mock[RequestBuilder]
+  private val exception = new UpstreamErrorResponse("", REQUEST_TIMEOUT, 0, Map.empty)
 
   implicit val hc: HeaderCarrier = HeaderCarrier()
 
@@ -70,7 +71,7 @@ class BaseHIPConnectorSpec extends PlaySpec
 
     def testPost: Future[Either[ErrorModel, String]] =
       retryFor[Either[ErrorModel, String]](TestParser.apiNumber, TestParser.apiName) {
-        case Left(ErrorModel(GATEWAY_TIMEOUT, _, _)) => true
+        case Left(ErrorModel(REQUEST_TIMEOUT, _, _)) => true
       } {
         super.post[String](
           uri = testUrl,
@@ -81,7 +82,7 @@ class BaseHIPConnectorSpec extends PlaySpec
 
     def testGet: Future[Either[ErrorModel, String]] =
       retryFor[Either[ErrorModel, String]](TestParser.apiNumber, TestParser.apiName) {
-        case Left(ErrorModel(GATEWAY_TIMEOUT, _, _)) => true
+        case Left(ErrorModel(REQUEST_TIMEOUT, _, _)) => true
       } {
         super.get[String](
           uri = testUrl,
@@ -113,8 +114,8 @@ class BaseHIPConnectorSpec extends PlaySpec
   "should retry 2 times and return a successful response when receiving a timeout" when {
     "POST" in {
       when(builder.execute(any(), any()))
-        .thenThrow(new TimeoutException)
-        .thenThrow(new TimeoutException)
+        .thenReturn(Future.failed(exception))
+        .thenReturn(Future.failed(exception))
         .thenReturn(Future.successful(Right(testUrl)))
 
       val result = TestConnector.testPost
@@ -125,8 +126,8 @@ class BaseHIPConnectorSpec extends PlaySpec
 
     "GET" in {
       when(builder.execute(any(), any()))
-        .thenThrow(new TimeoutException)
-        .thenThrow(new TimeoutException)
+        .thenReturn(Future.failed(exception))
+        .thenReturn(Future.failed(exception))
         .thenReturn(Future.successful(Right(testUrl)))
 
       val result = TestConnector.testGet
