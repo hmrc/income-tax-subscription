@@ -23,7 +23,7 @@ import helpers.IntegrationTestConstants.{testArn, testCreateIncomeFailureBody, t
 import helpers.WiremockHelper.StubResponse
 import helpers.servicemocks.{AuditStub, CreateIncomeSourceStub}
 import helpers.{ComponentSpecBase, WiremockHelper}
-import models.DateModel
+import models.{DateModel, ErrorModel}
 import models.subscription.*
 import models.subscription.business.{CreateIncomeSourceErrorModel, CreateIncomeSourceSuccessModel}
 import play.api.http.Status.{CREATED, INTERNAL_SERVER_ERROR, TOO_MANY_REQUESTS, UNPROCESSABLE_ENTITY}
@@ -131,7 +131,7 @@ class ItsaIncomeSourceConnectorISpec extends ComponentSpecBase with FeatureSwitc
             createIncomeSources = testCreateIncomeSources
           )
 
-          result.futureValue shouldBe Left(CreateIncomeSourceErrorModel(
+          result.futureValue shouldBe Left(ErrorModel(
             status = UNPROCESSABLE_ENTITY,
             reason = s"API #5265: Create income sources, Status: $UNPROCESSABLE_ENTITY, Code: 000, Reason: error text"
           ))
@@ -149,7 +149,7 @@ class ItsaIncomeSourceConnectorISpec extends ComponentSpecBase with FeatureSwitc
             createIncomeSources = testCreateIncomeSources
           )
 
-          result.futureValue shouldBe Left(CreateIncomeSourceErrorModel(
+          result.futureValue shouldBe Left(ErrorModel(
             status = UNPROCESSABLE_ENTITY,
             reason = s"API #5265: Create income sources, Status: $UNPROCESSABLE_ENTITY, Message: Failure parsing json response"
           ))
@@ -169,9 +169,9 @@ class ItsaIncomeSourceConnectorISpec extends ComponentSpecBase with FeatureSwitc
         createIncomeSources = testCreateIncomeSources
       )
 
-      result.futureValue shouldBe Left(CreateIncomeSourceErrorModel(
+      result.futureValue shouldBe Left(ErrorModel(
         status = INTERNAL_SERVER_ERROR,
-        reason = s"API #5265: Create income sources, Status: $INTERNAL_SERVER_ERROR, Message: Unexpected retryStatus received"
+        reason = s"API #5265: Create income sources, Status: $INTERNAL_SERVER_ERROR, Message: Unexpected status received"
       ))
       AuditStub.verifyAudit()
     }
