@@ -37,6 +37,7 @@ object SignUpParser {
           case CREATED => handleCreatedResponse(response.json, correlationId)
           case UNPROCESSABLE_ENTITY => handleUnprocessableEntity(response.json, correlationId)
           case FORBIDDEN => handleForbidden(response, correlationId)
+          case TOO_MANY_REQUESTS => handleTooManyRequests(response, correlationId)
           case status => handleOther(status, correlationId)
         }
       }
@@ -59,6 +60,17 @@ object SignUpParser {
     }
 
     private def handleForbidden(response: HttpResponse, correlationId: String): Nothing = {
+      throw SignUpParserException(
+        error = super.error(
+          correlationId = correlationId,
+          status = response.status,
+          reason = response.body
+        ),
+        status = response.status
+      )
+    }
+
+    private def handleTooManyRequests(response: HttpResponse, correlationId: String): Nothing = {
       throw SignUpParserException(
         error = super.error(
           correlationId = correlationId,

@@ -19,10 +19,10 @@ package connectors
 import com.typesafe.config.Config
 import config.AppConfig
 import connectors.hip.BaseHIPConnector
-import models.SignUpRequest
+import models.{ErrorModel, SignUpRequest}
 import org.apache.pekko.actor.ActorSystem
 import parsers.SignUpParser.*
-import play.api.http.Status.FORBIDDEN
+import play.api.http.Status.*
 import play.api.libs.json.{JsObject, Json}
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.{HeaderCarrier, Retries}
@@ -52,7 +52,7 @@ class HIPSignUpTaxYearConnector @Inject()(val httpClient: HttpClientV2,
   def signUp(signUpRequest: SignUpRequest)(implicit hc: HeaderCarrier): Future[PostSignUpResponse] = {
 
     retryFor("HIP API #5317 - Sign Up") {
-      case SignUpParserException(_, FORBIDDEN) => true
+      case SignUpParserException(_, TOO_MANY_REQUESTS) => true
       case _ => false
     } {
       val headers: Map[String, String] = Map(

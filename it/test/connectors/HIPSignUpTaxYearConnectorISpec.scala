@@ -139,11 +139,11 @@ class HIPSignUpTaxYearConnectorISpec extends ComponentSpecBase {
       }
     }
 
-    "receiving a 403 response" should {
-      s"handle consecutive $FORBIDDEN responses and then succeed" in {
+    "receiving a 429 response" should {
+      s"handle consecutive $TOO_MANY_REQUESTS responses and then succeed" in {
         WiremockHelper.stubPostSequence(s"/etmp/RESTAdapter/itsa/taxpayer/signup-mtdfb")(
-          StubResponse(FORBIDDEN),
-          StubResponse(FORBIDDEN),
+          StubResponse(TOO_MANY_REQUESTS),
+          StubResponse(TOO_MANY_REQUESTS),
           StubResponse(CREATED, hipTestSignUpSuccessBody)
         )
 
