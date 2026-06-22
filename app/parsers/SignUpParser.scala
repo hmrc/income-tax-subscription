@@ -21,7 +21,7 @@ import models.{ErrorModel, SignUpResponse}
 import parsers.hip.Parser
 import play.api.http.Status.*
 import play.api.libs.json.*
-import uk.gov.hmrc.http.{HttpReads, HttpResponse, InternalServerException}
+import uk.gov.hmrc.http.{HttpReads, HttpResponse}
 
 object SignUpParser {
 
@@ -36,8 +36,6 @@ object SignUpParser {
         response.status match {
           case CREATED => handleCreatedResponse(response.json, correlationId)
           case UNPROCESSABLE_ENTITY => handleUnprocessableEntity(response.json, correlationId)
-          case FORBIDDEN => handleForbidden(response, correlationId)
-          case TOO_MANY_REQUESTS => handleTooManyRequests(response, correlationId)
           case status => handleOther(status, correlationId)
         }
       }
@@ -57,28 +55,6 @@ object SignUpParser {
         case _ =>
           jsonError(UNPROCESSABLE_ENTITY, correlationId)
       }
-    }
-
-    private def handleForbidden(response: HttpResponse, correlationId: String): Nothing = {
-      throw SignUpParserException(
-        error = super.error(
-          correlationId = correlationId,
-          status = response.status,
-          reason = response.body
-        ),
-        status = response.status
-      )
-    }
-
-    private def handleTooManyRequests(response: HttpResponse, correlationId: String) = {
-      Left(ErrorModel(
-        response.status,
-        super.error(
-          correlationId = correlationId,
-          status = response.status,
-          reason = response.body
-        )
-      ))
     }
 
     private def handleOther(status: Int, correlationId: String) = {
@@ -108,10 +84,6 @@ object SignUpParser {
       ))
 
   }
-
-  case class SignUpParserException(error: String, status: Int) extends InternalServerException(s"[SignUpParserException] - $error - $status")
-
-  private val CustomerAlreadySignedUpEnum: String = "820"
 
   case class Error(processingDate: String,
                    code: String,
