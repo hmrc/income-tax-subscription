@@ -56,11 +56,11 @@ class ItsaIncomeSourceConnector @Inject()(val httpClient: HttpClientV2,
     updateETMP(mtdbsaRef, createIncomeSources) flatMap { result =>
       if (isEnabled(SubmissionAuditUpdate)) {
         auditService.extendedAudit(CreateIncomeSourcesAudit(
-          agentReferenceNumber   = agentReferenceNumber,
-          nino                   = createIncomeSources.nino,
+          agentReferenceNumber = agentReferenceNumber,
+          nino = createIncomeSources.nino,
           mtdItsaReferenceNumber = mtdbsaRef,
-          isSuccess              = result.isRight,
-          errorReason            = result.left.toOption.map(_.reason)
+          isSuccess = result.isRight,
+          errorReason = result.left.toOption.map(_.reason)
         )) map { _ => result }
       } else {
         Future.successful(result)

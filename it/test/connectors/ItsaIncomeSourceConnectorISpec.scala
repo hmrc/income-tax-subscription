@@ -50,7 +50,7 @@ class ItsaIncomeSourceConnectorISpec extends ComponentSpecBase with FeatureSwitc
   "createIncomeSources" must {
     "submit the country code if specified and GB if not" in {
       Map(
-        None       -> "GB",
+        None -> "GB",
         Some("FR") -> "FR"
       ).foreach { entry =>
         val country = entry._1.map(Country(_, ""))

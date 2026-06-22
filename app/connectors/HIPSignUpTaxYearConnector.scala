@@ -19,7 +19,7 @@ package connectors
 import com.typesafe.config.Config
 import config.AppConfig
 import connectors.hip.BaseHIPConnector
-import models.{ErrorModel, SignUpRequest}
+import models.SignUpRequest
 import org.apache.pekko.actor.ActorSystem
 import parsers.SignUpParser.*
 import play.api.http.Status.*
