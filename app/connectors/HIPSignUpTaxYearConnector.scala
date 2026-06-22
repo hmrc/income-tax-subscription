@@ -52,7 +52,7 @@ class HIPSignUpTaxYearConnector @Inject()(val httpClient: HttpClientV2,
   def signUp(signUpRequest: SignUpRequest)(implicit hc: HeaderCarrier): Future[PostSignUpResponse] = {
 
     retryFor[PostSignUpResponse](HIPSignUpResponseParser.apiNumber, HIPSignUpResponseParser.apiName) {
-      case Left(error) if error.status == TOO_MANY_REQUESTS => true
+      case Left(ErrorModel(TOO_MANY_REQUESTS, _, _)) => true
     } {
       val headers: Map[String, String] = Map(
         "X-Message-Type" -> "ITSASignUpMTDfB"
