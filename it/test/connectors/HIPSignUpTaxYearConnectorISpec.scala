@@ -17,13 +17,13 @@
 package connectors
 
 import config.MicroserviceAppConfig
-import helpers.IntegrationTestConstants._
+import helpers.IntegrationTestConstants.*
 import helpers.WiremockHelper.StubResponse
 import helpers.servicemocks.HIPSignUpTaxYearStub
 import helpers.{ComponentSpecBase, WiremockHelper}
 import models.SignUpResponse.SignUpSuccess
 import models.{ErrorModel, SignUpRequest}
-import play.api.http.Status._
+import play.api.http.Status.*
 import play.api.libs.json.Json
 import play.api.mvc.Request
 import play.api.test.FakeRequest
@@ -139,11 +139,11 @@ class HIPSignUpTaxYearConnectorISpec extends ComponentSpecBase {
       }
     }
 
-    "receiving a 403 response" should {
-      s"handle consecutive $FORBIDDEN responses and then succeed" in {
+    "receiving a 429 response" should {
+      s"handle consecutive $TOO_MANY_REQUESTS responses and then succeed" in {
         WiremockHelper.stubPostSequence(s"/etmp/RESTAdapter/itsa/taxpayer/signup-mtdfb")(
-          StubResponse(FORBIDDEN),
-          StubResponse(FORBIDDEN),
+          StubResponse(TOO_MANY_REQUESTS),
+          StubResponse(TOO_MANY_REQUESTS),
           StubResponse(CREATED, hipTestSignUpSuccessBody)
         )
 

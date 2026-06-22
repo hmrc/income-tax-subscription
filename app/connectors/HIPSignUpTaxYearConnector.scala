@@ -19,10 +19,10 @@ package connectors
 import com.typesafe.config.Config
 import config.AppConfig
 import connectors.hip.BaseHIPConnector
-import models.SignUpRequest
+import models.{ErrorModel, SignUpRequest}
 import org.apache.pekko.actor.ActorSystem
 import parsers.SignUpParser.*
-import play.api.http.Status.FORBIDDEN
+import play.api.http.Status.*
 import play.api.libs.json.{JsObject, Json}
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.{HeaderCarrier, Retries}
@@ -35,7 +35,7 @@ class HIPSignUpTaxYearConnector @Inject()(val httpClient: HttpClientV2,
                                           val appConfig: AppConfig,
                                           val configuration: Config,
                                           val actorSystem: ActorSystem)
-                                         (implicit val ec: ExecutionContext) extends BaseHIPConnector with Retries {
+                                         (implicit val ec: ExecutionContext) extends BaseHIPConnector with ConnectorRetries {
 
   private def signUpUrl =
     s"/etmp/RESTAdapter/itsa/taxpayer/signup-mtdfb"
@@ -51,9 +51,8 @@ class HIPSignUpTaxYearConnector @Inject()(val httpClient: HttpClientV2,
 
   def signUp(signUpRequest: SignUpRequest)(implicit hc: HeaderCarrier): Future[PostSignUpResponse] = {
 
-    retryFor("HIP API #5317 - Sign Up") {
-      case SignUpParserException(_, FORBIDDEN) => true
-      case _ => false
+    retryFor[PostSignUpResponse](HIPSignUpResponseParser.apiNumber, HIPSignUpResponseParser.apiName) {
+      case Left(ErrorModel(TOO_MANY_REQUESTS, _, _)) => true
     } {
       val headers: Map[String, String] = Map(
         "X-Message-Type" -> "ITSASignUpMTDfB"
