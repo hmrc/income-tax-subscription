@@ -70,15 +70,15 @@ object SignUpParser {
       )
     }
 
-    private def handleTooManyRequests(response: HttpResponse, correlationId: String): Nothing = {
-      throw SignUpParserException(
-        error = super.error(
+    private def handleTooManyRequests(response: HttpResponse, correlationId: String) = {
+      Left(ErrorModel(
+        response.status,
+        super.error(
           correlationId = correlationId,
           status = response.status,
           reason = response.body
-        ),
-        status = response.status
-      )
+        )
+      ))
     }
 
     private def handleOther(status: Int, correlationId: String) = {
