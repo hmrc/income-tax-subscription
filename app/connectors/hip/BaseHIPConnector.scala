@@ -20,11 +20,11 @@ import config.AppConfig
 import models.ErrorModel
 import parsers.hip.Parser
 import play.api.http.Status
-import play.api.http.Status.REQUEST_TIMEOUT
+import play.api.http.Status.GATEWAY_TIMEOUT
 import play.api.libs.json.JsValue
 import play.api.libs.ws.JsonBodyWritables.writeableOf_JsValue
 import uk.gov.hmrc.http.client.HttpClientV2
-import uk.gov.hmrc.http.{Authorization, GatewayTimeoutException, HeaderCarrier, HeaderNames, HttpReads, UpstreamErrorResponse}
+import uk.gov.hmrc.http.{Authorization, GatewayTimeoutException, HeaderCarrier, HeaderNames, HttpReads}
 
 import java.net.URL
 import java.time.format.DateTimeFormatter
@@ -52,7 +52,7 @@ trait BaseHIPConnector {
       .get(getFullUrl(uri))(headerCarrier)
       .setHeader(headers.toSeq: _*)
       .execute[Either[ErrorModel, A]]
-      .recover(recoverTimeout)
+      .recover(recoverTimeout _)
   }
   
   def post[A](uri: String, body: JsValue, parser: Parser[Either[ErrorModel, A]], additionalHeaders: Map[String, String] = Map.empty)
@@ -69,12 +69,12 @@ trait BaseHIPConnector {
       .withBody(body)
       .setHeader(headers.toSeq: _*)
       .execute[Either[ErrorModel, A]]
-      .recover(recoverTimeout)
+      .recover(recoverTimeout _)
   }
 
   private def recoverTimeout(t: Throwable) = t match {
     case t: GatewayTimeoutException =>
-      Left(ErrorModel(REQUEST_TIMEOUT, t.getMessage))
+      Left(ErrorModel(GATEWAY_TIMEOUT, t.getMessage))
     case _ =>
       throw t
   }
