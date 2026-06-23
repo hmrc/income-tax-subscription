@@ -21,9 +21,9 @@ import config.AppConfig
 import config.featureswitch.FeatureSwitch.SubmissionAuditUpdate
 import config.featureswitch.FeatureSwitching
 import connectors.hip.BaseHIPConnector
+import models.ErrorModel
 import models.monitoring.{CreateIncomeSourcesAudit, SignUpAudit}
 import models.subscription.CreateIncomeSourcesModel
-import models.subscription.business.CreateIncomeSourceErrorModel
 import org.apache.pekko.actor.ActorSystem
 import parsers.ITSAIncomeSourceParser.*
 import play.api.http.Status.TOO_MANY_REQUESTS
@@ -56,11 +56,11 @@ class ItsaIncomeSourceConnector @Inject()(val httpClient: HttpClientV2,
     updateETMP(mtdbsaRef, createIncomeSources) flatMap { result =>
       if (isEnabled(SubmissionAuditUpdate)) {
         auditService.extendedAudit(CreateIncomeSourcesAudit(
-          agentReferenceNumber = agentReferenceNumber,
-          nino = createIncomeSources.nino,
+          agentReferenceNumber   = agentReferenceNumber,
+          nino                   = createIncomeSources.nino,
           mtdItsaReferenceNumber = mtdbsaRef,
-          isSuccess = result.isRight,
-          errorReason = result.left.toOption.map(_.reason)
+          isSuccess              = result.isRight,
+          errorReason            = result.left.toOption.map(_.reason)
         )) map { _ => result }
       } else {
         Future.successful(result)
@@ -72,7 +72,7 @@ class ItsaIncomeSourceConnector @Inject()(val httpClient: HttpClientV2,
                          createIncomeSources: CreateIncomeSourcesModel)
                         (implicit hc: HeaderCarrier): Future[PostITSAIncomeSourceResponse] = {
     retryFor[PostITSAIncomeSourceResponse](ITSAIncomeSourceResponseHttpReads.apiNumber, ITSAIncomeSourceResponseHttpReads.apiName) {
-      case Left(CreateIncomeSourceErrorModel(TOO_MANY_REQUESTS, _)) => true
+      case Left(ErrorModel(TOO_MANY_REQUESTS, _, _)) => true
     } {
       val headers: Map[String, String] = Map(
         "X-Message-Type" -> "CreateIncomeSource"

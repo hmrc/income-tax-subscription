@@ -23,9 +23,9 @@ import helpers.IntegrationTestConstants.{testArn, testCreateIncomeFailureBody, t
 import helpers.WiremockHelper.StubResponse
 import helpers.servicemocks.{AuditStub, CreateIncomeSourceStub}
 import helpers.{ComponentSpecBase, WiremockHelper}
-import models.DateModel
+import models.{DateModel, ErrorModel}
 import models.subscription.*
-import models.subscription.business.{CreateIncomeSourceErrorModel, CreateIncomeSourceSuccessModel}
+import models.subscription.business.{CreateIncomeSourceSuccessModel}
 import play.api.http.Status.{CREATED, INTERNAL_SERVER_ERROR, TOO_MANY_REQUESTS, UNPROCESSABLE_ENTITY}
 import play.api.libs.json.{JsObject, Json}
 import play.api.mvc.Request
@@ -50,7 +50,7 @@ class ItsaIncomeSourceConnectorISpec extends ComponentSpecBase with FeatureSwitc
   "createIncomeSources" must {
     "submit the country code if specified and GB if not" in {
       Map(
-        None -> "GB",
+        None       -> "GB",
         Some("FR") -> "FR"
       ).foreach { entry =>
         val country = entry._1.map(Country(_, ""))
@@ -96,7 +96,7 @@ class ItsaIncomeSourceConnectorISpec extends ComponentSpecBase with FeatureSwitc
         AuditStub.verifyAuditCount(1 + (if (submissionAuditUpdateEnabled) 1 else 0))
       }
     }
-
+    
     s"should retry 2 times and return a successful response when receiving a $TOO_MANY_REQUESTS retryStatus" in {
       WiremockHelper.stubPostSequence(s"/etmp/RESTAdapter/itsa/taxpayer/income-source")(
         StubResponse(TOO_MANY_REQUESTS),
@@ -131,7 +131,7 @@ class ItsaIncomeSourceConnectorISpec extends ComponentSpecBase with FeatureSwitc
             createIncomeSources = testCreateIncomeSources
           )
 
-          result.futureValue shouldBe Left(CreateIncomeSourceErrorModel(
+          result.futureValue shouldBe Left(ErrorModel(
             status = UNPROCESSABLE_ENTITY,
             reason = s"API #5265: Create income sources, Status: $UNPROCESSABLE_ENTITY, Code: 000, Reason: error text"
           ))
@@ -149,7 +149,7 @@ class ItsaIncomeSourceConnectorISpec extends ComponentSpecBase with FeatureSwitc
             createIncomeSources = testCreateIncomeSources
           )
 
-          result.futureValue shouldBe Left(CreateIncomeSourceErrorModel(
+          result.futureValue shouldBe Left(ErrorModel(
             status = UNPROCESSABLE_ENTITY,
             reason = s"API #5265: Create income sources, Status: $UNPROCESSABLE_ENTITY, Message: Failure parsing json response"
           ))
@@ -169,7 +169,7 @@ class ItsaIncomeSourceConnectorISpec extends ComponentSpecBase with FeatureSwitc
         createIncomeSources = testCreateIncomeSources
       )
 
-      result.futureValue shouldBe Left(CreateIncomeSourceErrorModel(
+      result.futureValue shouldBe Left(ErrorModel(
         status = INTERNAL_SERVER_ERROR,
         reason = s"API #5265: Create income sources, Status: $INTERNAL_SERVER_ERROR, Message: Unexpected status received"
       ))

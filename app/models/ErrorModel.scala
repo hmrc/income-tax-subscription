@@ -24,7 +24,7 @@ trait ErrorResponsesModel {
   def reason: String
 }
 
-case class ErrorModel(status: Int, code: Option[String], reason: String) extends ErrorResponsesModel {
+case class ErrorModel(status: Int, code: Option[String] = None, reason: String) extends ErrorResponsesModel {
   override def toString: String = s"ErrorModel($status,${code.fold("")(x => x + ",")}$reason)"
 }
 

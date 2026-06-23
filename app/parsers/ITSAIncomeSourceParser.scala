@@ -16,7 +16,8 @@
 
 package parsers
 
-import models.subscription.business.{CreateIncomeSourceErrorModel, CreateIncomeSourceSuccessModel}
+import models.ErrorModel
+import models.subscription.business.CreateIncomeSourceSuccessModel
 import parsers.hip.Parser
 import play.api.Logging
 import play.api.http.Status.{CREATED, FORBIDDEN, UNPROCESSABLE_ENTITY}
@@ -25,7 +26,7 @@ import uk.gov.hmrc.http.{HttpReads, HttpResponse, InternalServerException}
 
 object ITSAIncomeSourceParser extends Logging {
 
-  type PostITSAIncomeSourceResponse = Either[CreateIncomeSourceErrorModel, CreateIncomeSourceSuccessModel]
+  type PostITSAIncomeSourceResponse = Either[ErrorModel, CreateIncomeSourceSuccessModel]
 
   object ITSAIncomeSourceResponseHttpReads extends Parser[PostITSAIncomeSourceResponse] {
 
@@ -58,7 +59,7 @@ object ITSAIncomeSourceParser extends Logging {
     private def handleUnprocessableEntityResponse(json: JsValue, correlationId: String) = {
       (json \ "errors").validate[Error] match {
         case JsSuccess(error, _) =>
-          Left(CreateIncomeSourceErrorModel(
+          Left(ErrorModel(
             status = UNPROCESSABLE_ENTITY,
             reason = super.error(
               correlationId = correlationId,
@@ -68,7 +69,7 @@ object ITSAIncomeSourceParser extends Logging {
             )
           ))
         case _ =>
-          Left(CreateIncomeSourceErrorModel(
+          Left(ErrorModel(
             status = UNPROCESSABLE_ENTITY,
             reason = super.error(
               correlationId = correlationId,
@@ -81,7 +82,7 @@ object ITSAIncomeSourceParser extends Logging {
     }
 
     private def handleOtherResponse(status: Int, correlationId: String) = {
-      Left(CreateIncomeSourceErrorModel(
+      Left(ErrorModel(
         status = status,
         reason = super.error(
           correlationId = correlationId,

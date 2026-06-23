@@ -17,11 +17,14 @@
 package connectors.hip
 
 import config.AppConfig
+import models.ErrorModel
 import parsers.hip.Parser
+import play.api.http.Status
+import play.api.http.Status.GATEWAY_TIMEOUT
 import play.api.libs.json.JsValue
 import play.api.libs.ws.JsonBodyWritables.writeableOf_JsValue
 import uk.gov.hmrc.http.client.HttpClientV2
-import uk.gov.hmrc.http.{Authorization, HeaderCarrier, HeaderNames, HttpReads}
+import uk.gov.hmrc.http.{Authorization, GatewayTimeoutException, HeaderCarrier, HeaderNames, HttpReads}
 
 import java.net.URL
 import java.time.format.DateTimeFormatter
@@ -36,35 +39,44 @@ trait BaseHIPConnector {
 
   implicit val ec: ExecutionContext
 
-  def get[A](uri: String, parser: Parser[A], additionalHeaders: Map[String, String] = Map.empty)
-            (implicit hc: HeaderCarrier): Future[A] = {
+  def get[A](uri: String, parser: Parser[Either[ErrorModel, A]], additionalHeaders: Map[String, String] = Map.empty)
+            (implicit hc: HeaderCarrier): Future[Either[ErrorModel, A]] = {
 
     val correlationId: String = UUID.randomUUID().toString
     val headers = fullHeaders(correlationId, additionalHeaders)
     val headerCarrier = fullHeaderCarrier(hc, headers)
 
-    implicit val reads: HttpReads[A] = parser.httpReads(correlationId)
+    implicit val reads: HttpReads[Either[ErrorModel, A]] = parser.httpReads(correlationId)
 
     httpClient
       .get(getFullUrl(uri))(headerCarrier)
       .setHeader(headers.toSeq: _*)
-      .execute[A]
+      .execute[Either[ErrorModel, A]]
+      .recover(recoverTimeout _)
   }
-
-  def post[A](uri: String, body: JsValue, parser: Parser[A], additionalHeaders: Map[String, String] = Map.empty)
-             (implicit hc: HeaderCarrier): Future[A] = {
+  
+  def post[A](uri: String, body: JsValue, parser: Parser[Either[ErrorModel, A]], additionalHeaders: Map[String, String] = Map.empty)
+             (implicit hc: HeaderCarrier): Future[Either[ErrorModel, A]] = {
 
     val correlationId: String = UUID.randomUUID().toString
     val headers = fullHeaders(correlationId, additionalHeaders)
     val headerCarrier = fullHeaderCarrier(hc, headers)
 
-    implicit val reads: HttpReads[A] = parser.httpReads(correlationId)
+    implicit val reads: HttpReads[Either[ErrorModel, A]] = parser.httpReads(correlationId)
 
     httpClient
       .post(getFullUrl(uri))(headerCarrier)
       .withBody(body)
       .setHeader(headers.toSeq: _*)
-      .execute[A]
+      .execute[Either[ErrorModel, A]]
+      .recover(recoverTimeout _)
+  }
+
+  private def recoverTimeout(t: Throwable) = t match {
+    case t: GatewayTimeoutException =>
+      Left(ErrorModel(GATEWAY_TIMEOUT, t.getMessage))
+    case _ =>
+      throw t
   }
 
   private def fullHeaders(correlationId: String, additionalHeaders: Map[String, String]): Map[String, String] = Map(
