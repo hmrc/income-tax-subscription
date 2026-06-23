@@ -52,10 +52,7 @@ trait BaseHIPConnector {
       .get(getFullUrl(uri))(headerCarrier)
       .setHeader(headers.toSeq: _*)
       .execute[Either[ErrorModel, A]]
-      .recover {
-        case t: GatewayTimeoutException =>
-          Left(ErrorModel(REQUEST_TIMEOUT, t.getMessage))
-      }
+      .recover(recoverTimeout)
   }
   
   def post[A](uri: String, body: JsValue, parser: Parser[Either[ErrorModel, A]], additionalHeaders: Map[String, String] = Map.empty)
@@ -72,10 +69,14 @@ trait BaseHIPConnector {
       .withBody(body)
       .setHeader(headers.toSeq: _*)
       .execute[Either[ErrorModel, A]]
-      .recover {
-        case t: GatewayTimeoutException =>
-          Left(ErrorModel(REQUEST_TIMEOUT, t.getMessage))
-      }
+      .recover(recoverTimeout)
+  }
+
+  private def recoverTimeout(t: Throwable) = t match {
+    case t: GatewayTimeoutException =>
+      Left(ErrorModel(REQUEST_TIMEOUT, t.getMessage))
+    case _ =>
+      throw t
   }
 
   private def fullHeaders(correlationId: String, additionalHeaders: Map[String, String]): Map[String, String] = Map(
