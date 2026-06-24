@@ -35,20 +35,27 @@ class HIPSignUpTaxYearConnectorISpec extends ComponentSpecBase {
   lazy val appConfig: MicroserviceAppConfig = app.injector.instanceOf[MicroserviceAppConfig]
   implicit val request: Request[_] = FakeRequest()
 
-  lazy val testSignUpRequest: SignUpRequest = SignUpRequest(nino = testNino, utr = testUtr, taxYear = testTaxYear)
+  private def testSignUpRequest(withIdemPotency: Boolean= false) = SignUpRequest(
+    nino = testNino,
+    utr = testUtr,
+    taxYear = testTaxYear,
+    idempotencyKey = if (withIdemPotency) Some("1234") else None
+  )
 
   "The sign up tax year connector" when {
     "receiving a 201 response" should {
       "return a valid MTDBSA number when valid json is found and utr is submitted" in {
-        HIPSignUpTaxYearStub.stubSignUp(
-          hipTestTaxYearSignUpRequestBodyWithUtr(testNino, testUtr, testTaxYear)
-        )(
-          CREATED, hipTestSignUpSuccessBody
-        )
+        Seq(false, true).foreach { withIdempotency =>
+          HIPSignUpTaxYearStub.stubSignUp(
+            hipTestTaxYearSignUpRequestBodyWithUtr(testNino, testUtr, testTaxYear, withIdempotency)
+          )(
+            CREATED, hipTestSignUpSuccessBody
+          )
 
-        val result = signUpConnector.signUp(testSignUpRequest)
+          val result = signUpConnector.signUp(testSignUpRequest(withIdempotency))
 
-        result.futureValue shouldBe Right(SignUpSuccess("XQIT00000000001"))
+          result.futureValue shouldBe Right(SignUpSuccess("XQIT00000000001"))
+        }
       }
 
       "return a Json parse failure when invalid json is found" in {
@@ -58,7 +65,7 @@ class HIPSignUpTaxYearConnectorISpec extends ComponentSpecBase {
           CREATED, hipTestSignUpInvalidBody
         )
 
-        val result = signUpConnector.signUp(testSignUpRequest)
+        val result = signUpConnector.signUp(testSignUpRequest())
 
         result.futureValue shouldBe Left(
           ErrorModel(status = CREATED, "API #5317: ITSA Sign Up, Status: 201, Message: Failure parsing json response")
@@ -77,7 +84,7 @@ class HIPSignUpTaxYearConnectorISpec extends ComponentSpecBase {
           )
         )
 
-        val result = signUpConnector.signUp(testSignUpRequest)
+        val result = signUpConnector.signUp(testSignUpRequest())
 
         result.futureValue shouldBe Left(ErrorModel(
           status = UNPROCESSABLE_ENTITY,
@@ -93,7 +100,7 @@ class HIPSignUpTaxYearConnectorISpec extends ComponentSpecBase {
           UNPROCESSABLE_ENTITY, testSignUpInvalidBody
         )
 
-        val result = signUpConnector.signUp(testSignUpRequest)
+        val result = signUpConnector.signUp(testSignUpRequest())
 
         result.futureValue shouldBe Left(
           ErrorModel(status = UNPROCESSABLE_ENTITY, "API #5317: ITSA Sign Up, Status: 422, Message: Failure parsing json response")
@@ -112,7 +119,7 @@ class HIPSignUpTaxYearConnectorISpec extends ComponentSpecBase {
           )
         )
 
-        val result = signUpConnector.signUp(testSignUpRequest)
+        val result = signUpConnector.signUp(testSignUpRequest())
 
         result.futureValue shouldBe Left(
           ErrorModel(UNPROCESSABLE_ENTITY, Some("002"), "API #5317: ITSA Sign Up, Status: 422, Code: 002, Reason: ID not found")
@@ -131,7 +138,7 @@ class HIPSignUpTaxYearConnectorISpec extends ComponentSpecBase {
           )
         )
 
-        val result = signUpConnector.signUp(testSignUpRequest)
+        val result = signUpConnector.signUp(testSignUpRequest())
 
         result.futureValue shouldBe Left(
           ErrorModel(INTERNAL_SERVER_ERROR, "API #5317: ITSA Sign Up, Status: 500, Message: Unexpected status returned")
@@ -147,7 +154,7 @@ class HIPSignUpTaxYearConnectorISpec extends ComponentSpecBase {
           StubResponse(CREATED, hipTestSignUpSuccessBody)
         )
 
-        val result = signUpConnector.signUp(testSignUpRequest)
+        val result = signUpConnector.signUp(testSignUpRequest())
 
         result.futureValue shouldBe Right(SignUpSuccess("XQIT00000000001"))
 

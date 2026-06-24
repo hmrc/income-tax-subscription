@@ -195,17 +195,21 @@ object IntegrationTestConstants extends JsonUtils {
     ))
   )
 
-  def hipTestTaxYearSignUpRequestBodyWithUtr(nino: String, utr: String, taxYear: String): JsValue = Json.parse(
-    s"""
-       |{
-       |  "signUpMTDfB": {
-       |    "nino": "$nino",
-       |    "utr": "$utr",
-       |    "signupTaxYear": "$taxYear"
-       |  }
-       |}
-    """.stripMargin
-  )
+  def hipTestTaxYearSignUpRequestBodyWithUtr(nino: String, utr: String, taxYear: String, withIdempotency: Boolean = false): JsValue = {
+    val idemPotency = if (withIdempotency) """ ,"idempotencyKey": "1234" """ else ""
+    Json.parse(
+      s"""
+         |{
+         |  "signUpMTDfB": {
+         |    "nino": "$nino",
+         |    "utr": "$utr",
+         |    "signupTaxYear": "$taxYear"
+         |    $idemPotency
+         |  }
+         |}
+      """.stripMargin
+    )
+  }
 
   val hipTestSignUpSuccessBody: JsValue = Json.parse(
     """
