@@ -21,29 +21,41 @@ import play.api.libs.json.{JsSuccess, Json}
 
 class SignUpRequestSpec extends PlaySpec {
 
-  val signUpRequestModel: SignUpRequest = SignUpRequest(
+  private val data1: SignUpRequest = SignUpRequest(
     nino = "test-nino",
     utr = "test-utr",
     taxYear = "2024-2025"
   )
 
-  val json = Json.obj(
+  private val data2 = data1.copy(
+    idempotencyKey = Some("1234")
+  )
+
+  private val json1 = Json.obj(
     "nino" -> "test-nino",
     "utr" -> "test-utr",
     "taxYear" -> "2024-2025"
   )
 
+  private val json2 = json1 ++ Json.obj(
+    "idempotencyKey" -> "1234"
+  )
+
+  private val data = Map(
+    "without [idemPotencyKey]" -> (data1, json1),
+    "eith [idemPotencyKey" -> (data2, json2)
+  )
+  
   "SignUpRequest" must {
-    "successfully read from json" in {
-      Json.fromJson[SignUpRequest](json) mustBe JsSuccess(signUpRequestModel)
-    }
-    "successfully write to json" in {
-      Json.toJson(signUpRequestModel) mustBe json
+    
+    data.foreach { case (k, v) =>
+      s"successfully read from json ($k)" in {
+        Json.fromJson[SignUpRequest](v._2) mustBe JsSuccess(v._1)
+      }
+
+      s"successfully write to json ($k)" in {
+        Json.toJson(v._1) mustBe v._2
+      }
     }
   }
-
-
-
-
-
 }
