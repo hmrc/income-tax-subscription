@@ -32,7 +32,7 @@ class BusinessIncomeSourcesControllerISpec extends ComponentSpecBase {
     s"return a $NO_CONTENT response" when {
       "income sources are successfully submitted" in {
         AuthStub.stubAuth(OK)
-        CreateIncomeSourceStub.stubItsaIncomeSource(Json.toJson(testCreateIncomeSources)(CreateIncomeSourcesModel.hipWrites(testMtdbsaRef))
+        CreateIncomeSourceStub.stubItsaIncomeSource(Json.toJson(testCreateIncomeSources())(CreateIncomeSourcesModel.hipWrites(testMtdbsaRef))
         )(CREATED, testCreateIncomeSuccessBody)
 
         val result: WSResponse = IncomeTaxSubscription.businessIncomeSource(testMtdbsaRef, testCreateIncomeSourcesJson)
@@ -43,7 +43,7 @@ class BusinessIncomeSourcesControllerISpec extends ComponentSpecBase {
     s"return a $INTERNAL_SERVER_ERROR response" when {
       "the submission of income sources failed" in {
         AuthStub.stubAuth(OK)
-        CreateIncomeSourceStub.stubItsaIncomeSource(Json.toJson(testCreateIncomeSources)(CreateIncomeSourcesModel.hipWrites(testMtdbsaRef))
+        CreateIncomeSourceStub.stubItsaIncomeSource(Json.toJson(testCreateIncomeSources())(CreateIncomeSourcesModel.hipWrites(testMtdbsaRef))
         )(INTERNAL_SERVER_ERROR, testCreateIncomeFailureBody)
 
         val result: WSResponse = IncomeTaxSubscription.businessIncomeSource(testMtdbsaRef, testCreateIncomeSourcesJson)

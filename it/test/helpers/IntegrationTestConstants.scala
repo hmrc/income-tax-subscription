@@ -166,7 +166,7 @@ object IntegrationTestConstants extends JsonUtils {
   )
 
   val now: LocalDate = LocalDate.now
-  val testCreateIncomeSources: CreateIncomeSourcesModel = CreateIncomeSourcesModel(
+  def testCreateIncomeSources(withIdempotency: Boolean = false): CreateIncomeSourcesModel = CreateIncomeSourcesModel(
     nino = testNino,
     soleTraderBusinesses = Some(SoleTraderBusinesses(
       accountingPeriod = AccountingPeriodModel(now, now),
@@ -192,7 +192,8 @@ object IntegrationTestConstants extends JsonUtils {
       accountingPeriod = AccountingPeriodModel(now, now),
       startDateBeforeLimit = false,
       tradingStartDate = LocalDate.now
-    ))
+    )),
+    idempotencyKey = if (withIdempotency) Some("1234") else None
   )
 
   def hipTestTaxYearSignUpRequestBodyWithUtr(nino: String, utr: String, taxYear: String, withIdempotency: Boolean = false): JsValue = {
