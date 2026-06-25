@@ -395,7 +395,7 @@ class CreateIncomeSourcesModelSpec extends PlaySpec {
       "tradingStartDate" -> desFormattedNow
     ),
     "idempotencyKey" -> "1234",
-    "addIncomeSources" -> false
+    "addIncomeSource" -> false
   )
 
   lazy val contextualTaxYear: String = (DateModel.dateConvert(now).getYear + 1).toString

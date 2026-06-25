@@ -109,7 +109,7 @@ object CreateIncomeSourcesModel {
       model.overseasProperty.map(overseasProperty) ++
       model.idempotencyKey.map { k => Json.obj(
         "idempotencyKey" -> k,
-        "addIncomeSources" -> false
+        "addIncomeSource" -> false
       )}
   }
 
