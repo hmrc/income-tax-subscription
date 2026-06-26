@@ -19,7 +19,7 @@ package controllers
 import common.CommonSpec
 import models.ErrorModel
 import models.subscription.*
-import models.subscription.business.{CreateIncomeSourceSuccessModel}
+import models.subscription.business.CreateIncomeSourceSuccessModel
 import play.api.http.Status.*
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.{ControllerComponents, Request, Result}
@@ -40,24 +40,26 @@ class BusinessIncomeSourcesControllerSpec extends CommonSpec
   "createIncomeSource" when {
     s"return a $NO_CONTENT response" when {
       "the income sources were successfully submitted" in {
-        mockAgentAuthSuccess()
-        mockCreateIncomeSources(Some(testArn), mtditid, testCreateIncomeSources)(
-          Right(CreateIncomeSourceSuccessModel())
-        )
+        Seq(false, true).foreach { withIdempotency =>
+          mockAgentAuthSuccess()
+          mockCreateIncomeSources(Some(testArn), mtditid, testCreateIncomeSources(withIdempotency))(
+            Right(CreateIncomeSourceSuccessModel())
+          )
 
-        val result: Future[Result] = TestController.createIncomeSource(mtditid)(postSaveAndRetrieveRequest)
+          val result: Future[Result] = TestController.createIncomeSource(mtditid)(postSaveAndRetrieveRequest(withIdempotency))
 
-        status(result) shouldBe NO_CONTENT
+          status(result) shouldBe NO_CONTENT
+        }
       }
     }
     s"return a $INTERNAL_SERVER_ERROR response" when {
       "there was an error submitting" in {
         mockAgentAuthSuccess()
-        mockCreateIncomeSources(Some(testArn), mtditid, testCreateIncomeSources)(
+        mockCreateIncomeSources(Some(testArn), mtditid, testCreateIncomeSources())(
           Left(ErrorModel(INTERNAL_SERVER_ERROR, "error"))
         )
 
-        val result: Future[Result] = TestController.createIncomeSource(mtditid)(postSaveAndRetrieveRequest)
+        val result: Future[Result] = TestController.createIncomeSource(mtditid)(postSaveAndRetrieveRequest())
 
         status(result) shouldBe INTERNAL_SERVER_ERROR
         contentAsString(result) shouldBe "Create Income Sources Failure"
@@ -75,7 +77,7 @@ class BusinessIncomeSourcesControllerSpec extends CommonSpec
 
   lazy val now: LocalDate = LocalDate.now
 
-  lazy val testCreateIncomeSources: CreateIncomeSourcesModel = CreateIncomeSourcesModel(
+  def testCreateIncomeSources(withIdempotency: Boolean = false): CreateIncomeSourcesModel = CreateIncomeSourcesModel(
     nino = testNino,
     soleTraderBusinesses = Some(SoleTraderBusinesses(
       accountingPeriod = AccountingPeriodModel(now, now),
@@ -101,10 +103,11 @@ class BusinessIncomeSourcesControllerSpec extends CommonSpec
       accountingPeriod = AccountingPeriodModel(now, now),
       startDateBeforeLimit = false,
       tradingStartDate = LocalDate.now
-    ))
+    )),
+    idempotencyKey = if (withIdempotency) Some("1234") else None
   )
 
-  lazy val testCreateIncomeSourcesJson: JsValue = Json.obj(
+  lazy val testCreateIncomeSourcesJson = Json.obj(
     "nino" -> testNino,
     "soleTraderBusinesses" -> Json.obj(
       "accountingPeriod" -> Json.obj(
@@ -190,7 +193,17 @@ class BusinessIncomeSourcesControllerSpec extends CommonSpec
     )
   )
 
-  lazy val postSaveAndRetrieveRequest: Request[JsValue] = FakeRequest().withBody(testCreateIncomeSourcesJson)
+  def postSaveAndRetrieveRequest(withIdempotency: Boolean = false): Request[JsValue] =
+    FakeRequest().withBody(
+      if (withIdempotency) {
+        testCreateIncomeSourcesJson ++ Json.obj(
+          "idempotencyKey" -> "1234",
+          "addIncomeSource" -> false
+        )
+      } else {
+        testCreateIncomeSourcesJson
+      }
+    )
 
 
 }
