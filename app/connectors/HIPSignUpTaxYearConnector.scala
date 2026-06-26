@@ -42,11 +42,14 @@ class HIPSignUpTaxYearConnector @Inject()(val httpClient: HttpClientV2,
 
   def requestBody(signUpRequest: SignUpRequest): JsObject =
     Json.obj(
-      "signUpMTDfB" -> Json.obj(
-        "nino" -> signUpRequest.nino,
-        "utr" -> signUpRequest.utr,
-        "signupTaxYear" -> signUpRequest.taxYear
-      )
+      "signUpMTDfB" ->
+        (Json.obj(
+          "nino" -> signUpRequest.nino,
+          "utr" -> signUpRequest.utr,
+          "signupTaxYear" -> signUpRequest.taxYear
+        ) ++ signUpRequest.idempotencyKey.fold(Json.obj()) { key =>
+          Json.obj("idempotencyKey" -> key)
+        })
     )
 
   def signUp(signUpRequest: SignUpRequest)(implicit hc: HeaderCarrier): Future[PostSignUpResponse] = {
