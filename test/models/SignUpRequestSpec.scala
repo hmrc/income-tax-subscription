@@ -43,7 +43,7 @@ class SignUpRequestSpec extends PlaySpec {
 
   private val data = Map(
     "without [idemPotencyKey]" -> (data1, json1),
-    "eith [idemPotencyKey" -> (data2, json2)
+    "with [idemPotencyKey" -> (data2, json2)
   )
   
   "SignUpRequest" must {

@@ -31,24 +31,29 @@ class SignUpControllerISpec extends ComponentSpecBase {
   val appConfig: MicroserviceAppConfig = app.injector.instanceOf[MicroserviceAppConfig]
   val signUpController: SignUpController = app.injector.instanceOf[SignUpController]
 
-  lazy val testSignUpRequest: SignUpRequest =
-    SignUpRequest(testNino, testUtr, testTaxYear)
+  def testSignUpRequest(withIdemPotency: Boolean = false): SignUpRequest =
+    SignUpRequest(
+      nino = testNino,
+      utr = testUtr,
+      taxYear = testTaxYear,
+      idempotencyKey = if (withIdemPotency) Some("1234") else None
+    )
 
   "signUp" when {
     "call sign up connector successfully when auth succeeds for a sign up submission 200" in {
-      AuthStub.stubAuth(OK)
-      HIPSignUpTaxYearStub.stubSignUp(
-        hipTestTaxYearSignUpRequestBodyWithUtr(testNino, testUtr, testTaxYear)
-      )(CREATED, hipTestSignUpSuccessBody)
+      Seq(false, true).foreach { withIdempotency =>
+        AuthStub.stubAuth(OK)
+        HIPSignUpTaxYearStub.stubSignUp(
+          hipTestTaxYearSignUpRequestBodyWithUtr(testNino, testUtr, testTaxYear, withIdempotency)
+        )(CREATED, hipTestSignUpSuccessBody)
 
-      val res = IncomeTaxSubscription.signUp(testSignUpRequest)
+        val res = IncomeTaxSubscription.signUp(testSignUpRequest(withIdempotency))
 
-      res should have(
-        httpStatus(OK)
-      )
-      res should have(
-        jsonBodyAs[SignUpSuccess](SignUpSuccess("XQIT00000000001"))
-      )
+        res should have(
+          httpStatus(OK),
+          jsonBodyAs[SignUpSuccess](SignUpSuccess("XQIT00000000001"))
+        )
+      }
     }
 
     "return a Json parse failure when invalid json is found" in {
@@ -57,7 +62,7 @@ class SignUpControllerISpec extends ComponentSpecBase {
         hipTestTaxYearSignUpRequestBodyWithUtr(testNino, testUtr, testTaxYear)
       )(CREATED, hipTestSignUpInvalidBody)
 
-      val res = IncomeTaxSubscription.signUp(testSignUpRequest)
+      val res = IncomeTaxSubscription.signUp(testSignUpRequest())
 
       res should have(
         httpStatus(INTERNAL_SERVER_ERROR)
@@ -75,7 +80,7 @@ class SignUpControllerISpec extends ComponentSpecBase {
         )
       )
 
-      val res = IncomeTaxSubscription.signUp(testSignUpRequest)
+      val res = IncomeTaxSubscription.signUp(testSignUpRequest())
 
       res should have(
         httpStatus(INTERNAL_SERVER_ERROR)
