@@ -25,7 +25,7 @@ import helpers.servicemocks.{AuditStub, CreateIncomeSourceStub}
 import helpers.{ComponentSpecBase, WiremockHelper}
 import models.{DateModel, ErrorModel}
 import models.subscription.*
-import models.subscription.business.{CreateIncomeSourceSuccessModel}
+import models.subscription.business.CreateIncomeSourceSuccessModel
 import play.api.http.Status.{CREATED, INTERNAL_SERVER_ERROR, TOO_MANY_REQUESTS, UNPROCESSABLE_ENTITY}
 import play.api.libs.json.{JsObject, Json}
 import play.api.mvc.Request
@@ -79,21 +79,23 @@ class ItsaIncomeSourceConnectorISpec extends ComponentSpecBase with FeatureSwitc
     }
 
     Seq(false, true).foreach { submissionAuditUpdateEnabled =>
-      s"return a successful response when receiving a $CREATED response and SubmissionAuditUpdate is $submissionAuditUpdateEnabled" in {
-        if (submissionAuditUpdateEnabled) enable(SubmissionAuditUpdate)
+      Seq(false, true).foreach { withIdempotency =>
+        s"return a successful response when receiving a $CREATED response and SubmissionAuditUpdate is $submissionAuditUpdateEnabled and ${if (withIdempotency) "an" else "no"} idempotencyKey is supplied" in {
+          if (submissionAuditUpdateEnabled) enable(SubmissionAuditUpdate)
 
-        CreateIncomeSourceStub.stubItsaIncomeSource(
-          expectedBody = Json.toJson(testCreateIncomeSources)(CreateIncomeSourcesModel.hipWrites(testMtdbsaRef))
-        )(status = CREATED, body = testCreateIncomeSuccessBody)
+          CreateIncomeSourceStub.stubItsaIncomeSource(
+            expectedBody = Json.toJson(testCreateIncomeSources(withIdempotency))(CreateIncomeSourcesModel.hipWrites(testMtdbsaRef))
+          )(status = CREATED, body = testCreateIncomeSuccessBody)
 
-        val result = connector.createIncomeSources(
-          agentReferenceNumber = Some(testArn),
-          mtdbsaRef = testMtdbsaRef,
-          createIncomeSources = testCreateIncomeSources
-        )
+          val result = connector.createIncomeSources(
+            agentReferenceNumber = Some(testArn),
+            mtdbsaRef = testMtdbsaRef,
+            createIncomeSources = testCreateIncomeSources(withIdempotency)
+          )
 
-        result.futureValue shouldBe Right(CreateIncomeSourceSuccessModel())
-        AuditStub.verifyAuditCount(1 + (if (submissionAuditUpdateEnabled) 1 else 0))
+          result.futureValue shouldBe Right(CreateIncomeSourceSuccessModel())
+          AuditStub.verifyAuditCount(1 + (if (submissionAuditUpdateEnabled) 1 else 0))
+        }
       }
     }
     
@@ -107,7 +109,7 @@ class ItsaIncomeSourceConnectorISpec extends ComponentSpecBase with FeatureSwitc
       val result = connector.createIncomeSources(
         agentReferenceNumber = Some(testArn),
         mtdbsaRef = testMtdbsaRef,
-        createIncomeSources = testCreateIncomeSources
+        createIncomeSources = testCreateIncomeSources()
       )
 
       result.futureValue shouldBe Right(CreateIncomeSourceSuccessModel())
@@ -122,13 +124,13 @@ class ItsaIncomeSourceConnectorISpec extends ComponentSpecBase with FeatureSwitc
       s"receiving a $UNPROCESSABLE_ENTITY retryStatus response" which {
         "has a valid error json" in {
           CreateIncomeSourceStub.stubItsaIncomeSource(
-            expectedBody = Json.toJson(testCreateIncomeSources)(CreateIncomeSourcesModel.hipWrites(testMtdbsaRef))
+            expectedBody = Json.toJson(testCreateIncomeSources())(CreateIncomeSourcesModel.hipWrites(testMtdbsaRef))
           )(status = UNPROCESSABLE_ENTITY, body = errorsJson)
 
           val result = connector.createIncomeSources(
             agentReferenceNumber = Some(testArn),
             mtdbsaRef = testMtdbsaRef,
-            createIncomeSources = testCreateIncomeSources
+            createIncomeSources = testCreateIncomeSources()
           )
 
           result.futureValue shouldBe Left(ErrorModel(
@@ -140,13 +142,13 @@ class ItsaIncomeSourceConnectorISpec extends ComponentSpecBase with FeatureSwitc
 
         "has an invalid error json" in {
           CreateIncomeSourceStub.stubItsaIncomeSource(
-            expectedBody = Json.toJson(testCreateIncomeSources)(CreateIncomeSourcesModel.hipWrites(testMtdbsaRef))
+            expectedBody = Json.toJson(testCreateIncomeSources())(CreateIncomeSourcesModel.hipWrites(testMtdbsaRef))
           )(status = UNPROCESSABLE_ENTITY, body = Json.obj())
 
           val result = connector.createIncomeSources(
             agentReferenceNumber = Some(testArn),
             mtdbsaRef = testMtdbsaRef,
-            createIncomeSources = testCreateIncomeSources
+            createIncomeSources = testCreateIncomeSources()
           )
 
           result.futureValue shouldBe Left(ErrorModel(
@@ -160,13 +162,13 @@ class ItsaIncomeSourceConnectorISpec extends ComponentSpecBase with FeatureSwitc
 
     s"return a failure response when receiving a non-$CREATED response" in {
       CreateIncomeSourceStub.stubItsaIncomeSource(
-        expectedBody = Json.toJson(testCreateIncomeSources)(CreateIncomeSourcesModel.hipWrites(testMtdbsaRef))
+        expectedBody = Json.toJson(testCreateIncomeSources())(CreateIncomeSourcesModel.hipWrites(testMtdbsaRef))
       )(status = INTERNAL_SERVER_ERROR, body = testCreateIncomeFailureBody)
 
       val result = connector.createIncomeSources(
         agentReferenceNumber = Some(testArn),
         mtdbsaRef = testMtdbsaRef,
-        createIncomeSources = testCreateIncomeSources
+        createIncomeSources = testCreateIncomeSources()
       )
 
       result.futureValue shouldBe Left(ErrorModel(

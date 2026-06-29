@@ -18,15 +18,16 @@ package utils
 
 import common.Constants
 import models.ErrorModel
-import models.frontend._
+import models.frontend.*
 import models.lockout.LockoutRequest
 import models.matching.LockoutResponse
-import play.api.http.Status._
+import play.api.http.Status.*
 import play.api.libs.json.{JsValue, Json}
 import uk.gov.hmrc.domain.Generator
 
 import java.time.{Instant, LocalDate}
 import java.util.UUID
+import scala.language.postfixOps
 
 object TestConstants extends JsonUtils {
 
@@ -86,11 +87,20 @@ object TestConstants extends JsonUtils {
 
   val testEndDate = LocalDate.now().plusDays(1)
 
-  def testTaxYearSignUpSubmission(nino: String, utr: String, taxYear: String): JsValue = Json.obj(
-    "nino" -> nino,
-    "utr" -> utr,
-    "taxYear" -> taxYear
-  )
+  def testTaxYearSignUpSubmission(nino: String, utr: String, taxYear: String, withIdempotency: Boolean = false): JsValue = {
+    val request = Json.obj(
+      "nino" -> nino,
+      "utr" -> utr,
+      "taxYear" -> taxYear
+    )
+    if (withIdempotency) {
+      request ++ Json.obj(
+        "idempotencyKey" -> "1234"
+      )
+    } else {
+      request
+    }
+  }
 
 
   val testCreateIncomeSuccessBody: JsValue = Json.parse(

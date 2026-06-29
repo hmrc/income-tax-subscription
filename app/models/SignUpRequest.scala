@@ -18,9 +18,13 @@ package models
 
 import play.api.libs.json.{Json, OFormat}
 
-case class SignUpRequest(nino: String, utr: String, taxYear: String)
+case class SignUpRequest(
+  nino: String,
+  utr: String,
+  taxYear: String,
+  idempotencyKey: Option[String] = None
+)
 
 object SignUpRequest {
   implicit val format: OFormat[SignUpRequest] = Json.format[SignUpRequest]
-
 }

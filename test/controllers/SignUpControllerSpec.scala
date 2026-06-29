@@ -70,54 +70,67 @@ class SignUpControllerSpec extends CommonSpec
 
   val auth = "auth"
 
-  lazy val testSignUpRequest: SignUpRequest = SignUpRequest(nino = testNino, utr = testUtr, taxYear = testTaxYear)
+  def testSignUpRequest(withIdempotency: Boolean = false): SignUpRequest = SignUpRequest(
+    nino = testNino,
+    utr = testUtr,
+    taxYear = testTaxYear,
+    idempotencyKey = if (withIdempotency) Some("1234") else None
+  )
 
   "SignUpController" should {
     "return OK with the sign up successful response" when {
       "sign up was successful" when {
         "an individual signs themselves up" in {
-          val fakeRequest = FakeRequest().withBody(Json.toJson(testTaxYearSignUpSubmission(testNino, testUtr, testTaxYear)))
+          Seq(false, true).foreach { withIdempotency =>
+            beforeEach()
 
-          mockRetrievalSuccess(Enrolments(Set()))
-          hipSignUpTaxYear(testSignUpRequest)(Future.successful(Right(SignUpSuccess("XAIT000000"))))
+            val fakeRequest = FakeRequest().withBody(Json.toJson(testTaxYearSignUpSubmission(testNino, testUtr, testTaxYear, withIdempotency)))
 
-          val result: Future[Result] = TestController.signUp(fakeRequest)
+            mockRetrievalSuccess(Enrolments(Set()))
+            hipSignUpTaxYear(testSignUpRequest(withIdempotency))(Future.successful(Right(SignUpSuccess("XAIT000000"))))
 
-          status(result) shouldBe OK
-          contentAsJson(result) shouldBe Json.obj(
-            "mtdbsa" -> "XAIT000000"
-          )
-          verifyAudit(RegistrationSuccessAudit(
-            agentReferenceNumber = None,
-            nino = testNino,
-            utr = testUtr,
-            postSignUpResponse = Right(SignUpSuccess("XAIT000000")),
-            authToken = auth,
-            path = None,
-            submissionAuditUpdateEnabled = false
-          ))
+            val result: Future[Result] = TestController.signUp(fakeRequest)
+
+            status(result) shouldBe OK
+            contentAsJson(result) shouldBe Json.obj(
+              "mtdbsa" -> "XAIT000000"
+            )
+            verifyAudit(RegistrationSuccessAudit(
+              agentReferenceNumber = None,
+              nino = testNino,
+              utr = testUtr,
+              postSignUpResponse = Right(SignUpSuccess("XAIT000000")),
+              authToken = auth,
+              path = None,
+              submissionAuditUpdateEnabled = false
+            ))
+          }
         }
         "an agent signs up their client" in {
-          val fakeRequest = FakeRequest().withBody(Json.toJson(testTaxYearSignUpSubmission(testNino, testUtr, testTaxYear)))
+          Seq(false, true).foreach { withIdempotency =>
+            beforeEach()
 
-          mockRetrievalSuccess(Enrolments(Set(Enrolment(hmrcAsAgent, Seq(EnrolmentIdentifier("AgentReferenceNumber", "123456789")), "Activated"))))
-          hipSignUpTaxYear(testSignUpRequest)(Future.successful(Right(SignUpSuccess("XAIT000000"))))
+            val fakeRequest = FakeRequest().withBody(Json.toJson(testTaxYearSignUpSubmission(testNino, testUtr, testTaxYear, withIdempotency)))
 
-          val result: Future[Result] = TestController.signUp(fakeRequest)
+            mockRetrievalSuccess(Enrolments(Set(Enrolment(hmrcAsAgent, Seq(EnrolmentIdentifier("AgentReferenceNumber", "123456789")), "Activated"))))
+            hipSignUpTaxYear(testSignUpRequest(withIdempotency))(Future.successful(Right(SignUpSuccess("XAIT000000"))))
 
-          status(result) shouldBe OK
-          contentAsJson(result) shouldBe Json.obj(
-            "mtdbsa" -> "XAIT000000"
-          )
-          verifyAudit(RegistrationSuccessAudit(
-            agentReferenceNumber = Some("123456789"),
-            nino = testNino,
-            utr = testUtr,
-            postSignUpResponse = Right(SignUpSuccess("XAIT000000")),
-            authToken = auth,
-            path = None,
-            submissionAuditUpdateEnabled = false
-          ))
+            val result: Future[Result] = TestController.signUp(fakeRequest)
+
+            status(result) shouldBe OK
+            contentAsJson(result) shouldBe Json.obj(
+              "mtdbsa" -> "XAIT000000"
+            )
+            verifyAudit(RegistrationSuccessAudit(
+              agentReferenceNumber = Some("123456789"),
+              nino = testNino,
+              utr = testUtr,
+              postSignUpResponse = Right(SignUpSuccess("XAIT000000")),
+              authToken = auth,
+              path = None,
+              submissionAuditUpdateEnabled = false
+            ))
+          }
         }
       }
     }
@@ -126,7 +139,7 @@ class SignUpControllerSpec extends CommonSpec
         val fakeRequest = FakeRequest().withBody(Json.toJson(testTaxYearSignUpSubmission(testNino, testUtr, testTaxYear)))
 
         mockRetrievalSuccess(Enrolments(Set()))
-        hipSignUpTaxYear(testSignUpRequest)(Future.successful(Left(ErrorModel(
+        hipSignUpTaxYear(testSignUpRequest())(Future.successful(Left(ErrorModel(
           status = UNPROCESSABLE_ENTITY,
           code = Some("820"),
           reason = "API #5317: ITSA Sign Up, Status: 422, Code: 820, Reason: CUSTOMER ALREADY SIGNED UP"
@@ -147,7 +160,7 @@ class SignUpControllerSpec extends CommonSpec
         val fakeRequest = FakeRequest().withBody(Json.toJson(testTaxYearSignUpSubmission(testNino, testUtr, testTaxYear)))
 
         mockRetrievalSuccess(Enrolments(Set()))
-        hipSignUpTaxYear(testSignUpRequest)(Future.successful(Left(ErrorModel(
+        hipSignUpTaxYear(testSignUpRequest())(Future.successful(Left(ErrorModel(
           status = UNPROCESSABLE_ENTITY,
           code = Some("820"),
           reason = "API #5317: ITSA Sign Up, Status: 422, Code: 820, Reason: CUSTOMER ALREADY SIGNED UP"
@@ -180,7 +193,7 @@ class SignUpControllerSpec extends CommonSpec
         val fakeRequest = FakeRequest().withBody(Json.toJson(testTaxYearSignUpSubmission(testNino, testUtr, testTaxYear)))
 
         mockRetrievalSuccess(Enrolments(Set(Enrolment(hmrcAsAgent, Seq(EnrolmentIdentifier("AgentReferenceNumber", "123456789")), "Activated"))))
-        hipSignUpTaxYear(testSignUpRequest)(Future.successful(Left(ErrorModel(INTERNAL_SERVER_ERROR, "Failure"))))
+        hipSignUpTaxYear(testSignUpRequest())(Future.successful(Left(ErrorModel(INTERNAL_SERVER_ERROR, "Failure"))))
 
         val result = TestController.signUp(fakeRequest)
 
@@ -194,7 +207,7 @@ class SignUpControllerSpec extends CommonSpec
         val fakeRequest = FakeRequest().withBody(Json.toJson(testTaxYearSignUpSubmission(testNino, testUtr, testTaxYear)))
 
         mockRetrievalSuccess(Enrolments(Set(Enrolment(hmrcAsAgent, Seq(EnrolmentIdentifier("AgentReferenceNumber", "123456789")), "Activated"))))
-        hipSignUpTaxYear(testSignUpRequest)(Future.successful(Left(ErrorModel(INTERNAL_SERVER_ERROR, "Failure"))))
+        hipSignUpTaxYear(testSignUpRequest())(Future.successful(Left(ErrorModel(INTERNAL_SERVER_ERROR, "Failure"))))
 
         val result = TestController.signUp(fakeRequest)
 

@@ -21,10 +21,13 @@ import play.api.libs.json._
 import uk.gov.hmrc.http.InternalServerException
 import utils.JsonUtils.JsObjectUtil
 
-case class CreateIncomeSourcesModel(nino: String,
-                                    soleTraderBusinesses: Option[SoleTraderBusinesses] = None,
-                                    ukProperty: Option[UkProperty] = None,
-                                    overseasProperty: Option[OverseasProperty] = None)
+case class CreateIncomeSourcesModel(
+  nino: String,
+  soleTraderBusinesses: Option[SoleTraderBusinesses] = None,
+  ukProperty: Option[UkProperty] = None,
+  overseasProperty: Option[OverseasProperty] = None,
+  idempotencyKey: Option[String] = None
+)
 
 object CreateIncomeSourcesModel {
 
@@ -103,7 +106,11 @@ object CreateIncomeSourcesModel {
     ) ++
       model.soleTraderBusinesses.map(businessDetailsJson) ++
       model.ukProperty.map(ukPropertyJson) ++
-      model.overseasProperty.map(overseasProperty)
+      model.overseasProperty.map(overseasProperty) ++
+      model.idempotencyKey.map { k => Json.obj(
+        "idempotencyKey" -> k,
+        "addIncomeSource" -> false
+      )}
   }
 
 }

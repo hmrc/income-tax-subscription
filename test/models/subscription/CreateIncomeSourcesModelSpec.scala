@@ -221,7 +221,8 @@ class CreateIncomeSourcesModelSpec extends PlaySpec {
     nino = testNino,
     soleTraderBusinesses = Some(fullSoleTraderBusinesses),
     ukProperty = Some(fullUkProperty),
-    overseasProperty = Some(fullOverseasProperty)
+    overseasProperty = Some(fullOverseasProperty),
+    idempotencyKey = Some("1234")
   )
 
   lazy val fullSoleTraderBusinessesJsonRead: JsObject = Json.obj(
@@ -313,7 +314,8 @@ class CreateIncomeSourcesModelSpec extends PlaySpec {
     "nino" -> testNino,
     "soleTraderBusinesses" -> fullSoleTraderBusinessesJsonRead,
     "ukProperty" -> fullUkPropertyJsonRead,
-    "overseasProperty" -> fullOverseasPropertyJsonRead
+    "overseasProperty" -> fullOverseasPropertyJsonRead,
+    "idempotencyKey" -> "1234"
   )
 
   lazy val fullCreateIncomeSourcesModelJsonWrite: JsObject = Json.obj(
@@ -391,8 +393,9 @@ class CreateIncomeSourcesModelSpec extends PlaySpec {
     "foreignPropertyDetails" -> Json.obj(
       "startDate" -> desFormattedNow,
       "tradingStartDate" -> desFormattedNow
-
-    )
+    ),
+    "idempotencyKey" -> "1234",
+    "addIncomeSource" -> false
   )
 
   lazy val contextualTaxYear: String = (DateModel.dateConvert(now).getYear + 1).toString
@@ -420,8 +423,6 @@ class CreateIncomeSourcesModelSpec extends PlaySpec {
     "foreignPropertyDetails" -> Json.obj(
       "startDate" -> desFormattedNow,
       "contextualTaxYear" -> contextualTaxYear
-
     )
   )
-
 }
