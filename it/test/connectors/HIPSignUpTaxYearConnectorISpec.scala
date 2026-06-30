@@ -68,7 +68,7 @@ class HIPSignUpTaxYearConnectorISpec extends ComponentSpecBase {
         val result = signUpConnector.signUp(testSignUpRequest())
 
         result.futureValue shouldBe Left(
-          ErrorModel(status = CREATED, "API #5317: ITSA Sign Up, Status: 201, Message: Failure parsing json response")
+          ErrorModel(INTERNAL_SERVER_ERROR, "API #5317: ITSA Sign Up, Status: 500, Message: Failure parsing json response")
         )
       }
     }

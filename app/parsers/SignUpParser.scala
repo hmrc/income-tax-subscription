@@ -44,7 +44,7 @@ object SignUpParser {
     private def handleCreatedResponse(json: JsValue, correlationId: String) = {
       (json \ "success").validate[SignUpSuccess] match {
         case JsSuccess(value, _) => Right(value)
-        case JsError(_) => jsonError(CREATED, correlationId)
+        case JsError(_) => jsonError(INTERNAL_SERVER_ERROR, correlationId)
       }
     }
 
