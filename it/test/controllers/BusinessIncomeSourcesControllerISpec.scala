@@ -52,7 +52,7 @@ class BusinessIncomeSourcesControllerISpec extends ComponentSpecBase {
 
         result should have(
           httpStatus(INTERNAL_SERVER_ERROR),
-          bodyOf("Create Income Sources Failure")
+          bodyOf("""{"reason":"API #5265: Create income sources, Status: 500, Message: Unexpected status received"}""")
         )
       }
     }

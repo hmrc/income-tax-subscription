@@ -56,7 +56,7 @@ class SignUpParserSpec extends CommonSpec {
           """.stripMargin)
 
         SignUpParser.HIPSignUpResponseParser.httpReads(correlationId).read("", "", response) shouldBe
-          Left(ErrorModel(CREATED, s"API #5317: ITSA Sign Up, Status: 201, Message: Failure parsing json response"))
+          Left(ErrorModel(INTERNAL_SERVER_ERROR, s"API #5317: ITSA Sign Up, Status: 500, Message: Failure parsing json response"))
       }
     }
 

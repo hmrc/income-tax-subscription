@@ -20,8 +20,8 @@ import common.Extractors
 import connectors.ItsaIncomeSourceConnector
 import models.subscription.CreateIncomeSourcesModel
 import play.api.Logging
-import play.api.libs.json.JsValue
-import play.api.mvc._
+import play.api.libs.json.{JsValue, Json}
+import play.api.mvc.*
 import services.AuthService
 import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
@@ -48,7 +48,7 @@ class BusinessIncomeSourcesController @Inject()(authService: AuthService,
             NoContent
           case Left(error) =>
             logger.error(s"Error processing Create Income Sources with status ${error.status} and message ${error.reason}")
-            InternalServerError("Create Income Sources Failure")
+            Status(error.status)(Json.obj("reason" -> error.reason) ++ error.code.fold(Json.obj())(c => Json.obj("code" -> c)))
         }
       }
     }

@@ -198,7 +198,9 @@ class SignUpControllerSpec extends CommonSpec
         val result = TestController.signUp(fakeRequest)
 
         status(result) shouldBe INTERNAL_SERVER_ERROR
-        contentAsString(result) shouldBe "Failed Sign up"
+        contentAsJson(result) shouldBe Json.obj(
+          "reason" -> "Failure"
+        )
         verifyAudit(RegistrationFailureAudit(testNino, INTERNAL_SERVER_ERROR, "Failure"))
       }
 
@@ -212,7 +214,9 @@ class SignUpControllerSpec extends CommonSpec
         val result = TestController.signUp(fakeRequest)
 
         status(result) shouldBe INTERNAL_SERVER_ERROR
-        contentAsString(result) shouldBe "Failed Sign up"
+        contentAsJson(result) shouldBe Json.obj(
+          "reason" -> "Failure"
+        )
         verifyAudit(RegistrationSuccessAudit(
           agentReferenceNumber = Some("123456789"),
           nino = testNino,

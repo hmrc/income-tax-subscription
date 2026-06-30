@@ -24,7 +24,7 @@ import play.api.http.Status.*
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.{ControllerComponents, Request, Result}
 import play.api.test.FakeRequest
-import play.api.test.Helpers.{contentAsString, defaultAwaitTimeout, status, stubControllerComponents}
+import play.api.test.Helpers.{contentAsJson, contentAsString, defaultAwaitTimeout, status, stubControllerComponents}
 import services.mocks.{MockAuthService, MockIncomeSourcesConnector}
 import uk.gov.hmrc.http.HeaderCarrier
 import utils.TestConstants.testNino
@@ -62,7 +62,9 @@ class BusinessIncomeSourcesControllerSpec extends CommonSpec
         val result: Future[Result] = TestController.createIncomeSource(mtditid)(postSaveAndRetrieveRequest())
 
         status(result) shouldBe INTERNAL_SERVER_ERROR
-        contentAsString(result) shouldBe "Create Income Sources Failure"
+        contentAsJson(result) shouldBe Json.obj(
+          "reason" -> "error"
+        )
       }
     }
   }
