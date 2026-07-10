@@ -131,7 +131,11 @@ class GetITSAStatusConnectorISpec extends ComponentSpecBase {
             StubResponse(OK, Json.arr(taxYearResponseJson("00")))
           )
 
-          await(connector.getItsaStatus(testNino))
+          val result = await(connector.getItsaStatus(testNino))
+
+          result shouldBe Right(Some(Seq(
+            taxYearResponse(GetITSAStatus.NoStatus)
+          )))
 
           WiremockHelper.verifyGet(
             uri = url,
