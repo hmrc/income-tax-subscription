@@ -16,9 +16,14 @@
 
 package connectors.hip
 
+import com.typesafe.config.Config
 import config.AppConfig
+import connectors.ConnectorRetries
+import models.ErrorModel
 import models.subscription.AccountingPeriodUtil
+import org.apache.pekko.actor.ActorSystem
 import parsers.hip.GetITSAStatusParser.*
+import play.api.http.Status.{BAD_GATEWAY, SERVICE_UNAVAILABLE, TOO_MANY_REQUESTS}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.client.HttpClientV2
 
@@ -26,14 +31,26 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class GetITSAStatusConnector @Inject()(val httpClient: HttpClientV2, val appConfig: AppConfig)
-                                      (implicit val ec: ExecutionContext) extends BaseHIPConnector {
+class GetITSAStatusConnector @Inject() (
+  val httpClient: HttpClientV2,
+  val appConfig: AppConfig,
+  val configuration: Config,
+  val actorSystem: ActorSystem
+) (implicit val ec: ExecutionContext) extends BaseHIPConnector with ConnectorRetries {
 
-  def getItsaStatus(nino: String)(implicit hc: HeaderCarrier): Future[GetITSAStatusResponse] = {
-    super.get(
-      uri = getItsaStatusUrl(nino),
-      parser = GetITSAStatusHttpReads
-    )
+  private val apiNumber = GetITSAStatusHttpReads.apiNumber
+  private val apiName = GetITSAStatusHttpReads.apiName
+
+  def getItsaStatus(nino: String)(implicit hc: HeaderCarrier): Future[GetITSAStatusResponse] =
+    retryFor[GetITSAStatusResponse](apiNumber, apiName) {
+      case Left(ErrorModel(TOO_MANY_REQUESTS, _, _)) => true
+      case Left(ErrorModel(BAD_GATEWAY, _, _)) => true
+      case Left(ErrorModel(SERVICE_UNAVAILABLE, _, _)) => true
+    } {
+      super.get(
+        uri = getItsaStatusUrl(nino),
+        parser = GetITSAStatusHttpReads
+      )
   }
 
   private def getItsaStatusUrl(nino: String) = {

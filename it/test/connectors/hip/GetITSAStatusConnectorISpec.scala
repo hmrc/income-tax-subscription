@@ -16,14 +16,16 @@
 
 package connectors.hip
 
-import helpers.ComponentSpecBase
+import helpers.WiremockHelper.StubResponse
+import helpers.{ComponentSpecBase, WiremockHelper}
 import helpers.servicemocks.hip.GetITSAStatusStub
 import models.ErrorModel
 import models.status.GetITSAStatus
 import models.subscription.AccountingPeriodUtil
 import parsers.GetITSAStatusParser.{GetITSAStatusTaxYearResponse, ITSAStatusDetail}
-import play.api.http.Status.{INTERNAL_SERVER_ERROR, NOT_FOUND, OK}
+import play.api.http.Status.{BAD_GATEWAY, INTERNAL_SERVER_ERROR, NOT_FOUND, OK, SERVICE_UNAVAILABLE, TOO_MANY_REQUESTS}
 import play.api.libs.json.{JsObject, JsValue, Json}
+import play.api.test.Helpers.{await, defaultAwaitTimeout}
 
 class GetITSAStatusConnectorISpec extends ComponentSpecBase {
 
@@ -116,6 +118,26 @@ class GetITSAStatusConnectorISpec extends ComponentSpecBase {
 
         result.futureValue shouldBe
           Left(ErrorModel(INTERNAL_SERVER_ERROR, "API #5197: Get ITSA Status, Status: 500, Message: Unexpected status returned"))
+      }
+    }
+
+    "Retry 3 times" should {
+      Seq(TOO_MANY_REQUESTS, BAD_GATEWAY, SERVICE_UNAVAILABLE).foreach { status =>
+        s"For a return status of $status" in {
+          val url = s"/itsd/person-itd/itsa-status/$testNino\\?taxYear=${AccountingPeriodUtil.getCurrentTaxYear.toShortTaxYear}"
+          WiremockHelper.stubGetSequence(url)(
+            StubResponse(status),
+            StubResponse(status),
+            StubResponse(OK, Json.arr(taxYearResponseJson("00")))
+          )
+
+          await(connector.getItsaStatus(testNino))
+
+          WiremockHelper.verifyGet(
+            uri = url,
+            times = 3
+          )
+        }
       }
     }
   }
