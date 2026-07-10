@@ -121,7 +121,7 @@ class GetITSAStatusConnectorISpec extends ComponentSpecBase {
       }
     }
 
-    "Retry 3 times" should {
+    "retry 3 times" should {
       Seq(TOO_MANY_REQUESTS, BAD_GATEWAY, SERVICE_UNAVAILABLE).foreach { status =>
         s"For a return status of $status" in {
           val url = s"/itsd/person-itd/itsa-status/$testNino\\?taxYear=${AccountingPeriodUtil.getCurrentTaxYear.toShortTaxYear}"
