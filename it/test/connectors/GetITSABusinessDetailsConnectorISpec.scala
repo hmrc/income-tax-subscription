@@ -83,10 +83,10 @@ class GetITSABusinessDetailsConnectorISpec extends ComponentSpecBase with Featur
       result shouldBe Right(NotSignedUp)
     }
 
-    s"call the API a defined number of times in the event it returns a $FORBIDDEN" in {
+    s"call the API a defined number of times in the event it returns a $BAD_GATEWAY or $SERVICE_UNAVAILABLE" in {
       WiremockHelper.stubGetSequence(s"/etmp/RESTAdapter/itsa/taxpayer/business-details\\?nino=$testNino")(
-        StubResponse(FORBIDDEN),
-        StubResponse(FORBIDDEN),
+        StubResponse(BAD_GATEWAY),
+        StubResponse(SERVICE_UNAVAILABLE),
         StubResponse(UNPROCESSABLE_ENTITY, Json.obj("errors" -> Json.obj("code" -> "006", "text" -> "", "processingDate" -> "")))
       )
 
