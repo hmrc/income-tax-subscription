@@ -76,7 +76,9 @@ class HipPrePopParserSpec extends CommonSpec {
 
     "a SERVICE_UNAVAILABLE (503) status is returned" should {
       "return an empty prepop data set" in {
-        read(SERVICE_UNAVAILABLE) shouldBe Right(SelfEmpHolder(None))
+        read(SERVICE_UNAVAILABLE) shouldBe Left(ErrorModel(
+          SERVICE_UNAVAILABLE, s"API #5646: Business Data, Status: 503, Message: Unexpected status returned"
+        ))
       }
     }
 

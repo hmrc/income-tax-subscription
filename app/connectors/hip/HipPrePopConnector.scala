@@ -16,27 +16,42 @@
 
 package connectors.hip
 
+import com.typesafe.config.Config
 import config.AppConfig
+import connectors.ConnectorRetries
+import models.ErrorModel
 import models.hip.SelfEmpHolder
 import parsers.hip.HipPrePopParser.*
 import uk.gov.hmrc.http.HeaderCarrier
+import org.apache.pekko.actor.ActorSystem
+import play.api.http.Status.{BAD_GATEWAY, INTERNAL_SERVER_ERROR, SERVICE_UNAVAILABLE, TOO_MANY_REQUESTS}
 import uk.gov.hmrc.http.client.HttpClientV2
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class HipPrePopConnector @Inject()(val httpClient: HttpClientV2, val appConfig: AppConfig)
-                                  (implicit val ec: ExecutionContext) extends BaseHIPConnector {
+class HipPrePopConnector @Inject()(val httpClient: HttpClientV2,
+                                   val appConfig: AppConfig,
+                                   val configuration: Config,
+                                   val actorSystem: ActorSystem)
+                                  (implicit val ec: ExecutionContext) extends BaseHIPConnector with ConnectorRetries {
 
-  def getHipPrePopData(
-                        nino: String
-                      )(implicit hc: HeaderCarrier): Future[GetHipPrePopResponse] = {
-    super.get[SelfEmpHolder](
-      uri = hipPrePopUrl(nino),
-      parser = GetHipPrePopResponseHttpReads
-    )
-  }
+  private val apiNumber = GetHipPrePopResponseHttpReads.apiNumber
+  private val apiName = GetHipPrePopResponseHttpReads.apiName
+
+  def getHipPrePopData(nino: String)(implicit hc: HeaderCarrier): Future[GetHipPrePopResponse] =
+    retryFor[GetHipPrePopResponse](apiNumber, apiName) {
+      case Left(ErrorModel(TOO_MANY_REQUESTS, _, _)) => true
+      case Left(ErrorModel(BAD_GATEWAY, _, _)) => true
+      case Left(ErrorModel(SERVICE_UNAVAILABLE, _, _)) => true
+      case Left(ErrorModel(INTERNAL_SERVER_ERROR, _, _)) => true
+    } {
+      super.get[SelfEmpHolder](
+        uri = hipPrePopUrl(nino),
+        parser = GetHipPrePopResponseHttpReads
+      )
+    }
 
   private def hipPrePopUrl(nino: String) =
     s"/cesa/prepopulation/businessdata/$nino"

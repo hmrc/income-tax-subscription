@@ -53,7 +53,8 @@ class PrePopController @Inject()(authService: AuthService,
           ))
           Ok(Json.toJson(prePopData))
         case Left(error) =>
-          InternalServerError
+          logger.error(s"[PrePopController][prePop] - Failed to retrieve pre-pop data for nino: $nino. Error: $error")
+          Ok(Json.toJson(PrePopData(selfEmployment = None)))
       }
     }
   }

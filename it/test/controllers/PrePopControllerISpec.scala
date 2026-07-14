@@ -96,7 +96,7 @@ class PrePopControllerISpec extends ComponentSpecBase with FeatureSwitching {
         )
 
       }
-      "there was an error returned from the pre-pop API" in {
+      "no data returned from the pre-pop API" in {
         AuthStub.stubAuth(OK)
 
         PrePopStub.stubHipPrePop(testNino)(
@@ -107,7 +107,7 @@ class PrePopControllerISpec extends ComponentSpecBase with FeatureSwitching {
         val res = IncomeTaxSubscription.getPrePop(testNino)
 
         res should have(
-          httpStatus(INTERNAL_SERVER_ERROR)
+          httpStatus(OK)
         )
       }
     }
