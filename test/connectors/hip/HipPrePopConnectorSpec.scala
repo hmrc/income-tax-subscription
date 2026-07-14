@@ -22,7 +22,7 @@ import models.ErrorModel
 import models.hip.{SelfEmp, SelfEmpHolder}
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import parsers.hip.HipPrePopParser.GetHipPrePopResponseHttpReads
-import play.api.http.Status.{BAD_GATEWAY, INTERNAL_SERVER_ERROR, OK}
+import play.api.http.Status.{BAD_GATEWAY, INTERNAL_SERVER_ERROR, OK, SERVICE_UNAVAILABLE}
 import play.api.libs.json.Json
 import uk.gov.hmrc.http.HttpResponse
 
@@ -75,13 +75,17 @@ class HipPrePopConnectorSpec extends CommonSpec with MockHttp with GuiceOneAppPe
       }
 
       "the HIP API #5646 returns BAD_GATEWAY" in {
-        val response = HttpResponse(
-          BAD_GATEWAY,
-          Json.obj().toString
-        )
+        val response = HttpResponse(BAD_GATEWAY, Json.obj().toString)
 
         GetHipPrePopResponseHttpReads.httpReads(testCorrelationId).read("", "", response) shouldBe
-          Right(SelfEmpHolder(None))
+          Left(ErrorModel(BAD_GATEWAY, s"API #5646: Business Data, Status: 502, Message: Unexpected status returned"))
+      }
+
+      "the HIP API #5646 returns SERVICE_UNAVAILABLE" in {
+        val response = HttpResponse(SERVICE_UNAVAILABLE, Json.obj().toString)
+
+        GetHipPrePopResponseHttpReads.httpReads(testCorrelationId).read("", "", response) shouldBe
+          Left(ErrorModel(SERVICE_UNAVAILABLE, s"API #5646: Business Data, Status: 503, Message: Unexpected status returned"))
       }
     }
   }
