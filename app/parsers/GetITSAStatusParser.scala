@@ -27,7 +27,7 @@ object GetITSAStatusParser {
 
   type GetItsaStatusResponse = Either[ErrorModel, Seq[GetITSAStatusTaxYearResponse]]
 
-  object GetItsaStatusResponseHttpReads extends Parser[GetItsaStatusResponse] {
+  object GetItsaStatusResponseHttpReads extends Parser[Seq[GetITSAStatusTaxYearResponse]] {
 
     override val apiNumber: Int = 5197
     override val apiName: String = "Get ITSA Status"

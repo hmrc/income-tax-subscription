@@ -28,7 +28,7 @@ object ITSAIncomeSourceParser extends Logging {
 
   type PostITSAIncomeSourceResponse = Either[ErrorModel, CreateIncomeSourceSuccessModel]
 
-  object ITSAIncomeSourceResponseHttpReads extends Parser[PostITSAIncomeSourceResponse] {
+  object ITSAIncomeSourceResponseHttpReads extends Parser[CreateIncomeSourceSuccessModel] {
 
     val apiNumber: Int = 5265
     val apiName: String = "Create income sources"

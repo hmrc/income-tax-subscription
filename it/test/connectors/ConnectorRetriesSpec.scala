@@ -17,15 +17,17 @@
 package connectors
 
 import com.typesafe.config.Config
+import models.ErrorModel
 import org.apache.pekko.actor.ActorSystem
 import org.mockito.ArgumentMatchers
-import org.mockito.Mockito.{when, reset, verify, times}
+import org.mockito.Mockito.{reset, times, verify, when}
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatestplus.mockito.MockitoSugar.mock
 import org.scalatestplus.play.PlaySpec
 
 import java.time.Duration
+import scala.collection.mutable
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
@@ -35,13 +37,24 @@ class ConnectorRetriesSpec extends PlaySpec
 
   private val config = mock[Config]
 
-  private val connectorRetries: ConnectorRetries = new ConnectorRetries {
-    override protected val configuration: Config = config
-    override val actorSystem: ActorSystem = ActorSystem("test-actor-system")
+  val counts: mutable.Map[Level, Int] = mutable.Map()
+
+  class TestLogCounter extends LogCounter {
+    override def count(level: Level): Unit = {
+      counts.put(level, counts.getOrElse(level, 0) + 1)
+    }
   }
 
-  private val SUCCESSFUL = "SUCCESSFUL"
-  private val FAILURE = "FAILURE"
+  private val testLogCounter = new TestLogCounter
+
+  private val connectorRetries: ConnectorRetries = new ConnectorRetries {
+    override protected val configuration: Config = config
+    override protected val actorSystem: ActorSystem = ActorSystem("test-actor-system")
+    override protected val logCounter = Some(testLogCounter)
+  }
+
+  private val SUCCESSFUL = Right("SUCCESSFUL")
+  private val FAILURE = Left(ErrorModel(0, "FAILURE"))
 
   private val apiOne = 0
   private val apiTwo = 1
@@ -65,12 +78,22 @@ class ConnectorRetriesSpec extends PlaySpec
     reset(config)
     when(config.getDurationList(ArgumentMatchers.eq(s"$root.$apiOne"))).thenReturn(specific)
     when(config.getDurationList(ArgumentMatchers.eq(root))).thenReturn(fallback)
+    counts.clear()
   }
 
-  private def check(apiNumber: Int, fallbackUsed: Boolean) = {
+  private def checkConfigUsed(apiNumber: Int, fallbackUsed: Boolean) = {
     verify(config, times(if (apiNumber == apiOne) 1 else 0)).getDurationList(ArgumentMatchers.eq(s"$root.$apiOne"))
     verify(config, times(if (apiNumber == apiTwo) 1 else 0)).getDurationList(ArgumentMatchers.eq(s"$root.$apiTwo"))
     verify(config, times(if (fallbackUsed) 1 else 0)).getDurationList(ArgumentMatchers.eq(root))
+  }
+
+  private def checkSingleLogFor(level: Level) = {
+    Thread.sleep(100)
+    counts.size mustBe 1
+    counts.get(level) mustBe Some(1)
+    Seq(Off, Info, Warn, Error).filterNot(_ == level).foreach { l =>
+      counts.get(l) mustBe None
+    }
   }
 
   "ConnectorRetries.retryFor" should {
@@ -91,7 +114,7 @@ class ConnectorRetriesSpec extends PlaySpec
         result.futureValue mustBe SUCCESSFUL
         counter mustBe 2
 
-        check(
+        checkConfigUsed(
           apiNumber = apiOne,
           fallbackUsed = false
         )
@@ -111,7 +134,7 @@ class ConnectorRetriesSpec extends PlaySpec
         result.futureValue mustBe FAILURE
         counter mustBe 4
 
-        check(
+        checkConfigUsed(
           apiNumber = apiOne,
           fallbackUsed = false
         )
@@ -133,7 +156,7 @@ class ConnectorRetriesSpec extends PlaySpec
         result.futureValue mustBe SUCCESSFUL
         counter mustBe 1
 
-        check(
+        checkConfigUsed(
           apiNumber = apiOne,
           fallbackUsed = false
         )
@@ -154,10 +177,22 @@ class ConnectorRetriesSpec extends PlaySpec
       result.futureValue mustBe FAILURE
       counter mustBe 2
 
-      check(
+      checkConfigUsed(
         apiNumber = apiTwo,
         fallbackUsed = true
       )
+    }
+
+    Seq(Off, Info, Warn, Error).foreach { level =>
+      s"use logging level of ${level.name} for errors" in {
+        connectorRetries.retryFor[String](apiOne, "Test API failure retry", _ => level) {
+          case FAILURE => true
+        } {
+          Future.successful(FAILURE)
+        }
+
+        checkSingleLogFor(level)
+      }
     }
   }
 }

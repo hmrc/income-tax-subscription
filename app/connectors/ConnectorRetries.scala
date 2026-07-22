@@ -17,7 +17,9 @@
 package connectors
 
 import com.typesafe.config.Config
+import models.ErrorModel
 import org.apache.pekko.actor.ActorSystem
+import org.apache.pekko.event.LoggingReceive
 import org.apache.pekko.pattern.after
 import play.api.Logging
 import uk.gov.hmrc.mdc.Mdc
@@ -26,7 +28,7 @@ import java.util.concurrent.TimeUnit
 import scala.concurrent.duration.*
 import scala.concurrent.{ExecutionContext, Future}
 import scala.jdk.CollectionConverters.*
-import scala.util.{Try, Success}
+import scala.util.{Success, Try}
 
 trait ConnectorRetries extends Logging {
 
@@ -34,15 +36,17 @@ trait ConnectorRetries extends Logging {
 
   protected def configuration: Config
 
-  def retryFor[A](apiNumber: Int, desc: String)
-                 (condition: PartialFunction[A, Boolean])
-                 (block: => Future[A])
-                 (implicit ec: ExecutionContext): Future[A] = {
+  protected def logCounter: Option[LogCounter] = None
+  
+  def retryFor[A](apiNumber: Int, desc: String, level: PartialFunction[ErrorModel, Level] = _ => Error)
+                 (condition: PartialFunction[Either[ErrorModel, A], Boolean])
+                 (block: => Future[Either[ErrorModel, A]])
+                 (implicit ec: ExecutionContext): Future[Either[ErrorModel, A]] = {
 
-    def loop(remainingIntervals: Seq[FiniteDuration]): Future[A] = {
+    def loop(remainingIntervals: Seq[FiniteDuration]): Future[Either[ErrorModel, A]] = {
       // scheduling will loose MDC data. Here we explicitly ensure it is available on block.
       block.flatMap { result =>
-        val mustRetry: Boolean = condition.lift(result).getOrElse(false)
+        val mustRetry = condition.lift(result).getOrElse(false)
         if (mustRetry && remainingIntervals.nonEmpty) {
           val delay = remainingIntervals.head
           logger.warn(s"Retrying [API #$apiNumber - $desc] in $delay due to error")
@@ -57,7 +61,12 @@ trait ConnectorRetries extends Logging {
       }
     }
 
-    loop(intervals(apiNumber))
+    val result = loop(intervals(apiNumber))
+    result.onComplete {
+      case Success(Left(error)) => logError(error, level)
+      case _ => {}
+    }
+    result
   }
 
   private def intervals(apiNumber: Int): Seq[FiniteDuration] = {
@@ -72,6 +81,39 @@ trait ConnectorRetries extends Logging {
       FiniteDuration(d.toMillis, TimeUnit.MILLISECONDS)
     }
   }
+  
+  private def logError(error: ErrorModel, level: PartialFunction[ErrorModel, Level]): Unit = {
+    val value = level.lift(error).getOrElse(Error)
+    logCounter.foreach(_.count(value))
+    value match {
+      case Info => logger.info(error.reason)
+      case Warn => logger.warn(error.reason)
+      case Error => logger.error(error.reason)
+      case Off => {}
+    }
+  }
 }
 
+sealed trait Level {
+  val name: String
+}
 
+object Off extends Level {
+  override val name: String = "OFF"
+}
+
+object Info extends Level{
+  override val name: String = "INFO"
+}
+
+object Warn extends Level{
+  override val name: String = "WARN"
+}
+
+object Error extends Level{
+  override val name: String = "ERROR"
+}
+
+trait LogCounter {
+  def count(level: Level): Unit
+}

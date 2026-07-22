@@ -18,7 +18,7 @@ package parsers
 
 import models.ErrorModel
 import parsers.hip.Parser
-import play.api.http.Status.{FORBIDDEN, OK, UNPROCESSABLE_ENTITY}
+import play.api.http.Status.{OK, UNPROCESSABLE_ENTITY}
 import play.api.libs.json.*
 import uk.gov.hmrc.http.{HttpReads, HttpResponse, InternalServerException}
 
@@ -52,7 +52,7 @@ object GetITSABusinessDetailsParser {
 
   case object NotSignedUp extends GetITSABusinessDetailsResponse
 
-  object GetITSABusinessDetailsResponseHttpReads extends Parser[Either[ErrorModel, GetITSABusinessDetailsResponse]] {
+  object GetITSABusinessDetailsResponseHttpReads extends Parser[GetITSABusinessDetailsResponse] {
     val apiNumber = 5266
     val apiName = "Get Business Details"
 

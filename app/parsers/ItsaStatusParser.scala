@@ -27,7 +27,7 @@ object ItsaStatusParser {
 
   type DetermineItsaStatusResponse = Either[ErrorModel, ItsaStatusResponse]
 
-  object ItsaStatusResponseHttpReads extends Parser[DetermineItsaStatusResponse] {
+  object ItsaStatusResponseHttpReads extends Parser[ItsaStatusResponse] {
     val apiNumber: Int = 5197
     val apiName: String = "Determine ITSA Status for Sign Up"
 
