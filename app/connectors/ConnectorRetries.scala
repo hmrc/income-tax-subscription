@@ -28,7 +28,7 @@ import java.util.concurrent.TimeUnit
 import scala.concurrent.duration.*
 import scala.concurrent.{ExecutionContext, Future}
 import scala.jdk.CollectionConverters.*
-import scala.util.{Success, Try}
+import scala.util.{Failure, Success, Try}
 
 trait ConnectorRetries extends Logging {
 
@@ -64,7 +64,7 @@ trait ConnectorRetries extends Logging {
     val result = loop(intervals(apiNumber))
     result.onComplete {
       case Success(Left(error)) => logError(error, level)
-      case _ => {}
+      case Failure(exception) => throw exception
     }
     result
   }
