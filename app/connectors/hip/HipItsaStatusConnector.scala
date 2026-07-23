@@ -17,26 +17,43 @@
 package connectors.hip
 
 import config.AppConfig
+import com.typesafe.config.Config
 import models.status.ItsaStatusResponse
 import models.subscription.AccountingPeriodUtil
 import parsers.ItsaStatusParser.*
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.client.HttpClientV2
+import org.apache.pekko.actor.ActorSystem
+import play.api.http.Status.{BAD_GATEWAY, SERVICE_UNAVAILABLE, TOO_MANY_REQUESTS}
+import connectors.ConnectorRetries
+import models.ErrorModel
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class HipItsaStatusConnector @Inject()(val httpClient: HttpClientV2, val appConfig: AppConfig)
-                                      (implicit val ec: ExecutionContext) extends BaseHIPConnector {
+class HipItsaStatusConnector @Inject()(val httpClient: HttpClientV2,
+                                       val appConfig: AppConfig,
+                                       val configuration: Config,
+                                       val actorSystem: ActorSystem)
+                                      (implicit val ec: ExecutionContext) extends BaseHIPConnector with ConnectorRetries {
+
+
+  private val apiNumber = ItsaStatusResponseHttpReads.apiNumber
+  private val apiName = ItsaStatusResponseHttpReads.apiName
 
   def determineItsaStatus(nino: String,
-                          utr: String)(implicit hc: HeaderCarrier): Future[DetermineItsaStatusResponse] = {
-    super.get[ItsaStatusResponse](
-      uri = getItsaStatusUrl(nino, utr),
-      parser = ItsaStatusResponseHttpReads
-    )
-  }
+                          utr: String)(implicit hc: HeaderCarrier): Future[DetermineItsaStatusResponse] =
+    retryFor[DetermineItsaStatusResponse](apiNumber, apiName) {
+      case Left(ErrorModel(TOO_MANY_REQUESTS, _, _)) => true
+      case Left(ErrorModel(BAD_GATEWAY, _, _)) => true
+      case Left(ErrorModel(SERVICE_UNAVAILABLE, _, _)) => true
+    } {
+      super.get[ItsaStatusResponse](
+        uri = getItsaStatusUrl(nino, utr),
+        parser = ItsaStatusResponseHttpReads
+      )
+    }
 
   private def getItsaStatusUrl(nino: String, utr: String) = {
     s"/itsd/itsa-status/signup/$nino/$utr/${AccountingPeriodUtil.getCurrentTaxYear.toItsaStatusShortTaxYear}"
