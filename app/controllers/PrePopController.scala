@@ -21,7 +21,6 @@ import config.AppConfig
 import config.featureswitch.FeatureSwitching
 import connectors.hip.HipPrePopConnector
 import models.{PrePopAuditModel, PrePopData}
-import play.api.Logging
 import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import services.AuthService
@@ -37,7 +36,7 @@ class PrePopController @Inject()(authService: AuthService,
                                  auditService: AuditService,
                                  hipPrePopConnector: HipPrePopConnector,
                                  val appConfig: AppConfig,
-                                 cc: ControllerComponents)(implicit ec: ExecutionContext) extends BackendController(cc) with Logging with FeatureSwitching {
+                                 cc: ControllerComponents)(implicit ec: ExecutionContext) extends BackendController(cc) with FeatureSwitching {
 
   def prePop(nino: String): Action[AnyContent] = Action.async { implicit request =>
     authService.authorised().retrieve(allEnrolments) { allEnrolments =>
@@ -53,10 +52,8 @@ class PrePopController @Inject()(authService: AuthService,
           ))
           Ok(Json.toJson(prePopData))
         case Left(error) =>
-          logger.error(s"[PrePopController][prePop] - Failed to retrieve pre-pop data for nino: $nino. Error: $error")
           Ok(Json.toJson(PrePopData(selfEmployment = None)))
       }
     }
   }
-
 }

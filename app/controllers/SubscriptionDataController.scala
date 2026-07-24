@@ -44,12 +44,11 @@ class SubscriptionDataController @Inject()(authService: AuthService,
         case JsError(_) =>
           logger.error("[SubscriptionDataController][retrieveReference] - Could not parse json request.")
           Future.successful(InternalServerError(
-            s"[SubscriptionDataController][retrieveReference] - Could not parse json request."
+            "[SubscriptionDataController][retrieveReference] - Could not parse json request."
           ))
       }
     }
   }
-
 
   def getAllSubscriptionData(reference: String): Action[AnyContent] = Action.async { implicit request =>
     authService.authorised() {

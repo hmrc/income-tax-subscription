@@ -35,5 +35,4 @@ class LockoutStatusService @Inject()(lockoutRepository: LockoutMongoRepository)
   def checkLockoutStatus(arn: String): Future[Either[ErrorModel, Option[LockoutResponse]]] = {
     lockoutRepository.getLockoutStatus(arn).map(response => Right(response))
   }
-
 }

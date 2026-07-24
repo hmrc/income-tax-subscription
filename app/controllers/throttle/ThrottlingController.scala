@@ -57,5 +57,4 @@ class ThrottlingController @Inject()(throttlingRepository: ThrottlingRepository,
         }
     }
   }
-
 }
