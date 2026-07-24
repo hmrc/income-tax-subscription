@@ -83,36 +83,39 @@ trait ConnectorRetries extends Logging {
     }
   }
   
-  private def logError(error: ErrorModel, level: PartialFunction[ErrorModel, Level]): Unit = {
-    val value = level.lift(error).getOrElse(Error)
-    logCounter.foreach(_.count(value))
-    value match {
-      case Info => logger.info(error.reason)
-      case Warn => logger.warn(error.reason)
-      case Error => logger.error(error.reason)
-      case Off => {}
-    }
+  private def logError(error: ErrorModel, f: PartialFunction[ErrorModel, Level]): Unit = {
+    val level = f.lift(error).getOrElse(Error)
+    logCounter.foreach(_.count(level))
+    level.log(error.reason)
   }
 }
 
-sealed trait Level {
+sealed trait Level extends Logging {
   val name: String
+  def log(message: String): Unit
 }
 
 object Off extends Level {
   override val name: String = "OFF"
+  override def log(message: String): Unit = {}
 }
 
 object Info extends Level{
   override val name: String = "INFO"
+  override def log(message: String): Unit =
+    logger.info(message)
 }
 
 object Warn extends Level{
   override val name: String = "WARN"
+  override def log(message: String): Unit =
+    logger.warn(message)
 }
 
 object Error extends Level{
   override val name: String = "ERROR"
+  override def log(message: String): Unit =
+    logger.error(message)
 }
 
 trait LogCounter {
