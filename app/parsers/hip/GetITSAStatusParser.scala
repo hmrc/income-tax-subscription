@@ -27,7 +27,7 @@ object GetITSAStatusParser extends Logging {
 
   type GetITSAStatusResponse = Either[ErrorModel, Option[Seq[GetITSAStatusTaxYearResponse]]]
 
-  object GetITSAStatusHttpReads extends Parser[GetITSAStatusResponse] {
+  object GetITSAStatusHttpReads extends Parser[Option[Seq[GetITSAStatusTaxYearResponse]]] {
     val apiNumber = 5197
     val apiName = "Get ITSA Status"
 

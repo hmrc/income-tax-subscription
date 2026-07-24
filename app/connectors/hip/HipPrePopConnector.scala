@@ -41,7 +41,7 @@ class HipPrePopConnector @Inject()(val httpClient: HttpClientV2,
   private val apiName = GetHipPrePopResponseHttpReads.apiName
 
   def getHipPrePopData(nino: String)(implicit hc: HeaderCarrier): Future[GetHipPrePopResponse] =
-    retryFor[GetHipPrePopResponse](apiNumber, apiName) {
+    retryFor[SelfEmpHolder](apiNumber, apiName) {
       case Left(ErrorModel(TOO_MANY_REQUESTS, _, _)) => true
       case Left(ErrorModel(BAD_GATEWAY, _, _)) => true
       case Left(ErrorModel(SERVICE_UNAVAILABLE, _, _)) => true

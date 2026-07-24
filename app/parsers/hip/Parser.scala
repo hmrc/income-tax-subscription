@@ -16,22 +16,21 @@
 
 package parsers.hip
 
-import play.api.Logging
+import models.ErrorModel
 import uk.gov.hmrc.http.HttpReads
 
-trait Parser[T] extends Logging {
+trait Parser[A] {
 
   val apiNumber: Int
   val apiName: String
   
-  def httpReads(correlationId: String): HttpReads[T]
+  def httpReads(correlationId: String): HttpReads[Either[ErrorModel, A]]
 
   protected def error(correlationId: String,
                       status: Int,
                       maybeCode: Option[String] = None,
-                      reason: String): String = {
-
-    val errorMessage = Seq(
+                      reason: String): String =
+    Seq(
       s"API #$apiNumber: $apiName",
       s"Status: $status",
       maybeCode match {
@@ -39,8 +38,4 @@ trait Parser[T] extends Logging {
         case None => s"Message: $reason"
       }
     ).mkString(", ")
-
-    logger.error(s"$errorMessage, CorrelationId: $correlationId")
-    errorMessage
-  }
 }
