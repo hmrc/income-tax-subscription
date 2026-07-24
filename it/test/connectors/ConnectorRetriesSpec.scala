@@ -90,12 +90,9 @@ class ConnectorRetriesSpec extends PlaySpec
 
   private def checkSingleLogFor(level: Option[Level]) = {
     Thread.sleep(1000)
-    level match {
-      case Some(level) =>
-        counts.size mustBe 1
-        counts.get(level) mustBe Some(1)
-      case None =>
-        counts.isEmpty mustBe true
+    counts.size mustBe level.size
+    level.foreach { l =>
+      counts.get(l) mustBe Some(1)
     }
   }
 
