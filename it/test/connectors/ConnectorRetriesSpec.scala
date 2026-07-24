@@ -37,7 +37,8 @@ class ConnectorRetriesSpec extends PlaySpec
 
   private val config = mock[Config]
 
-  val counts: mutable.Map[Level, Int] = mutable.Map()
+  private val counts: mutable.Map[Level, Int] =
+    mutable.Map()
 
   class TestLogCounter extends LogCounter {
     override def count(level: Level): Unit = {
