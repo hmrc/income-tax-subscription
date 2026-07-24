@@ -93,9 +93,6 @@ class ConnectorRetriesSpec extends PlaySpec
       case Some(level) =>
         counts.size mustBe 1
         counts.get(level) mustBe Some(1)
-        Seq(Off, Info, Warn, Error).filterNot(_ == level).foreach { l =>
-          counts.get(l) mustBe None
-        }
       case None =>
         counts.isEmpty mustBe true
     }
