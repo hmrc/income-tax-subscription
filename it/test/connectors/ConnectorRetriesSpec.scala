@@ -87,12 +87,17 @@ class ConnectorRetriesSpec extends PlaySpec
     verify(config, times(if (fallbackUsed) 1 else 0)).getDurationList(ArgumentMatchers.eq(root))
   }
 
-  private def checkSingleLogFor(level: Level) = {
+  private def checkSingleLogFor(level: Option[Level]) = {
     Thread.sleep(100)
-    counts.size mustBe 1
-    counts.get(level) mustBe Some(1)
-    Seq(Off, Info, Warn, Error).filterNot(_ == level).foreach { l =>
-      counts.get(l) mustBe None
+    level match {
+      case Some(level) =>
+        counts.size mustBe 1
+        counts.get(level) mustBe Some(1)
+        Seq(Off, Info, Warn, Error).filterNot(_ == level).foreach { l =>
+          counts.get(l) mustBe None
+        }
+      case None =>
+        counts.isEmpty mustBe true
     }
   }
 
@@ -183,15 +188,27 @@ class ConnectorRetriesSpec extends PlaySpec
       )
     }
 
-    Seq(Off, Info, Warn, Error).foreach { level =>
-      s"use logging level of ${level.name} for errors" in {
-        connectorRetries.retryFor[String](apiOne, "Test API failure retry", _ => level) {
+    "error logging" should {
+      Seq(Off, Info, Warn, Error).foreach { level =>
+        s"use logging level of ${level.name} for errors" in {
+          connectorRetries.retryFor[String](apiOne, "Test API failure retry", _ => level) {
+            case FAILURE => true
+          } {
+            Future.successful(FAILURE)
+          }
+
+          checkSingleLogFor(Some(level))
+        }
+      }
+
+      "log nothing if all Ok" in {
+        connectorRetries.retryFor[String](apiOne, "Test API failure retry", _ => Error) {
           case FAILURE => true
         } {
-          Future.successful(FAILURE)
+          Future.successful(SUCCESSFUL)
         }
 
-        checkSingleLogFor(level)
+        checkSingleLogFor(None)
       }
     }
   }
