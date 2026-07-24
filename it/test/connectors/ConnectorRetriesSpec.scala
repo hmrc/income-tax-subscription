@@ -88,7 +88,7 @@ class ConnectorRetriesSpec extends PlaySpec
   }
 
   private def checkSingleLogFor(level: Option[Level]) = {
-    Thread.sleep(100)
+    Thread.sleep(1000)
     level match {
       case Some(level) =>
         counts.size mustBe 1
