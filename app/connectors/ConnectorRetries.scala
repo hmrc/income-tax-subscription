@@ -19,7 +19,6 @@ package connectors
 import com.typesafe.config.Config
 import models.ErrorModel
 import org.apache.pekko.actor.ActorSystem
-import org.apache.pekko.event.LoggingReceive
 import org.apache.pekko.pattern.after
 import play.api.Logging
 import uk.gov.hmrc.mdc.Mdc
