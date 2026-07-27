@@ -27,7 +27,7 @@ object HipPrePopParser extends Logging {
 
   type GetHipPrePopResponse = Either[ErrorModel, SelfEmpHolder]
 
-  implicit object GetHipPrePopResponseHttpReads extends Parser[GetHipPrePopResponse] {
+  implicit object GetHipPrePopResponseHttpReads extends Parser[SelfEmpHolder] {
     val apiNumber = 5646
     val apiName = "Business Data"
 

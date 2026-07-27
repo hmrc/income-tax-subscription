@@ -27,7 +27,7 @@ object SignUpParser {
 
   type PostSignUpResponse = Either[ErrorModel, SignUpResponse]
 
-  implicit object HIPSignUpResponseParser extends Parser[PostSignUpResponse] {
+  implicit object HIPSignUpResponseParser extends Parser[SignUpResponse] {
     val apiNumber: Int = 5317
     val apiName: String = "ITSA Sign Up"
 

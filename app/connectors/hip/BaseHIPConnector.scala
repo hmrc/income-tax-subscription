@@ -39,7 +39,7 @@ trait BaseHIPConnector {
 
   implicit val ec: ExecutionContext
 
-  def get[A](uri: String, parser: Parser[Either[ErrorModel, A]], additionalHeaders: Map[String, String] = Map.empty)
+  def get[A](uri: String, parser: Parser[A], additionalHeaders: Map[String, String] = Map.empty)
             (implicit hc: HeaderCarrier): Future[Either[ErrorModel, A]] = {
 
     val correlationId: String = UUID.randomUUID().toString
@@ -55,7 +55,7 @@ trait BaseHIPConnector {
       .recover(recoverTimeout _)
   }
   
-  def post[A](uri: String, body: JsValue, parser: Parser[Either[ErrorModel, A]], additionalHeaders: Map[String, String] = Map.empty)
+  def post[A](uri: String, body: JsValue, parser: Parser[A], additionalHeaders: Map[String, String] = Map.empty)
              (implicit hc: HeaderCarrier): Future[Either[ErrorModel, A]] = {
 
     val correlationId: String = UUID.randomUUID().toString

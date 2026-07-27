@@ -44,7 +44,7 @@ class HipItsaStatusConnector @Inject()(val httpClient: HttpClientV2,
 
   def determineItsaStatus(nino: String,
                           utr: String)(implicit hc: HeaderCarrier): Future[DetermineItsaStatusResponse] =
-    retryFor[DetermineItsaStatusResponse](apiNumber, apiName) {
+    retryFor[ItsaStatusResponse](apiNumber, apiName) {
       case Left(ErrorModel(TOO_MANY_REQUESTS, _, _)) => true
       case Left(ErrorModel(BAD_GATEWAY, _, _)) => true
       case Left(ErrorModel(SERVICE_UNAVAILABLE, _, _)) => true
