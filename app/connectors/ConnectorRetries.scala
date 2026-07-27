@@ -27,9 +27,9 @@ import java.util.concurrent.TimeUnit
 import scala.concurrent.duration.*
 import scala.concurrent.{ExecutionContext, Future}
 import scala.jdk.CollectionConverters.*
-import scala.util.{Failure, Success, Try}
+import scala.util.{Success, Try}
 
-trait ConnectorRetries extends Logging {
+trait ConnectorRetries {
 
   protected def actorSystem: ActorSystem
 
@@ -48,7 +48,6 @@ trait ConnectorRetries extends Logging {
         val mustRetry = condition.lift(result).getOrElse(false)
         if (mustRetry && remainingIntervals.nonEmpty) {
           val delay = remainingIntervals.head
-          logger.warn(s"Retrying [API #$apiNumber - $desc] in $delay due to error")
           val mdcData = Mdc.mdcData
           after(delay, actorSystem.scheduler) {
             Mdc.putMdc(mdcData)

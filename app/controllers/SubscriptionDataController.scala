@@ -17,7 +17,6 @@
 package controllers
 
 import common.Extractors
-import play.api.Logging
 import play.api.libs.json.{JsError, JsSuccess, JsValue, Json}
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import services.{AuthService, SubscriptionDataService}
@@ -31,7 +30,7 @@ import scala.concurrent.{ExecutionContext, Future}
 class SubscriptionDataController @Inject()(authService: AuthService,
                                            subscriptionDataService: SubscriptionDataService,
                                            cc: ControllerComponents)
-                                          (implicit ec: ExecutionContext) extends BackendController(cc) with Logging with Extractors {
+                                          (implicit ec: ExecutionContext) extends BackendController(cc) with Extractors {
 
   def retrieveReference: Action[JsValue] = Action.async(parse.json) { implicit request =>
     authService.authorised().retrieve(Retrievals.allEnrolments) { enrolments =>
@@ -42,7 +41,6 @@ class SubscriptionDataController @Inject()(authService: AuthService,
             case SubscriptionDataService.Created(reference) => Created(Json.obj("reference" -> reference))
           }
         case JsError(_) =>
-          logger.error("[SubscriptionDataController][retrieveReference] - Could not parse json request.")
           Future.successful(InternalServerError(
             "[SubscriptionDataController][retrieveReference] - Could not parse json request."
           ))

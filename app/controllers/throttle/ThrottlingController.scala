@@ -16,7 +16,6 @@
 
 package controllers.throttle
 
-import play.api.Logging
 import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import repositories.ThrottlingRepository
@@ -30,7 +29,7 @@ import scala.util.Try
 class ThrottlingController @Inject()(throttlingRepository: ThrottlingRepository,
                                      servicesConfig: ServicesConfig,
                                      cc: ControllerComponents)
-                                    (implicit ec: ExecutionContext) extends BackendController(cc) with Logging {
+                                    (implicit ec: ExecutionContext) extends BackendController(cc) {
 
   def throttled(throttleId: String): Action[AnyContent] = Action.async { _ =>
     val throttleKey = s"throttle.$throttleId.max"
@@ -41,7 +40,6 @@ class ThrottlingController @Inject()(throttlingRepository: ThrottlingRepository,
 
     configOrProperties match {
       case None =>
-        logger.warn(s"No throttle max found for $throttleKey in config")
         Future.successful(BadRequest)
       case Some(max) =>
         throttlingRepository.checkThrottle(throttleId).map {
@@ -50,7 +48,6 @@ class ThrottlingController @Inject()(throttlingRepository: ThrottlingRepository,
             if (int <= max)
               Ok(body)
             else {
-              logger.info(s"Throttle max exceeded for $throttleId")
               ServiceUnavailable(body)
             }
           }

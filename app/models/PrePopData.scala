@@ -24,7 +24,6 @@ import uk.gov.hmrc.http.InternalServerException
 
 import scala.util.matching.Regex
 
-
 case class PrePopData(selfEmployment: Option[Seq[PrePopSelfEmployment]])
 
 object PrePopData {
@@ -73,7 +72,6 @@ object PrePopSelfEmployment extends Logging {
       address = (addressFirstLine, isValidPostcode(adjustedPostcode)) match {
         case (Some(firstLine), Some(postcode)) => Some(Address(Seq(firstLine), Some(postcode)))
         case (Some(_), None) =>
-          logger.warn("[PrePopSelfEmployment] - Did not receive a postcode from the api.")
           None
         case _ => None
       },

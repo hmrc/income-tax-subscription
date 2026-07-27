@@ -17,16 +17,15 @@
 package controllers.matching
 
 import helpers.ComponentSpecBase
-import helpers.IntegrationTestConstants._
-import helpers.servicemocks._
+import helpers.IntegrationTestConstants.*
+import helpers.servicemocks.*
 import models.lockout.LockoutRequest
-import play.api.Logging
-import play.api.http.Status._
+import play.api.http.Status.*
 import play.api.libs.json.JsObject
 import repositories.LockoutMongoRepository
 import uk.gov.hmrc.mongo.test.DefaultPlayMongoRepositorySupport
 
-class LockoutStatusControllerISpec extends ComponentSpecBase with DefaultPlayMongoRepositorySupport[JsObject] with Logging {
+class LockoutStatusControllerISpec extends ComponentSpecBase with DefaultPlayMongoRepositorySupport[JsObject] {
 
   override def overriddenConfig(): Map[String, String] = Map("mongodb.uri" -> mongoUri)
 

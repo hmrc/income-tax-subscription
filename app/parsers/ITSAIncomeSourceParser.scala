@@ -19,12 +19,11 @@ package parsers
 import models.ErrorModel
 import models.subscription.business.CreateIncomeSourceSuccessModel
 import parsers.hip.Parser
-import play.api.Logging
 import play.api.http.Status.{CREATED, FORBIDDEN, UNPROCESSABLE_ENTITY}
 import play.api.libs.json.{JsSuccess, JsValue, Json, Reads}
 import uk.gov.hmrc.http.{HttpReads, HttpResponse, InternalServerException}
 
-object ITSAIncomeSourceParser extends Logging {
+object ITSAIncomeSourceParser {
 
   type PostITSAIncomeSourceResponse = Either[ErrorModel, CreateIncomeSourceSuccessModel]
 
