@@ -100,19 +100,19 @@ object Off extends Level {
   override def log(message: String): Unit = {}
 }
 
-object Info extends Level{
+object Info extends Level {
   override val name: String = "INFO"
   override def log(message: String): Unit =
     logger.info(message)
 }
 
-object Warn extends Level{
+object Warn extends Level {
   override val name: String = "WARN"
   override def log(message: String): Unit =
     logger.warn(message)
 }
 
-object Error extends Level{
+object Error extends Level {
   override val name: String = "ERROR"
   override def log(message: String): Unit =
     logger.error(message)
