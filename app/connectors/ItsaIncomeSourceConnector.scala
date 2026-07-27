@@ -24,6 +24,7 @@ import connectors.hip.BaseHIPConnector
 import models.ErrorModel
 import models.monitoring.{CreateIncomeSourcesAudit, SignUpAudit}
 import models.subscription.CreateIncomeSourcesModel
+import models.subscription.business.CreateIncomeSourceSuccessModel
 import org.apache.pekko.actor.ActorSystem
 import parsers.ITSAIncomeSourceParser.*
 import play.api.http.Status.TOO_MANY_REQUESTS
@@ -71,7 +72,7 @@ class ItsaIncomeSourceConnector @Inject()(val httpClient: HttpClientV2,
   private def updateETMP(mtdbsaRef: String,
                          createIncomeSources: CreateIncomeSourcesModel)
                         (implicit hc: HeaderCarrier): Future[PostITSAIncomeSourceResponse] = {
-    retryFor[PostITSAIncomeSourceResponse](ITSAIncomeSourceResponseHttpReads.apiNumber, ITSAIncomeSourceResponseHttpReads.apiName) {
+    retryFor[CreateIncomeSourceSuccessModel](ITSAIncomeSourceResponseHttpReads.apiNumber, ITSAIncomeSourceResponseHttpReads.apiName) {
       case Left(ErrorModel(TOO_MANY_REQUESTS, _, _)) => true
     } {
       val headers: Map[String, String] = Map(

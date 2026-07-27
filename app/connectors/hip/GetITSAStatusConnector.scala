@@ -22,6 +22,7 @@ import connectors.ConnectorRetries
 import models.ErrorModel
 import models.subscription.AccountingPeriodUtil
 import org.apache.pekko.actor.ActorSystem
+import parsers.GetITSAStatusParser.GetITSAStatusTaxYearResponse
 import parsers.hip.GetITSAStatusParser.*
 import play.api.http.Status.{BAD_GATEWAY, SERVICE_UNAVAILABLE, TOO_MANY_REQUESTS}
 import uk.gov.hmrc.http.HeaderCarrier
@@ -42,7 +43,7 @@ class GetITSAStatusConnector @Inject() (
   private val apiName = GetITSAStatusHttpReads.apiName
 
   def getItsaStatus(nino: String)(implicit hc: HeaderCarrier): Future[GetITSAStatusResponse] =
-    retryFor[GetITSAStatusResponse](apiNumber, apiName) {
+    retryFor[Option[Seq[GetITSAStatusTaxYearResponse]]](apiNumber, apiName) {
       case Left(ErrorModel(TOO_MANY_REQUESTS, _, _)) => true
       case Left(ErrorModel(BAD_GATEWAY, _, _)) => true
       case Left(ErrorModel(SERVICE_UNAVAILABLE, _, _)) => true

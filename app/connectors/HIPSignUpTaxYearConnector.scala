@@ -19,13 +19,13 @@ package connectors
 import com.typesafe.config.Config
 import config.AppConfig
 import connectors.hip.BaseHIPConnector
-import models.{ErrorModel, SignUpRequest}
+import models.{ErrorModel, SignUpRequest, SignUpResponse}
 import org.apache.pekko.actor.ActorSystem
 import parsers.SignUpParser.*
 import play.api.http.Status.*
 import play.api.libs.json.{JsObject, Json}
+import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.client.HttpClientV2
-import uk.gov.hmrc.http.{HeaderCarrier, Retries}
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
@@ -54,7 +54,7 @@ class HIPSignUpTaxYearConnector @Inject()(val httpClient: HttpClientV2,
 
   def signUp(signUpRequest: SignUpRequest)(implicit hc: HeaderCarrier): Future[PostSignUpResponse] = {
 
-    retryFor[PostSignUpResponse](HIPSignUpResponseParser.apiNumber, HIPSignUpResponseParser.apiName) {
+    retryFor[SignUpResponse](HIPSignUpResponseParser.apiNumber, HIPSignUpResponseParser.apiName) {
       case Left(ErrorModel(TOO_MANY_REQUESTS, _, _)) => true
     } {
       val headers: Map[String, String] = Map(
