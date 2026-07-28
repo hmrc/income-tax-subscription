@@ -48,6 +48,7 @@ trait ConnectorRetries {
         val mustRetry = condition.lift(result).getOrElse(false)
         if (mustRetry && remainingIntervals.nonEmpty) {
           val delay = remainingIntervals.head
+          Warn.log(s"Retrying [API #$apiNumber - $desc] in $delay due to error")
           val mdcData = Mdc.mdcData
           after(delay, actorSystem.scheduler) {
             Mdc.putMdc(mdcData)
