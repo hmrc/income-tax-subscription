@@ -19,7 +19,6 @@ package controllers
 import common.Extractors
 import connectors.ItsaIncomeSourceConnector
 import models.subscription.CreateIncomeSourcesModel
-import play.api.Logging
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.*
 import services.AuthService
@@ -34,7 +33,7 @@ class BusinessIncomeSourcesController @Inject()(authService: AuthService,
                                                 itsaIncomeSourceConnector: ItsaIncomeSourceConnector,
                                                 cc: ControllerComponents)
                                                (implicit ec: ExecutionContext)
-  extends BackendController(cc) with Extractors with Logging {
+  extends BackendController(cc) with Extractors {
 
   def createIncomeSource(mtdbsaRef: String): Action[JsValue] = Action.async(parse.json) { implicit request =>
     authService.authorised().retrieve(Retrievals.allEnrolments) { enrolments =>
@@ -47,7 +46,6 @@ class BusinessIncomeSourcesController @Inject()(authService: AuthService,
           case Right(_) =>
             NoContent
           case Left(error) =>
-            logger.error(s"Error processing Create Income Sources with status ${error.status} and message ${error.reason}")
             Status(error.status)(Json.obj("reason" -> error.reason) ++ error.code.fold(Json.obj())(c => Json.obj("code" -> c)))
         }
       }

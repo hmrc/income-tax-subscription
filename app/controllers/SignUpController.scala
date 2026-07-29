@@ -16,7 +16,6 @@
 
 package controllers
 
-
 import common.Extractors
 import config.AppConfig
 import config.featureswitch.FeatureSwitch.SubmissionAuditUpdate
@@ -88,6 +87,4 @@ class SignUpController @Inject()(authService: AuthService,
         Status(error.status)(Json.obj("reason" -> error.reason) ++ error.code.fold(Json.obj())(c => Json.obj("code" -> c)))
     }
   }
-
-
 }

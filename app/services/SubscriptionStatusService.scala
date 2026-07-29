@@ -21,7 +21,6 @@ import connectors.GetITSABusinessDetailsConnector
 import models.ErrorModel
 import models.frontend.FESuccessResponse
 import parsers.GetITSABusinessDetailsParser
-import play.api.Logging
 import play.api.mvc.Request
 import uk.gov.hmrc.http.HeaderCarrier
 
@@ -30,8 +29,7 @@ import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class SubscriptionStatusService @Inject()(val appConfig: AppConfig,
-                                          itsaBusinessDetailsConnector: GetITSABusinessDetailsConnector)
-  extends Logging {
+                                          itsaBusinessDetailsConnector: GetITSABusinessDetailsConnector) {
 
   /*
   * This method will check to see if a user with the supplied nino has an MTD IT SA subscription

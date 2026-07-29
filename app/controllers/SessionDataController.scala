@@ -17,7 +17,6 @@
 package controllers
 
 import common.Extractors
-import play.api.Logging
 import play.api.libs.json.JsValue
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import services.{AuthService, SessionDataService}
@@ -30,8 +29,7 @@ import scala.concurrent.ExecutionContext
 class SessionDataController @Inject()(authService: AuthService,
                                       sessionDataService: SessionDataService,
                                       cc: ControllerComponents)
-                                     (implicit ec: ExecutionContext) extends BackendController(cc) with Logging with Extractors {
-
+                                     (implicit ec: ExecutionContext) extends BackendController(cc) with Extractors {
 
   def getAllSessionData: Action[AnyContent] = Action.async { implicit request =>
     authService.authorised() {

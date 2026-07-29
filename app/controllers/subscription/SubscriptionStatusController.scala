@@ -16,8 +16,6 @@
 
 package controllers.subscription
 
-import models.frontend.FEFailureResponse
-import play.api.Logger
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import services.{AuthService, SubscriptionStatusService}
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
@@ -31,13 +29,10 @@ class SubscriptionStatusController @Inject()(authService: AuthService,
                                              cc: ControllerComponents)
                                             (implicit ec: ExecutionContext) extends BackendController(cc) with JsonUtils {
 
-  val logger: Logger = Logger(this.getClass)
-
   def checkSubscriptionStatus(nino: String): Action[AnyContent] = Action.async { implicit request =>
     authService.authorised() {
       subscriptionStatusService.checkMtditsaSubscription(nino).map {
         case Right(success) =>
-          logger.debug(s"SubscriptionStatusController.checkSubscriptionStatus - successful, responding with\n$success")
           Ok(toJsValue(success))
         case Left(_) =>
           InternalServerError

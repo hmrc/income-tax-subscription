@@ -22,7 +22,6 @@ import connectors.hip.HipItsaStatusConnector
 import models.monitoring.MandationStatusAuditModel
 import models.status.{ITSAStatus, MandationStatusRequest, MandationStatusResponse}
 import models.subscription.AccountingPeriodUtil
-import play.api.Logger
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.{Action, ControllerComponents}
 import services.AuthService
@@ -42,8 +41,6 @@ class MandationStatusController @Inject()(authService: AuthService,
                                           val appConfig: AppConfig
                                          )(implicit ec: ExecutionContext)
   extends BackendController(cc) with Extractors {
-
-  val logger: Logger = Logger(this.getClass)
 
   def mandationStatus: Action[JsValue] = Action.async(parse.json) { implicit request =>
     authService.authorised().retrieve(Retrievals.allEnrolments) { enrolments =>

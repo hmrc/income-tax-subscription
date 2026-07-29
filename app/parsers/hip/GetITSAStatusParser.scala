@@ -18,12 +18,11 @@ package parsers.hip
 
 import models.ErrorModel
 import parsers.GetITSAStatusParser.GetITSAStatusTaxYearResponse
-import play.api.Logging
 import play.api.http.Status.{NOT_FOUND, OK}
 import play.api.libs.json.{JsError, JsSuccess, JsValue}
 import uk.gov.hmrc.http.{HttpReads, HttpResponse}
 
-object GetITSAStatusParser extends Logging {
+object GetITSAStatusParser {
 
   type GetITSAStatusResponse = Either[ErrorModel, Option[Seq[GetITSAStatusTaxYearResponse]]]
 
