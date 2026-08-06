@@ -38,6 +38,7 @@ class GetITSABusinessDetailsConnector @Inject()(val httpClient: HttpClientV2,
 
   def getHIPBusinessDetails(nino: String)(implicit hc: HeaderCarrier): Future[Either[ErrorModel, GetITSABusinessDetailsResponse]] = {
     retryFor[GetITSABusinessDetailsResponse](GetITSABusinessDetailsResponseHttpReads.apiNumber, GetITSABusinessDetailsResponseHttpReads.apiName) {
+      case Left(ErrorModel(TOO_MANY_REQUESTS, _, _)) => true
       case Left(ErrorModel(BAD_GATEWAY, _, _)) => true
       case Left(ErrorModel(SERVICE_UNAVAILABLE, _, _)) => true
     } {

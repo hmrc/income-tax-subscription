@@ -27,8 +27,7 @@ import play.api.http.Status.*
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.Request
 import play.api.test.FakeRequest
-import play.api.test.Helpers.{await, defaultAwaitTimeout}
-import uk.gov.hmrc.http.{HeaderCarrier, InternalServerException}
+import uk.gov.hmrc.http.HeaderCarrier
 import utils.TestConstants.{testMtditId, testNino}
 
 class GetITSABusinessDetailsConnectorISpec extends ComponentSpecBase with FeatureSwitching {
@@ -83,21 +82,23 @@ class GetITSABusinessDetailsConnectorISpec extends ComponentSpecBase with Featur
       result shouldBe Right(NotSignedUp)
     }
 
-    s"call the API a defined number of times in the event it returns a $BAD_GATEWAY or $SERVICE_UNAVAILABLE" in {
-      WiremockHelper.stubGetSequence(s"/etmp/RESTAdapter/itsa/taxpayer/business-details\\?nino=$testNino")(
-        StubResponse(BAD_GATEWAY),
-        StubResponse(SERVICE_UNAVAILABLE),
-        StubResponse(UNPROCESSABLE_ENTITY, Json.obj("errors" -> Json.obj("code" -> "006", "text" -> "", "processingDate" -> "")))
-      )
+    Seq(BAD_GATEWAY, SERVICE_UNAVAILABLE, TOO_MANY_REQUESTS).foreach { status =>
+      s"call the API a defined number of times in the event it returns a $status" in {
+        WiremockHelper.stubGetSequence(s"/etmp/RESTAdapter/itsa/taxpayer/business-details\\?nino=$testNino")(
+          StubResponse(status),
+          StubResponse(status),
+          StubResponse(UNPROCESSABLE_ENTITY, Json.obj("errors" -> Json.obj("code" -> "006", "text" -> "", "processingDate" -> "")))
+        )
 
-      val result = getITSABusinessConnector.getHIPBusinessDetails(testNino).futureValue
+        val result = getITSABusinessConnector.getHIPBusinessDetails(testNino).futureValue
 
-      result shouldBe Right(NotSignedUp)
+        result shouldBe Right(NotSignedUp)
 
-      WiremockHelper.verifyGet(
-        uri = s"/etmp/RESTAdapter/itsa/taxpayer/business-details\\?nino=$testNino",
-        times = 3
-      )
+        WiremockHelper.verifyGet(
+          uri = s"/etmp/RESTAdapter/itsa/taxpayer/business-details\\?nino=$testNino",
+          times = 3
+        )
+      }
     }
 
     "return an error for unsupported status" in {
