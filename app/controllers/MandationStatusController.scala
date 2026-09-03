@@ -46,24 +46,24 @@ class MandationStatusController @Inject()(authService: AuthService,
     authService.authorised().retrieve(Retrievals.allEnrolments) { enrolments =>
       withJsonBody[MandationStatusRequest] { requestBody =>
 
-        val statusResult: Future[(Option[ITSAStatus], Option[ITSAStatus])] =
+        val statusResult: Future[(Option[ITSAStatus], Option[ITSAStatus], Option[String])] =
           hipItsaStatusConnector.determineItsaStatus(requestBody.nino, requestBody.utr) map {
             case Right(response) =>
               val current = response.taxYearStatus.find(_.taxYear == AccountingPeriodUtil.getCurrentTaxYear.toItsaStatusShortTaxYear).map(_.status)
               val next = response.taxYearStatus.find(_.taxYear == AccountingPeriodUtil.getNextTaxYear.toItsaStatusShortTaxYear).map(_.status)
-              (current, next)
+              (current, next, None)
             case Left(error) =>
-              throw new InternalServerException(s"[MandationStatusController] - Failure response fetching mandation status. ${error.status}, ${error.reason}")
+              (None, None, Some(s"[MandationStatusController] - Failure response fetching mandation status. ${error.status}, ${error.reason}"))
           }
 
         statusResult flatMap {
-          case (maybeCurrentYearStatus, maybeNextYearStatus) =>
-            val currentYearStatus = maybeCurrentYearStatus.getOrElse(
-              throw new InternalServerException("[MandationStatusController] - No itsa status found for current tax year")
-            )
-            val nextYearStatus = maybeNextYearStatus.getOrElse(
-              throw new InternalServerException("[MandationStatusController] - No itsa status found for next tax year")
-            )
+          case (_, _, Some(error)) =>
+            Future.successful(InternalServerError(error))
+          case (None, _, _) =>
+            Future.successful(InternalServerError("[MandationStatusController] - No itsa status found for current tax year"))
+          case (_, None, _) =>
+            Future.successful(InternalServerError("[MandationStatusController] - No itsa status found for next tax year"))
+          case (Some(currentYearStatus), Some(nextYearStatus), _) =>
             auditService.audit(MandationStatusAuditModel(
               agentReferenceNumber = getArnFromEnrolments(enrolments),
               utr = requestBody.utr,
