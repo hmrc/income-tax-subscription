@@ -27,7 +27,6 @@ import play.api.mvc.{Action, ControllerComponents}
 import services.AuthService
 import services.monitoring.AuditService
 import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals
-import uk.gov.hmrc.http.InternalServerException
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
 import javax.inject.{Inject, Singleton}

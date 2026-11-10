@@ -21,10 +21,10 @@ import models.ErrorModel
 import models.subscription.*
 import models.subscription.business.CreateIncomeSourceSuccessModel
 import play.api.http.Status.*
-import play.api.libs.json.{JsValue, Json}
+import play.api.libs.json.{JsObject, JsValue, Json}
 import play.api.mvc.{ControllerComponents, Request, Result}
 import play.api.test.FakeRequest
-import play.api.test.Helpers.{contentAsJson, contentAsString, defaultAwaitTimeout, status, stubControllerComponents}
+import play.api.test.Helpers.{contentAsJson, defaultAwaitTimeout, status, stubControllerComponents}
 import services.mocks.{MockAuthService, MockIncomeSourcesConnector}
 import uk.gov.hmrc.http.HeaderCarrier
 import utils.TestConstants.testNino
@@ -109,7 +109,7 @@ class BusinessIncomeSourcesControllerSpec extends CommonSpec
     idempotencyKey = if (withIdempotency) Some("1234") else None
   )
 
-  lazy val testCreateIncomeSourcesJson = Json.obj(
+  lazy val testCreateIncomeSourcesJson: JsObject = Json.obj(
     "nino" -> testNino,
     "soleTraderBusinesses" -> Json.obj(
       "accountingPeriod" -> Json.obj(

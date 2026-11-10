@@ -21,8 +21,7 @@ import common.CommonSpec
 import play.api.libs.json.{JsObject, Json}
 import play.api.mvc.{AnyContentAsEmpty, Result}
 import play.api.test.FakeRequest
-import play.api.test.Helpers._
-import services.SubscriptionDataService.{Created, Existing}
+import play.api.test.Helpers.*
 import services.mocks.{MockAuthService, MockSubscriptionDataService}
 import uk.gov.hmrc.auth.core.{Enrolment, EnrolmentIdentifier, Enrolments}
 
@@ -45,7 +44,7 @@ class SubscriptionDataControllerSpec extends CommonSpec with MockSubscriptionDat
       "return Ok with a reference" when {
         "SubscriptionDataService returns an Existing reference" in {
           mockRetrievalSuccess[Enrolments](Enrolments(Set(Enrolment("HMRC-AS-AGENT", Seq(EnrolmentIdentifier("AgentReferenceNumber", testArn)), "Activated"))))
-          mockRetrieveReference("1234567890", Some(testArn), Existing)(reference)
+          mockRetrieveReference("1234567890", Some(testArn), services.SubscriptionDataService.Existing.apply)(reference)
 
           val result = TestController.retrieveReference()(request.withBody(Json.obj("utr" -> "1234567890")))
 
@@ -55,7 +54,7 @@ class SubscriptionDataControllerSpec extends CommonSpec with MockSubscriptionDat
       "return Created with a reference" when {
         "SubscriptionDataService returns an Created reference" in {
           mockRetrievalSuccess[Enrolments](Enrolments(Set(Enrolment("HMRC-AS-AGENT", Seq(EnrolmentIdentifier("AgentReferenceNumber", testArn)), "Activated"))))
-          mockRetrieveReference("1234567890", Some(testArn), Created)(reference)
+          mockRetrieveReference("1234567890", Some(testArn), services.SubscriptionDataService.Created.apply)(reference)
 
           val result = TestController.retrieveReference()(request.withBody(Json.obj("utr" -> "1234567890")))
 
@@ -67,7 +66,7 @@ class SubscriptionDataControllerSpec extends CommonSpec with MockSubscriptionDat
       "return Ok with a reference" when {
         "SubscriptionDataService returns an Existing reference" in {
           mockRetrievalSuccess[Enrolments](Enrolments(Set()))
-          mockRetrieveReference("1234567890", None, Existing)(reference)
+          mockRetrieveReference("1234567890", None, services.SubscriptionDataService.Existing.apply)(reference)
 
           val result = TestController.retrieveReference()(request.withBody(Json.obj("utr" -> "1234567890")))
 
@@ -75,7 +74,7 @@ class SubscriptionDataControllerSpec extends CommonSpec with MockSubscriptionDat
         }
         "SubscriptionDataService returns an Created reference" in {
           mockRetrievalSuccess[Enrolments](Enrolments(Set()))
-          mockRetrieveReference("1234567890", None, Created)(reference)
+          mockRetrieveReference("1234567890", None, services.SubscriptionDataService.Created.apply)(reference)
 
           val result = TestController.retrieveReference()(request.withBody(Json.obj("utr" -> "1234567890")))
 

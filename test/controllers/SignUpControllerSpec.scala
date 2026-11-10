@@ -31,7 +31,7 @@ import play.api.http.Status.{INTERNAL_SERVER_ERROR, OK, UNPROCESSABLE_ENTITY}
 import play.api.libs.json.Json
 import play.api.mvc.{ControllerComponents, Result}
 import play.api.test.FakeRequest
-import play.api.test.Helpers.{contentAsJson, contentAsString, defaultAwaitTimeout, status, stubControllerComponents}
+import play.api.test.Helpers.{contentAsJson, defaultAwaitTimeout, status, stubControllerComponents}
 import services.mocks.monitoring.MockAuditService
 import services.mocks.{MockAuthService, MockHIPSignUpTaxYearConnector}
 import uk.gov.hmrc.auth.core.{Enrolment, EnrolmentIdentifier, Enrolments}
