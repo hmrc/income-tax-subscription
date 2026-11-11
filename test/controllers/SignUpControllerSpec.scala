@@ -26,7 +26,6 @@ import models.monitoring.{RegistrationFailureAudit, RegistrationSuccessAudit}
 import models.{ErrorModel, SignUpRequest, SignUpResponse}
 import org.mockito.Mockito.when
 import org.scalatest.BeforeAndAfterEach
-import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.http.Status.{INTERNAL_SERVER_ERROR, OK, UNPROCESSABLE_ENTITY}
 import play.api.libs.json.Json
 import play.api.mvc.{ControllerComponents, Result}
@@ -45,8 +44,7 @@ class SignUpControllerSpec extends CommonSpec
   with MockHIPSignUpTaxYearConnector
   with MockAuditService
   with BeforeAndAfterEach
-  with FeatureSwitching
-  with GuiceOneAppPerSuite {
+  with FeatureSwitching {
 
   lazy val mockCC: ControllerComponents = stubControllerComponents()
   override val appConfig: MicroserviceAppConfig = mock[MicroserviceAppConfig]

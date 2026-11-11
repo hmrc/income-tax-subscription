@@ -20,7 +20,6 @@ import common.CommonSpec
 import connectors.mocks.MockHttp
 import models.ErrorModel
 import models.hip.{SelfEmp, SelfEmpHolder}
-import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import parsers.hip.HipPrePopParser.GetHipPrePopResponseHttpReads
 import play.api.http.Status.{BAD_GATEWAY, INTERNAL_SERVER_ERROR, OK, SERVICE_UNAVAILABLE}
 import play.api.libs.json.Json
@@ -28,7 +27,7 @@ import uk.gov.hmrc.http.HttpResponse
 
 import java.util.UUID
 
-class HipPrePopConnectorSpec extends CommonSpec with MockHttp with GuiceOneAppPerSuite {
+class HipPrePopConnectorSpec extends CommonSpec with MockHttp {
 
   val testCorrelationId: String = UUID.randomUUID().toString
 
