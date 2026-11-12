@@ -97,7 +97,7 @@ class SubscriptionDataRepository @Inject()(config: SubscriptionDataRepositoryCon
       ).as[JsValue]
     )
     val update: JsObject = Json.obj(f"$$set" -> set)
-    findAndUpdate(selector, update, fetchNewObject = true, upsert = true)
+    findAndUpdate(selector, update)
   }
 
   def deleteDataWithReference(reference: String, dataId: String): Future[Option[JsValue]] = {
@@ -149,7 +149,7 @@ class SubscriptionDataRepository @Inject()(config: SubscriptionDataRepositoryCon
     }
   }
 
-  private def findAndUpdate(selector: JsObject, update: JsObject, fetchNewObject: Boolean = false, upsert: Boolean = false) = {
+  private def findAndUpdate(selector: JsObject, update: JsObject) = {
     collection
       .findOneAndUpdate(selector, update, findOneAndUpdateOptions)
       .toFuture()

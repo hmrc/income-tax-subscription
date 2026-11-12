@@ -22,10 +22,10 @@ import org.mockito.Mockito.*
 import org.scalatest.BeforeAndAfterEach
 import org.scalatestplus.mockito.MockitoSugar
 import play.api.libs.json.JsValue
-import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse, StringContextOps}
 import uk.gov.hmrc.http.client.HttpClientV2
+import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse, StringContextOps}
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.Future
 
 trait MockHttp extends CommonSpec with MockitoSugar with BeforeAndAfterEach {
 
@@ -70,16 +70,6 @@ trait MockHttp extends CommonSpec with MockitoSugar with BeforeAndAfterEach {
     verify(mockHttpClient, times(count))
       .post(url"$urlMatcher")
       .execute[HttpResponse](ArgumentMatchers.any(), ArgumentMatchers.any())
-  }
-
-  def setupMockHttpGet(url: Option[String] = None, headers: Option[Seq[(String, String)]] = None)(status: Int, response: JsValue): Unit = {
-    lazy val urlMatcher = url.fold(ArgumentMatchers.any[String]())(x => ArgumentMatchers.eq(x))
-    lazy val headersMatcher = headers.fold(ArgumentMatchers.any[Seq[(String, String)]])(x => ArgumentMatchers.eq(x))
-    when(
-      mockHttpClient
-        .get(url"$urlMatcher")
-        .execute[HttpResponse](ArgumentMatchers.any(), ArgumentMatchers.any())
-    ).thenReturn(Future.successful(HttpResponse(status, body = response.toString())))
   }
 
   def setupMockHttpGetWithParams(url: Option[String], params: Option[Seq[(String, String)]])(status: Int, response: JsValue): Unit = {
